@@ -33,6 +33,9 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     if (seed) await p.addInitScript(([s]) => { if (!sessionStorage.getItem('seeded')) { localStorage.clear(); for (const [k, v] of Object.entries(s)) localStorage.setItem('nc_' + k, JSON.stringify(v)); sessionStorage.setItem('seeded', '1') } }, [seed]);
     await p.goto(o.url || PAGE); await p.waitForTimeout(500); return p };
 
+  // 圖片工坊入口在「飲食」頁底部
+  const toLab = async () => { await page.click('#nav button[data-v="menu"]'); await page.click('#v-menu [data-golab]'); await page.waitForTimeout(150) };
+
   // =============== 1. 判讀、評分、身體地圖 ===============
   let page = await newPage({
     members: [{ id: 'm1', name: '爸爸', sex: 'm', birth: '1975-05-20', h: 172, w: 82, waist: 95, neck: 40, act: '1.375', goal: 'cut' }], active: 'm1',
@@ -113,7 +116,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   page = await newPage({ members: [{ id: 'g1', name: '我', sex: 'm', birth: '1990-01-01', h: 170, w: 65, act: '1.375', goal: 'keep' }], active: 'g1',
     img: { b1: 'https://image.pollinations.ai/prompt/x' } });
   check('舊的 Pollinations 網址自動清掉', await page.evaluate(() => !IMG.b1));
-  await page.click('#nav button[data-v="lab"]'); await page.selectOption('#labDish', 'l2'); await page.click('#labStyle button[data-v="neon"]'); await page.click('#genOne');
+  await toLab(); await page.selectOption('#labDish', 'l2'); await page.click('#labStyle button[data-v="neon"]'); await page.click('#genOne');
   await page.waitForSelector('#labOut img', { timeout: 60000 });
   const img = await page.evaluate(async () => ({ src: document.querySelector('#labOut img').src.slice(0, 5), mark: IMG.l2, idb: Object.keys(await IDB.all()).includes('l2') }));
   check('生成圖片存進 IndexedDB 並顯示', img.src === 'blob:' && img.mark === 'idb' && img.idb, JSON.stringify(img));
@@ -125,7 +128,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   // AI Horde 完全不回應：每次請求 30 秒逾時、退避重試後放棄，佇列不會永遠停在「送出中」（假時鐘快轉，約 4 分鐘的流程幾秒跑完）
   horde.mode = 'hang';
   page = await newPage({ members: [{ id: 'g1', name: '我', sex: 'm', birth: '1990-01-01', h: 170, w: 65, act: '1.375', goal: 'keep' }], active: 'g1' }, { clock: true });
-  await page.click('#nav button[data-v="lab"]'); await page.selectOption('#labDish', 'l4'); await page.click('#genOne');
+  await toLab(); await page.selectOption('#labDish', 'l4'); await page.click('#genOne');
   for (let i = 0; i < 60 && await page.evaluate(() => !!busy || queue.length > 0); i++) { await page.clock.fastForward(10000); await page.waitForTimeout(80) }
   const hang = await page.evaluate(() => ({ busy: !!busy, q: queue.length, out: document.querySelector('#labOut').textContent }));
   check('AI Horde 不回應：逾時後顯示錯誤、佇列不卡死', !hang.busy && !hang.q && /沒有回應/.test(hang.out), hang.out.slice(0, 50));
@@ -133,7 +136,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   // GAS：設定錯誤直接停（不重試 3 次、不再等 20 秒），訊息講要去哪裡設定
   page = await newPage({ members: [{ id: 'g1', name: '我', sex: 'm', birth: '1990-01-01', h: 170, w: 65, act: '1.375', goal: 'keep' }], active: 'g1', gas: 'https://script.google.com/macros/s/TEST/exec' });
   const labOut = re => page.waitForFunction(re => new RegExp(re).test(document.querySelector('#labOut').textContent), re.source, { timeout: 15000 }).catch(() => {});
-  await page.click('#nav button[data-v="lab"]'); await page.selectOption('#labDish', 'l5'); await page.click('#genOne'); await labOut(/生成失敗/);
+  await toLab(); await page.selectOption('#labDish', 'l5'); await page.click('#genOne'); await labOut(/生成失敗/);
   let t = await page.textContent('#labOut');
   check('GAS 未設定：只送 1 次，提示去填 CF_ACCOUNT_ID／CF_API_TOKEN', gas.hits === 1 && /CF_ACCOUNT_ID/.test(t) && /指令碼屬性/.test(t), `${gas.hits} 次｜${t.slice(0, 50)}`);
   gas.hits = 0; gas.reply = '<html><body>找不到網頁</body></html>'; await page.click('#genOne'); await labOut(/不是圖片資料/);
@@ -169,6 +172,46 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   }
   const doc = fs.readFileSync(pfile, 'utf8');
   check('PROMPTS.md 與 App 內提示詞一致', doc.includes(md(prompts.scale)) && doc.includes(md(prompts.lab)), '不一致時執行 node tests/e2e.js --update-prompts');
+  await page.close();
+
+  // =============== 6b. 儀表、營養師、健身教練、疫苗 ===============
+  const ZM = { id: 'z', name: '宗鑫', sex: 'm', birth: '1984-03-15', h: 170, w: 71.4, waist: 88, act: '1.375', goal: 'keep', fit: { lim: ['knee'], lvl: 'new', days: 4, min: 30, like: ['walk', 'slowjog', 'swim'] },
+    life: { smoke: 'never', betel: 'never', alc: 'some', colono: 2014 }, fh: { ca: ['crc'], chr: ['dm'], early: false } };
+  page = await newPage({ members: [ZM, { id: 'g', name: '阿嬤', sex: 'f', birth: '1958-02-01', h: 155, w: 52, act: '1.2', goal: 'auto', life: { colono: 2022 } }], active: 'z',
+    labs: { z: [{ id: 'l', t: '2026-09-14', items: { glu: { v: 106 }, hba1c: { v: 5.9 }, tg: { v: 182 }, ldl: { v: 142 }, ua: { v: 7.6 }, sbp: { v: 134 }, dbp: { v: 86 } }, extra: [] }] } });
+  check('BMI 儀表：單一漸層弧線＋動畫指針（不再是 4 段圓頭線）', await page.evaluate(() => !!document.querySelector('#gauge linearGradient') && !!document.querySelector('#gauge .gmark') && !document.querySelector('#gauge [stroke="#ffb547"]')));
+  const sg = await page.evaluate(() => ({ g: suggestGoal(me()).goal, box: !!document.querySelector('#energyCard [data-autogoal]'), bmr: /別低於 BMR/.test(document.querySelector('#energyCard').textContent) }));
+  check('BMI 24.7 → 營養師建議減脂，熱量卡說明 BMR／TDEE 怎麼用', sg.g === 'cut' && sg.box && sg.bmr, JSON.stringify(sg));
+  await page.click('#energyCard [data-autogoal]'); await page.waitForTimeout(200);
+  const ag = await page.evaluate(() => { const c = calc(me()); return { goal: me().goal, cg: c.goal, d: Math.round(c.target - c.tdee) } });
+  check('一鍵改成自動 → 目標變減脂、熱量低於 TDEE', ag.goal === 'auto' && ag.cg === 'cut' && ag.d < 0, JSON.stringify(ag));
+  const np = await page.evaluate(() => { const n = nutriPlan(me()), ds = ['2026-10-12', '2026-10-13', '2026-10-14', '2026-10-15', '2026-10-16'].map(d => plan(d));
+    return { f: n.F.map(f => f.t).join(','), avd: [...n.avd].join(','), bad: ds.flatMap(x => x.slots.flatMap(s => s.items)).filter(f => f.x.includes('pur') || f.x.includes('hc')).map(f => f.n).join(','), adj: ds[0].slots.flatMap(s => s.adj).join(',') } });
+  check('營養師：控糖＋降膽固醇＋降尿酸＋減脂，菜單 5 天都避開高普林與精緻澱粉', /控糖/.test(np.f) && /降壞膽固醇/.test(np.f) && /降尿酸/.test(np.f) && /減脂/.test(np.f) && !np.bad && /先吃菜再吃飯/.test(np.adj), `${np.f}｜避開 ${np.avd}｜違規 ${np.bad || '無'}`);
+  const fp = await page.evaluate(() => { const P = fitPlan(me()); return { used: [...new Set(P.days.flatMap(d => d.b.map(b => b.k)))].join(','), no: P.no.map(x => x.k + ':' + x.why.join('/')).join(','), w: P.W.map(x => x.t).join('｜'), aer: P.aer, aerT: P.aerT, nS: P.nS, mv: P.mv.map(x => x.n).join(',') } });
+  check('教練：膝蓋不適 → 不排跑步、超慢跑、爬山、球類，並說明原因', !/run|slowjog|hike|ball|hiit/.test(fp.used) && /slowjog:膝蓋/.test(fp.no) && /膝蓋/.test(fp.w) && !/椅子深蹲|弓箭步/.test(fp.mv), `排了 ${fp.used}｜${fp.no}`);
+  check('教練：每週有氧 ≥150 分（WHO 最低）、肌力 ≥2 天、血糖高提醒飯後散步', fp.aer >= 150 && fp.nS >= 2 && /飯後散步/.test(fp.w), `${fp.aer}/${fp.aerT} 分、肌力 ${fp.nS} 天`);
+  const fp2 = await page.evaluate(() => { const m = { ...me(), fit: { lim: [], lvl: 'mid', days: 5, min: 45, like: ['slowjog', 'gym'] } }; const P = fitPlan(m); return [...new Set(P.days.flatMap(d => d.b.map(b => b.k)))].join(',') });
+  check('沒有限制、喜歡超慢跑＋重訓 → 課表有超慢跑與器械重訓', /slowjog/.test(fp2) && /gym/.test(fp2), fp2);
+  const stop = await page.evaluate(() => { const m = me(); LABS.z[0].items.sbp = { v: 182 }; LABS.z[0].items.dbp = { v: 112 }; const P = fitPlan(m); LABS.z[0].items.sbp = { v: 134 }; LABS.z[0].items.dbp = { v: 86 }; return P.stop && /太高/.test(P.W[0].t) });
+  check('血壓 182/112 → 先就醫、暫停中高強度', stop);
+  const ics = await page.evaluate(() => { const m = me(), t = fitICS(m, fitPlan(m)); return { ev: (t.match(/BEGIN:VEVENT/g) || []).length, rr: /RRULE:FREQ=WEEKLY;BYDAY=(MO|TU|WE|TH|FR|SA|SU)/.test(t), al: /TRIGGER:-PT10M/.test(t), long: t.split('\r\n').filter(l => new TextEncoder().encode(l).length > 75).length } });
+  check('行事曆檔：每個訓練日一個每週重複事件、提前 10 分鐘提醒、每行 ≤75 bytes', ics.ev === 4 && ics.rr && ics.al && !ics.long, JSON.stringify(ics));
+  await page.click('#nav button[data-v="fit"]'); await page.waitForTimeout(300); await page.click('#fitBody [data-timer]'); await page.waitForTimeout(300);
+  const t0 = await page.textContent('#tmTxt'); await page.click('#tmGo'); await page.waitForTimeout(1600); const t1 = await page.textContent('#tmTxt');
+  await page.click('#sheet h3 [data-close]'); await page.waitForTimeout(200);
+  check('運動計時器會倒數，關閉後停止', t0 === '30:00' && t1 !== t0 && await page.evaluate(() => !onSheetClose), `${t0} → ${t1}`);
+  const yp = await page.evaluate(() => MEM.map(m => yearPlan(m).items.filter(o => /大腸鏡|疫苗|皰疹/.test(o.t)).map(o => `${o.t}|${o.ch}`)));
+  check('大腸鏡：家族史上次 2014 → 今年該做；一般人上次 2022 → 下次 2032', yp[0].some(x => /今年該做/.test(x)) && yp[1].some(x => /下次 2032/.test(x)), yp.map(x => x.filter(y => /大腸鏡/.test(y)).join('/')).join('｜'));
+  check('疫苗：42 歲流感自費；68 歲肺炎鏈球菌公費、帶狀皰疹', yp[0].some(x => /^流感疫苗\|自費/.test(x)) && yp[1].some(x => /^肺炎鏈球菌疫苗\|公費/.test(x)) && yp[1].some(x => /帶狀皰疹/.test(x)), yp[1].join(' / ').slice(0, 120));
+  await page.evaluate(() => openMemberEdit('z', 'vax')); await page.waitForTimeout(400);
+  await page.click('#m-vax .chip[data-k="flu"]'); await page.click('#m-lim .chip[data-k="back"]'); await page.click('#m-save'); await page.waitForTimeout(300);
+  const sv = await page.evaluate(() => ({ vax: me().vax, lim: me().fit.lim, flu: yearPlan(me()).items.some(o => o.t === '流感疫苗') }));
+  check('成員表單可存疫苗紀錄與運動限制；打過流感就不再列', sv.vax.flu === (new Date().getMonth() >= 9 ? new Date().getFullYear() : new Date().getFullYear() - 1) && sv.lim.includes('back') && !sv.flu, JSON.stringify(sv));
+  const cb = await page.evaluate(() => { const c = cleanBackup({ members: [{ id: 'q', name: 'x', sex: 'm', birth: '1990-01-01', goal: '<x>', fit: { lim: ['knee', '<img>'], lvl: 'zzz', days: 99, like: ['run', 'evil'] }, vax: { flu: 'abc', zzz: 2020, pneu: 2020 } }] }).mem[0]; return { g: c.goal, lim: c.fit.lim, lvl: c.fit.lvl, days: c.fit.days, like: c.fit.like, vax: c.vax } });
+  check('備份檔的運動、疫苗、目標欄位會被清洗', cb.g === 'auto' && cb.lim.join() === 'knee' && cb.lvl === 'new' && cb.days === 6 && cb.like.join() === 'run' && JSON.stringify(cb.vax) === '{"pneu":2020}', JSON.stringify(cb));
+  const ovf = []; for (const v of ['dash', 'body', 'menu', 'fit', 'lab', 'me']) { await page.evaluate(v => go(v), v); await page.waitForTimeout(250); if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) ovf.push(v) }
+  check('6 個頁面在 iPhone 寬度都沒有橫向捲動', !ovf.length, ovf.join(','));
   await page.close();
 
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
