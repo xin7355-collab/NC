@@ -753,7 +753,7 @@ function bodySVG(m,issues,p){
     col.forEach(i=>{i.ly=Math.max(i.y,last+GAP,TOP);last=i.ly});
     for(let k=col.length-1,nx=BOT+GAP;k>=0;k--){col[k].ly=Math.min(col[k].ly,nx-GAP);nx=col[k].ly}}
   const call=items.map(i=>{const l=lv[i.o],c=HCOL[l],Lf=i.side==='L',tx=Lf?84:256,ex=Lf?94:246,an=Lf?'end':'start',w=worst[i.o],more=cnt[i.o]-1;
-    const sub=fitText(`${w.short||w.name} ${typeof w.val==='number'?fmt(w.val):String(w.val??'')}`.trim(),80-(more>0?18:0),9.2)+(more>0?` +${more}`:'');
+    const tail=more>0?` 等${more+1}項`:'',sub=fitText(`${w.short||w.name} ${typeof w.val==='number'?fmt(w.val):String(w.val??'')}`.trim(),80-(more>0?30:0),9.2)+tail;
     const nm=fitText(orgName(i.o,m),80,12),nw=[...nm].length*12;
     const dots=[...Array(l)].map((_,k)=>`<circle cx="${Lf?tx-nw-5-k*4.6:tx+nw+5+k*4.6}" cy="${HUD_F(i.ly-7.2)}" r="1.7" fill="${c}"/>`).join('');
     return `<g data-o="${i.o}" class="callout"><rect x="${Lf?2:250}" y="${i.ly-14}" width="88" height="30" fill="transparent"/>`+
