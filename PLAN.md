@@ -47,6 +47,6 @@ lab    = {id, t:'YYYY-MM-DD', hospital, items:{glu:{v, lo, hi, ref, flag, conv}}
 - **Phase 4（選用）**：GAS 代理 Gemini Vision，一鍵拍照直接匯入。代價是健康截圖會經過你的 GAS 與 Google，需自行評估隱私風險。
 
 ## 5. 部署
-1. 把 `index.html`、`icon-180.png`、`.nojekyll` 放在 repo 根目錄，到 Settings → Pages 選 `main`／`/(root)` 啟用。網址：https://xin7355-collab.github.io/NC/
+1. 原始碼在 `main`；推到 `main` 後，`.github/workflows/pages-sync.yml` 會把同一版同步到 `gh-pages`，GitHub Pages 從 `gh-pages` 發布（約 1 分鐘）。網址：https://xin7355-collab.github.io/NC/
 2. 用 iPhone Safari 開啟網站 → 分享 → 加入主畫面。
 3. 到「我的」頁建立家人；體脂與體檢從「身體」頁新增。

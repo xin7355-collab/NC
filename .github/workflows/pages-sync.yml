@@ -1,0 +1,21 @@
+# GitHub Pages 從 gh-pages 分支發布；main 一更新就把同一版同步過去（約 1 分鐘後網站更新）
+name: 同步網站到 gh-pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pages-sync
+  cancel-in-progress: true
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: main → gh-pages
+        run: git push --force origin HEAD:refs/heads/gh-pages

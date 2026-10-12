@@ -12,4 +12,4 @@
 | `PLAN.md` | 架構與判讀規則 |
 | `PROMPTS.md` | AI 截圖擷取提示詞（與 App 內相同） |
 
-更新方式：改完 `index.html` 推到 `main`，GitHub Pages 約 1 分鐘後自動更新（手機若看到舊版，關掉分頁重開）。
+更新方式：改完 `index.html` 推到 `main`，GitHub Actions 會自動同步到 `gh-pages` 發布，約 1 分鐘後網站更新（手機若看到舊版，關掉分頁重開）。`gh-pages` 分支不要手動改。
