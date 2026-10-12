@@ -704,8 +704,9 @@ function colonPath(){
 
 const HCOL=['rgba(34,228,255,.9)','#ff8a5c','#ff4d6d','#ff1f4b'];
 // 文字寬度估算（中日韓全形 1em、其他 0.58em），超出就截斷加 …
-function fitText(s,maxW,fs){s=String(s??'');const cw=ch=>/[\u2e80-\uffff]/.test(ch)?fs:fs*.58;let w=0;for(const ch of s)w+=cw(ch);if(w<=maxW)return s;
-  let o='';w=fs*.9;for(const ch of s){w+=cw(ch);if(w>maxW)break;o+=ch}return o.trimEnd()+'…'}
+const textW=(s,fs)=>[...String(s??'')].reduce((w,ch)=>w+(/[\u2e80-\uffff]/.test(ch)?fs:fs*.58),0);
+function fitText(s,maxW,fs){s=String(s??'');if(textW(s,fs)<=maxW)return s;
+  let o='',w=fs*.9;for(const ch of s){w+=textW(ch,fs);if(w>maxW)break;o+=ch}return o.trimEnd()+'…'}
 function bodySVG(m,issues,p){
   const fem=m.sex==='f',B=bodyGeo(m.sex),G=B.G,TX=70,ox=G.ox,sxo=x=>100+(x-100)*ox;
   const lv={},worst={},cnt={};
@@ -753,7 +754,9 @@ function bodySVG(m,issues,p){
     col.forEach(i=>{i.ly=Math.max(i.y,last+GAP,TOP);last=i.ly});
     for(let k=col.length-1,nx=BOT+GAP;k>=0;k--){col[k].ly=Math.min(col[k].ly,nx-GAP);nx=col[k].ly}}
   const call=items.map(i=>{const l=lv[i.o],c=HCOL[l],Lf=i.side==='L',tx=Lf?84:256,ex=Lf?94:246,an=Lf?'end':'start',w=worst[i.o],more=cnt[i.o]-1;
-    const tail=more>0?` 等${more+1}項`:'',sub=fitText(`${w.short||w.name} ${typeof w.val==='number'?fmt(w.val):String(w.val??'')}`.trim(),80-(more>0?30:0),9.2)+tail;
+    // 第二行：最嚴重的項目＋數值；放得下才補「等 N 項」，放不下就保留數值
+    const main=`${w.short||w.name} ${typeof w.val==='number'?fmt(w.val):String(w.val??'')}`.trim(),tail=more>0?` 等${more+1}項`:'';
+    const sub=textW(main+tail,9.2)<=80?main+tail:fitText(main,80,9.2);
     const nm=fitText(orgName(i.o,m),80,12),nw=[...nm].length*12;
     const dots=[...Array(l)].map((_,k)=>`<circle cx="${Lf?tx-nw-5-k*4.6:tx+nw+5+k*4.6}" cy="${HUD_F(i.ly-7.2)}" r="1.7" fill="${c}"/>`).join('');
     return `<g data-o="${i.o}" class="callout"><rect x="${Lf?2:250}" y="${i.ly-14}" width="88" height="30" fill="transparent"/>`+
