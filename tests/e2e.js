@@ -293,6 +293,26 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   horde.mode = 'ok'; await page.close();
   await ctx.unroute('https://aihorde.net/api/v2/generate/async'); await ctx.unroute('https://aihorde.net/api/v2/generate/status/**');
 
+  // =============== 6e. AI 醫生（整理問題、複製後打開 AI） ===============
+  await ctx.route(/^https:\/\/(chatgpt\.com|claude\.ai|gemini\.google\.com)\//, r => r.fulfill({ contentType: 'text/html', body: '<title>AI</title>ok' }));
+  page = await newPage({ members: [{ id: 'z', name: '宗鑫', sex: 'm', birth: '1984-03-15', h: 172, w: 73.1, waist: 88, act: '1.375', goal: 'auto', fh: { ca: ['breast'], chr: ['htn'], early: false }, life: { smoke: 'never', betel: 'never', alc: 'some' }, fit: { lim: ['knee'] } }], active: 'z',
+    labs: { z: [{ id: 'l', t: '2026-09-14', hospital: '台安醫院', items: { glu: { v: 106 }, ldl: { v: 142 }, sdldl: { v: 30.2, hi: 30 }, alt: { v: 30 } }, extra: [] }] } });
+  const ap0 = await page.evaluate(() => { const o = { topic: 'all', fh: true, scale: true, normals: false, q: '' }; return { a: aiPrompt(me(), o), n: aiPrompt(me(), { ...o, normals: true }), it: aiPrompt(me(), { ...o, topic: 'item', item: 'sdldl' }) } });
+  check('AI 醫生的問題：不含姓名、生日、醫院；有年齡性別、異常數值、家族史、身體限制', !/宗鑫|1984|台安/.test(ap0.a + ap0.n) && /男性、42 歲/.test(ap0.a) && /空腹血糖：106/.test(ap0.a) && /乳癌/.test(ap0.a) && /膝蓋/.test(ap0.a) && !/GPT 30/.test(ap0.a) && /GPT 30/.test(ap0.n), ap0.a.split('\n').slice(3, 5).join(' / '));
+  check('單項提問帶入該項數值與報告自己的參考值', /請解釋我的「小而密低密度膽固醇 sdLDL 30\.2 mg\/dL」（參考 ≤30）/.test(ap0.it), (ap0.it.match(/【我的問題】.*/) || [''])[0].slice(0, 60));
+  await page.click('#nav button[data-v="body"]'); await page.waitForTimeout(300);
+  await page.click('#issueList [data-ask="sdldl"]'); await page.waitForTimeout(400);
+  const ai1 = await page.evaluate(() => ({ on: document.querySelector('#ai-topic .chip.on')?.textContent, href: [...document.querySelectorAll('[data-aiopen]')].map(a => a.href) }));
+  check('異常項目旁的「問 AI」→ 直接選好這一項；三個 AI 連結', /這一項/.test(ai1.on) && /^https:\/\/chatgpt\.com\//.test(ai1.href[0]) && /^https:\/\/claude\.ai\/new/.test(ai1.href[1]) && /^https:\/\/gemini\.google\.com\/app/.test(ai1.href[2]), ai1.on);
+  await page.evaluate(() => { window.copyText = t => { window.__copied = t } });
+  await page.click('#ai-opt .chip[data-k="normals"]'); await page.fill('#ai-q', '最近常覺得累');
+  const [pop] = await Promise.all([ctx.waitForEvent('page'), page.click('[data-aiopen="claude"]')]); await pop.waitForLoadState().catch(() => {});
+  const cp = await page.evaluate(() => window.__copied || ''); const popUrl = pop.url(); await pop.close();
+  check('按 Claude：先複製完整問題（含補充、正常數值），再開新分頁', /補充：最近常覺得累/.test(cp) && /GPT 30/.test(cp) && /^https:\/\/claude\.ai\/new/.test(popUrl), popUrl.slice(0, 40));
+  await page.evaluate(() => closeSheet()); await page.click('#nav button[data-v="dash"]'); await page.waitForTimeout(200);
+  check('總覽與身體頁都有「問 AI 醫生」入口', await page.evaluate(() => !!document.querySelector('#latestCard [data-aidoc]') && !!document.querySelector('#v-body [data-aidoc]')));
+  await page.close();
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);

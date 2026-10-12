@@ -207,6 +207,9 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 .shop.done .bx{background:var(--lime);border-color:var(--lime)}.shop.done b{text-decoration:line-through;color:var(--mute)}
 .sk .m{min-width:0;flex:1}.sk .q{color:var(--cyan);font-weight:700;font-variant-numeric:tabular-nums;margin-left:4px}
 .sk small{display:block;font-size:11px;color:var(--mute);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ask{flex:0 0 auto;align-self:center;margin-left:6px;padding:6px 10px;border-radius:99px;border:1px solid rgba(167,139,250,.45);background:rgba(167,139,250,.12);color:#c4b5fd;font-size:11px;font-weight:700;white-space:nowrap}
+.aib{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.aib .btn{display:block;margin:0;padding:14px 4px;text-align:center;text-decoration:none}
+.btn.ai{background:linear-gradient(90deg,#a78bfa,var(--cyan))}
 .stg>*{animation:in .45s ease both}.stg>*:nth-child(2){animation-delay:.06s}.stg>*:nth-child(3){animation-delay:.12s}.stg>*:nth-child(4){animation-delay:.18s}.stg>*:nth-child(5){animation-delay:.24s}.stg>*:nth-child(n+6){animation-delay:.3s}
 @media (prefers-reduced-motion:reduce){.pulse,.vflow,.scan::after,.view,.gmark,.garc,.grow,.beat,.stg>*,.pl{animation:none}}
 .callout{cursor:pointer}
@@ -280,6 +283,7 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
     <button class="btn" data-addscale>＋ 體脂紀錄</button>
     <button class="btn ghost" data-addlab>＋ 體檢報告</button>
   </div>
+  <button class="btn ai" data-aidoc style="margin:0 0 14px">🩺 問 AI 醫生（帶著你的數值去問）</button>
   <div class="card"><h2>需要注意</h2><div id="issueList"></div></div>
   <div class="card"><h2>建議掛號科別</h2><div id="deptList"></div>
     <p class="note">依數值規則自動建議，不是醫療診斷。身體不適請直接就醫，不必等報告。</p></div>
@@ -869,7 +873,7 @@ function labEval(rec,m){
       if(H){const h1=it.hi!=null?it.hi:H[0],h2=Math.max(H[1],h1),h3=Math.max(H[2],h2);lv=v>=h3?3:v>=h2?2:v>h1?1:0}
       if(!lv&&L){const l1=it.lo!=null?it.lo:L[0],l2=Math.min(L[1],l1),l3=Math.min(L[2],l2);lv=v<l3?3:v<l2?2:v<l1?1:0;if(lv)dir='lo'}
       if(!lv){const fd=flagDir(it.flag);if(fd){lv=1;dir=fd}}}
-    if(lv)out.push({src:'體檢',k,name:x.n,short:LSHORT[k]||x.n,val:it.v,unit:x.u||'',lv,dir,msg:om||(dir==='lo'?x.lo:x.hi)||(x.t==='opt'?'檢查結果需追蹤':dir==='lo'?'低於參考值':'高於參考值'),organ:x.o,dept:x.d,ref:it.ref||refText(x,sex)});
+    if(lv)out.push({src:'體檢',k,name:x.n,short:LSHORT[k]||x.n,val:it.v,unit:x.u||'',lv,dir,msg:om||(dir==='lo'?x.lo:x.hi)||(x.t==='opt'?'檢查結果需追蹤':dir==='lo'?'低於參考值':'高於參考值'),organ:x.o,dept:x.d,ref:it.ref||(it.lo!=null&&it.hi!=null?`${it.lo}–${it.hi}`:it.hi!=null?`≤${it.hi}`:it.lo!=null?`≥${it.lo}`:refText(x,sex))});   // 報告有自己的上下限就顯示報告的
   }
   // 衍生判讀：PSA 4–10 看游離比例；空腹血糖＋胰島素算 HOMA-IR
   const iv=k=>num(rec.items?.[k]?.v),ps=iv('psa'),fp=iv('fpsa'),g0=iv('glu'),in0=iv('ins');
@@ -1445,7 +1449,7 @@ function bodySVG(m,issues,p){
   </g>${call}
   </svg>`;
 }
-function issueHTML(list,showRef){return list.map(i=>{const long=typeof i.val==='string'&&i.val.length>6;return `<div class="issue"><span class="lv lv${i.lv}">${LVT[i.lv]}</span><div style="flex:1;min-width:0"><div class="t">${esc(i.name)}</div><div class="s">${long?`<b style="color:var(--text)">${esc(i.val)}</b><br>`:''}${esc(i.src)}・${esc(i.msg)}${showRef&&i.ref?`<br>參考值 ${esc(i.ref)}`:''}${i.dev&&i.msg.indexOf('設備')<0?`<br>設備判定：${esc(i.dev)}`:''}</div></div>${long?'':`<div class="v">${fmt(i.val)}<div class="sub">${esc(i.unit||'')}</div></div>`}</div>`}).join('')}
+function issueHTML(list,showRef,ask){return list.map(i=>{const long=typeof i.val==='string'&&i.val.length>6;return `<div class="issue"><span class="lv lv${i.lv}">${LVT[i.lv]}</span><div style="flex:1;min-width:0"><div class="t">${esc(i.name)}</div><div class="s">${long?`<b style="color:var(--text)">${esc(i.val)}</b><br>`:''}${esc(i.src)}・${esc(i.msg)}${showRef&&i.ref?`<br>參考值 ${esc(i.ref)}`:''}${i.dev&&i.msg.indexOf('設備')<0?`<br>設備判定：${esc(i.dev)}`:''}</div></div>${long?'':`<div class="v">${fmt(i.val)}<div class="sub">${esc(i.unit||'')}</div></div>`}${ask?`<button class="ask" data-ask="${esc(i.k)}" aria-label="問 AI：${esc(i.name)}">問 AI</button>`:''}</div>`}).join('')}
 function deptHTML(dp){return dp.length?dp.map(d=>`<div class="dept"><span class="lv lv${d.lv}">${LVT[d.lv]}</span><div style="flex:1;min-width:0"><b>${esc(d.d)}</b><div class="sub" style="margin-top:2px">${d.when}</div><div class="sub" style="margin-top:2px">${esc(d.items.join('、'))}</div></div></div>`).join(''):'<div class="empty">目前不需要特別就診，維持每年健康檢查即可</div>'}
 
 /* ================= 渲染：總覽 ================= */
@@ -1473,7 +1477,8 @@ function renderDash(){
        :`<button class="rec" data-addscale><div class="m"><b>尚無體脂紀錄</b><small>手動輸入或 AI 截圖匯入</small></div><span class="chev">＋</span></button>`)+
     (l?(()=>{const sc=scoreOf(labEval(l,m)),g=grade(sc);return `<button class="rec" data-lid="${esc(l.id)}"><div class="m"><b>體檢報告</b><small>${esc(l.t)}${l.hospital?'・'+esc(l.hospital):''}</small></div><span class="lv" style="background:${g[1]}22;color:${g[1]}">${sc} 分</span><span class="chev">›</span></button>`})()
        :`<button class="rec" data-addlab><div class="m"><b>尚無體檢報告</b><small>拍照給 AI 讀數字後匯入，App 自動評分</small></div><span class="chev">＋</span></button>`)+
-    (()=>{const pl=yearPlan(m),n1=pl.items.filter(o=>o.pr===1).length;return `<button class="rec" data-goplan><div class="m"><b>今年健檢建議</b><small>${pl.items.length} 項${n1?`・其中 ${n1} 項優先`:''}${pl.filled?'':'・還沒填家族史'}</small></div>${n1?`<span class="lv lv2">${n1} 優先</span>`:''}<span class="chev">›</span></button>`})();
+    (()=>{const pl=yearPlan(m),n1=pl.items.filter(o=>o.pr===1).length;return `<button class="rec" data-goplan><div class="m"><b>今年健檢建議</b><small>${pl.items.length} 項${n1?`・其中 ${n1} 項優先`:''}${pl.filled?'':'・還沒填家族史'}</small></div>${n1?`<span class="lv lv2">${n1} 優先</span>`:''}<span class="chev">›</span></button>`})()+
+    `<button class="rec" data-aidoc><div class="m"><b>🩺 問 AI 醫生</b><small>把你的數值整理好，一鍵帶到 ChatGPT／Claude／Gemini</small></div><span class="chev">›</span></button>`;
 }
 
 // 快走（MET 4.3）消耗：MET × 3.5 × 體重 ÷ 200 × 分鐘
@@ -1588,7 +1593,7 @@ function renderBody(){
   if(s){const sc=s.score??scoreOf(scale);chips.push(`<span class="tg">體脂 ${sc}</span>`)}
   $('#bodyScore').innerHTML=chips.join('');
   $('#hud').innerHTML=bodySVG(m,all,'b');$('#organPanel').innerHTML='';
-  $('#issueList').innerHTML=all.length?issueHTML(all.slice(0,12),true)+(all.length>12?`<div class="note">另有 ${all.length-12} 項，請點紀錄看完整分析</div>`:''):`<div class="empty">${s||l?'目前沒有異常指標 👍':'尚無資料'}</div>`;
+  $('#issueList').innerHTML=all.length?issueHTML(all.slice(0,12),true,true)+(all.length>12?`<div class="note">另有 ${all.length-12} 項，請點紀錄看完整分析</div>`:''):`<div class="empty">${s||l?'目前沒有異常指標 👍':'尚無資料'}</div>`;
   $('#deptList').innerHTML=deptHTML(deptPlan(all));
   $('#planBody').innerHTML=planHTML(m);
   $$('#recSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===recTab));
@@ -1613,7 +1618,7 @@ function renderRecs(){
 function showOrgan(o){
   const m=me(),{scale,lab}=issuesOf(m),list=[...lab,...scale].filter(i=>i.organ===o).sort((a,b)=>b.lv-a.lv);
   $$('#hud [data-org]').forEach(e=>e.classList.toggle('sel',e.dataset.org===o));
-  $('#organPanel').innerHTML=`<div class="organ-pop"><div class="row" style="margin:0 0 6px"><b>${esc(orgName(o,m))}</b><button class="x" data-closeorgan>✕</button></div>${list.length?issueHTML(list,true):'<div class="empty" style="padding:8px 0">這個部位目前沒有異常指標</div>'}${ORG[o].tip?`<p class="note">💡 ${esc(ORG[o].tip)}</p>`:''}</div>`;
+  $('#organPanel').innerHTML=`<div class="organ-pop"><div class="row" style="margin:0 0 6px"><b>${esc(orgName(o,m))}</b><button class="x" data-closeorgan>✕</button></div>${list.length?issueHTML(list,true,true):'<div class="empty" style="padding:8px 0">這個部位目前沒有異常指標</div>'}${ORG[o].tip?`<p class="note">💡 ${esc(ORG[o].tip)}</p>`:''}</div>`;
   $('#organPanel').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
@@ -1721,6 +1726,59 @@ function openMemberEdit(id,focus){
     MEM=MEM.filter(x=>x.id!==m.id);delete SCALE[m.id];delete LABS[m.id];if(ACT===m.id)ACT=MEM[0].id;
     S.set('members',MEM);S.set('scale',SCALE);S.set('labs',LABS);S.set('active',ACT);closeSheet();renderAll();toast('已刪除')};
 }
+
+/* ================= AI 醫生：把數值整理成問題，使用者自己帶到 AI 問 =================
+   不經 App 上傳、不需要金鑰：按下去先複製，再打開 ChatGPT／Claude／Gemini，由使用者貼上送出。
+   內容不含姓名、生日、醫院名稱。短的問題用網址 ?q= 直接帶入，長的靠貼上。 */
+const AI_TOPICS=[['all','整體解讀','請整體解讀我的狀況：哪些最需要注意、彼此有沒有關聯、接下來 3 個月最該先做哪 3 件事。'],
+  ['each','異常逐項解釋','請逐項解釋每個異常：代表什麼、常見原因、風險高低、該看哪一科、多久內要看、生活上怎麼改善。'],
+  ['visit','看診準備','我要去看醫生，請幫我整理：該掛哪一科、先後順序、要帶哪些資料，以及可以問醫生的 5 個問題。'],
+  ['diet','飲食怎麼改','請依我的數值給一週飲食建議：台灣常見、外食族也做得到的選擇，哪些少吃、哪些多吃，並說明原因。'],
+  ['fit','運動怎麼練','請依我的數值和身體限制，安排 4 週運動計畫（每週幾次、多久、強度、要避開什麼）。']];
+const AIS=[['chatgpt','ChatGPT','https://chatgpt.com/','?q='],['claude','Claude','https://claude.ai/new','?q='],['gemini','Gemini','https://gemini.google.com/app','']];
+const aiHref=(k,t)=>{const[,,u,q]=AIS.find(x=>x[0]===k),e=encodeURIComponent(t);return q&&e.length<=6000?u+q+e:u};
+const tv=v=>typeof v==='number'?String(+v.toPrecision(4)):String(v??'');
+function aiPrompt(m,o){
+  const c=calc(m),{scale,lab,s,l}=issuesOf(m),fh=fhOf(m),lf=lifeOf(m),fp=fitOf(m),dt=dietOf(m),out=[],P=labsOf(m).find(r=>l&&r!==l&&dayDiff(r.t,l.t)>=180);
+  const iss=i=>`${i.name}：${tv(i.val)}${i.unit?' '+i.unit:''}${i.ref?`（參考 ${i.ref}）`:''} → ${LVT[i.lv]}（${i.msg}）`;
+  out.push('你是一位謹慎、會用白話解釋的家庭醫學科醫師。請用繁體中文（台灣用語）回答。',
+    '規則：①只根據下面的資料，不要假設沒提供的數值，資料不夠就說要補哪些檢查 ②有需要儘快就醫的警訊放最前面（沒有就說沒有）③分清楚「要看醫生」和「生活調整即可」④不要開藥或給劑量 ⑤最後給我 3 個下次看診可以問醫生的問題。','',
+    `【基本資料】${sexT(m.sex)}性、${Math.floor(c.a)} 歲、身高 ${c.h} cm、體重 ${tv(c.w)} kg（BMI ${r1(c.bmi)}）${m.waist?`、腰圍 ${m.waist} cm`:''}`,
+    `【目標】${GOALT[c.goal]}；活動量：${(ACTS.find(x=>x[0]===String(m.act))||ACTS[1])[1]}`);
+  if(o.fh){if(fhText(m))out.push(`【一等親家族史】${fhText(m)}${fh.early?'（有 50 歲前發病，或同一種癌症 2 人以上）':''}`);
+    if(m.life)out.push(`【生活習慣】吸菸：${{never:'從不',former:'已戒',current:'目前有'}[lf.smoke]}${lf.smoke!=='never'&&packYears(lf)?`（約 ${packYears(lf)} 包年）`:''}；喝酒：${{none:'不喝',some:'偶爾',often:'每週 3 次以上'}[lf.alc]}；檳榔：${{never:'從不',former:'已戒',current:'目前有'}[lf.betel]}`);
+    if(fp.lim.length)out.push(`【身體限制】${fp.lim.map(k=>(LIM.find(z=>z[0]===k)||[,k])[1]).join('、')}`);
+    if(dt.no.length)out.push(`【不吃的食物】${dt.no.map(k=>(EXG.find(z=>z[0]===k)||[,k])[1]).join('、')}`)}
+  if(l){out.push('',`【體檢報告 ${l.t}】App 判讀異常 ${lab.length} 項：`);
+    lab.slice().sort((a,b)=>b.lv-a.lv).forEach(i=>{const pv=P?.items?.[i.k]?.v;out.push(`- ${iss(i)}${pv!=null&&pv!==''?`；前一次（${P.t}）${pv}`:''}`)});
+    if(o.normals){const ab=new Set(lab.map(i=>i.k)),nm=Object.entries(l.items||{}).filter(([k,it])=>!ab.has(k)&&LABK[k]&&it?.v!==''&&it?.v!=null).map(([k,it])=>`${LABK[k].s||LABK[k].n} ${it.v}${LABK[k].u?' '+LABK[k].u:''}`);
+      if(nm.length)out.push(`其他正常或只記錄的項目：${nm.join('、')}`)}}
+  else out.push('','【體檢報告】還沒有');
+  if(o.scale&&s){out.push('',`【體脂計 ${String(s.t).slice(0,10)}】${['weight','fat','visceral','muscle','skeletal','bmr'].filter(k=>s[k]!=null).map(k=>`${SFN[k].n} ${tv(s[k])}${SFN[k].u?' '+SFN[k].u:''}`).join('、')}`);
+    scale.forEach(i=>out.push(`- ${iss(i)}`))}
+  const pr=yearPlan(m).items.filter(x=>x.pr===1);if(pr.length)out.push('',`【App 依規則列出的優先檢查】${pr.map(x=>x.t).join('、')}`);
+  const it=o.item&&[...lab,...scale].find(i=>i.k===o.item);
+  const q=o.topic==='item'&&it?`請解釋我的「${it.name} ${tv(it.val)}${it.unit?' '+it.unit:''}」${it.ref?`（參考 ${it.ref}）`:''}：代表什麼、可能原因、和我其他數值有沒有關聯、要不要看醫生、怎麼改善。`:(AI_TOPICS.find(x=>x[0]===o.topic)||AI_TOPICS[0])[2];
+  out.push('',`【我的問題】${q}${o.q?`\n補充：${o.q}`:''}`);
+  return out.join('\n');
+}
+let aiO={topic:'all',fh:true,scale:true,normals:false,q:'',item:null};
+function openAI(item){const m=me();aiO={...aiO,item:item||null,topic:item?'item':aiO.topic==='item'?'all':aiO.topic,q:''};
+  const it=item&&[...issuesOf(m).lab,...issuesOf(m).scale].find(i=>i.k===item),topics=[...(it?[['item','這一項：'+(it.short||it.name)]]:[]),...AI_TOPICS];
+  openSheet(sheetHead('🩺 AI 醫生','把你的數值整理成問題，帶到你常用的 AI 問')+`
+    <label>想問什麼</label><div class="chips" id="ai-topic">${topics.map(([k,n])=>`<button class="chip${aiO.topic===k?' on':''}" data-k="${k}">${esc(n)}</button>`).join('')}</div>
+    <label>補充問題（選填）</label><textarea id="ai-q" maxlength="500" style="min-height:70px;font-family:inherit" placeholder="例如：最近常覺得累，跟報告有關嗎？"></textarea>
+    <label>要附上的資料</label><div class="chips" id="ai-opt"><button class="chip${aiO.fh?' on':''}" data-k="fh">家族史與生活習慣</button><button class="chip${aiO.scale?' on':''}" data-k="scale">體脂紀錄</button><button class="chip${aiO.normals?' on':''}" data-k="normals">正常的數值也附上</button></div>
+    <details class="box"><summary>預覽要問的內容 <span class="sub" id="ai-n"></span></summary><div class="prompt" id="ai-pv"></div></details>
+    <div class="aib">${AIS.map(([k,n])=>`<a class="btn" data-aiopen="${k}" href="${AIS.find(x=>x[0]===k)[2]}" target="_blank" rel="noopener">${n}</a>`).join('')}</div>
+    <button class="btn ghost" id="ai-copy">只複製（自己貼到任何 AI）</button>
+    <p class="note">🔒 內容不含姓名、生日、醫院名稱，只會送到你選的 AI。按下去會先複製，打開 AI 後在輸入框長按「貼上」再送出。<br>⚠️ AI 的回答僅供參考，不能取代醫師診斷；胸痛、呼吸困難、單側無力等緊急狀況請直接就醫或打 119。</p>`);
+  const txt=()=>aiPrompt(m,aiO),upd=()=>{const t=txt();$('#ai-pv').textContent=t;$('#ai-n').textContent=`（${t.length} 字）`;$$('[data-aiopen]').forEach(a=>a.href=aiHref(a.dataset.aiopen,t))};
+  $$('#ai-topic .chip').forEach(b=>b.onclick=()=>{aiO.topic=b.dataset.k;$$('#ai-topic .chip').forEach(x=>x.classList.toggle('on',x===b));upd()});
+  $$('#ai-opt .chip').forEach(b=>b.onclick=()=>{aiO[b.dataset.k]=!aiO[b.dataset.k];b.classList.toggle('on',aiO[b.dataset.k]);upd()});
+  $('#ai-q').oninput=e=>{aiO.q=e.target.value.slice(0,500);upd()};
+  $$('[data-aiopen]').forEach(a=>a.onclick=()=>{copyText(txt(),'已複製，到 AI 輸入框長按「貼上」送出')});   /* 先複製（同一次點擊內），連結照常開新分頁 */
+  $('#ai-copy').onclick=()=>copyText(txt(),'已複製，可以貼到任何 AI');upd()}
 
 /* ================= AI 提示詞 ================= */
 function promptScale(){return `你是「體脂計數據擷取器」。我會附上體脂計 App 的截圖（可能多張、可能是簡體中文介面）。你的任務只有「讀取畫面上的數字」，不要分析、不要給建議。
@@ -2000,7 +2058,7 @@ function openLabDetail(id){
     ${iss.some(i=>i.lv===3)?'<div class="banner">⚠️ 有「嚴重」等級的項目，建議 1–2 週內就醫。若有胸痛、呼吸困難、單側無力、意識改變等症狀，請立即掛急診。</div>':''}
     <div class="hud">${bodySVG(m,iss,'d')}</div>
     <div class="h4">建議掛號</div>${deptHTML(dp)}
-    <div class="h4">異常項目</div>${iss.length?issueHTML(iss,true):'<div class="empty">全部項目都在參考範圍內 👍</div>'}
+    <div class="h4">異常項目</div>${iss.length?issueHTML(iss,true,true):'<div class="empty">全部項目都在參考範圍內 👍</div>'}
     ${orgs.length?`<div class="h4">注意事項</div>${orgs.map(o=>`<div class="issue"><span class="lv lv1">${esc(orgName(o,m))}</span><div class="s" style="flex:1;margin:0">${esc(ORG[o].tip)}</div></div>`).join('')}`:''}
     ${normal.length?`<details class="box"><summary>正常項目（${normal.length}）</summary>${normal.map(([k,it])=>`<div class="lrow"><label>${esc(LABK[k]?.n||k)}</label><span>${fmt(it.v)} <span class="sub">${esc(LABK[k]?.u||'')}</span></span></div>`).join('')}</details>`:''}
     <p class="note">評分由 App 內建規則計算（參考國健署與常用臨床參考值）。各醫院參考值不同，報告有附參考範圍時以報告為準。本分析不能取代醫師診斷。</p>
@@ -2301,7 +2359,7 @@ $('#memChip').onclick=openMemberPicker;
 $$('#recSeg button').forEach(b=>b.onclick=()=>{recTab=b.dataset.v;$$('#recSeg button').forEach(x=>x.classList.toggle('on',x===b));renderRecs()});
 $('#hud').addEventListener('click',e=>{const t=e.target.closest('[data-o]');if(t)showOrgan(t.dataset.o)});
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-close],[data-closeorgan],[data-copy],[data-show],[data-pick],[data-editmem],[data-addmem],[data-sid],[data-lid],[data-addscale],[data-addlab],[data-copyplan],[data-goplan],[data-autogoal],[data-go],[data-golab],[data-goback],[data-fday],[data-timer],[data-ics],[data-meal],[data-ban],[data-shop],[data-export],[data-import],[data-autoimg]');if(!t)return;const d=t.dataset;
+  const t=e.target.closest('[data-close],[data-closeorgan],[data-copy],[data-show],[data-pick],[data-editmem],[data-addmem],[data-sid],[data-lid],[data-addscale],[data-addlab],[data-copyplan],[data-goplan],[data-autogoal],[data-go],[data-golab],[data-goback],[data-fday],[data-timer],[data-ics],[data-meal],[data-ban],[data-shop],[data-export],[data-import],[data-autoimg],[data-aidoc],[data-ask]');if(!t)return;const d=t.dataset;
   if('close' in d)closeSheet();
   else if('closeorgan' in d){$('#organPanel').innerHTML='';$$('#hud .sel').forEach(e=>e.classList.remove('sel'))}
   else if(d.copy)copyText(d.copy==='scale'?promptScale():promptLab());
@@ -2311,6 +2369,8 @@ document.addEventListener('click',e=>{
   else if(d.meal!=null)openMeal(+d.meal);
   else if(d.ban){const m=me(),dt=dietOf(m);m.diet={...dt,ban:[...new Set([...dt.ban,d.ban])]};S.set('members',MEM);closeSheet();renderMenu();toast(`已移除「${BY_ID[d.ban].n}」，之後不再排（「我的 → 編輯 → 不吃的食物」可恢復）`)}
   else if('shop' in d)openShop();
+  else if('aidoc' in d)openAI();
+  else if(d.ask)openAI(d.ask);
   else if('export' in d)exportData();
   else if('import' in d)$('#importFile').click();
   else if('autoimg' in d){$('#genMissing').onclick();t.textContent=AUTO?'⏸ 停止自動補圖':'🖼 自動補齊全部菜色圖片'}
