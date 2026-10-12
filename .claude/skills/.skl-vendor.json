@@ -1,0 +1,25 @@
+{
+  "skills": [
+    "accessibility",
+    "app-guardrails-audit",
+    "apple-hig-expert",
+    "e2e-testing",
+    "error-handling",
+    "make-interfaces-feel-better",
+    "systematic-debugging",
+    "verification-before-completion"
+  ],
+  "source_repo": "https://github.com/xin7355-collab/skl",
+  "source_commit": "b9b2cfe",
+  "updated_at": "2026-10-12T08:30:08Z",
+  "packs": [],
+  "extra_skills": [
+    "ecc/skills/accessibility",
+    "ecc/skills/e2e-testing",
+    "ecc/skills/error-handling",
+    "ecc/skills/make-interfaces-feel-better",
+    "product-team/apple-hig-expert/skills/apple-hig-expert",
+    "superpowers/skills/systematic-debugging",
+    "superpowers/skills/verification-before-completion"
+  ]
+}
