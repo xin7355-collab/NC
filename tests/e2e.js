@@ -205,7 +205,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   check('大腸鏡：家族史上次 2014 → 今年該做；一般人上次 2022 → 下次 2032', yp[0].some(x => /今年該做/.test(x)) && yp[1].some(x => /下次 2032/.test(x)), yp.map(x => x.filter(y => /大腸鏡/.test(y)).join('/')).join('｜'));
   check('疫苗：42 歲流感自費；68 歲肺炎鏈球菌公費、帶狀皰疹', yp[0].some(x => /^流感疫苗\|自費/.test(x)) && yp[1].some(x => /^肺炎鏈球菌疫苗\|公費/.test(x)) && yp[1].some(x => /帶狀皰疹/.test(x)), yp[1].join(' / ').slice(0, 120));
   await page.evaluate(() => openMemberEdit('z', 'vax')); await page.waitForTimeout(400);
-  await page.click('#m-vax .chip[data-k="flu"]'); await page.click('#m-lim .chip[data-k="back"]'); await page.click('#m-save'); await page.waitForTimeout(300);
+  await page.click('#m-vax .chip[data-k="flu"]'); await page.click('#m-tabs [data-t="fit"]'); await page.click('#m-lim .chip[data-k="back"]'); await page.click('#m-save'); await page.waitForTimeout(300);
   const sv = await page.evaluate(() => ({ vax: me().vax, lim: me().fit.lim, flu: yearPlan(me()).items.some(o => o.t === '流感疫苗') }));
   check('成員表單可存疫苗紀錄與運動限制；打過流感就不再列', sv.vax.flu === (new Date().getMonth() >= 9 ? new Date().getFullYear() : new Date().getFullYear() - 1) && sv.lim.includes('back') && !sv.flu, JSON.stringify(sv));
   const cb = await page.evaluate(() => { const c = cleanBackup({ members: [{ id: 'q', name: 'x', sex: 'm', birth: '1990-01-01', goal: '<x>', fit: { lim: ['knee', '<img>'], lvl: 'zzz', days: 99, like: ['run', 'evil'] }, vax: { flu: 'abc', zzz: 2020, pneu: 2020 } }] }).mem[0]; return { g: c.goal, lim: c.fit.lim, lvl: c.fit.lvl, days: c.fit.days, like: c.fit.like, vax: c.vax } });
@@ -248,6 +248,50 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   const cd = await page.evaluate(() => cleanBackup({ members: [{ id: 'q', name: 'x', sex: 'm', birth: '1990-01-01', diet: { no: ['beef', '<x>'], ban: ['l1', 'zzz', '<img>'] } }] }).mem[0].diet);
   check('備份檔的「不吃的食物」會被清洗', JSON.stringify(cd) === '{"no":["beef"],"ban":["l1"]}', JSON.stringify(cd));
   await page.close();
+
+  // =============== 6d. 報告項目對應、體脂計 vs 醫院、設定分頁、自動補圖 ===============
+  const X = (name, value, unit, ref, flag, lo, hi) => ({ name, value, unit, ref, flag, lo, hi });
+  page = await newPage({ members: [{ id: 'z', name: '宗鑫', sex: 'm', birth: '1984-03-15', h: 172, w: 73.1, act: '1.375', goal: 'auto', life: { smoke: 'never', betel: 'never', alc: 'none' } }], active: 'z',
+    labs: { z: [{ id: 'l', t: `${new Date().getFullYear()}-09-14`, hospital: '台安', items: { us_liver: { v: '輕度脂肪肝' }, cxr: { v: '輕微變化（如主動脈鈣化、陳舊病灶）' } }, extra: [
+      X('身體質量指數BMI', '24.8', '', '18.5~24', '*', 18.5, 24), X('右眼壓', '9', 'mmHg', '0~20', '', 0, 20), X('糞便潛血檢驗值(免疫法)', '50', 'ng/mL', '<100', '', null, 100), X('超壞膽固醇(sdLDL)', '30.2', 'mg/dL', '<30', '*', null, 30),
+      X('骨質密度攝影檢查', '-0.2', '', '>-1.0', '', -1, null), X('骨質密度攝影檢查(右股骨頭)', '-0.4', '', '>-1.0', '', -1, null), X('體脂肪質量', '16.8', 'kg', '7.3~14.5', '', 7.3, 14.5), X('腰臀圍比', '0.87'), X('體脂肪率', '23.2', '%'), X('體重', '73.1', 'kg'),
+      X('白蛋白/球蛋白比(A/G)', '1.7', 'mg/dl', '1.0~2.5', '', 1, 2.5), X('腰圍(InBody)', '83.7', 'cm'), X('肺功能檢查', '正常')] }] },
+    scale: { z: [{ id: 's', t: `${new Date().getFullYear()}-10-11T20:57`, device: '小米', weight: 74.6, bmi: 24.9, fat: 21, fatMass: 15.7, visceral: 6, whr: 1, status: { bmi: '標準', whr: '偏高' } }] } });
+  const mg = await page.evaluate(() => { const L = LABS.z[0], pl = yearPlan(me()).items; return { it: Object.keys(L.items).join(), dxa: L.items.dxa?.v, alb: !!L.items.alb, ev: labEval(L, me()).map(i => i.k).join(), ex: L.extra.map(e => e.name).join('、'), plan: pl.map(o => o.t + '｜' + o.why).join(' / '), sec: SECS[0] } });
+  check('舊報告「其他項目」搬回正式項目：糞便潛血、眼壓、骨密度取最低、sdLDL、InBody', /fobt/.test(mg.it) && /iop/.test(mg.it) && mg.dxa === -0.4 && /sdldl/.test(mg.it) && /bia_fm/.test(mg.it) && /wt/.test(mg.it), mg.it);
+  check('「白蛋白/球蛋白比」不會被當成白蛋白；肺功能留在其他項目', !mg.alb && /白蛋白\/球蛋白比/.test(mg.ex) && /肺功能/.test(mg.ex), mg.ex);
+  check('BMI、體脂肪量只記錄不再叫你「複驗」；sdLDL 列入血脂追蹤', !/複驗 (身體質量|體脂肪|BMI)/.test(mg.plan) && /血脂/.test(mg.plan) && mg.ev === 'us_liver,cxr,sdldl', mg.ev);
+  check('今年的報告不說「去年」；胸部 X 光輕微變化不追加 CT', !/去年/.test(mg.plan) && /這次報告/.test(mg.plan) && /下次健檢再照/.test(mg.plan) && !/低劑量 CT/.test(mg.plan) && mg.sec === '追蹤報告異常', mg.plan.slice(0, 80));
+  const cmp = await page.evaluate(() => { const r = scalesOf(me())[0]; openScaleDetail(r.id); const t = document.querySelector('#sheetBody').textContent; closeSheet(); return { whr: scaleEval(r, me()).some(i => i.k === 'whr'), t } });
+  check('體脂計 vs 醫院 InBody：逐項比較、指出腰臀比是推算、BMI 身高設定', /和醫院 InBody 比較/.test(cmp.t) && /腰臀比差很多/.test(cmp.t) && /身高設定/.test(cmp.t) && /國際標準/.test(cmp.t) && !cmp.whr, cmp.whr ? '腰圍正常卻仍判腰臀比' : '');
+  await page.click('#nav button[data-v="body"]'); await page.click('#v-body [data-addlab]'); await page.waitForTimeout(400); await page.click('details.box.ai > summary');
+  await page.fill('#ai-in', JSON.stringify({ type: 'nutricore.lab', v: 1, date: '2026-09-14', items: { '骨質密度攝影檢查(左股骨頭)': { value: -0.1 }, '骨質密度攝影檢查(右股骨頭)': { value: -0.4 }, '右眼壓': { value: 9 }, '左眼壓': { value: 12 }, '白蛋白/球蛋白比(A/G)': { value: 1.7 }, '握力 右手': { value: 36, unit: 'kgf' } } }));
+  await page.click('#ai-go'); await page.waitForTimeout(200);
+  const imp = await page.evaluate(() => ({ dxa: $('#l-dxa').value, iop: $('#l-iop').value, alb: $('#l-alb')?.value || '', grip: $('#l-grip_r')?.value, ex: lExtra.map(e => e.name).join() }));
+  check('匯入：多個骨密度取最低、兩眼取較高眼壓、A/G 比放其他項目、握力對到', imp.dxa === '-0.4' && imp.iop === '12' && !imp.alb && /白蛋白/.test(imp.ex) && imp.grip === '36', JSON.stringify(imp));
+  await page.evaluate(() => closeSheet()); await page.waitForTimeout(200);
+  await page.click('#gearBtn'); await page.waitForTimeout(400);
+  const st1 = await page.evaluate(() => ({ title: document.querySelector('#sheetBody h3').textContent, vis: [...document.querySelectorAll('#sheetBody .tabp')].filter(p => !p.hidden).map(p => p.dataset.t).join(), smoke: $('#m-smokebox').offsetParent === null }));
+  await page.click('#m-tabs [data-t="app"]'); await page.waitForTimeout(150);
+  const st2 = await page.evaluate(() => ({ vis: [...document.querySelectorAll('#sheetBody .tabp')].filter(p => !p.hidden).map(p => p.dataset.t).join(), save: $('#m-actions').offsetParent === null, exp: !!document.querySelector('#sheetBody [data-export]') }));
+  check('右上角 ⚙️ 設定：分頁一次只顯示一頁，App 設定頁藏起儲存鈕；沒吸菸時不顯示包數', /設定・宗鑫/.test(st1.title) && st1.vis === 'basic' && st1.smoke && st2.vis === 'app' && st2.save && st2.exp, JSON.stringify([st1, st2]));
+  await page.close();
+  // 自動補齊全部菜色圖片：一次只跑一張、做完自動接下一張；連續失敗 3 次暫停（假時鐘快轉）
+  horde.mode = 'ok'; let jobs = 0, maxOpen = 0, open = 0;
+  await ctx.route('https://aihorde.net/api/v2/generate/async', async r => { jobs++; open++; maxOpen = Math.max(maxOpen, open); horde.checks = 0; horde.prompts.push(JSON.parse(r.request().postData()).prompt); return r.fulfill({ status: 202, json: { id: 'job' + jobs } }) });
+  await ctx.route('https://aihorde.net/api/v2/generate/status/**', async r => { if (r.request().method() === 'GET') open--; return r.fallback() });
+  page = await newPage({ members: [{ id: 'g1', name: '我', sex: 'm', birth: '1990-01-01', h: 170, w: 65, act: '1.375', goal: 'keep' }], active: 'g1' }, { clock: true });
+  await toLab(); await page.click('#genMissing');
+  for (let i = 0; i < 40 && jobs < 3; i++) { await page.clock.fastForward(10000); await page.waitForTimeout(80) }
+  const au = await page.evaluate(() => ({ on: JSON.parse(localStorage.getItem('nc_autoimg')), have: FOODS.filter(f => imgSrc(f.id)).length, txt: $('#autoImg').textContent }));
+  check('自動補齊全部菜色圖片：做完一張自動接下一張、永遠只有一張在跑、開關會記住', jobs >= 3 && maxOpen === 1 && au.on === true && au.have >= 2 && /已有圖片 \d+ \/ \d+/.test(au.txt), `已送 ${jobs} 張、同時最多 ${maxOpen}、已有 ${au.have}`);
+  horde.mode = 'fail'; const j0 = jobs;
+  for (let i = 0; i < 120 && !(await page.evaluate(() => autoPause)); i++) { await page.clock.fastForward(10000); await page.waitForTimeout(60) }
+  const ap = await page.evaluate(() => ({ p: !!autoPause, txt: $('#autoImg').textContent })); const j1 = jobs;
+  for (let i = 0; i < 20; i++) { await page.clock.fastForward(10000); await page.waitForTimeout(40) }
+  check('連續失敗 3 次 → 自動補圖暫停，不再送出', ap.p && /暫停/.test(ap.txt) && jobs === j1, `失敗期間送了 ${j1 - j0} 張，暫停後又送 ${jobs - j1} 張`);
+  horde.mode = 'ok'; await page.close();
+  await ctx.unroute('https://aihorde.net/api/v2/generate/async'); await ctx.unroute('https://aihorde.net/api/v2/generate/status/**');
 
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');

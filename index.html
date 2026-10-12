@@ -17,6 +17,7 @@
   --r:20px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
 html,body{background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;font-size:15px}
 body{min-height:100vh;padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 96px);
   background:radial-gradient(600px 400px at 90% -10%,rgba(34,228,255,.18),transparent 60%),
@@ -27,6 +28,10 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.25;
 header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;position:relative;gap:10px}
 .logo{font-weight:800;font-size:22px;letter-spacing:.5px}
 .logo b{background:linear-gradient(90deg,var(--cyan),var(--lime));-webkit-background-clip:text;background-clip:text;color:transparent}
+.gear{flex:0 0 38px;height:38px;border-radius:50%;background:var(--glass);border:1px solid var(--line);color:var(--text);display:grid;place-items:center}.gear svg{width:20px;height:20px}
+.tabs{display:flex;gap:6px;overflow-x:auto;position:sticky;top:-8px;z-index:3;background:#0e1830;padding:10px 0 8px;margin:6px 0 4px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:0 0 auto;padding:8px 13px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--mute);font-size:13px}
+.tabs button.on{background:linear-gradient(90deg,rgba(34,228,255,.25),rgba(182,255,60,.18));color:var(--text);border-color:rgba(34,228,255,.5);font-weight:700}
 .mchip{display:flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:4px 12px 4px 4px;font-size:13px;max-width:62%;white-space:nowrap;overflow:hidden}
 .mchip .sub{margin-left:2px}
 .av{flex:0 0 28px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;color:#04121a}
@@ -232,7 +237,8 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 <body>
 <header>
   <div class="logo">Nutri<b>Core</b></div>
-  <button class="mchip" id="memChip" aria-label="切換成員"></button>
+  <div style="display:flex;gap:8px;align-items:center;min-width:0"><button class="mchip" id="memChip" aria-label="切換成員" style="max-width:56vw"></button>
+    <button class="gear" id="gearBtn" aria-label="設定"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button></div>
 </header>
 
 <!-- 總覽 -->
@@ -328,7 +334,8 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
     <h2>圖庫（每道菜只生成一次）</h2>
     <div id="genState" style="margin-bottom:10px"></div>
     <div class="gallery" id="gallery"></div>
-    <button class="btn ghost" id="genMissing">補齊今日菜單缺圖（排隊生成）</button>
+    <div id="autoImg" style="margin-top:12px"></div>
+    <button class="btn" id="genMissing"></button>
   </div>
 </section>
 
@@ -621,6 +628,7 @@ const LAB=[
  {g:'血脂',k:'tg',n:'三酸甘油酯',s:'三酸甘油酯',u:'mg/dL',H:[149,200,500],o:'vessel',d:'新陳代謝科',hi:'≥500 有急性胰臟炎風險'},
  {g:'血脂',k:'hdl',n:'高密度膽固醇 HDL',s:'HDL',u:'mg/dL',L:{m:[40,35,25],f:[50,40,30]},o:'vessel',d:'心臟內科',lo:'好的膽固醇偏低，規律有氧運動可提升'},
  {g:'血脂',k:'ldl',n:'低密度膽固醇 LDL',s:'LDL',u:'mg/dL',H:[129,160,190],o:'vessel',d:'心臟內科',hi:'壞的膽固醇偏高，動脈硬化風險上升'},
+ {g:'血脂',k:'sdldl',n:'小而密低密度膽固醇 sdLDL',s:'sdLDL',u:'mg/dL',H:[35,50,70],o:'vessel',d:'心臟內科',hi:'小而密的壞膽固醇，比一般 LDL 更容易鑽進血管壁；少精緻糖與飽和脂肪、減重、運動可降低'},
  {g:'血脂',k:'lpa',n:'脂蛋白(a) Lp(a)',s:'Lp(a)',u:'mg/dL',H:[30,50,180],o:'vessel',d:'心臟內科',hi:'Lp(a) 主要由遺傳決定，偏高者心血管風險上升，其他血脂要控制得更嚴格'},
  {g:'肝膽',k:'ast',n:'GOT (AST)',s:'GOT',u:'U/L',H:[40,80,200],o:'liver',d:'腸胃肝膽科',hi:'肝指數偏高，常見於脂肪肝、飲酒、藥物'},
  {g:'肝膽',k:'alt',n:'GPT (ALT)',s:'GPT',u:'U/L',H:[40,80,200],o:'liver',d:'腸胃肝膽科',hi:'肝指數偏高，常見於脂肪肝、肝炎、藥物'},
@@ -725,11 +733,20 @@ const LAB=[
  {g:'影像與檢查',k:'breastus',n:'乳房超音波',s:'乳房超音波',t:'opt',sex:'f',O:BIRADS,o:'breast',d:'乳房外科'},
  {g:'影像與檢查',k:'pap',n:'子宮頸抹片',s:'子宮頸抹片',t:'opt',sex:'f',O:[['正常（陰性）',0],['發炎／反應性變化',0],['ASC-US（意義未明）',1,'加做 HPV 或 6–12 個月複驗'],['LSIL（輕度病變）',2,'請婦產科做陰道鏡'],['ASC-H／HSIL 以上',3,'請儘速婦產科陰道鏡切片']],o:'pelvis',d:'婦產科'},
  {g:'影像與檢查',k:'hpv',n:'HPV 檢測',s:'HPV',t:'opt',sex:'f',O:[['陰性',0],['陽性（非 16／18 型）',1,'依抹片結果追蹤'],['16／18 型陽性',2,'請婦產科做陰道鏡']],o:'pelvis',d:'婦產科'},
- {g:'影像與檢查',k:'fundus',n:'眼底攝影',s:'眼底',t:'opt',O:[['正常',0],['輕微異常',1],['視網膜病變／疑似青光眼',2,'請眼科追蹤']],o:'eye',d:'眼科'}
+ {g:'影像與檢查',k:'fundus',n:'眼底攝影',s:'眼底',t:'opt',O:[['正常',0],['輕微異常',1],['視網膜病變／疑似青光眼',2,'請眼科追蹤']],o:'eye',d:'眼科'},
+ {g:'身體組成（InBody）',k:'ht',n:'身高',t:'qi',u:'cm'},{g:'身體組成（InBody）',k:'wt',n:'體重',t:'qi',u:'kg'},{g:'身體組成（InBody）',k:'bmi',n:'BMI',t:'qi',u:''},
+ {g:'身體組成（InBody）',k:'bia_fat',n:'體脂肪率',t:'qi',u:'%'},{g:'身體組成（InBody）',k:'bia_fm',n:'體脂肪量',t:'qi',u:'kg'},{g:'身體組成（InBody）',k:'bia_smm',n:'骨骼肌量',t:'qi',u:'kg'},
+ {g:'身體組成（InBody）',k:'bia_bmr',n:'基礎代謝率',t:'qi',u:'kcal'},{g:'身體組成（InBody）',k:'bia_whr',n:'腰臀圍比',t:'qi',u:''},{g:'身體組成（InBody）',k:'phase',n:'相位角',t:'qi',u:'°'},
+ {g:'身體組成（InBody）',k:'vfa',n:'內臟脂肪面積',s:'內臟脂肪面積',u:'cm²',H:[100,150,200],o:'abdomen',d:'家醫科',hi:'內臟脂肪面積 ≥100 cm² 為內臟型肥胖，代謝症候群與脂肪肝風險上升'},
+ {g:'身體組成（InBody）',k:'asmi',n:'四肢骨骼肌質量指數 ASMI',s:'ASMI',u:'kg/m²',L:{m:[7,6,5],f:[5.7,5,4.5]},d:'家醫科',lo:'低於亞洲肌少症標準（男 <7.0、女 <5.7）：加強肌力訓練與蛋白質'},
+ {g:'身體組成（InBody）',k:'grip_r',n:'握力（右手）',s:'右手握力',u:'kg',L:{m:[28,22,16],f:[18,14,10]},d:'家醫科',lo:'握力低於參考值；男 <28、女 <18 kg 是肌少症警訊'},
+ {g:'身體組成（InBody）',k:'grip_l',n:'握力（左手）',s:'左手握力',u:'kg',L:{m:[28,22,16],f:[18,14,10]},d:'家醫科',lo:'握力低於參考值；男 <28、女 <18 kg 是肌少症警訊'},
 ];
 const LABK=Object.fromEntries(LAB.map(x=>[x.k,x]));
 const LSHORT=Object.fromEntries(LAB.filter(x=>x.s).map(x=>[x.k,x.s]));
-const ALIAS={glu:['空腹血糖','飯前血糖','血糖','glucoseac','glucose','fbg','ac'],hba1c:['糖化血色素','糖化血紅素','hba1c','a1c'],
+const ALIAS={sdldl:['小而密低密度膽固醇','超壞膽固醇','sdldl','smalldenseldl'],vfa:['內臟脂肪面積','visceralfatarea','vfa'],asmi:['四肢骨骼肌質量指數','asmi'],
+  grip_r:['右手握力','握力右手','握力右'],grip_l:['左手握力','握力左手','握力左'],ht:['身高','height'],wt:['體重','weight'],bmi:['身體質量指數','bmi'],bia_fat:['體脂肪率','體脂率'],bia_fm:['體脂肪量','體脂肪質量'],
+  bia_smm:['骨骼肌量','骨骼肌質量'],bia_bmr:['基礎代謝率','基礎代謝','bmr'],bia_whr:['腰臀圍比','腰臀比'],phase:['相位角','phaseangle'],glu:['空腹血糖','飯前血糖','血糖','glucoseac','glucose','fbg','ac'],hba1c:['糖化血色素','糖化血紅素','hba1c','a1c'],
  pcg:['飯後血糖','飯後兩小時血糖','glucosepc','pc','2hpg','2hpc'],ins:['胰島素','空腹胰島素','insulin'],
  tc:['總膽固醇','cholesterol','tcho','t-cho','tc'],tg:['三酸甘油酯','三酸甘油脂','甘油三酯','triglyceride','tg'],
  hdl:['高密度膽固醇','高密度脂蛋白膽固醇','高密度脂蛋白','hdl','hdl-c'],ldl:['低密度膽固醇','低密度脂蛋白膽固醇','低密度脂蛋白','ldl','ldl-c'],lpa:['lp(a)','lpa','脂蛋白a','脂蛋白(a)'],
@@ -751,7 +768,7 @@ const ALIAS={glu:['空腹血糖','飯前血糖','血糖','glucoseac','glucose','
  amy:['澱粉酶','amylase','amy'],lip:['脂肪酶','lipase','lip'],cea:['cea','癌胚抗原'],ca199:['ca19-9','ca199'],ca724:['ca72-4','ca724'],cyfra:['cyfra21-1','cyfra','cyfra211'],nse:['nse','神經元特異性烯醇化酶'],
  scc:['scc','鱗狀上皮細胞癌抗原'],ebv:['ebv','eb病毒','ebvvca-iga','eb病毒抗體','鼻咽癌篩檢'],psa:['psa','攝護腺特異抗原','前列腺特異抗原','totalpsa'],fpsa:['freepsa','fpsa','游離psa'],
  ca125:['ca-125','ca125'],ca153:['ca15-3','ca153'],hp:['幽門桿菌','幽門螺旋桿菌','h.pylori','hpylori','hp'],rf:['類風濕因子','rf'],ana:['抗核抗體','ana'],
- fobt:['糞便潛血','fobt','fit','ifobt'],iop:['眼壓','iop'],dxa:['骨密度','tscore','t值','bmd'],testo:['睪固酮','testosterone'],waist:['腰圍','waist'],pulse:['脈搏','心跳','pulse','hr'],
+ fobt:['糞便潛血','糞便潛血檢驗值','糞便潛血檢查','免疫法糞便潛血','fobt','fit','ifobt'],iop:['眼壓','右眼壓','左眼壓','眼內壓','iop'],dxa:['骨密度','骨質密度','骨質密度攝影檢查','骨密度檢查','骨密度t值','tscore','t值','bmd'],testo:['睪固酮','testosterone'],waist:['腰圍','waist'],pulse:['脈搏','心跳','pulse','hr'],
  us_liver:['腹部超音波','肝臟超音波','肝超音波'],us_gb:['膽囊超音波','膽囊'],us_kidney:['腎臟超音波','腎超音波'],cxr:['胸部x光','胸部x光檢查','cxr','chestx-ray'],ldct:['低劑量電腦斷層','ldct','低劑量胸部電腦斷層'],
  ekg:['心電圖','ekg','ecg'],gastro:['胃鏡','上消化道內視鏡'],colono:['大腸鏡','大腸鏡檢查'],thyus:['甲狀腺超音波'],mammo:['乳房攝影','乳房x光攝影','mammography'],breastus:['乳房超音波'],
  pap:['子宮頸抹片','抹片','pap'],hpv:['hpv','人類乳突病毒'],fundus:['眼底攝影','眼底'],
@@ -810,7 +827,7 @@ function devLv(s){if(!s)return 0;s=String(s);for(const[k,v]of DEVW)if(s.includes
 function scaleEval(rec,m){
   const a=ageOf(m),male=m.sex!=='f',kid=a<18,st=rec.status||{},out=[];
   // 體脂機是生物電阻估算的慢性指標：最高只到「異常」，不觸發「1–2 週內就診」與分數上限
-  const push=(k,lv,msg,organ,dept)=>{const d=devLv(st[k]),L=Math.min(2,Math.max(lv,d));if(!L)return;
+  const push=(k,lv,msg,organ,dept,cap=2)=>{const d=devLv(st[k]),L=Math.min(cap,Math.max(lv,d));if(!L)return;
     out.push({src:'體脂',k,name:SFN[k].n,short:SFN[k].n,val:rec[k],unit:SFN[k].u,lv:L,msg:lv?msg:`設備判定「${st[k]}」`,dev:st[k]||null,organ,dept})};
   const v=k=>rec[k];
   if(v('bmi')!=null){const b=v('bmi');let lv,msg;
@@ -822,7 +839,9 @@ function scaleEval(rec,m){
   if(v('visceral')!=null){const x=v('visceral'),lv=x>=15?2:x>=10?1:0;
     push('visceral',lv,'內臟脂肪過高，代謝症候群與脂肪肝風險上升','abdomen','家醫科');
     if(Math.max(lv,devLv(st.visceral))>=1)out.push({src:'體脂',k:'visceral_liver',name:'內臟脂肪 → 脂肪肝風險',short:'內臟脂肪',val:x,unit:'級',lv:1,msg:'建議腹部超音波確認是否有脂肪肝',organ:'liver',dept:'腸胃肝膽科'})}
-  if(v('whr')!=null){const x=v('whr');push('whr',male?(x>=1?2:x>=.9?1:0):(x>=.95?2:x>=.85?1:0),'腰臀比偏高（中央型肥胖，WHO 男 ≥0.9、女 ≥0.85）','abdomen','家醫科')}
+  // 腳踩式體脂計量不到腰圍、臀圍，腰臀比是推算的：最多判到「注意」；有實際量的腰圍且正常就不判
+  if(v('whr')!=null){const x=v('whr'),wst=+m.waist||num(labsOf(m)[0]?.items?.waist?.v);
+    if(!(wst&&wst<(male?90:80)))push('whr',male?(x>=.9?1:0):(x>=.85?1:0),`體脂計推算的腰臀比（不是實際量測），僅供參考；請用皮尺在肚臍高度量腰圍：${male?'男 ≥90':'女 ≥80'} cm 才算腹部肥胖`,'abdomen','家醫科',1)}
   if(v('hr')!=null){const x=v('hr');push('hr',x>120?2:x>100?1:x<50?1:0,x<50?'心率偏慢（運動員可能正常）':'靜止心率偏快','heart','心臟內科')}
   if(v('waterRate')!=null&&!kid)push('waterRate',v('waterRate')<(male?50:45)?1:0,'體水分偏低，注意補水',null,null);
   if(v('bodyAge')!=null&&!kid)push('bodyAge',v('bodyAge')>=a+5?1:0,'身體年齡高於實際年齡 5 歲以上',null,null);
@@ -891,7 +910,7 @@ function nutriPlan(m){
   if(c.goal==='cut')add({ic:'🔥',t:'減脂',why:c.sg.why.join('、')||'目標設定為減脂',do:[`每天約 ${Math.round(c.target)} kcal，用「211 餐盤」：半盤蔬菜、¼ 蛋白質、¼ 全穀`,'每餐一個手掌大的蛋白質，飽足感高、減脂不掉肌肉','炸物、勾芡、濃湯、含糖飲料先停','晚餐 7 點前吃完，睡前 3 小時不進食'],eat:['燙青菜','魚、雞胸、豆腐、蛋','地瓜、糙米'],avoid:['炸雞排','手搖飲','宵夜']},[],['oil']);
   if(c.goal==='bulk')add({ic:'💪',t:a<18?'成長':'增肌增重',why:c.sg.why.join('、'),do:[`每天約 ${Math.round(c.target)} kcal，三餐＋2 次點心`,`蛋白質 ${Math.round(c.prot)} g，平均分到 4–5 餐（每餐 20–40 g）`,'重訓後 2 小時內吃蛋白質＋碳水（例：香蕉＋無糖豆漿）','睡前可吃無糖優格或豆花'],eat:['蛋、豆漿、優格','雞腿、牛肉、魚','香蕉、地瓜、燕麥'],avoid:['只吃澱粉不吃蛋白質']},['ca']);
   if(sugar||visc||lv('tg'))add({ic:'🩸',t:'控糖',why:why(['glu','hba1c','pcg','ins','homa','uglu','tg'])||`內臟脂肪 ${s?.visceral}（胰島素阻抗風險）`,do:['吃飯順序：先菜、再肉、最後飯，血糖升得慢','白飯換糙米／五穀／地瓜，一餐半碗到八分滿','戒含糖飲料（手搖飲一杯約 10 顆方糖）','水果一天 2 份、每份一個拳頭，不打成果汁','飯後散步 10–15 分鐘，降血糖效果最好'],eat:['糙米、燕麥、地瓜','芭樂、番茄','毛豆、豆腐'],avoid:['含糖飲料、果汁','白粥、麵包、甜點','勾芡、糖醋']},['fib'],['hc']);
-  if(lv('ldl')||lv('tc')||lv('lpa'))add({ic:'🫀',t:'降壞膽固醇',why:why(['ldl','tc','lpa']),do:['少飽和脂肪：肥肉、雞皮、豬油、奶油、椰子油、香腸培根','每天一碗燕麥或一份豆類（可溶性纖維降 LDL）','堅果一天一湯匙（約 10 顆杏仁）','魚每週至少 2 次，蒸、煮、烤'],eat:['燕麥、豆類','鯖魚、鮭魚','無調味堅果'],avoid:['肥肉、雞皮','加工肉','酥皮、奶油麵包']},['fib','fish'],['oil']);
+  if(lv('ldl')||lv('tc')||lv('lpa')||lv('sdldl'))add({ic:'🫀',t:'降壞膽固醇',why:why(['ldl','sdldl','tc','lpa']),do:['少飽和脂肪：肥肉、雞皮、豬油、奶油、椰子油、香腸培根','每天一碗燕麥或一份豆類（可溶性纖維降 LDL）','堅果一天一湯匙（約 10 顆杏仁）','魚每週至少 2 次，蒸、煮、烤'],eat:['燕麥、豆類','鯖魚、鮭魚','無調味堅果'],avoid:['肥肉、雞皮','加工肉','酥皮、奶油麵包']},['fib','fish'],['oil']);
   if(lv('tg'))add({ic:'🧈',t:'降三酸甘油酯',why:why(['tg']),do:['甜食、精製澱粉、果汁、酒精是三酸甘油酯的主因，先減這些','鯖魚、鮭魚、秋刀魚每週 2–3 次（Omega-3）','晚餐澱粉減量'],eat:['青背魚','蔬菜'],avoid:['酒','甜點、果汁','精緻澱粉']},['fish'],['hc']);
   if(lv('hdl'))add({ic:'⬆️',t:'提升好膽固醇',why:why(['hdl']),do:['每週 150 分鐘有氧運動最能提升 HDL','用橄欖油、苦茶油、堅果取代動物油','戒菸'],eat:['橄欖油、苦茶油','酪梨、堅果'],avoid:['反式脂肪（酥油、奶精）']});
   if(lv('sbp')||lv('dbp'))add({ic:'🧂',t:'降血壓（得舒飲食）',why:why(['sbp','dbp']),do:['鹽一天 ≤5 g（鈉 2000 mg）：湯不喝完、醬料減半、少加工食品',kid||lv('k')?'蔬菜天天吃，但鉀要依腎功能控制':'得舒飲食：每天 5 份蔬菜＋2 份水果＋1.5 杯低脂乳','體重每減 1 kg，收縮壓約降 1 mmHg','酒一天最多 1 杯'],eat:['深綠蔬菜','低脂乳、豆漿','新鮮肉魚'],avoid:['泡麵、罐頭、醃漬物','火鍋湯、拉麵湯','香腸、火腿']},kid||lv('k')?[]:['kf'],['salt']);
@@ -1004,7 +1023,7 @@ const fhText=m=>{const f=fhOf(m),n=(a,ks)=>ks.map(k=>(a.find(x=>x[0]===k)||[,k])
    大腸癌 45–74（一等親大腸癌 40–44）每 2 年；胃癌幽門桿菌 45–74 終身一次（2026 起）；乳癌 40–74 每 2 年；子宮頸抹片 25–29 每 3 年、30+ 每年；
    HPV 35／45／65 歲；口腔癌 30+ 吸菸或嚼檳榔（原住民 18+ 嚼檳榔）每 2 年；肺癌 LDCT 一等親肺癌（男 45、女 40 起）或 50–74 歲 ≥20 包年且戒菸未滿 15 年，每 2 年 */
 const PRT=['','優先','今年','可考慮'];
-const SECS=['追蹤去年異常','數值趨勢','公費篩檢（國健署）','家族史與生活習慣','定期檢查（成人）','疫苗建議','報告沒驗、建議補上'];
+const SECS=['追蹤報告異常','數值趨勢','公費篩檢（國健署）','家族史與生活習慣','定期檢查（成人）','疫苗建議','報告沒驗、建議補上'];
 const dayDiff=(a,b)=>Math.abs(new Date(a+'T00:00')-new Date(b+'T00:00'))/864e5;
 function yearPlan(m){
   const a=Math.floor(ageOf(m)),fem=m.sex==='f',fh=fhOf(m),lf=lifeOf(m),labs=labsOf(m),L=labs[0],P=L&&labs.find(r=>r!==L&&dayDiff(r.t,L.t)>=180);
@@ -1016,42 +1035,44 @@ function yearPlan(m){
   const out=[],done=new Set(),add=(sec,pr,t,why,ch,when)=>{if(!out.some(o=>o.t===t))out.push({sec,pr,t,why,ch,when})};
   const rule=(ks,fn)=>{if(ks.some(k=>lvOf(k)>0)){ks.forEach(k=>done.add(k));fn(mx(...ks),names(ks))}};
   const pk=packYears(lf),smoker=lf.smoke!=='never',betel=lf.betel!=='never',heavy=pk>=20&&(lf.smoke==='current'||(+lf.quit||0)<15);
-  const S=SECS;
+  const S=SECS,ago=L?(L.t.slice(0,4)===String(new Date().getFullYear())?'這次報告':L.t.slice(0,4)+' 年報告'):'';
 
   // ① 追蹤去年異常
-  rule(['fobt'],()=>add(S[0],1,'大腸鏡檢查','去年糞便潛血陽性：要直接做大腸鏡，不要只重驗糞便','健保','3 個月內'));
+  rule(['fobt'],()=>add(S[0],1,'大腸鏡檢查','糞便潛血陽性：要直接做大腸鏡，不要只重驗糞便','健保','3 個月內'));
   rule(['hbsag','hbeag'],()=>add(S[0],1,'B 肝追蹤：肝功能＋腹部超音波＋AFP','B 肝帶原是肝癌高風險族群，需定期追蹤並評估是否用藥','健保','每 6–12 個月'));
   rule(['antihcv'],()=>add(S[0],1,'C 肝病毒量 HCV RNA','抗體陽性需確認是否仍有病毒；口服藥 8–12 週治癒率超過 95%','健保','儘快'));
-  rule(['ast','alt','ggt','alp','tbil','dbil','ubil','us_liver','us_gb'],(l,n)=>add(S[0],l>=2?1:2,'複驗肝功能＋腹部超音波',`去年 ${n}`,'健保／自費',l>=2?'1 個月內':'3–6 個月內'));
-  rule(['glu','hba1c','pcg','uglu','ins','homa'],(l,n)=>add(S[0],l>=2?1:2,'複驗空腹血糖＋糖化血色素 HbA1c',`去年 ${n}`,l>=2?'健保':'公費／自費',l>=2?'1 個月內新陳代謝科':'3–6 個月後'));
-  rule(['tc','tg','ldl','hdl','lpa'],(l,n)=>add(S[0],l>=2?1:2,'複驗空腹血脂（LDL、HDL、三酸甘油酯）',`去年 ${n}`,'公費／健保',l>=2?'1 個月內門診評估是否用藥':'飲食運動調整 3 個月後'));
-  rule(['sbp','dbp'],(l,n)=>add(S[0],l>=2?1:2,'居家血壓 722：連續 7 天、早晚各量 2 次',`去年 ${n}；診間血壓容易偏高，居家量測才準`,'自行量測','從今天開始'));
-  rule(['cr','egfr','bun','upro','uacr','us_kidney'],(l,n)=>add(S[0],l>=2?1:2,'複驗腎功能：肌酸酐／eGFR＋尿液＋UACR',`去年 ${n}；要隔 3 個月確認是否持續`,'健保','3 個月後'));
-  rule(['ua'],(l,n)=>add(S[0],l>=2?2:3,'複驗尿酸',`去年 ${n}`,'公費／健保','3–6 個月後'));
+  rule(['ast','alt','ggt','alp','tbil','dbil','ubil','us_liver','us_gb'],(l,n)=>add(S[0],l>=2?1:2,'複驗肝功能＋腹部超音波',`${ago} ${n}`,'健保／自費',l>=2?'1 個月內':'3–6 個月內'));
+  rule(['glu','hba1c','pcg','uglu','ins','homa'],(l,n)=>add(S[0],l>=2?1:2,'複驗空腹血糖＋糖化血色素 HbA1c',`${ago} ${n}`,l>=2?'健保':'公費／自費',l>=2?'1 個月內新陳代謝科':'3–6 個月後'));
+  rule(['tc','tg','ldl','sdldl','hdl','lpa'],(l,n)=>add(S[0],l>=2?1:2,'複驗空腹血脂（LDL、HDL、三酸甘油酯）',`${ago} ${n}`,'公費／健保',l>=2?'1 個月內門診評估是否用藥':'飲食運動調整 3 個月後'));
+  rule(['sbp','dbp'],(l,n)=>add(S[0],l>=2?1:2,'居家血壓 722：連續 7 天、早晚各量 2 次',`${ago} ${n}；診間血壓容易偏高，居家量測才準`,'自行量測','從今天開始'));
+  rule(['cr','egfr','bun','upro','uacr','us_kidney'],(l,n)=>add(S[0],l>=2?1:2,'複驗腎功能：肌酸酐／eGFR＋尿液＋UACR',`${ago} ${n}；要隔 3 個月確認是否持續`,'健保','3 個月後'));
+  rule(['ua'],(l,n)=>add(S[0],l>=2?2:3,'複驗尿酸',`${ago} ${n}`,'公費／健保','3–6 個月後'));
   if(lo('hb')){['hb','rbc','hct'].forEach(k=>done.add(k));
-    add(S[0],lvOf('hb')>=2?1:2,'貧血檢查：鐵蛋白、血清鐵、B12、葉酸',`去年 ${names(['hb','mcv','ferritin'])}`,'健保','1 個月內');
+    add(S[0],lvOf('hb')>=2?1:2,'貧血檢查：鐵蛋白、血清鐵、B12、葉酸',`${ago} ${names(['hb','mcv','ferritin'])}`,'健保','1 個月內');
     if(!fem||a>=50)add(S[0],1,'胃鏡＋大腸鏡（排除腸胃道出血）',`${fem?'停經後女性':'男性'}不明原因貧血，常見原因是腸胃道慢性出血`,'健保','與醫師討論')}
   rule(['mcv','mch','mchc','rdw','ferritin','fe','b12','folate'],(l,n)=>{if(lo('mcv')&&!lo('hb'))add(S[0],3,'海洋性貧血帶因檢查（血紅素電泳）',`${n}；台灣常見帶因者，計畫懷孕時夫妻都要驗`,'自費','有需要時');
-    else add(S[0],l>=2?2:3,'複驗鐵蛋白與血液常規',`去年 ${n}`,'健保','3 個月後')});
-  rule(['wbc','plt','neut','lymph','mono','eos','baso','rbc','hct','hb','esr'],(l,n)=>add(S[0],l>=2?1:2,'複驗血液常規＋白血球分類',`去年 ${n}`,'健保','1–3 個月後'));
-  rule(['tsh','ft4','t3','ft3','t4','antitpo','thyus'],(l,n)=>add(S[0],l>=2?1:2,lvOf('thyus')>=2?'甲狀腺結節：新陳代謝科評估細針穿刺':'複驗甲狀腺功能 TSH＋Free T4',`去年 ${n}`,'健保',l>=2?'1 個月內':'3–6 個月後'));
-  rule(['psa','psa_ratio','testo'],(l,n)=>add(S[0],l>=2?1:2,'泌尿科：複驗 PSA＋游離 PSA 比例',`去年 ${n}`,'健保／自費','1–3 個月內'));
-  rule(['cea','ca199','afp','ca125','ca153','cyfra','scc','ca724','nse'],(l,n)=>add(S[0],l>=2?1:2,'腫瘤標記偏高：依部位安排影像或內視鏡',`去年 ${n}；單獨偏高不等於癌症，需搭配檢查確認`,'健保','1 個月內門診'));
+    else add(S[0],l>=2?2:3,'複驗鐵蛋白與血液常規',`${ago} ${n}`,'健保','3 個月後')});
+  rule(['wbc','plt','neut','lymph','mono','eos','baso','rbc','hct','hb','esr'],(l,n)=>add(S[0],l>=2?1:2,'複驗血液常規＋白血球分類',`${ago} ${n}`,'健保','1–3 個月後'));
+  rule(['tsh','ft4','t3','ft3','t4','antitpo','thyus'],(l,n)=>add(S[0],l>=2?1:2,lvOf('thyus')>=2?'甲狀腺結節：新陳代謝科評估細針穿刺':'複驗甲狀腺功能 TSH＋Free T4',`${ago} ${n}`,'健保',l>=2?'1 個月內':'3–6 個月後'));
+  rule(['psa','psa_ratio','testo'],(l,n)=>add(S[0],l>=2?1:2,'泌尿科：複驗 PSA＋游離 PSA 比例',`${ago} ${n}`,'健保／自費','1–3 個月內'));
+  rule(['cea','ca199','afp','ca125','ca153','cyfra','scc','ca724','nse'],(l,n)=>add(S[0],l>=2?1:2,'腫瘤標記偏高：依部位安排影像或內視鏡',`${ago} ${n}；單獨偏高不等於癌症，需搭配檢查確認`,'健保','1 個月內門診'));
   rule(['ebv'],()=>add(S[0],1,'耳鼻喉科鼻咽內視鏡','EB 病毒抗體陽性（鼻咽癌篩檢）','健保','儘快'));
   rule(['hp'],()=>add(S[0],1,'幽門桿菌除菌治療，療程結束 4 週後複驗','除菌可大幅降低胃癌風險','健保','儘快'));
-  rule(['gastro','ca724'],(l,n)=>add(S[0],l>=3?1:2,'胃鏡追蹤',`去年 ${n}`,'健保',l>=3?'儘快':'每 1–3 年'));
-  rule(['colono'],(l,n)=>add(S[0],l>=3?1:3,'大腸鏡追蹤',`去年 ${n}`,'健保',l>=3?'儘快':'依瘜肉病理（腺瘤通常 3 年後）'));
-  rule(['uob','urbc'],(l,n)=>{const again=P&&(qLv(P.items?.uob?.v)>0||num(P.items?.urbc?.v)>3);add(S[0],again?1:2,again?'泌尿科：連續兩年尿潛血，需超音波與尿液細胞學':'複驗尿液＋尿沉渣（女性避開生理期）',`去年 ${n}`,'健保','1–3 個月後')});
-  rule(['unit','uleu','uwbc'],(l,n)=>add(S[0],2,'泌尿道感染評估（尿液培養）',`去年 ${n}`,'健保','有症狀時儘快'));
-  rule(['mammo','breastus','ca153'],(l,n)=>add(S[0],l>=2?1:2,'乳房追蹤：乳房外科',`去年 ${n}`,'健保',l>=3?'儘快切片評估':l>=2?'加做檢查':'6 個月後追蹤'));
-  rule(['pap','hpv'],(l,n)=>add(S[0],l>=2?1:2,'子宮頸追蹤：婦產科（陰道鏡／HPV）',`去年 ${n}`,'健保',l>=2?'1 個月內':'6–12 個月後複驗'));
-  rule(['ldct','cxr'],(l,n)=>add(S[0],l>=2?1:2,'胸部影像追蹤（低劑量 CT）',`去年 ${n}`,'健保',l>=3?'儘快胸腔科':l>=2?'3 個月後':'6 個月後'));
-  rule(['ekg','ntprobnp','pulse','hr'],(l,n)=>add(S[0],l>=2?1:2,'心臟內科：心電圖／心臟超音波',`去年 ${n}`,'健保','1–3 個月內'));
-  rule(['iop','fundus'],(l,n)=>add(S[0],2,'眼科：眼底＋視野檢查（排除青光眼）',`去年 ${n}`,'健保','3 個月內'));
-  rule(['dxa','vitd','ca'],(l,n)=>add(S[0],lvOf('dxa')>=2?1:3,lvOf('dxa')>=2?'骨質疏鬆治療評估（骨科／新陳代謝科）':'補鈣與維生素 D、負重運動，之後複驗',`去年 ${n}`,lvOf('dxa')>=2?'健保':'自費',lvOf('dxa')>=2?'1 個月內':'3 個月後複驗維生素 D、2 年後骨密度'));
-  rule(['na','k','cl','p','mg'],(l,n)=>add(S[0],l>=2?1:2,'複驗電解質',`去年 ${n}`,'健保',l>=2?'儘快':'3 個月後'));
-  rule(['hscrp','crp','hcy','ck','ldh'],(l,n)=>add(S[0],3,'發炎或肌肉指標改天複驗',`去年 ${n}；感冒、運動後都會暫時偏高`,'自費／健保','1–3 個月後'));
-  for(const i of iss)if(!done.has(i.k)){done.add(i.k);add(S[0],i.lv>=2?2:3,`複驗 ${i.short||i.name}`,`去年 ${i.short||i.name} ${typeof i.val==='number'?fmt(i.val):i.val}（${LVT[i.lv]}）`,'健保／自費',URG[i.lv])}
+  rule(['gastro','ca724'],(l,n)=>add(S[0],l>=3?1:2,'胃鏡追蹤',`${ago} ${n}`,'健保',l>=3?'儘快':'每 1–3 年'));
+  rule(['colono'],(l,n)=>add(S[0],l>=3?1:3,'大腸鏡追蹤',`${ago} ${n}`,'健保',l>=3?'儘快':'依瘜肉病理（腺瘤通常 3 年後）'));
+  rule(['uob','urbc'],(l,n)=>{const again=P&&(qLv(P.items?.uob?.v)>0||num(P.items?.urbc?.v)>3);add(S[0],again?1:2,again?'泌尿科：連續兩年尿潛血，需超音波與尿液細胞學':'複驗尿液＋尿沉渣（女性避開生理期）',`${ago} ${n}`,'健保','1–3 個月後')});
+  rule(['unit','uleu','uwbc'],(l,n)=>add(S[0],2,'泌尿道感染評估（尿液培養）',`${ago} ${n}`,'健保','有症狀時儘快'));
+  rule(['mammo','breastus','ca153'],(l,n)=>add(S[0],l>=2?1:2,'乳房追蹤：乳房外科',`${ago} ${n}`,'健保',l>=3?'儘快切片評估':l>=2?'加做檢查':'6 個月後追蹤'));
+  rule(['pap','hpv'],(l,n)=>add(S[0],l>=2?1:2,'子宮頸追蹤：婦產科（陰道鏡／HPV）',`${ago} ${n}`,'健保',l>=2?'1 個月內':'6–12 個月後複驗'));
+  rule(['ldct'],(l,n)=>add(S[0],l>=2?1:2,'胸部低劑量 CT 追蹤',`${ago} ${n}`,'健保',l>=3?'儘快胸腔科':l>=2?'3 個月後':'6 個月後'));
+  rule(['cxr'],(l,n)=>l>=2?add(S[0],l>=3?1:2,'胸腔科：胸部 X 光異常，安排電腦斷層確認',`${ago} ${n}`,'健保',l>=3?'儘快':'1 個月內')
+    :add(S[0],3,'胸部 X 光：下次健檢再照即可',`${ago} ${n}；主動脈鈣化代表血管老化，控制血壓、血脂、戒菸比追加檢查重要`,'—','下次健檢'));
+  rule(['ekg','ntprobnp','pulse','hr'],(l,n)=>add(S[0],l>=2?1:2,'心臟內科：心電圖／心臟超音波',`${ago} ${n}`,'健保','1–3 個月內'));
+  rule(['iop','fundus'],(l,n)=>add(S[0],2,'眼科：眼底＋視野檢查（排除青光眼）',`${ago} ${n}`,'健保','3 個月內'));
+  rule(['dxa','vitd','ca'],(l,n)=>add(S[0],lvOf('dxa')>=2?1:3,lvOf('dxa')>=2?'骨質疏鬆治療評估（骨科／新陳代謝科）':'補鈣與維生素 D、負重運動，之後複驗',`${ago} ${n}`,lvOf('dxa')>=2?'健保':'自費',lvOf('dxa')>=2?'1 個月內':'3 個月後複驗維生素 D、2 年後骨密度'));
+  rule(['na','k','cl','p','mg'],(l,n)=>add(S[0],l>=2?1:2,'複驗電解質',`${ago} ${n}`,'健保',l>=2?'儘快':'3 個月後'));
+  rule(['hscrp','crp','hcy','ck','ldh'],(l,n)=>add(S[0],3,'發炎或肌肉指標改天複驗',`${ago} ${n}；感冒、運動後都會暫時偏高`,'自費／健保','1–3 個月後'));
+  for(const i of iss)if(!done.has(i.k)){done.add(i.k);add(S[0],i.lv>=2?2:3,`複驗 ${i.short||i.name}`,`${ago} ${i.short||i.name} ${typeof i.val==='number'?fmt(i.val):i.val}（${LVT[i.lv]}）`,'健保／自費',URG[i.lv])}
 
   // ② 與一年前比較：還沒異常但一路往壞的方向走
   if(L&&P){const tr=[];
@@ -1611,7 +1632,9 @@ const ACTS=[['1.2','久坐（幾乎不運動）'],['1.375','輕度（每週 1–
 function openMemberEdit(id,focus){
   const ex=id?MEM.find(x=>x.id===id):null;
   const m=ex?{...ex}:{id:uid(),name:'',sex:'m',birth:'',h:'',w:'',waist:'',neck:'',hip:'',act:'1.375',goal:'auto'};if(!GOALT[m.goal])m.goal='auto';
-  openSheet(sheetHead(ex?'編輯成員':'新增成員','性別＋出生日期會自動判斷兒童／青少年／成人／長者')+`
+  const TABS=[['basic','基本資料'],['fh','家族史'],['fit','運動'],['diet','不吃的'],['vax','疫苗'],...(ex?[['app','App 設定']]:[])];
+  openSheet(sheetHead(ex?'設定・'+esc(m.name):'新增成員','')+`<div class="tabs" id="m-tabs" role="tablist">${TABS.map(([k,t])=>`<button data-t="${k}" role="tab">${t}</button>`).join('')}</div>
+    <div class="tabp" data-t="basic"><p class="note" style="margin-top:0">性別＋出生日期會自動判斷兒童／青少年／成人／長者</p>
     <label>名稱</label><input id="m-name" value="${esc(m.name)}" placeholder="例如：爸爸、小明" maxlength="12">
     <label>性別</label><div class="seg" id="m-sex"><button data-v="m">男</button><button data-v="f">女</button></div>
     <div class="grid2">
@@ -1627,9 +1650,9 @@ function openMemberEdit(id,focus){
     <label>目標</label><div class="seg" id="m-goal"><button data-v="auto">自動</button><button data-v="cut">減脂</button><button data-v="keep">維持</button><button data-v="bulk">增肌</button></div>
     <div class="note" style="margin-top:6px">自動＝營養師依 BMI、體脂、腰圍、肌肉量判斷${ex?`（目前建議：${GOALT[suggestGoal(m).goal]}）`:''}</div>
     <div class="note" id="m-kidnote"></div>
-    <p class="note">有體脂紀錄時，計算會自動改用最新一筆體脂機體重。</p>
+    <p class="note">有體脂紀錄時，計算會自動改用最新一筆體脂機體重。</p></div>
     ${(()=>{const fh=fhOf(m),lf=lifeOf(m),chips=(id,list,on)=>`<div class="chips" id="${id}">${list.map(([k,n])=>`<button type="button" class="chip${on.includes(k)?' on':''}" data-k="${k}">${n}</button>`).join('')}</div>`;
-      return `<details class="box" id="m-fhbox"${focus==='fh'||m.fh||m.life?' open':''}><summary>家族史與生活習慣 <span class="sub">影響今年健檢建議</span></summary>
+      return `<div class="tabp" id="m-fhbox" data-t="fh"><p class="note" style="margin-top:0">影響今年健檢建議（篩檢年齡與項目）</p>
       <label>一等親（父母、兄弟姊妹、子女）罹患過的癌症</label>${chips('m-fhca',FH_CA,fh.ca)}
       <div class="chips" style="margin-top:8px"><button type="button" class="chip${fh.early?' on':''}" id="m-early">有家人 50 歲前確診，或同一種癌症 2 人以上</button></div>
       <label>一等親的慢性病</label>${chips('m-fhchr',FH_CHR,fh.chr)}
@@ -1639,23 +1662,31 @@ function openMemberEdit(id,focus){
       <label>嚼檳榔</label><div class="seg" id="m-betel"><button data-v="never">從不</button><button data-v="former">已戒</button><button data-v="current">目前有</button></div>
       <label>喝酒</label><div class="seg" id="m-alc"><button data-v="none">不喝</button><button data-v="some">偶爾</button><button data-v="often">每週 3 次以上</button></div>
       <div class="chips" style="margin-top:12px"><button type="button" class="chip${lf.abo?' on':''}" id="m-abo">原住民（部分篩檢可提早）</button></div>
-      <label>上次大腸鏡（西元年，選填）</label><input id="m-colono" inputmode="numeric" value="${esc(lf.colono||'')}" placeholder="例如 2023"></details>`})()}
+      <label>上次大腸鏡（西元年，選填）</label><input id="m-colono" inputmode="numeric" value="${esc(lf.colono||'')}" placeholder="例如 2023"></div>`})()}
     ${(()=>{const fp=fitOf(m),chips=(id,list,on)=>`<div class="chips" id="${id}">${list.map(([k,n])=>`<button type="button" class="chip${on.includes(k)?' on':''}" data-k="${k}">${n}</button>`).join('')}</div>`,sg=(id,list)=>`<div class="seg" id="${id}">${list.map(([v,t])=>`<button data-v="${v}">${t}</button>`).join('')}</div>`;
-      return `<details class="box" id="m-fitbox"${focus==='fit'||m.fit?' open':''}><summary>運動狀況 <span class="sub">影響運動課表</span></summary>
+      return `<div class="tabp" id="m-fitbox" data-t="fit"><p class="note" style="margin-top:0">影響運動課表：身體限制會自動避開不適合的運動</p>
       <label>身體限制（會自動避開不適合的運動）</label>${chips('m-lim',LIM,fp.lim)}
       <label>體能程度</label>${sg('m-lvl',[['new','新手'],['mid','偶爾運動'],['pro','規律運動']])}
       <label>每週可以運動幾天</label>${sg('m-days',[2,3,4,5,6].map(d=>[d,d+' 天']))}
       <label>每次多久</label>${sg('m-min',[20,30,45,60].map(d=>[d,d+' 分']))}
       <label>喜歡的運動（可複選）</label>${chips('m-like',Object.entries(EX).map(([k,e])=>[k,e.e+' '+e.n]),fp.like)}
-      <label>行事曆提醒時間</label><input type="time" id="m-time" value="${fp.time}"></details>
-      ${(()=>{const dt=dietOf(m);return `<details class="box" id="m-dietbox"${focus==='diet'||dt.no.length||dt.ban.length?' open':''}><summary>不吃的食物 <span class="sub">菜單、採買清單會避開</span></summary>
+      <label>行事曆提醒時間</label><input type="time" id="m-time" value="${fp.time}"></div>
+      ${(()=>{const dt=dietOf(m);return `<div class="tabp" id="m-dietbox" data-t="diet"><p class="note" style="margin-top:0">菜單、採買清單會避開這些食物</p>
       <label>不吃的食材</label>${chips('m-no',EXG.map(([k,n])=>[k,n]),dt.no)}
       <label>不要的菜（點一下取消＝恢復）</label>${dt.ban.length?`<div class="chips" id="m-ban">${dt.ban.map(id=>`<button type="button" class="chip on" data-k="${id}">${BY_ID[id].e} ${esc(BY_ID[id].n)}</button>`).join('')}</div>`:'<div class="sub">還沒有。在菜單點一餐 →「不要這道」就會加到這裡</div>'}
-      <p class="note">吃素：把牛肉、豬肉、雞肉、魚、蝦蟹貝都選起來。</p></details>`})()}
-      <details class="box" id="m-vaxbox"${focus==='vax'?' open':''}><summary>疫苗紀錄 <span class="sub">影響疫苗建議</span></summary>
+      <p class="note">吃素：把牛肉、豬肉、雞肉、魚、蝦蟹貝都選起來。</p></div>`})()}
+      <div class="tabp" id="m-vaxbox" data-t="vax"><p class="note" style="margin-top:0">打過的疫苗就不會再出現在建議裡</p>
       <label>已經打過的（點選）</label>${chips('m-vax',VAX,VAX.filter(([k])=>vaxDone(m,k)).map(([k])=>k))}
-      <p class="note">流感、新冠是「這一季」（每年 10 月開打）；破傷風算 10 年內。</p></details>`})()}
-    <div class="row2">${ex&&MEM.length>1?'<button class="btn danger" id="m-del" style="flex:0 0 30%">刪除</button>':''}<button class="btn" id="m-save">儲存</button></div>`);
+      <p class="note">流感、新冠是「這一季」（每年 10 月開打）；破傷風算 10 年內。</p></div>
+      ${ex?`<div class="tabp" data-t="app"><div class="h4" style="margin-top:4px">家庭成員</div>${memRows()}<button class="btn ghost" data-addmem>＋ 新增成員</button>
+        <div class="h4">資料備份</div><p class="note" style="margin-top:0">健康資料只存在這支手機，請定期匯出備份（換手機、Safari 清資料時用得到）。</p>
+        <div class="row2"><button class="btn" data-export>匯出備份</button><button class="btn ghost" data-import>匯入備份</button></div>
+        <div class="h4">菜色圖片</div><button class="btn ghost" data-autoimg>${AUTO?'⏸ 停止自動補圖':'🖼 自動補齊全部菜色圖片'}</button>
+        <div class="h4">圖片後端（選用）</div><input id="s-gas" value="${esc(GAS)}" placeholder="https://script.google.com/macros/s/.../exec" inputmode="url"><p class="note">留空＝AI Horde 免費社群算力。金鑰只放在 GAS，絕不放這裡。</p></div>`:''}`})()}
+    <div class="row2" id="m-actions">${ex&&MEM.length>1?'<button class="btn danger" id="m-del" style="flex:0 0 30%">刪除</button>':''}<button class="btn" id="m-save">儲存</button></div>`);
+  const seen=new Set(),tab=t=>{seen.add(t);$$('#m-tabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===t);b.setAttribute('aria-selected',b.dataset.t===t)});
+    $$('#sheetBody .tabp').forEach(p=>p.hidden=p.dataset.t!==t);$('#m-actions').hidden=t==='app';$('.sheet-panel').scrollTop=0;$('#m-tabs [data-t="'+t+'"]')?.scrollIntoView({inline:'center',block:'nearest'})};
+  $$('#m-tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));if($('#s-gas'))$('#s-gas').onchange=e=>setGas(e.target.value.trim(),e.target);
   let sex=m.sex,goal=m.goal;
   const upd=()=>{const b=$('#m-birth').value,a=ageOf({birth:b}),kid=!!b&&a<18;
     $('#m-stage').textContent=b?`${Math.floor(a)} 歲・${stageOf(a)}${kid?'・使用國健署兒童青少年 BMI 標準與 Schofield 代謝公式':''}`:'';
@@ -1668,7 +1699,7 @@ function openMemberEdit(id,focus){
   seg('#m-smoke',smoke,v=>{smoke=v;smokeUI()});seg('#m-betel',betel,v=>betel=v);seg('#m-alc',alc,v=>alc=v);smokeUI();
   $$('#m-fhbox .chip,#m-fitbox .chip,#m-vaxbox .chip,#m-dietbox .chip').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
   const fp0=fitOf(m);let lvl=fp0.lvl,days=String(fp0.days),mins=String(fp0.min);seg('#m-lvl',lvl,v=>lvl=v);seg('#m-days',days,v=>days=v);seg('#m-min',mins,v=>mins=v);
-  if(focus)setTimeout(()=>$('#m-'+focus+'box')?.scrollIntoView({behavior:'smooth',block:'start'}),350);
+  tab(TABS.some(x=>x[0]===focus)?focus:'basic');
   $('#m-save').onclick=()=>{
     const name=$('#m-name').value.trim(),birth=$('#m-birth').value,h=num($('#m-h').value),w=num($('#m-w').value);
     if(!name)return toast('請輸入名稱');
@@ -1680,7 +1711,7 @@ function openMemberEdit(id,focus){
     m.fh={ca:pick('#m-fhca'),chr:pick('#m-fhchr'),early:$('#m-early').classList.contains('on')};
     m.life={smoke,betel,alc,abo:$('#m-abo').classList.contains('on'),ppd:smoke==='never'?0:Math.min(10,num($('#m-ppd').value)||0),yrs:smoke==='never'?0:Math.min(80,num($('#m-yrs').value)||0),
       quit:smoke==='former'?Math.min(80,num($('#m-quit').value)||0):0,colono:cy>=1950&&cy<=new Date().getFullYear()?cy:''};
-    if($('#m-fitbox').open||m.fit)m.fit={lim:pick('#m-lim'),lvl,days:+days,min:+mins,like:pick('#m-like'),time:/^\d{2}:\d{2}$/.test($('#m-time').value)?$('#m-time').value:'07:00'};
+    if(seen.has('fit')||m.fit)m.fit={lim:pick('#m-lim'),lvl,days:+days,min:+mins,like:pick('#m-like'),time:/^\d{2}:\d{2}$/.test($('#m-time').value)?$('#m-time').value:'07:00'};
     m.diet={no:pick('#m-no'),ban:pick('#m-ban')};
     const vx={},on=pick('#m-vax'),y=new Date().getFullYear();for(const k of on)vx[k]=vaxDone(m,k)?+obj(m.vax)[k]:(k==='flu'||k==='covid'?season():y);m.vax=vx;
     const i=MEM.findIndex(x=>x.id===m.id);if(i>=0)MEM[i]=m;else MEM.push(m);
@@ -1813,11 +1844,28 @@ function openScaleDetail(id){
   const m=me(),r=scalesOf(m).find(x=>x.id===id);if(!r)return;const iss=scaleEval(r,m).sort((a,b)=>b.lv-a.lv);
   openSheet(sheetHead('體脂紀錄',`${esc(m.name)}・${fmtDT(r.t)}${r.device?'・'+esc(r.device):''}`)+`
     <div class="kv" style="margin:14px 0">${SF.filter(f=>r[f.k]!=null).map(f=>`<span>${f.n}${(r.derived||[]).includes(f.k)?' <em class="dev">推算</em>':''}</span><span><b>${fmt(r[f.k])}</b> <span class="sub">${f.u}</span>${r.status?.[f.k]?` <em class="dev${devLv(r.status[f.k])?'':' ok'}">${esc(r.status[f.k])}</em>`:''}</span>`).join('')}${r.bodyType?`<span>身體類型</span><span>${esc(r.bodyType)}</span>`:''}</div>
-    <div class="h4">判讀</div>${iss.length?issueHTML(iss):'<div class="empty">各項指標正常 👍</div>'}
+    <div class="h4">判讀</div>${iss.length?issueHTML(iss):'<div class="empty">各項指標正常 👍</div>'}${bodyCompare(r,m)}
     <p class="note">內建判定採國健署成人標準與一般體脂計分級（內臟脂肪 1–9 標準、10–14 偏高、≥15 過高）。各品牌標準不同，設備判定與內建判定並列，取較嚴重者。</p>
     <div class="row2"><button class="btn danger" id="sd-del" style="flex:0 0 30%">刪除</button><button class="btn ghost" id="sd-edit">編輯</button></div>`);
   $('#sd-edit').onclick=()=>openScaleSheet(r);$('#sd-del').onclick=()=>delScale(r.id);
 }
+
+// 體脂計 vs 醫院 InBody（90 天內）：逐項比較差距，並說明哪個比較可信
+function bodyCompare(r,m){const d0=String(r.t).slice(0,10),BK=['wt','bia_fat','bia_fm','bia_smm','bia_bmr','bia_whr','vfa'];
+  const L=labsOf(m).find(l=>dayDiff(l.t,d0)<=90&&BK.some(k=>l.items?.[k]));if(!L)return '';const iv=k=>num(L.items[k]?.v);
+  const R=[['體重','weight','wt','kg',1.5],['體脂率','fat','bia_fat','%',3],['體脂肪量','fatMass','bia_fm','kg',2],['骨骼肌','skeletal','bia_smm','kg',2],['基礎代謝','bmr','bia_bmr','kcal',120],['腰臀比','whr','bia_whr','',.05]].filter(([,a,b])=>r[a]!=null&&iv(b)!=null);
+  if(!R.length&&iv('vfa')==null)return '';
+  const row=([n,a,b,u,tol])=>{const x=+r[a],y=iv(b),df=x-y,ok=Math.abs(df)<=tol;return `<span>${n}</span><span>${fmt(x)}</span><span>${fmt(y)}</span><span style="color:${ok?'var(--lime)':'var(--amber)'}">${df>0?'+':''}${fmt(r1(df))}${u?' '+u:''}<br><small>${ok?'接近':'差距大'}</small></span>`};
+  const notes=[],dw=r.weight!=null&&iv('wt')!=null?r.weight-iv('wt'):0,bmiH=r.weight&&m.h?r.weight/((m.h/100)**2):null;
+  notes.push('家用體脂計是腳底兩點測電阻，醫院 InBody 是手腳八點，體脂率通常低估 2–5%：<b>看自己的趨勢比看絕對值有用</b>，絕對值以醫院為準。');
+  if(r.whr!=null&&iv('bia_whr')!=null&&Math.abs(r.whr-iv('bia_whr'))>.05)notes.push(`腰臀比差很多（${fmt(r.whr)} vs ${fmt(iv('bia_whr'))}）：體脂計量不到腰圍和臀圍，這個數字是推算的，<b>以醫院或皮尺為準</b>。`);
+  if(Math.abs(dw)>=1)notes.push(`體重差 ${fmt(r1(Math.abs(dw)))} kg：量的時間（早上或晚上）、衣服、吃喝都會影響 1–2 kg。建議固定早上起床、上完廁所、吃早餐前量。`);
+  if(bmiH&&r.bmi!=null&&Math.abs(bmiH-r.bmi)>=.2)notes.push(`體脂計的 BMI ${fmt(r.bmi)} 和用身高 ${m.h} cm 算的 ${r1(bmiH)} 不同：請確認體脂計 App 裡的身高設定。`);
+  if(r.bmi>=24&&r.bmi<25&&!devLv(r.status?.bmi))notes.push('體脂計說 BMI「標準」是用國際標準（<25）；台灣國健署 24 以上就算過重，所以 App 判「注意」。');
+  if(iv('vfa')!=null)notes.push(`醫院內臟脂肪面積 ${fmt(iv('vfa'))} cm²（${iv('vfa')>=100?'≥100 屬內臟型肥胖':'<100 正常'}）${r.visceral!=null?`；體脂計內臟脂肪等級 ${fmt(r.visceral)} 是各廠牌自訂的分級，兩者單位不同不能直接比`:''}。`);
+  return `<div class="h4">和醫院 InBody 比較（${esc(L.t)}${L.hospital?'・'+esc(L.hospital):''}，相差 ${Math.round(dayDiff(L.t,d0))} 天）</div>
+    ${R.length?`<div class="kv" style="grid-template-columns:auto 1fr 1fr auto;text-align:right"><span class="sub">項目</span><span class="sub">體脂計</span><span class="sub">醫院</span><span class="sub">差</span>${R.map(row).join('')}</div>`:''}
+    <ul class="steps" style="margin-top:10px;color:var(--text)">${notes.map(x=>`<li>${x}</li>`).join('')}</ul>`}
 
 /* ================= 體檢報告 ================= */
 let lMeta={},lExtra=[],lEditId=null;
@@ -1841,7 +1889,9 @@ function optFind(x,v){v=String(v??'').trim();if(!v||!x.O)return null;const nv=no
   return null}
 function resolveKey(name){
   const n=normK(name);if(!n)return null;if(LABK[n])return n;
-  const cands=[n,...n.split(/[()\/、,，]/),n.replace(/[a-z0-9\-()\/.+]+/g,''),n.replace(/[^\x00-\x7f]/g,'')].map(s=>s.trim()).filter(s=>s.length>=2);
+  // 比值（A/G、BUN/Cr…）不拆開比對，避免「白蛋白/球蛋白比」被當成白蛋白
+  const ratio=/比|ratio|\w\/\w/.test(n),c0=[n,...(ratio?[]:n.split(/[()\/、,，]/)),n.replace(/[a-z0-9\-()\/.+]+/g,''),n.replace(/[^\x00-\x7f]/g,'')].map(s=>s.trim());
+  const cands=[...c0,...c0.map(s=>s.replace(/^(左|右)/,'').replace(/(檢驗值|檢查值|檢查|測定|數值)$/,''))].filter(s=>s.length>=2);
   for(const c of cands)for(const[k,al]of Object.entries(ALIAS))if(al.some(a=>normK(a)===c))return k;
   return null;
 }
@@ -1904,7 +1954,8 @@ function fillLab(o){
     else{
       if(k==='sbp'&&typeof val==='string'&&val.includes('/')){const d=num(val.split('/')[1]);if(d!=null&&$('#l-dbp'))$('#l-dbp').value=d}
       const v=num(val);if(v==null)continue;
-      const c=convUnit(k,v,it.unit,num(it.lo),num(it.hi));
+      const c=convUnit(k,v,it.unit,num(it.lo),num(it.hi)),prev=num(el.value);
+      if(prev!=null&&(k==='dxa'||k==='iop'))c.v=k==='dxa'?Math.min(prev,c.v):Math.max(prev,c.v);
       el.value=c.v;lMeta[k]={lo:c.lo,hi:c.hi,ref:it.ref?(c.note?`${it.ref} ${it.unit||''}`.trim():String(it.ref)):'',flag:it.flag||null,conv:c.note};
       if(c.note)conv.push(x.n);
       if(implausible(x,c.v,m.sex)){el.classList.add('bad');warn.push(x.n)}
@@ -2199,7 +2250,7 @@ async function run(){if(busy||!queue.length)return;const q=queue.shift(),f=q.f;b
     try{const src=await generate(f,q.st,s=>{busy.s=s;genStatus()});await saveImage(f.id,src);err=null;break}
     catch(e){err=e;if(e.fatal||/上限|過濾/.test(e.message))break;if(i===0){busy.s={retry:true};genStatus();await sleep(20000)}}}
   if(err)toast('失敗：'+f.n+'（'+err.message+'）');else{renderGallery();renderMenu();toast('已儲存：'+f.n)}
-  lastGen=Date.now();q.cb.forEach(cb=>{try{cb(err)}catch(e){}});busy=null;genStatus();run()}
+  lastGen=Date.now();q.cb.forEach(cb=>{try{cb(err)}catch(e){}});busy=null;genStatus();run();if(!queue.length&&!busy)setTimeout(autoNext,3000)}
 function genStatus(){const el=$('#genState');if(!el)return;
   if(!busy){el.innerHTML=queue.length?`排隊中 ${queue.length} 張`:'';return}
   const s=busy.s||{},w=s.retry?'暫時失敗，20 秒後重試…':s.queue_position>0?`排隊第 ${s.queue_position} 位，約 ${Math.max(1,Math.round((s.wait_time||0)/60))} 分鐘`:s.processing?'志工主機繪製中…':'送出中…';
@@ -2250,7 +2301,7 @@ $('#memChip').onclick=openMemberPicker;
 $$('#recSeg button').forEach(b=>b.onclick=()=>{recTab=b.dataset.v;$$('#recSeg button').forEach(x=>x.classList.toggle('on',x===b));renderRecs()});
 $('#hud').addEventListener('click',e=>{const t=e.target.closest('[data-o]');if(t)showOrgan(t.dataset.o)});
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-close],[data-closeorgan],[data-copy],[data-show],[data-pick],[data-editmem],[data-addmem],[data-sid],[data-lid],[data-addscale],[data-addlab],[data-copyplan],[data-goplan],[data-autogoal],[data-go],[data-golab],[data-goback],[data-fday],[data-timer],[data-ics],[data-meal],[data-ban],[data-shop]');if(!t)return;const d=t.dataset;
+  const t=e.target.closest('[data-close],[data-closeorgan],[data-copy],[data-show],[data-pick],[data-editmem],[data-addmem],[data-sid],[data-lid],[data-addscale],[data-addlab],[data-copyplan],[data-goplan],[data-autogoal],[data-go],[data-golab],[data-goback],[data-fday],[data-timer],[data-ics],[data-meal],[data-ban],[data-shop],[data-export],[data-import],[data-autoimg]');if(!t)return;const d=t.dataset;
   if('close' in d)closeSheet();
   else if('closeorgan' in d){$('#organPanel').innerHTML='';$$('#hud .sel').forEach(e=>e.classList.remove('sel'))}
   else if(d.copy)copyText(d.copy==='scale'?promptScale():promptLab());
@@ -2260,6 +2311,9 @@ document.addEventListener('click',e=>{
   else if(d.meal!=null)openMeal(+d.meal);
   else if(d.ban){const m=me(),dt=dietOf(m);m.diet={...dt,ban:[...new Set([...dt.ban,d.ban])]};S.set('members',MEM);closeSheet();renderMenu();toast(`已移除「${BY_ID[d.ban].n}」，之後不再排（「我的 → 編輯 → 不吃的食物」可恢復）`)}
   else if('shop' in d)openShop();
+  else if('export' in d)exportData();
+  else if('import' in d)$('#importFile').click();
+  else if('autoimg' in d){$('#genMissing').onclick();t.textContent=AUTO?'⏸ 停止自動補圖':'🖼 自動補齊全部菜色圖片'}
   else if(d.fday!=null){fitDay=+d.fday;renderFit()}
   else if(d.timer!=null)openTimer(+d.timer);
   else if('ics' in d)shareICS();
@@ -2278,9 +2332,10 @@ document.addEventListener('click',e=>{
 $('#exportBtn').onclick=exportData;
 $('#importBtn').onclick=()=>$('#importFile').click();
 $('#importFile').onchange=e=>{const f=e.target.files[0];if(f)importData(f);e.target.value=''};
-$('#f-gas').onchange=()=>{const v=$('#f-gas').value.trim();
-  if(v&&!/^https:\/\/script\.google(usercontent)?\.com\//.test(v)){toast('請貼上 https://script.google.com/ 開頭的 GAS 網址');$('#f-gas').value=GAS;return}
-  GAS=v;S.set('gas',GAS);renderGallery();toast(v?'已改用 GAS 圖片後端':'已改回 AI Horde 免費社群算力')};
+function setGas(v,el){if(v&&!/^https:\/\/script\.google(usercontent)?\.com\//.test(v)){toast('請貼上 https://script.google.com/ 開頭的 GAS 網址');el.value=GAS;return}
+  GAS=v;S.set('gas',GAS);renderGallery();renderMe();toast(v?'已改用 GAS 圖片後端':'已改回 AI Horde 免費社群算力')}
+$('#f-gas').onchange=e=>setGas(e.target.value.trim(),e.target);
+$('#gearBtn').onclick=()=>openMemberEdit(ACT,'basic');
 $('#labDish').onchange=updPrompt;
 $$('#labStyle button').forEach(b=>b.onclick=()=>{style=b.dataset.v;$$('#labStyle button').forEach(x=>x.classList.toggle('on',x===b));updPrompt()});
 $('#copyPrompt').onclick=async()=>{try{await navigator.clipboard.writeText($('#labPrompt').textContent);toast('已複製')}catch(e){toast('請長按提示詞手動複製')}};
@@ -2288,7 +2343,19 @@ $('#genOne').onclick=()=>{const f=BY_ID[$('#labDish').value],box=$('#labOut');
   box.innerHTML=`<div class="note" style="margin:0">已排入：${esc(f.n)}（進度顯示在下方圖庫）</div>`;
   enqueue(f,style,err=>{box.innerHTML=err?`<div class="note" style="color:var(--red);margin:0">生成失敗：${esc(err.message)}</div>`
     :`<img src="${esc(imgSrc(f.id))}" alt="${esc(f.n)}" style="width:100%;border-radius:14px">`})};
-$('#genMissing').onclick=()=>{const{slots}=plan(curDate);let n=0;slots.forEach(s=>s.items.forEach(f=>{if(!imgSrc(f.id)){enqueue(f);n++}}));toast(n?`已排入 ${n} 張，${GAS?'約 10 秒一張':'社群算力要排隊，可以先做別的事'}`:'今日菜單圖片已齊全')};
+/* ---- 自動補齊全部菜色圖片：一次只排一張，做完才排下一張；先補這週菜單會用到的菜。
+   開著 App 時在背景慢慢跑，關掉 App 會停，下次打開自動接著做；連續失敗 3 次先暫停，避免一直打擾免費服務 ---- */
+let AUTO=!!S.get('autoimg',false),autoFail=0,autoPause=0;const autoSkip=new Set();
+function nextMissing(){const ids=[];for(const m of MEM)for(let i=0;i<7;i++)for(const sl of plan(addDays(ymd(new Date()),i),m).slots)sl.items.forEach(f=>ids.push(f.id));
+  return[...ids.map(id=>BY_ID[id]),...FOODS].find(f=>f&&!imgSrc(f.id)&&!autoSkip.has(f.id)&&!queue.some(q=>q.f.id===f.id)&&busy?.f.id!==f.id)||null}
+function updAuto(){const have=FOODS.filter(f=>imgSrc(f.id)).length,el=$('#autoImg'),b=$('#genMissing');if(!el)return;
+  el.innerHTML=`<div class="row" style="margin:0"><span class="sub">已有圖片 ${have} / ${FOODS.length} 道</span><span class="sub">${AUTO?(autoPause?'⏸ 暫停中（服務不穩）':'🔄 自動補圖中'):''}</span></div><div class="bar"><i style="width:${(have/FOODS.length*100).toFixed(1)}%;background:linear-gradient(90deg,var(--cyan),var(--lime))"></i></div>`;
+  b.className=AUTO?'btn ghost':'btn';b.textContent=AUTO?'⏸ 停止自動補圖':'🖼 自動補齊全部菜色圖片（背景慢慢排）'}
+function autoNext(){if(!AUTO||autoPause||busy||queue.length)return;const f=nextMissing();
+  if(!f){AUTO=false;S.set('autoimg',false);updAuto();if(autoSkip.size)toast(`其餘菜色都有圖了；${autoSkip.size} 道這次生成失敗，下次打開 App 再試`);else toast('全部菜色圖片都補齊了 🎉');return}
+  enqueue(f,'studio',err=>{if(err){autoSkip.add(f.id);if(++autoFail>=3){autoPause=Date.now();toast('圖片服務目前不穩，自動補圖先暫停；下次打開 App 會繼續')}}else{autoFail=0;renderGallery()}updAuto()})}
+$('#genMissing').onclick=()=>{AUTO=!AUTO;S.set('autoimg',AUTO);autoPause=0;autoFail=0;updAuto();
+  if(AUTO){toast(GAS?'開始自動補圖，約 10 秒一張':'開始自動補圖：社群算力一張約 1–10 分鐘，開著 App 就會慢慢補完');autoNext()}else toast('已停止自動補圖（排隊中的這張會做完）')};
 
 /* ---- 版本自動更新：GitHub Pages 的網頁會被快取約 10 分鐘，加入主畫面的 App 可能一直停在舊版 ----
    回到前景時（最多每分鐘一次）抓線上 index.html 比對 APP_VER；不同就重新載入。
@@ -2303,8 +2370,18 @@ async function checkUpdate(){if(APP_VER==='dev'||!/^https?:$/.test(location.prot
   try{const r=await fetch(location.href.split('#')[0],{cache:'reload',signal:ac.signal});if(!r.ok)return;
     const v=((await r.text()).match(/^const APP_VER='([\w.-]+)';/m)||[])[1];if(v&&v!==APP_VER){newVer=true;applyUpdate()}}
   catch(e){}finally{clearTimeout(to)}}                                 // 離線或抓不到：下次回到前景再試
-document.addEventListener('visibilitychange',()=>{if(document.hidden)return;const t=ymd(new Date());if(t!==TODAY){if(curDate===TODAY)curDate=t;TODAY=t;renderDays();renderMenu()}checkUpdate()});
-fillDish();renderAll();loadImages();
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;const t=ymd(new Date());if(t!==TODAY){if(curDate===TODAY)curDate=t;TODAY=t;renderDays();renderMenu()}checkUpdate();if(AUTO&&autoPause&&Date.now()-autoPause>10*60e3){autoPause=0;autoFail=0;updAuto()}autoNext()});
+// 舊紀錄：當時對不到、放進「其他項目」的，現在對得到就搬回正式項目（骨密度取最低、眼壓取最高、已有值的不覆蓋）
+function migrateLabs(){let ch=false;
+  for(const arr of Object.values(LABS))for(const r of Array.isArray(arr)?arr:[]){if(!Array.isArray(r.extra)||!r.extra.length)continue;r.items=obj(r.items);
+    r.extra=r.extra.filter(e=>{const k=resolveKey(e?.name),x=k&&LABK[k];if(!x||e.value==null||e.value==='')return true;const old=r.items[k];
+      if(x.t){if(old)return true;let v=String(e.value);if(x.t==='opt'){const o=optFind(x,v);if(!o)return true;v=o[0]}
+        r.items[k]={v,...(num(e.hi)!=null?{hi:num(e.hi)}:{}),...(e.ref?{ref:String(e.ref).slice(0,60)}:{}),...(e.flag?{flag:e.flag}:{})};ch=true;return false}
+      const v=num(e.value);if(v==null)return true;const ov=num(old?.v);if(ov!=null&&k!=='dxa'&&k!=='iop')return true;
+      const c=convUnit(k,v,e.unit,num(e.lo),num(e.hi));
+      r.items[k]=ov!=null?{...old,v:k==='dxa'?Math.min(ov,c.v):Math.max(ov,c.v)}:{v:c.v,...(c.lo!=null?{lo:c.lo}:{}),...(c.hi!=null?{hi:c.hi}:{}),...(e.ref?{ref:String(e.ref).slice(0,60)}:{}),...(e.flag?{flag:e.flag}:{})};ch=true;return false})}
+  if(ch)S.set('labs',LABS);return ch}
+migrateLabs();fillDish();renderAll();loadImages().then(()=>{updAuto();if(AUTO)setTimeout(autoNext,4000)});
 if(FRESH)setTimeout(()=>{go('me');openMemberEdit(MEM[0].id);toast('先建立你的資料，30 秒完成')},400);
 </script>
 </body>
