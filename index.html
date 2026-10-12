@@ -285,6 +285,7 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
   </div>
   <button class="btn ai" data-aidoc style="margin:0 0 14px">🩺 問 AI 醫生（帶著你的數值去問）</button>
   <div class="card"><h2>需要注意</h2><div id="issueList"></div></div>
+  <div class="card" id="derivedCard" hidden><h2>App 自動計算（不用問 AI）</h2><div id="derivedList"></div></div>
   <div class="card"><h2>建議掛號科別</h2><div id="deptList"></div>
     <p class="note">依數值規則自動建議，不是醫療診斷。身體不適請直接就醫，不必等報告。</p></div>
   <div class="card" id="planCard"><h2>今年健檢建議</h2><div id="planBody"></div></div>
@@ -727,7 +728,7 @@ const LAB=[
  {g:'影像與檢查',k:'us_liver',n:'腹部超音波：肝臟',s:'肝臟超音波',t:'opt',O:[['正常',0],['輕度脂肪肝',1],['中度脂肪肝',1],['重度脂肪肝',2,'重度脂肪肝：減重 5–10%、戒酒，追蹤肝功能'],['肝囊腫／血管瘤（良性）',0],['慢性肝病／肝硬化',2,'請腸胃肝膽科定期追蹤'],['肝腫瘤或結節（待查）',3,'請儘速腸胃肝膽科確認']],o:'liver',d:'腸胃肝膽科',hi:'脂肪肝：減重 5–10%、少喝含糖飲料與酒'},
  {g:'影像與檢查',k:'us_gb',n:'腹部超音波：膽囊',s:'膽囊超音波',t:'opt',O:[['正常',0],['膽結石（無症狀）',1],['膽囊瘜肉 <1 公分',1],['膽囊瘜肉 ≥1 公分',2,'瘜肉 ≥1 公分建議外科評估'],['膽囊壁增厚／疑似腫瘤',3,'請儘速腸胃肝膽科確認']],o:'liver',d:'腸胃肝膽科',hi:'每年超音波追蹤'},
  {g:'影像與檢查',k:'us_kidney',n:'腹部超音波：腎臟',s:'腎臟超音波',t:'opt',O:[['正常',0],['腎囊腫（良性）',0],['腎結石',1,'多喝水，必要時泌尿科處理'],['腎水腫',2,'需找出阻塞原因'],['腎臟腫瘤（待查）',3,'請儘速泌尿科確認']],o:'kidney',d:'泌尿科'},
- {g:'影像與檢查',k:'cxr',n:'胸部 X 光',s:'胸部X光',t:'opt',O:[['正常',0],['輕微變化（如主動脈鈣化、陳舊病灶）',1],['肺結節或陰影（待查）',2,'建議胸部電腦斷層確認'],['疑似腫瘤',3,'請儘速胸腔內科']],o:'lung',d:'胸腔內科'},
+ {g:'影像與檢查',k:'cxr',n:'胸部 X 光',s:'胸部X光',t:'opt',okRx:/肺(部|野)?(均)?(無|未見|沒有)(明顯)?異常|lungs?\s*(are\s*)?clear/i,badRx:/結節|陰影|腫|浸潤|積水|塌陷|纖維化|nodule|mass|opacit|effusion|infiltrat/i,O:[['正常',0],['輕微變化（如主動脈鈣化、陳舊病灶）',1],['肺結節或陰影（待查）',2,'建議胸部電腦斷層確認'],['疑似腫瘤',3,'請儘速胸腔內科']],o:'lung',d:'胸腔內科'},
  {g:'影像與檢查',k:'ldct',n:'低劑量胸部 CT（Lung-RADS）',s:'LDCT',t:'opt',O:[['Lung-RADS 1（陰性）',0],['Lung-RADS 2（良性）',0],['Lung-RADS 3（可能良性）',1,'6 個月後複查 LDCT'],['Lung-RADS 4A（可疑）',2,'3 個月後複查或進一步檢查'],['Lung-RADS 4B／4X（高度可疑）',3,'請儘速胸腔科評估']],o:'lung',d:'胸腔內科'},
  {g:'影像與檢查',k:'ekg',n:'心電圖',s:'心電圖',t:'opt',O:[['正常',0],['非特異性變化',1],['心律不整',2,'請心臟內科評估'],['疑似心肌缺血／傳導阻滯',2,'請心臟內科評估']],o:'heart',d:'心臟內科'},
  {g:'影像與檢查',k:'gastro',n:'胃鏡',s:'胃鏡',t:'opt',O:[['正常',0],['胃炎／逆流性食道炎',1],['胃或十二指腸潰瘍',2,'需治療並確認幽門桿菌'],['萎縮性胃炎／腸化生',2,'胃癌風險較高，需定期胃鏡追蹤'],['疑似腫瘤',3,'請儘速腸胃科確認']],o:'stomach',d:'腸胃科'},
@@ -864,16 +865,17 @@ function qLv(s,Q,ti){s=String(s??'').trim().toLowerCase().replace(/\s/g,'');if(!
 function labEval(rec,m){
   const sex=m.sex,out=[];
   for(const[k,it]of Object.entries(rec.items||{})){
-    const x=LABK[k];if(!x||x.t==='qi')continue;let lv=0,dir='hi',om=null;
-    if(x.t==='opt'){const o=optFind(x,it.v);if(o){lv=o[1];om=o[2]||null}}
+    const x=LABK[k];if(!x||x.t==='qi')continue;let lv=0,dir='hi',om=null,bl=null;
+    if(x.t==='opt'){const o=optFind(x,it.v);if(o){lv=o[1];om=o[2]||null}
+      if(lv&&x.okRx&&x.okRx.test(it.ref||'')&&!x.badRx.test(it.ref||''))lv=0}   // 報告原文說肺部正常（例如只有脊椎側彎）就不算肺部異常
     else if(x.t==='q'){lv=qLv(it.v,x.Q,x.ti);
       // 定量回報（如 FIT 135 ng/mL、HBsAg 1250 S/CO）：沒有「陽性」字樣時，改看報告上限或異常標記，避免漏判
       if(!lv){const v=num(it.v);if(flagDir(it.flag)==='hi'||(v!=null&&it.hi!=null&&v>it.hi))lv=x.Q||1}}
     else{let v=num(it.v);if(v==null)continue;if(PERUL[k]&&v>=PERUL[k])v=v/1000;const H=thr(x,'H',sex),L=thr(x,'L',sex);
-      if(H){const h1=it.hi!=null?it.hi:H[0],h2=Math.max(H[1],h1),h3=Math.max(H[2],h2);lv=v>=h3?3:v>=h2?2:v>h1?1:0}
-      if(!lv&&L){const l1=it.lo!=null?it.lo:L[0],l2=Math.min(L[1],l1),l3=Math.min(L[2],l2);lv=v<l3?3:v<l2?2:v<l1?1:0;if(lv)dir='lo'}
+      if(H){const h1=it.hi!=null?it.hi:H[0],h2=Math.max(H[1],h1),h3=Math.max(H[2],h2);lv=v>=h3?3:v>=h2?2:v>h1?1:0;if(lv===1&&h1>0&&(v-h1)/h1<.05)bl=Math.round((v-h1)/h1*1000)/10}
+      if(!lv&&L){const l1=it.lo!=null?it.lo:L[0],l2=Math.min(L[1],l1),l3=Math.min(L[2],l2);lv=v<l3?3:v<l2?2:v<l1?1:0;if(lv)dir='lo';if(lv===1&&l1>0&&(l1-v)/l1<.05)bl=Math.round((l1-v)/l1*1000)/10}
       if(!lv){const fd=flagDir(it.flag);if(fd){lv=1;dir=fd}}}
-    if(lv)out.push({src:'體檢',k,name:x.n,short:LSHORT[k]||x.n,val:it.v,unit:x.u||'',lv,dir,msg:om||(dir==='lo'?x.lo:x.hi)||(x.t==='opt'?'檢查結果需追蹤':dir==='lo'?'低於參考值':'高於參考值'),organ:x.o,dept:x.d,ref:it.ref||(it.lo!=null&&it.hi!=null?`${it.lo}–${it.hi}`:it.hi!=null?`≤${it.hi}`:it.lo!=null?`≥${it.lo}`:refText(x,sex))});   // 報告有自己的上下限就顯示報告的
+    if(lv)out.push({src:'體檢',k,name:x.n,short:LSHORT[k]||x.n,val:it.v,unit:x.u||'',lv,dir,bl,msg:(bl!=null?`僅略${dir==='lo'?'低':'高'}於參考值 ${bl}%，單次輕微超出意義有限；`:'')+(om||(dir==='lo'?x.lo:x.hi)||(x.t==='opt'?'檢查結果需追蹤':dir==='lo'?'低於參考值':'高於參考值')),organ:x.o,dept:x.d,ref:it.ref||(it.lo!=null&&it.hi!=null?`${it.lo}–${it.hi}`:it.hi!=null?`≤${it.hi}`:it.lo!=null?`≥${it.lo}`:refText(x,sex))});   // 報告有自己的上下限就顯示報告的
   }
   // 衍生判讀：PSA 4–10 看游離比例；空腹血糖＋胰島素算 HOMA-IR
   const iv=k=>num(rec.items?.[k]?.v),ps=iv('psa'),fp=iv('fpsa'),g0=iv('glu'),in0=iv('ins');
@@ -885,6 +887,20 @@ function labEval(rec,m){
     if(lv)out.push({src:'體檢',k:'x_'+e.name,name:e.name,val:e.value,unit:e.unit||'',lv,dir:flagDir(e.flag)||'hi',msg:'報告標示異常，請諮詢醫師',organ:null,dept:null,ref:e.ref||''})}
   return out;
 }
+// App 自己算得出來、不用問 AI 的綜合指標：FIB-4（肝纖維化風險）、代謝症候群（國健署 5 項）
+const r2=v=>Math.round(v*100)/100;
+function derivedOf(m){const l=labsOf(m)[0],a=Math.floor(ageOf(m)),male=m.sex!=='f',iv=k=>num(l?.items?.[k]?.v),out=[];if(!l)return out;
+  const ast=iv('ast'),alt=iv('alt');let plt=iv('plt');if(plt!=null&&plt>=PERUL.plt)plt/=1000;
+  if(ast!=null&&alt>0&&plt>0){const f=a*ast/(plt*Math.sqrt(alt)),lo=a>=65?2:1.3;
+    out.push({k:'fib4',name:'FIB-4 肝纖維化指數',val:r2(f).toFixed(2),lv:a<35?0:f>2.67?2:f>=lo?1:0,
+      txt:a<35?'35 歲以下不適用，僅供參考':f>2.67?'高風險：建議腸胃肝膽科做肝臟彈性超音波（FibroScan）':f>=lo?`灰色地帶（≥${lo}）：建議做肝臟彈性超音波確認`:`低風險（<${lo}）：目前肝纖維化機會低，不必急著做彈性超音波`,src:`年齡 ${a}、GOT ${ast}、GPT ${alt}、血小板 ${r1(plt)}`})}
+  const waist=+m.waist||iv('waist'),sbp=iv('sbp'),dbp=iv('dbp'),glu=iv('glu'),tg=iv('tg'),hdl=iv('hdl');
+  const C=[['腰圍',waist||null,waist>=(male?90:80),`${waist} cm`],['血壓',sbp??dbp,sbp>=130||dbp>=85,`${sbp??'—'}/${dbp??'—'}`],['空腹血糖',glu,glu>=100,`${glu}`],['三酸甘油酯',tg,tg>=150,`${tg}`],['HDL',hdl,hdl!=null&&hdl<(male?40:50),`${hdl}`]];
+  const have=C.filter(c=>c[1]!=null),hit=have.filter(c=>c[2]);
+  if(have.length>=3||hit.length>=3)out.push({k:'mets',name:'代謝症候群（國健署 5 項）',val:`${hit.length}/5`,lv:hit.length>=3?2:hit.length===2?1:0,
+    txt:hit.length>=3?'符合代謝症候群（≥3 項）：心血管、糖尿病、脂肪肝風險明顯上升，建議家醫科或新陳代謝科整體評估':hit.length===2?'再多 1 項就是代謝症候群，現在調整最有效':'目前未達代謝症候群',
+    src:C.map(c=>`${c[0]} ${c[1]==null?'沒資料':c[3]+(c[2]?' ✗':' ✓')}`).join('、')});
+  return out}
 const DED=[0,3,8,15];
 // 同一器官：最嚴重一項全扣，其餘項目扣 40%（避免血壓收縮/舒張、血脂多項重複重扣）
 function scoreOf(iss){const g={};iss.forEach(i=>{const k=i.organ||('x_'+i.k);(g[k]=g[k]||[]).push(DED[i.lv])});
@@ -919,7 +935,7 @@ function nutriPlan(m){
   if(lv('hdl'))add({ic:'⬆️',t:'提升好膽固醇',why:why(['hdl']),do:['每週 150 分鐘有氧運動最能提升 HDL','用橄欖油、苦茶油、堅果取代動物油','戒菸'],eat:['橄欖油、苦茶油','酪梨、堅果'],avoid:['反式脂肪（酥油、奶精）']});
   if(lv('sbp')||lv('dbp'))add({ic:'🧂',t:'降血壓（得舒飲食）',why:why(['sbp','dbp']),do:['鹽一天 ≤5 g（鈉 2000 mg）：湯不喝完、醬料減半、少加工食品',kid||lv('k')?'蔬菜天天吃，但鉀要依腎功能控制':'得舒飲食：每天 5 份蔬菜＋2 份水果＋1.5 杯低脂乳','體重每減 1 kg，收縮壓約降 1 mmHg','酒一天最多 1 杯'],eat:['深綠蔬菜','低脂乳、豆漿','新鮮肉魚'],avoid:['泡麵、罐頭、醃漬物','火鍋湯、拉麵湯','香腸、火腿']},kid||lv('k')?[]:['kf'],['salt']);
   if(lv('ua'))add({ic:'🦶',t:'降尿酸',why:why(['ua']),do:['少內臟、蝦蟹貝類、濃湯、火鍋湯底','戒含糖飲料（果糖會升尿酸）與啤酒','每天喝水 2–3 L（腎功能正常時）','雞蛋、低脂乳品、豆腐都是安全的蛋白質'],eat:['蛋、低脂乳','豆腐','大量白開水'],avoid:['內臟、海鮮','濃湯、火鍋湯','啤酒、含糖飲料']},['ca'],['pur']);
-  if(['alt','ast','ggt','us_liver'].some(lv))add({ic:'🫁',t:'護肝（脂肪肝）',why:why(['alt','ast','ggt','us_liver']),do:['體重減 7–10% 是改善脂肪肝最有效的方法','戒酒；少含糖飲料（果糖直接在肝臟變脂肪）','少油炸、少宵夜','無糖黑咖啡一天 1–2 杯對肝有幫助'],eat:['蔬菜、全穀','魚、豆腐'],avoid:['酒','油炸','含糖飲料']},[],['oil']);
+  if(['alt','ast','ggt','us_liver'].some(lv))add({ic:'🫁',t:'護肝（脂肪肝）',why:why(['alt','ast','ggt','us_liver']),do:[`體重減 5%（到 ${(w*.95).toFixed(1)} kg）肝脂肪就會下降；減 7–10%（到 ${(w*.9).toFixed(1)}–${(w*.93).toFixed(1)} kg）可改善肝發炎`,'追蹤脂肪肝期間以不喝酒為佳；少含糖飲料（果糖直接在肝臟變脂肪）','少油炸、少宵夜','無糖黑咖啡一天 1–2 杯對肝有幫助'],eat:['蔬菜、全穀','魚、豆腐'],avoid:['酒','油炸','含糖飲料']},[],['oil']);
   if(kid)add({ic:'🫘',t:'護腎',why:why(['egfr','cr','upro','uacr','bun']),do:[`蛋白質 0.8 g/kg（約 ${Math.round(w*.8)} g），不吃高蛋白補充品`,'鹽 ≤5 g','不亂吃止痛藥、中草藥偏方',(num(l?.items?.egfr?.v)??99)<45?'eGFR <45：鉀、磷要問營養師（加工食品、可樂含磷高）':'定期追蹤 eGFR 與尿蛋白'],eat:['適量魚、蛋、豆腐'],avoid:['高蛋白粉','加工食品','止痛藥']},[],['pro','salt']);
   if(lv('k')&&!lo('k'))add({ic:'🍌',t:'限鉀',why:why(['k']),do:['高鉀蔬果（香蕉、奇異果、地瓜葉、菠菜）先燙過、湯不喝','不用低鈉鹽（含鉀）'],eat:['燙過的蔬菜'],avoid:['香蕉、奇異果','菜湯、肉湯','低鈉鹽']},[],['kf']);
   if(lo('hb')||lo('ferritin')||lo('fe'))add({ic:'🥩',t:'補鐵',why:why(['hb','ferritin','fe']),do:['紅肉（牛、豬）每週 2–3 次，深綠蔬菜天天吃','搭配維生素 C 水果（芭樂、奇異果）幫助吸收','茶、咖啡飯後隔 1 小時再喝'],eat:['牛肉','菠菜、地瓜葉','芭樂'],avoid:['飯後馬上喝茶']},['fe']);
@@ -1035,9 +1051,10 @@ function yearPlan(m){
   const lvOf=k=>iss.reduce((x,i)=>i.k===k?Math.max(x,i.lv):x,0),mx=(...ks)=>Math.max(0,...ks.map(lvOf)),any=(...ks)=>ks.some(k=>lvOf(k)>0);
   const lo=k=>iss.some(i=>i.k===k&&i.dir==='lo'),vOf=r=>k=>{const v=r?.items?.[k]?.v;return v==null||v===''?null:v};
   const hasL=k=>vOf(L)(k)!=null,has=k=>labs.some(r=>vOf(r)(k)!=null);
-  const names=ks=>iss.filter(i=>ks.includes(i.k)).map(i=>`${i.short||i.name} ${typeof i.val==='number'?fmt(i.val):i.val}`).join('、');
-  const out=[],done=new Set(),add=(sec,pr,t,why,ch,when)=>{if(!out.some(o=>o.t===t))out.push({sec,pr,t,why,ch,when})};
-  const rule=(ks,fn)=>{if(ks.some(k=>lvOf(k)>0)){ks.forEach(k=>done.add(k));fn(mx(...ks),names(ks))}};
+  const names=ks=>iss.filter(i=>ks.includes(i.k)).map(i=>`${i.short||i.name} ${typeof i.val==='number'?fmt(i.val):i.val}${i.bl!=null?`（僅略${i.dir==='lo'?'低':'高'}）`:''}`).join('、');
+  let blMode=false;const out=[],done=new Set(),add=(sec,pr,t,why,ch,when)=>{if(blMode&&pr===2)pr=3;if(!out.some(o=>o.t===t))out.push({sec,pr,t,why,ch,when})};
+  // 同一組項目全部只是「略高／略低」（超出 5% 內）→ 建議降一級（今年 → 可考慮）
+  const rule=(ks,fn)=>{if(ks.some(k=>lvOf(k)>0)){const h=iss.filter(i=>ks.includes(i.k));blMode=h.length>0&&h.every(i=>i.bl!=null);ks.forEach(k=>done.add(k));fn(mx(...ks),names(ks));blMode=false}};
   const pk=packYears(lf),smoker=lf.smoke!=='never',betel=lf.betel!=='never',heavy=pk>=20&&(lf.smoke==='current'||(+lf.quit||0)<15);
   const S=SECS,ago=L?(L.t.slice(0,4)===String(new Date().getFullYear())?'這次報告':L.t.slice(0,4)+' 年報告'):'';
 
@@ -1070,13 +1087,16 @@ function yearPlan(m){
   rule(['pap','hpv'],(l,n)=>add(S[0],l>=2?1:2,'子宮頸追蹤：婦產科（陰道鏡／HPV）',`${ago} ${n}`,'健保',l>=2?'1 個月內':'6–12 個月後複驗'));
   rule(['ldct'],(l,n)=>add(S[0],l>=2?1:2,'胸部低劑量 CT 追蹤',`${ago} ${n}`,'健保',l>=3?'儘快胸腔科':l>=2?'3 個月後':'6 個月後'));
   rule(['cxr'],(l,n)=>l>=2?add(S[0],l>=3?1:2,'胸腔科：胸部 X 光異常，安排電腦斷層確認',`${ago} ${n}`,'健保',l>=3?'儘快':'1 個月內')
-    :add(S[0],3,'胸部 X 光：下次健檢再照即可',`${ago} ${n}；主動脈鈣化代表血管老化，控制血壓、血脂、戒菸比追加檢查重要`,'—','下次健檢'));
+    :add(S[0],3,'胸部 X 光：下次健檢再照即可',`${ago} ${n}${/鈣化/.test(L?.items?.cxr?.ref||'')?'；主動脈鈣化代表血管老化，控制血壓、血脂、戒菸比追加檢查重要':/側彎/.test(L?.items?.cxr?.ref||'')?'；脊椎側彎通常不需處理，有背痛再看復健科':''}`,'—','下次健檢'));
   rule(['ekg','ntprobnp','pulse','hr'],(l,n)=>add(S[0],l>=2?1:2,'心臟內科：心電圖／心臟超音波',`${ago} ${n}`,'健保','1–3 個月內'));
   rule(['iop','fundus'],(l,n)=>add(S[0],2,'眼科：眼底＋視野檢查（排除青光眼）',`${ago} ${n}`,'健保','3 個月內'));
   rule(['dxa','vitd','ca'],(l,n)=>add(S[0],lvOf('dxa')>=2?1:3,lvOf('dxa')>=2?'骨質疏鬆治療評估（骨科／新陳代謝科）':'補鈣與維生素 D、負重運動，之後複驗',`${ago} ${n}`,lvOf('dxa')>=2?'健保':'自費',lvOf('dxa')>=2?'1 個月內':'3 個月後複驗維生素 D、2 年後骨密度'));
   rule(['na','k','cl','p','mg'],(l,n)=>add(S[0],l>=2?1:2,'複驗電解質',`${ago} ${n}`,'健保',l>=2?'儘快':'3 個月後'));
   rule(['hscrp','crp','hcy','ck','ldh'],(l,n)=>add(S[0],3,'發炎或肌肉指標改天複驗',`${ago} ${n}；感冒、運動後都會暫時偏高`,'自費／健保','1–3 個月後'));
   for(const i of iss)if(!done.has(i.k)){done.add(i.k);add(S[0],i.lv>=2?2:3,`複驗 ${i.short||i.name}`,`${ago} ${i.short||i.name} ${typeof i.val==='number'?fmt(i.val):i.val}（${LVT[i.lv]}）`,'健保／自費',URG[i.lv])}
+
+  for(const d of derivedOf(m)){if(d.k==='fib4'&&d.lv)add(S[0],d.lv>=2?1:2,'肝纖維化評估：肝臟彈性超音波（FibroScan）',`FIB-4 ${d.val}：${d.txt}（${d.src}）`,'自費／健保',d.lv>=2?'1 個月內':'3 個月內');
+    if(d.k==='mets'&&d.lv>=2)add(S[0],1,'代謝症候群：家醫科或新陳代謝科整體評估',`符合 ${d.val} 項：${d.src}`,'健保','1 個月內')}
 
   // ② 與一年前比較：還沒異常但一路往壞的方向走
   if(L&&P){const tr=[];
@@ -1106,6 +1126,8 @@ function yearPlan(m){
     else if(a<40)add(S[3],3,'40 歲開始大腸癌篩檢','大腸癌家族史：若家人確診時未滿 60 歲，建議 40 歲（或比家人確診年齡早 10 年）開始大腸鏡','—',`${40-a} 年後`)}
   if(fem&&(fh.ca.includes('breast')||fh.ca.includes('ovary'))){if(fh.early||fh.ca.includes('ovary'))add(S[3],2,'遺傳諮詢（BRCA 基因評估）','家族有早發乳癌或卵巢癌','自費','今年');
     if(a>=30&&a<40)add(S[3],3,'乳房超音波','乳癌家族史，40 歲前可自費超音波','自費','每 1–2 年')}
+  if(!fem&&(fh.ca.includes('breast')||fh.ca.includes('ovary'))&&(fh.early||fh.ca.includes('ovary')||fh.ca.includes('prostate')||fh.ca.includes('pancreas')))
+    add(S[3],3,'遺傳諮詢（BRCA）可考慮','家族有早發乳癌／卵巢癌：男性帶 BRCA2 基因會增加攝護腺癌、男性乳癌風險；先確認是哪位家人、幾歲發病','自費','與醫師討論');
   if(fh.ca.includes('uterus')||(crcFH&&fh.early))add(S[3],3,'遺傳諮詢（林奇症候群評估）','家族有早發大腸癌或子宮內膜癌','自費','與醫師討論');
   if(!fem&&fh.ca.includes('prostate')&&a>=45&&!hasL('psa'))add(S[3],3,'PSA 檢查（與泌尿科討論）','攝護腺癌家族史可從 45 歲開始討論','自費','每 1–2 年');
   if((fh.ca.includes('liver')||fh.chr.includes('hbv'))&&!has('hbsag'))add(S[3],1,'B 型肝炎表面抗原 HBsAg','家族有肝癌或 B 肝帶原，自己有沒有帶原一定要知道','公費／自費','今年');
@@ -1449,7 +1471,7 @@ function bodySVG(m,issues,p){
   </g>${call}
   </svg>`;
 }
-function issueHTML(list,showRef,ask){return list.map(i=>{const long=typeof i.val==='string'&&i.val.length>6;return `<div class="issue"><span class="lv lv${i.lv}">${LVT[i.lv]}</span><div style="flex:1;min-width:0"><div class="t">${esc(i.name)}</div><div class="s">${long?`<b style="color:var(--text)">${esc(i.val)}</b><br>`:''}${esc(i.src)}・${esc(i.msg)}${showRef&&i.ref?`<br>參考值 ${esc(i.ref)}`:''}${i.dev&&i.msg.indexOf('設備')<0?`<br>設備判定：${esc(i.dev)}`:''}</div></div>${long?'':`<div class="v">${fmt(i.val)}<div class="sub">${esc(i.unit||'')}</div></div>`}${ask?`<button class="ask" data-ask="${esc(i.k)}" aria-label="問 AI：${esc(i.name)}">問 AI</button>`:''}</div>`}).join('')}
+function issueHTML(list,showRef,ask){return list.map(i=>{const long=typeof i.val==='string'&&i.val.length>6;return `<div class="issue"><span class="lv lv${i.lv}">${LVT[i.lv]}</span><div style="flex:1;min-width:0"><div class="t">${esc(i.name)}</div><div class="s">${long?`<b style="color:var(--text)">${esc(i.val)}</b><br>`:''}${esc(i.src)}・${esc(i.msg)}${showRef&&i.ref?`<br>${/^原文/.test(i.ref)?'報告':'參考值 '}${esc(i.ref)}`:''}${i.dev&&i.msg.indexOf('設備')<0?`<br>設備判定：${esc(i.dev)}`:''}</div></div>${long?'':`<div class="v">${fmt(i.val)}<div class="sub">${esc(i.unit||'')}</div></div>`}${ask?`<button class="ask" data-ask="${esc(i.k)}" aria-label="問 AI：${esc(i.name)}">問 AI</button>`:''}</div>`}).join('')}
 function deptHTML(dp){return dp.length?dp.map(d=>`<div class="dept"><span class="lv lv${d.lv}">${LVT[d.lv]}</span><div style="flex:1;min-width:0"><b>${esc(d.d)}</b><div class="sub" style="margin-top:2px">${d.when}</div><div class="sub" style="margin-top:2px">${esc(d.items.join('、'))}</div></div></div>`).join(''):'<div class="empty">目前不需要特別就診，維持每年健康檢查即可</div>'}
 
 /* ================= 渲染：總覽 ================= */
@@ -1487,12 +1509,13 @@ function renderEnergy(m,c){
   const bmr=Math.round(c.bmr),tdee=Math.round(c.tdee),tg=Math.round(c.target),d=tg-tdee,mxv=Math.max(tdee,tg)*1.05,pc=v=>Math.max(0,v/mxv*100).toFixed(1);
   const w30=Math.round(metK(4.3,c.w,30)),wk=c.goal==='cut'&&d<0?-d*7/7700:0,toW=c.w>c.wMax?c.w-c.wMax:0,weeks=wk&&toW?Math.ceil(toW/wk):0;
   const act=(ACTS.find(x=>x[0]===String(m.act))||ACTS[1])[1],tp=+pc(tg);
+  const lh=num(labsOf(m)[0]?.items?.ht?.v),hBox=lh&&Math.abs(lh-c.h)>=1?`<div class="hl" style="margin-bottom:12px">📏 <b>醫院量的身高是 ${lh} cm，你的設定是 ${c.h} cm</b><div class="sub" style="margin-top:4px">差 ${r1(Math.abs(lh-c.h))} cm，BMI 約差 ${r1(2*c.bmi*Math.abs(lh-c.h)/c.h)}，會影響判讀與熱量</div><button class="btn sm" data-fixh="${lh}">改成 ${lh} cm</button></div>`:'';
   const sgBox=!c.kid&&c.gsel!=='auto'&&c.gsel!==c.sg.goal?`<div class="hl" style="margin-bottom:12px">🧑‍⚕️ <b>營養師建議目標：${GOALT[c.sg.goal]}</b><div class="sub" style="margin-top:4px">${esc(c.sg.why.join('、'))}。你目前設定「${GOALT[c.gsel]}」。</div><button class="btn sm" data-autogoal>改成自動（跟著身體數據調整）</button></div>`:'';
-  const eat=c.goal==='cut'?[`每天吃約 ${tg} kcal（比消耗少 ${-d}）`,`約每週減 ${wk.toFixed(2)} kg${weeks?`；約 ${weeks} 週（${Math.max(1,Math.round(weeks/4.3))} 個月）到健康體重上限 ${Math.round(c.wMax)} kg`:''}。減太快會掉肌肉，這個速度剛好`]
+  const eat=c.goal==='cut'?[`每天吃約 ${tg} kcal（比消耗少 ${-d}）`,`約每週減 ${wk.toFixed(2)} kg；第一階段 3 個月先減 3–5%（到 ${(c.w*.95).toFixed(1)}–${(c.w*.97).toFixed(1)} kg）${weeks?`；約 ${weeks} 週（${Math.max(1,Math.round(weeks/4.3))} 個月）到健康體重上限 ${Math.round(c.wMax)} kg`:''}。減太快會掉肌肉，這個速度剛好`]
     :c.goal==='bulk'?[`每天吃約 ${tg} kcal（比消耗多 ${d}）`,'搭配每週 3 次重訓，每月增重 0.5–1 kg 為宜；增太快多半是脂肪']
     :[`每天吃約 ${tg} kcal 維持體重`,'吃進的約等於消耗的；體重 2 週內上下 1 kg 都算正常波動'];
   const row=(ic,t,sub)=>`<div class="do"><span class="ic">${ic}</span><div><b>${t}</b><div class="s">${sub}</div></div></div>`;
-  $('#energyCard').innerHTML=`<h2>熱量怎麼用</h2>${sgBox}
+  $('#energyCard').innerHTML=`<h2>熱量怎麼用</h2>${hBox}${sgBox}
     <div class="ebar" role="img" aria-label="基礎代謝 ${bmr}、活動 ${tdee-bmr}、目標 ${tg} kcal"><i class="grow" style="width:${pc(bmr)}%;background:linear-gradient(90deg,#14a3c2,var(--cyan))">基礎代謝 ${bmr}</i><i class="grow" style="width:${pc(tdee-bmr)}%;background:linear-gradient(90deg,#8fd12f,var(--lime));animation-delay:.25s">活動 ${tdee-bmr}</i>
       <span class="mk" style="left:${tp}%"><b style="${tp>85?'transform:translateX(-85%)':''}">🎯 目標 ${tg}</b></span></div>
     <div class="sub" style="margin:-20px 0 6px">每日消耗 TDEE <b style="color:var(--text)">${tdee}</b> kcal ＝ 基礎代謝 ${bmr} ＋ 活動 ${tdee-bmr}</div>
@@ -1595,6 +1618,8 @@ function renderBody(){
   $('#hud').innerHTML=bodySVG(m,all,'b');$('#organPanel').innerHTML='';
   $('#issueList').innerHTML=all.length?issueHTML(all.slice(0,12),true,true)+(all.length>12?`<div class="note">另有 ${all.length-12} 項，請點紀錄看完整分析</div>`:''):`<div class="empty">${s||l?'目前沒有異常指標 👍':'尚無資料'}</div>`;
   $('#deptList').innerHTML=deptHTML(deptPlan(all));
+  const dv=derivedOf(m);$('#derivedCard').hidden=!dv.length;
+  $('#derivedList').innerHTML=dv.map(d=>`<div class="issue"><span class="lv lv${d.lv}">${d.lv?LVT[d.lv]:'正常'}</span><div style="flex:1;min-width:0"><div class="t">${esc(d.name)}</div><div class="s">${esc(d.txt)}<br><span style="font-size:11px">${esc(d.src)}</span></div></div><div class="v">${esc(d.val)}</div></div>`).join('');
   $('#planBody').innerHTML=planHTML(m);
   $$('#recSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===recTab));
   renderRecs();
@@ -1606,7 +1631,9 @@ function renderRecs(){
     const asc=recs.slice(0,30).reverse(),last=recs[0],prev=recs[1];
     const tr=(k,n,u,col)=>{const d=prev&&last[k]!=null&&prev[k]!=null?last[k]-prev[k]:null;
       return `<div class="stat"><div class="k">${n}</div><div class="v">${fmt(last[k])}<span class="u">${u}</span></div><div class="sub">${d==null?'&nbsp;':(d>0?'▲':d<0?'▼':'＝')+' '+Math.abs(r1(d))}</div>${spark(asc.map(r=>r[k]),col)}</div>`};
-    $('#recList').innerHTML=`<div class="spark">${tr('weight','體重','kg','#22e4ff')}${tr('fat','體脂率','%','#ff4fa3')}${tr('visceral','內臟脂肪','','#ffb547')}</div>`+
+    const wAvg=(a,b)=>{const v=recs.filter(r=>{const d=String(r.t).slice(0,10);return d>a&&d<=b&&r.weight!=null}).map(r=>+r.weight);return v.length?v.reduce((x,y)=>x+y,0)/v.length:null};
+    const td=ymd(new Date()),w1=wAvg(addDays(td,-7),td),w0=wAvg(addDays(td,-14),addDays(td,-7));
+    $('#recList').innerHTML=(w1!=null?`<div class="hl" style="margin-bottom:10px">⚖️ 近 7 天平均體重 <b>${r1(w1)} kg</b>${w0!=null?`（前 7 天 ${r1(w0)}，${w1-w0<=0?'▼':'▲'} ${r1(Math.abs(w1-w0))}）`:''}<div class="sub" style="margin-top:2px">看週平均就好，單日上下 1 kg 是水分和食物</div></div>`:'')+`<div class="spark">${tr('weight','體重','kg','#22e4ff')}${tr('fat','體脂率','%','#ff4fa3')}${tr('visceral','內臟脂肪','','#ffb547')}</div>`+
       recs.map(r=>{const lv=scaleEval(r,m).reduce((a,i)=>Math.max(a,i.lv),0);
         return `<button class="rec" data-sid="${esc(r.id)}"><div class="m"><b>${fmtDT(r.t)}</b><small>體重 ${fmt(r.weight)} kg・體脂 ${fmt(r.fat)}%・內臟 ${fmt(r.visceral)}・肌肉 ${fmt(r.muscle)} kg</small></div><span class="lv lv${lv}">${LVT[lv]}</span><span class="chev">›</span></button>`}).join('');
   }else{const recs=labsOf(m);
@@ -1738,12 +1765,15 @@ const AI_TOPICS=[['all','整體解讀','請整體解讀我的狀況：哪些最�
 const AIS=[['chatgpt','ChatGPT','https://chatgpt.com/','?q='],['claude','Claude','https://claude.ai/new','?q='],['gemini','Gemini','https://gemini.google.com/app','']];
 const aiHref=(k,t)=>{const[,,u,q]=AIS.find(x=>x[0]===k),e=encodeURIComponent(t);return q&&e.length<=6000?u+q+e:u};
 const tv=v=>typeof v==='number'?String(+v.toPrecision(4)):String(v??'');
+// 一定附上的關鍵項目（正常也列，AI 才不會叫你重驗已經驗過的）；報告沒有的列成「沒有驗」
+const AI_CORE=['sbp','dbp','glu','hba1c','tc','ldl','hdl','tg','ast','alt','ggt','plt','hb','wbc','cr','egfr','ua','tsh','waist'];
+const AI_STD='【台灣判讀標準】BMI：18.5–24 正常、24–27 過重、≥27 肥胖（國健署）；腰圍 男 ≥90、女 ≥80 cm 為腹部肥胖；代謝症候群＝腰圍、血壓 ≥130/85、空腹血糖 ≥100、三酸甘油酯 ≥150、HDL 男 <40 女 <50 五項中 ≥3 項；血壓 ≥130/80 為高血壓（2022 台灣指引）。';
 function aiPrompt(m,o){
   const c=calc(m),{scale,lab,s,l}=issuesOf(m),fh=fhOf(m),lf=lifeOf(m),fp=fitOf(m),dt=dietOf(m),out=[],P=labsOf(m).find(r=>l&&r!==l&&dayDiff(r.t,l.t)>=180);
-  const iss=i=>`${i.name}：${tv(i.val)}${i.unit?' '+i.unit:''}${i.ref?`（參考 ${i.ref}）`:''} → ${LVT[i.lv]}（${i.msg}）`;
+  const iss=i=>/^原文：/.test(i.ref||'')?`${i.name}：報告${i.ref}（App 歸類「${tv(i.val)}」）→ ${LVT[i.lv]}（${i.msg}）`:`${i.name}：${tv(i.val)}${i.unit?' '+i.unit:''}${i.ref?`（參考 ${i.ref}）`:''} → ${LVT[i.lv]}（${i.msg}）`;
   out.push('你是一位謹慎、會用白話解釋的家庭醫學科醫師。請用繁體中文（台灣用語）回答。',
-    '規則：①只根據下面的資料，不要假設沒提供的數值，資料不夠就說要補哪些檢查 ②有需要儘快就醫的警訊放最前面（沒有就說沒有）③分清楚「要看醫生」和「生活調整即可」④不要開藥或給劑量 ⑤最後給我 3 個下次看診可以問醫生的問題。','',
-    `【基本資料】${sexT(m.sex)}性、${Math.floor(c.a)} 歲、身高 ${c.h} cm、體重 ${tv(c.w)} kg（BMI ${r1(c.bmi)}）${m.waist?`、腰圍 ${m.waist} cm`:''}`,
+    '規則：①只根據下面的資料，不要假設沒提供的數值 ②「關鍵數值」裡列出的都已經驗過，不要再叫我重驗；只能建議補「這份報告沒有驗」的項目 ③判讀用下面的台灣標準 ④有需要儘快就醫的警訊放最前面（沒有就說沒有）⑤分清楚「要看醫生」和「生活調整即可」⑥不要開藥或給劑量 ⑦最後給我 3 個下次看診可以問醫生的問題。',AI_STD,'',
+    `【基本資料】${sexT(m.sex)}性、${Math.floor(c.a)} 歲、身高 ${c.h} cm、體重 ${tv(c.w)} kg（BMI ${r1(c.bmi)}）${m.waist?`、腰圍 ${m.waist} cm`:''}${l?.items?.ht||l?.items?.bmi?`；醫院量：${[l.items.ht&&`身高 ${l.items.ht.v} cm`,l.items.wt&&`體重 ${l.items.wt.v} kg`,l.items.bmi&&`BMI ${l.items.bmi.v}`].filter(Boolean).join('、')}`:''}`,
     `【目標】${GOALT[c.goal]}；活動量：${(ACTS.find(x=>x[0]===String(m.act))||ACTS[1])[1]}`);
   if(o.fh){if(fhText(m))out.push(`【一等親家族史】${fhText(m)}${fh.early?'（有 50 歲前發病，或同一種癌症 2 人以上）':''}`);
     if(m.life)out.push(`【生活習慣】吸菸：${{never:'從不',former:'已戒',current:'目前有'}[lf.smoke]}${lf.smoke!=='never'&&packYears(lf)?`（約 ${packYears(lf)} 包年）`:''}；喝酒：${{none:'不喝',some:'偶爾',often:'每週 3 次以上'}[lf.alc]}；檳榔：${{never:'從不',former:'已戒',current:'目前有'}[lf.betel]}`);
@@ -1751,7 +1781,10 @@ function aiPrompt(m,o){
     if(dt.no.length)out.push(`【不吃的食物】${dt.no.map(k=>(EXG.find(z=>z[0]===k)||[,k])[1]).join('、')}`)}
   if(l){out.push('',`【體檢報告 ${l.t}】App 判讀異常 ${lab.length} 項：`);
     lab.slice().sort((a,b)=>b.lv-a.lv).forEach(i=>{const pv=P?.items?.[i.k]?.v;out.push(`- ${iss(i)}${pv!=null&&pv!==''?`；前一次（${P.t}）${pv}`:''}`)});
-    if(o.normals){const ab=new Set(lab.map(i=>i.k)),nm=Object.entries(l.items||{}).filter(([k,it])=>!ab.has(k)&&LABK[k]&&it?.v!==''&&it?.v!=null).map(([k,it])=>`${LABK[k].s||LABK[k].n} ${it.v}${LABK[k].u?' '+LABK[k].u:''}`);
+    {const ab=new Set(lab.map(i=>i.k)),has=k=>{const v=l.items?.[k]?.v;return v!=null&&v!==''},core=AI_CORE.filter(k=>has(k)&&!ab.has(k)).map(k=>`${LABK[k].s||LABK[k].n} ${l.items[k].v}${LABK[k].u?' '+LABK[k].u:''}`),miss=AI_CORE.filter(k=>!has(k)&&!(k==='waist'&&m.waist)).map(k=>LABK[k].s||LABK[k].n);
+      if(core.length)out.push(`【關鍵數值（有驗、正常）】${core.join('、')}`);if(miss.length)out.push(`【這份報告沒有驗】${miss.join('、')}`)}
+    const dv=derivedOf(m);if(dv.length)out.push(`【App 自動計算】${dv.map(d=>`${d.name} ${d.val}：${d.txt}（${d.src}）`).join('；')}`);
+    if(o.normals){const ab=new Set([...lab.map(i=>i.k),...AI_CORE]),nm=Object.entries(l.items||{}).filter(([k,it])=>!ab.has(k)&&LABK[k]&&it?.v!==''&&it?.v!=null).map(([k,it])=>`${LABK[k].s||LABK[k].n} ${it.v}${LABK[k].u?' '+LABK[k].u:''}`);
       if(nm.length)out.push(`其他正常或只記錄的項目：${nm.join('、')}`)}}
   else out.push('','【體檢報告】還沒有');
   if(o.scale&&s){out.push('',`【體脂計 ${String(s.t).slice(0,10)}】${['weight','fat','visceral','muscle','skeletal','bmr'].filter(k=>s[k]!=null).map(k=>`${SFN[k].n} ${tv(s[k])}${SFN[k].u?' '+SFN[k].u:''}`).join('、')}`);
@@ -2359,7 +2392,7 @@ $('#memChip').onclick=openMemberPicker;
 $$('#recSeg button').forEach(b=>b.onclick=()=>{recTab=b.dataset.v;$$('#recSeg button').forEach(x=>x.classList.toggle('on',x===b));renderRecs()});
 $('#hud').addEventListener('click',e=>{const t=e.target.closest('[data-o]');if(t)showOrgan(t.dataset.o)});
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-close],[data-closeorgan],[data-copy],[data-show],[data-pick],[data-editmem],[data-addmem],[data-sid],[data-lid],[data-addscale],[data-addlab],[data-copyplan],[data-goplan],[data-autogoal],[data-go],[data-golab],[data-goback],[data-fday],[data-timer],[data-ics],[data-meal],[data-ban],[data-shop],[data-export],[data-import],[data-autoimg],[data-aidoc],[data-ask]');if(!t)return;const d=t.dataset;
+  const t=e.target.closest('[data-close],[data-closeorgan],[data-copy],[data-show],[data-pick],[data-editmem],[data-addmem],[data-sid],[data-lid],[data-addscale],[data-addlab],[data-copyplan],[data-goplan],[data-autogoal],[data-go],[data-golab],[data-goback],[data-fday],[data-timer],[data-ics],[data-meal],[data-ban],[data-shop],[data-export],[data-import],[data-autoimg],[data-aidoc],[data-ask],[data-fixh]');if(!t)return;const d=t.dataset;
   if('close' in d)closeSheet();
   else if('closeorgan' in d){$('#organPanel').innerHTML='';$$('#hud .sel').forEach(e=>e.classList.remove('sel'))}
   else if(d.copy)copyText(d.copy==='scale'?promptScale():promptLab());
@@ -2369,6 +2402,7 @@ document.addEventListener('click',e=>{
   else if(d.meal!=null)openMeal(+d.meal);
   else if(d.ban){const m=me(),dt=dietOf(m);m.diet={...dt,ban:[...new Set([...dt.ban,d.ban])]};S.set('members',MEM);closeSheet();renderMenu();toast(`已移除「${BY_ID[d.ban].n}」，之後不再排（「我的 → 編輯 → 不吃的食物」可恢復）`)}
   else if('shop' in d)openShop();
+  else if(d.fixh){const m=me();m.h=+d.fixh;S.set('members',MEM);renderAll();toast(`身高已改成 ${d.fixh} cm`)}
   else if('aidoc' in d)openAI();
   else if(d.ask)openAI(d.ask);
   else if('export' in d)exportData();

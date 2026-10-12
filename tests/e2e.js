@@ -6,6 +6,7 @@ let pw; for (const p of ['playwright', '/opt/node22/lib/node_modules/playwright'
 if (!pw) { console.error('找不到 playwright（npm i -g playwright）'); process.exit(2) }
 const ROOT = path.join(__dirname, '..'), PAGE = 'file://' + path.join(ROOT, 'index.html');
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEUlEQVR4nGP432ODFTEMLQkAoxxxwW4TzCoAAAAASUVORK5CYII=', 'base64');
+const addD = n => { const d = new Date(); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
 const results = []; const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'}  ${name}${extra ? '  — ' + extra : ''}`);
 
 (async () => {
@@ -298,7 +299,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   page = await newPage({ members: [{ id: 'z', name: '宗鑫', sex: 'm', birth: '1984-03-15', h: 172, w: 73.1, waist: 88, act: '1.375', goal: 'auto', fh: { ca: ['breast'], chr: ['htn'], early: false }, life: { smoke: 'never', betel: 'never', alc: 'some' }, fit: { lim: ['knee'] } }], active: 'z',
     labs: { z: [{ id: 'l', t: '2026-09-14', hospital: '台安醫院', items: { glu: { v: 106 }, ldl: { v: 142 }, sdldl: { v: 30.2, hi: 30 }, alt: { v: 30 } }, extra: [] }] } });
   const ap0 = await page.evaluate(() => { const o = { topic: 'all', fh: true, scale: true, normals: false, q: '' }; return { a: aiPrompt(me(), o), n: aiPrompt(me(), { ...o, normals: true }), it: aiPrompt(me(), { ...o, topic: 'item', item: 'sdldl' }) } });
-  check('AI 醫生的問題：不含姓名、生日、醫院；有年齡性別、異常數值、家族史、身體限制', !/宗鑫|1984|台安/.test(ap0.a + ap0.n) && /男性、42 歲/.test(ap0.a) && /空腹血糖：106/.test(ap0.a) && /乳癌/.test(ap0.a) && /膝蓋/.test(ap0.a) && !/GPT 30/.test(ap0.a) && /GPT 30/.test(ap0.n), ap0.a.split('\n').slice(3, 5).join(' / '));
+  check('AI 醫生的問題：不含姓名、生日、醫院；有年齡性別、異常數值、家族史、身體限制、正常的關鍵數值', !/宗鑫|1984|台安/.test(ap0.a + ap0.n) && /男性、42 歲/.test(ap0.a) && /空腹血糖：106/.test(ap0.a) && /乳癌/.test(ap0.a) && /膝蓋/.test(ap0.a) && /【關鍵數值（有驗、正常）】.*GPT 30/.test(ap0.a), ap0.a.split('\n').slice(3, 5).join(' / '));
   check('單項提問帶入該項數值與報告自己的參考值', /請解釋我的「小而密低密度膽固醇 sdLDL 30\.2 mg\/dL」（參考 ≤30）/.test(ap0.it), (ap0.it.match(/【我的問題】.*/) || [''])[0].slice(0, 60));
   await page.click('#nav button[data-v="body"]'); await page.waitForTimeout(300);
   await page.click('#issueList [data-ask="sdldl"]'); await page.waitForTimeout(400);
@@ -311,6 +312,30 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   check('按 Claude：先複製完整問題（含補充、正常數值），再開新分頁', /補充：最近常覺得累/.test(cp) && /GPT 30/.test(cp) && /^https:\/\/claude\.ai\/new/.test(popUrl), popUrl.slice(0, 40));
   await page.evaluate(() => closeSheet()); await page.click('#nav button[data-v="dash"]'); await page.waitForTimeout(200);
   check('總覽與身體頁都有「問 AI 醫生」入口', await page.evaluate(() => !!document.querySelector('#latestCard [data-aidoc]') && !!document.querySelector('#v-body [data-aidoc]')));
+  await page.close();
+
+  // =============== 6f. 不用問 AI 就能算的：FIB-4、代謝症候群、略高、X 光原文、身高不一致 ===============
+  page = await newPage({ members: [{ id: 'z', name: '宗鑫', sex: 'm', birth: '1984-03-15', h: 173, w: 74.6, act: '1.375', goal: 'auto', fh: { ca: ['breast'], chr: ['htn'], early: true }, life: { smoke: 'never', betel: 'never', alc: 'some' } },
+      { id: 'q', name: '阿伯', sex: 'm', birth: '1966-01-01', h: 168, w: 82, waist: 96, act: '1.2', goal: 'auto' }], active: 'z',
+    labs: { z: [{ id: 'l', t: '2026-09-14', items: { ht: { v: '172' }, bmi: { v: '24.8' }, glu: { v: 92 }, ldl: { v: 118 }, hdl: { v: 48 }, tg: { v: 110 }, ast: { v: 24 }, alt: { v: 30 }, plt: { v: 240 }, sdldl: { v: 30.2, hi: 30 }, us_liver: { v: '輕度脂肪肝' },
+      cxr: { v: '輕微變化（如主動脈鈣化、陳舊病灶）', ref: '原文：肺部無明顯異常（疑輕度脊椎側彎）' } }, extra: [] }],
+      q: [{ id: 'm', t: '2026-09-01', items: { sbp: { v: 136 }, dbp: { v: 86 }, glu: { v: 108 }, tg: { v: 190 }, hdl: { v: 36 }, ast: { v: 60 }, alt: { v: 45 }, plt: { v: 150 }, cxr: { v: '肺結節或陰影（待查）', ref: '原文：右上肺結節 0.6 cm' } }, extra: [] }] },
+    scale: { z: [{ id: 'a', t: addD(-2) + 'T07:00', weight: 74.2 }, { id: 'b', t: addD(-4) + 'T07:00', weight: 74.4 }, { id: 'c', t: addD(-10) + 'T07:00', weight: 75.0 }] } });
+  const dz = await page.evaluate(() => { const ev = labEval(LABS.z[0], me()), pl = yearPlan(me()).items; return { ev: ev.map(i => i.k + (i.bl != null ? '~' : '')).join(), dv: derivedOf(me()).map(d => `${d.k}:${d.val}:${d.lv}`).join(), lip: pl.find(o => /血脂/.test(o.t))?.pr, brca: pl.some(o => /BRCA/.test(o.t)) } });
+  check('X 光原文寫「肺部無明顯異常」→ 不算肺部異常；sdLDL 只超出 0.7% 標「略高」、血脂追蹤降為可考慮', !/cxr/.test(dz.ev) && /sdldl~/.test(dz.ev) && dz.lip === 3, dz.ev);
+  check('FIB-4 自己算（42 歲 GOT 24、GPT 30、血小板 240 → 0.77 低風險）；代謝症候群 0/5', /fib4:0\.77:0/.test(dz.dv) && /mets:0\/5:0/.test(dz.dv), dz.dv);
+  check('男性、一等親早發乳癌 → 列出 BRCA 遺傳諮詢可考慮', dz.brca);
+  const dq = await page.evaluate(() => { const m = MEM.find(x => x.id === 'q'), pl = yearPlan(m).items; return { dv: derivedOf(m).map(d => `${d.k}:${d.val}:${d.lv}`).join(), plan: pl.filter(o => /代謝症候群|FibroScan|胸腔科/.test(o.t)).map(o => o.pr + o.t).join(' / '), cx: labEval(LABS.q[0], m).some(i => i.k === 'cxr') } });
+  check('代謝症候群 5/5 → 列為優先；FIB-4 偏高 → 建議彈性超音波；X 光原文有結節仍算異常', /mets:5\/5:2/.test(dq.dv) && /1代謝症候群/.test(dq.plan) && /FibroScan/.test(dq.plan) && dq.cx, dq.dv + '｜' + dq.plan);
+  const pz = await page.evaluate(() => aiPrompt(me(), { topic: 'all', fh: true, scale: true, normals: false, q: '' }));
+  check('AI 問題附台灣標準、已驗正常的關鍵數值、沒驗的項目、FIB-4、醫院身高；X 光用報告原文', /BMI：18\.5–24 正常、24–27 過重/.test(pz) && /【關鍵數值（有驗、正常）】.*LDL 118/.test(pz) && /【這份報告沒有驗】.*HbA1c/.test(pz) && /FIB-4 .*0\.77/.test(pz) && /醫院量：身高 172 cm/.test(pz) && !/主動脈鈣化/.test(pz), (pz.match(/【這份報告沒有驗】.*/) || [''])[0].slice(0, 50));
+  await page.click('#nav button[data-v="dash"]'); await page.waitForTimeout(300);
+  const hb = await page.evaluate(() => !!document.querySelector('#energyCard [data-fixh="172"]'));
+  await page.click('#energyCard [data-fixh="172"]'); await page.waitForTimeout(200);
+  check('身高和醫院不一致（173 vs 172）→ 提示並一鍵改成 172', hb && await page.evaluate(() => me().h === 172 && !document.querySelector('#energyCard [data-fixh]')));
+  await page.click('#nav button[data-v="body"]'); await page.waitForTimeout(300);
+  const bodyTxt = await page.evaluate(() => ({ d: document.querySelector('#derivedCard').hidden ? '' : document.querySelector('#derivedList').textContent, w: document.querySelector('#recList').textContent }));
+  check('身體頁顯示「App 自動計算」卡與近 7 天平均體重', /FIB-4/.test(bodyTxt.d) && /代謝症候群/.test(bodyTxt.d) && /近 7 天平均體重\s*74\.3 kg/.test(bodyTxt.w) && /前 7 天 75/.test(bodyTxt.w), bodyTxt.w.slice(0, 50));
   await page.close();
 
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
