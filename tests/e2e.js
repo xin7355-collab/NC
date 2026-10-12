@@ -214,6 +214,41 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   check('6 個頁面在 iPhone 寬度都沒有橫向捲動', !ovf.length, ovf.join(','));
   await page.close();
 
+  // =============== 6c. 菜色庫、不吃的食物、採買清單 ===============
+  page = await newPage({ members: [{ id: 'a', name: '爸', sex: 'm', birth: '1980-01-01', h: 172, w: 75, act: '1.375', goal: 'auto' }, { id: 'b', name: '媽', sex: 'f', birth: '1982-01-01', h: 160, w: 55, act: '1.375', goal: 'auto' }], active: 'a' });
+  const db = await page.evaluate(() => { const ids = FOODS.map(f => f.id); return { n: FOODS.length, dup: ids.length - new Set(ids).size, unk: [...new Set(FOODS.flatMap(f => ingOf(f).map(i => i.n)).filter(n => !CAT_OF[n]))].join(','),
+    bad: FOODS.filter(f => !f.g || !f.en || !['b', 'ld', 'v', 's'].includes(f.m) || Math.abs(f.k - (4 * (f.p + f.c) + 9 * f.f)) / f.k > .25).map(f => f.id).join(',') } });
+  check('菜色庫 ≥130 道：id 不重複、每道都有食材與英文描述、食材都有分類、熱量與三大營養素一致', db.n >= 130 && !db.dup && !db.unk && !db.bad, `${db.n} 道｜未分類 ${db.unk || '無'}｜有問題 ${db.bad || '無'}`);
+  const days14 = await page.evaluate(() => [...Array(14)].map((_, i) => addDays(ymd(new Date()), i)));
+  const vary = await page.evaluate(d => { const ld = d.slice(0, 7).flatMap(x => plan(x).slots.filter(s => /午|晚/.test(s.n)).map(s => s.items[0].id)); return new Set(ld).size }, days14);
+  check('一週 14 餐午晚餐不重複', vary === 14, `${vary} 種`);
+  await page.click('#nav button[data-v="menu"]'); await page.waitForTimeout(300); await page.click('#meals [data-meal="1"]'); await page.waitForTimeout(400);
+  const banned = await page.getAttribute('#sheet [data-ban]', 'data-ban'); await page.click('#sheet [data-ban]'); await page.waitForTimeout(300);
+  const ban = await page.evaluate(([id, d]) => ({ saved: dietOf(me()).ban.includes(id), seen: d.some(x => plan(x).slots.some(s => s.items.some(f => f.id === id))) }), [banned, days14]);
+  check('點一餐 →「不要這道」→ 之後 14 天都不再排', ban.saved && !ban.seen, `${banned} ${JSON.stringify(ban)}`);
+  await page.evaluate(() => openMemberEdit('a', 'diet')); await page.waitForTimeout(400);
+  for (const k of ['beef', 'shell', 'wheat']) await page.click(`#m-no .chip[data-k="${k}"]`);
+  await page.click(`#m-ban .chip[data-k="${banned}"]`); await page.click('#m-save'); await page.waitForTimeout(300);
+  const ex = await page.evaluate(d => { const dt = dietOf(me()), hit = d.flatMap(x => plan(x).slots.flatMap(s => s.items)).flatMap(f => ingOf(f).map(i => i.n)).filter(n => /牛(?!奶|蒡)|蝦|蛤|花枝|麵|吐司|饅頭|餅皮|貝果|燒餅|水餃|油條/.test(n));
+    return { no: dt.no.join(), ban: dt.ban.length, hit: [...new Set(hit)].join(',') } }, days14);
+  check('不吃牛肉、蝦蟹貝、麵食 → 14 天菜單都避開；點掉的菜可恢復', ex.no === 'beef,shell,wheat' && !ex.hit && ex.ban === 0, JSON.stringify(ex));
+  const veg = await page.evaluate(d => { const m = { ...me(), diet: { no: ['beef', 'pork', 'chicken', 'fish', 'shell'], ban: [] } }; return d.every(x => plan(x, m).slots.filter(s => /午|晚/.test(s.n)).length === 2) && !d.some(x => plan(x, m).slots.some(s => s.items.some(f => ingOf(f).some(i => /雞(?!蛋)|豬|牛(?!奶)|魚|蝦|鮭|鯖|鱈|鯛|鱸|鮪/.test(i.n))))) }, days14);
+  check('吃素（不吃肉、魚、海鮮）每天仍排得出午晚餐', veg);
+  await page.click('#v-menu [data-shop]'); await page.waitForTimeout(400);
+  const sh0 = await page.evaluate(() => ({ rows: document.querySelectorAll('#shopBody .shop').length, cats: document.querySelectorAll('#shopBody .h4').length, egg: [...document.querySelectorAll('#shopBody .shop')].map(r => r.textContent).find(t => /^.?雞蛋/.test(t.trim())) || '' }));
+  const k1 = await page.getAttribute('#shopBody .shop:nth-of-type(1) [data-shopk], #shopBody [data-shopk]', 'data-shopk');
+  await page.click(`#shopBody [data-shopk="${k1}"]`); await page.waitForTimeout(150);
+  const k2 = await page.evaluate(() => [...document.querySelectorAll('#shopBody [data-shoprm]')].map(b => b.dataset.shoprm)[1]); await page.click(`#shopBody .x[data-shoprm="${k2}"]`); await page.waitForTimeout(150);
+  await page.click('#sheet h3 [data-close]'); await page.waitForTimeout(200); await page.click('#v-menu [data-shop]'); await page.waitForTimeout(300);
+  const sh1 = await page.evaluate(([a, b]) => ({ done: document.querySelector(`#shopBody .shop [data-shopk="${a}"]`)?.closest('.shop').classList.contains('done'), gone: !document.querySelector(`#shopBody .sk[data-shopk="${b}"]`), txt: shopText() }), [k1, k2]);
+  check('採買清單：依分類列出、雞蛋以整數顆計', sh0.rows >= 15 && sh0.cats >= 5 && /雞蛋\s*\d+ 顆/.test(sh0.egg), `${sh0.rows} 項 ${sh0.cats} 類｜${sh0.egg.slice(0, 20)}`);
+  check('採買清單：打勾、移除會記住，複製的文字不含已買與已移除', sh1.done && sh1.gone && !sh1.txt.includes('□ ' + k1.split('|')[0] + ' ') && !sh1.txt.includes('□ ' + k2.split('|')[0] + ' ') && /【.+】/.test(sh1.txt), sh1.txt.split('\n').slice(0, 3).join(' / '));
+  const two = await page.evaluate(() => { const one = shopList(['a'], '2026-10-12', '2026-10-18'), both = shopList(['a', 'b'], '2026-10-12', '2026-10-18'), q = l => l.reduce((t, o) => t + (o.u === 'g' ? o.q : 0), 0); return [Math.round(q(one)), Math.round(q(both))] });
+  check('兩個人吃的採買量比一個人多', two[1] > two[0] * 1.3, two.join(' → ') + ' g');
+  const cd = await page.evaluate(() => cleanBackup({ members: [{ id: 'q', name: 'x', sex: 'm', birth: '1990-01-01', diet: { no: ['beef', '<x>'], ban: ['l1', 'zzz', '<img>'] } }] }).mem[0].diet);
+  check('備份檔的「不吃的食物」會被清洗', JSON.stringify(cd) === '{"no":["beef"],"ban":["l1"]}', JSON.stringify(cd));
+  await page.close();
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);

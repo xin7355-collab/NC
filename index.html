@@ -195,6 +195,13 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 @keyframes beat{0%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:.75}}
 .pl{transform-box:fill-box;transform-origin:center;animation:plin .7s cubic-bezier(.2,.8,.2,1) both}
 @keyframes plin{from{transform:scale(.35) rotate(-25deg);opacity:0}}
+.meal[data-meal],.sheet-bg{cursor:pointer}
+.shop{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line)}.h4+.shop{border-top:0}
+.sk{flex:1;display:flex;gap:10px;align-items:center;background:none;border:0;color:var(--text);text-align:left;padding:10px 0;font-size:14px;min-width:0}
+.sk .bx{flex:0 0 24px;height:24px;border-radius:8px;border:1.5px solid rgba(255,255,255,.25);display:grid;place-items:center;color:#04121a;font-weight:800;transition:background .2s,border-color .2s}
+.shop.done .bx{background:var(--lime);border-color:var(--lime)}.shop.done b{text-decoration:line-through;color:var(--mute)}
+.sk .m{min-width:0;flex:1}.sk .q{color:var(--cyan);font-weight:700;font-variant-numeric:tabular-nums;margin-left:4px}
+.sk small{display:block;font-size:11px;color:var(--mute);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stg>*{animation:in .45s ease both}.stg>*:nth-child(2){animation-delay:.06s}.stg>*:nth-child(3){animation-delay:.12s}.stg>*:nth-child(4){animation-delay:.18s}.stg>*:nth-child(5){animation-delay:.24s}.stg>*:nth-child(n+6){animation-delay:.3s}
 @media (prefers-reduced-motion:reduce){.pulse,.vflow,.scan::after,.view,.gmark,.garc,.grow,.beat,.stg>*,.pl{animation:none}}
 .callout{cursor:pointer}
@@ -281,6 +288,7 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 <section class="view" id="v-menu">
   <div class="card" id="nutriCard"></div>
   <div class="days" id="days"></div>
+  <button class="btn ghost" data-shop style="margin:0 0 14px">🛒 一週採買清單（依菜單自動算份量）</button>
   <div class="tags" id="menuMode" style="margin-bottom:12px"></div>
   <div class="card">
     <h2 id="menuTitle">今日菜單</h2>
@@ -434,10 +442,138 @@ const FOODS=[
  {id:'v7',n:'燙秋葵',e:'🫑',m:'v',k:50,p:2,c:7,f:1,en:'blanched okra with soy dressing'},
  {id:'s7',n:'茶葉蛋＋無糖豆漿',e:'🥚',m:'s',k:190,p:15,c:9,f:10,en:'Taiwanese tea egg with a glass of unsweetened soy milk'}
 ];
+/* 食材（1 人份）：「名稱＋數量＋單位」逗號分隔；沒數量＝常備調味料。用於採買清單與「不吃的食材」 */
+const G0={b1:'蛋餅皮1片,雞蛋1顆,鮪魚罐頭40g,蔥5g',b2:'飯糰1個,無糖豆漿400ml',b3:'希臘優格150g,燕麥片40g,藍莓50g',b4:'全麥吐司2片,雞胸肉80g,生菜20g,番茄30g',
+  b5:'地瓜150g,雞蛋2顆',b6:'全麥吐司1片,酪梨0.5顆,雞蛋1顆',b7:'無糖豆漿350ml,油條0.3條,蔥5g,醬油',b8:'蘿蔔糕2片,雞蛋1顆',b9:'燕麥片40g,無糖豆漿300ml,雞蛋1顆',
+  l1:'雞胸肉150g,糙米80g,青花菜100g,紅蘿蔔30g',l2:'鮭魚120g,藜麥60g,綜合生菜80g,小番茄50g,酪梨0.25顆',l3:'牛腱120g,麵條150g,白蘿蔔80g,青江菜50g',
+  l4:'去皮雞腿150g,白米90g,高麗菜80g,醬油',l5:'鯖魚120g,白米80g,味噌10g,嫩豆腐50g,海帶芽3g',l6:'蝦仁100g,白米80g,雞蛋1顆,三色豆40g,蔥10g',
+  l7:'板豆腐150g,咖哩塊20g,馬鈴薯80g,紅蘿蔔50g,洋蔥50g,白米80g',l8:'涼麵150g,小黃瓜50g,芝麻醬15g,雞蛋1顆',l9:'白米80g,牛絞肉60g,雞蛋1顆,菠菜50g,黃豆芽50g,紅蘿蔔30g,韓式辣醬15g',
+  l10:'河粉100g,牛肉片100g,豆芽菜50g,九層塔5g,洋蔥30g',l11:'鯛魚片150g,櫛瓜80g,甜椒80g,洋蔥50g',l12:'去皮雞腿150g,高麗菜100g,金針菇50g,板豆腐80g,玉米1段',
+  l13:'義大利麵90g,牛絞肉80g,番茄150g,洋蔥40g',l14:'虱目魚肚120g,白米50g,芹菜10g,薑5g',l15:'豬里肌120g,地瓜150g,青花菜80g',l16:'蕎麥麵80g,嫩豆腐100g,味噌15g,海帶芽3g,蔥5g',
+  l17:'鱸魚150g,五穀米80g,薑5g,蔥10g',v1:'地瓜葉150g,蒜頭5g',v2:'芥藍150g,蒜頭5g',v3:'青江菜150g',v4:'菠菜150g,芝麻5g',v5:'小黃瓜150g,蒜頭5g',v6:'番茄150g,雞蛋2顆',v7:'秋葵100g',
+  s1:'香蕉1根,綜合堅果15g',s2:'芭樂1顆',s3:'無糖豆花1碗',s4:'無糖優格1杯',s5:'毛豆100g',s6:'乳清蛋白粉30g',s7:'雞蛋1顆,無糖豆漿250ml'};
+// 採買分類（食材名稱 → 區域）；新增菜色用到新食材時要加在這裡（測試會檢查）
+const ING_CAT={
+  '肉類':'雞胸肉,去皮雞腿,雞絞肉,即食雞胸肉,豬里肌,豬絞肉,瘦豬肉片,牛腱,牛肉片,牛絞肉,牛排',
+  '海鮮':'鮪魚罐頭,鮭魚,鯖魚,鯛魚片,虱目魚肚,鱸魚,鱈魚,秋刀魚,蝦仁,蛤蜊,花枝',
+  '蛋豆':'雞蛋,無糖豆漿,板豆腐,嫩豆腐,豆干,毛豆,無糖豆花,鷹嘴豆',
+  '蔬菜':'蔥,生菜,番茄,小番茄,綜合生菜,青花菜,花椰菜,紅蘿蔔,白蘿蔔,青江菜,高麗菜,三色豆,馬鈴薯,洋蔥,小黃瓜,菠菜,黃豆芽,豆芽菜,九層塔,櫛瓜,甜椒,玉米,玉米粒,玉米筍,芹菜,薑,蒜頭,地瓜葉,芥藍,秋葵,南瓜,空心菜,A菜,大陸妹,白菜,茄子,四季豆,蘆筍,苦瓜,絲瓜,韭菜,海帶,海帶絲,黑木耳,酪梨',
+  '菇類':'金針菇,鴻喜菇,香菇',
+  '水果':'藍莓,香蕉,芭樂,奇異果,蘋果,柳丁,鳳梨,木瓜',
+  '主食':'飯糰,蛋餅皮,全麥吐司,全麥饅頭,全麥餅皮,全麥貝果,全麥麵包,燒餅,蔥抓餅,蘿蔔糕,油條,地瓜,燕麥片,糙米,白米,五穀米,藜麥,麵條,涼麵,河粉,義大利麵,蕎麥麵,烏龍麵,冬粉,米粉,粄條,冷凍水餃,越南春捲皮,全麥蘇打餅',
+  '乳品':'希臘優格,無糖優格,鮮奶,起司片,乳清蛋白粉',
+  '堅果種子':'綜合堅果,芝麻,花生,無糖花生醬',
+  '調味乾貨':'醬油,味噌,咖哩塊,芝麻醬,韓式辣醬,辣豆瓣醬,青醬,橄欖油,海帶芽,海苔,乾辣椒,黑胡椒'};
+const CATS=Object.keys(ING_CAT),CAT_OF={};CATS.forEach(c=>ING_CAT[c].split(',').forEach(n=>CAT_OF[n]=c));
+// 不吃的食材群組（比對食材名稱）：牛奶、牛蒡不算牛肉；雞蛋不算雞肉
+const EXG=[['beef','牛肉',/牛(?!奶|蒡)/],['pork','豬肉',/豬|培根|火腿|肉鬆/],['chicken','雞肉',/雞(?!蛋)|鴨/],['fish','魚',/魚|鮭|鯖|鱈|鯛|鱸|鮪|秋刀/],['shell','蝦蟹貝',/蝦|蛤|蟹|花枝|透抽|牡蠣|貝(?!果)|魷/],
+  ['egg','蛋',/雞蛋|鴨蛋|鹹蛋|皮蛋/],['dairy','奶類',/鮮奶|牛奶|優格|起司|乳清|奶油|乳酪/],['soy','黃豆製品',/豆漿|豆腐|豆干|豆皮|毛豆|豆花|味噌|黃豆/],['nut','堅果花生芝麻',/堅果|花生|杏仁|核桃|腰果|芝麻/],
+  ['wheat','麵食（小麥）',/麵(?!線)|麵線|吐司|饅頭|餅皮|貝果|麵包|燒餅|蔥抓餅|水餃|蘇打餅|油條/],['spicy','辣',/辣/]];
+const ingOf=f=>String(f.g||'').split(',').filter(Boolean).map(t=>{const x=t.trim().match(/^(.+?)(\d+(?:\.\d+)?)(g|ml|顆|個|片|條|根|包|杯|碗|張|段|捲)?$/);return x?{n:x[1],q:+x[2],u:x[3]||''}:{n:t.trim(),q:null,u:''}});
+// 擴充菜色：id|名稱|圖示|餐別|蛋白,碳水,脂肪(g)|標籤|食材|英文（AI 生圖用）；熱量由三大營養素換算
+const MORE=`b10|蔬菜蛋餅（少油）|🥚|b|14,28,12|oil|蛋餅皮1片,雞蛋1顆,高麗菜50g|Taiwanese egg crepe with shredded cabbage, light oil
+b11|全麥饅頭夾蛋＋豆漿|🥟|b|24,52,12||全麥饅頭1個,雞蛋1顆,無糖豆漿300ml|whole wheat steamed bun with egg and a glass of soy milk
+b12|地瓜燕麥鮮奶粥|🍠|b|12,52,7|fib,ca|地瓜100g,燕麥片30g,鮮奶200ml|sweet potato oatmeal porridge cooked with milk
+b13|雞肉蔬菜捲餅|🌯|b|26,32,9||全麥餅皮1片,雞胸肉80g,生菜30g,小黃瓜30g|whole wheat chicken and vegetable wrap
+b14|鮭魚糙米飯糰|🍙|b|16,55,7|fish,fib|糙米70g,鮭魚50g,海苔1片|brown rice onigiri with salmon wrapped in nori
+b15|起司蛋全麥吐司|🧀|b|20,38,15|ca|全麥吐司2片,雞蛋1顆,起司片1片|whole wheat toast sandwich with egg and cheese
+b16|優格奇異果燕麥杯|🥝|b|9,35,5|ca,kf,fib|無糖優格1杯,奇異果1顆,燕麥片20g|yogurt parfait with kiwi and oats in a glass
+b17|菇菇蛋捲＋地瓜|🍳|b|15,36,11|fib|雞蛋2顆,鴻喜菇50g,地瓜120g|mushroom omelette roll with roasted sweet potato
+b18|鮮奶燕麥＋香蕉|🍌|b|14,58,10|ca,fib,kf|燕麥片40g,鮮奶250ml,香蕉0.5根|oatmeal with milk and sliced banana
+b19|雞絲蔬菜粥|🥣|b|17,35,3||白米40g,雞胸肉60g,高麗菜50g,紅蘿蔔20g|chicken and vegetable congee
+b20|酪梨鮪魚全麥貝果|🥯|b|22,50,12|hc|全麥貝果1個,鮪魚罐頭40g,酪梨0.25顆|whole wheat bagel with tuna and avocado
+b21|蔥抓餅加蛋（偶爾）|🫓|b|12,40,22|oil,hc|蔥抓餅1片,雞蛋1顆|Taiwanese scallion pancake with egg
+b22|燒餅夾蛋|🥙|b|14,45,18|oil,hc|燒餅1個,雞蛋1顆|Taiwanese sesame flatbread with egg
+b23|地瓜粥＋滷豆干|🍠|b|14,55,6|ca|地瓜100g,白米40g,豆干50g,醬油|sweet potato congee with braised dried tofu
+b24|菠菜烘蛋＋全麥吐司|🥬|b|20,20,14|fe|雞蛋2顆,菠菜50g,洋蔥30g,鮮奶30ml,全麥吐司1片|spinach frittata with whole wheat toast
+b25|花生醬吐司＋豆漿|🥜|b|22,40,17||全麥吐司2片,無糖花生醬15g,無糖豆漿300ml|whole wheat toast with peanut butter and soy milk
+b26|蛋白質早餐盒|🍱|b|24,32,7||雞胸肉60g,雞蛋1顆,小番茄80g,地瓜100g|breakfast box with chicken breast, boiled egg, cherry tomatoes and sweet potato
+v8|燙青花菜|🥦|v|5,8,1|fib|青花菜150g|blanched broccoli florets
+v9|清炒高麗菜|🥬|v|2,8,4||高麗菜150g,蒜頭5g|stir fried cabbage with garlic
+v10|蒜炒空心菜|🌿|v|3,6,4|fib,kf|空心菜150g,蒜頭5g|stir fried water spinach with garlic
+v11|燙A菜|🥬|v|2,5,1||A菜150g|blanched Taiwanese lettuce greens
+v12|清炒大陸妹|🥬|v|2,4,3||大陸妹150g,蒜頭5g|stir fried leaf lettuce
+v13|涼拌海帶絲|🌊|v|1,6,2|salt|海帶絲100g,蒜頭5g|Taiwanese cold kelp salad
+v14|香菇炒白菜|🍄|v|3,8,3|fib|白菜150g,香菇30g|napa cabbage stir fried with shiitake
+v15|塔香茄子（少油）|🍆|v|2,10,5||茄子150g,九層塔5g,蒜頭5g|eggplant with Thai basil, light oil
+v16|蒜炒四季豆|🫛|v|3,10,4|fib|四季豆150g,蒜頭5g|stir fried green beans with garlic
+v17|蘆筍炒菇|🌱|v|4,7,3|fib|蘆筍100g,鴻喜菇50g|asparagus stir fried with mushrooms
+v18|涼拌黑木耳|🍄|v|1,8,2|fib|黑木耳100g,蒜頭5g|cold black wood ear mushroom salad
+v19|炒綜合時蔬|🥕|v|4,12,3|fib|花椰菜60g,玉米筍40g,紅蘿蔔30g,甜椒40g|mixed vegetable stir fry
+v20|蒸南瓜|🎃|v|2,20,0|fib|南瓜120g|steamed kabocha pumpkin
+v21|番茄蛋花湯|🍅|v|7,6,5||番茄100g,雞蛋1顆|tomato egg drop soup
+v22|味噌豆腐湯|🥣|v|5,4,2|salt|味噌10g,海帶芽3g,嫩豆腐50g|miso soup with tofu and wakame
+v23|涼拌苦瓜|🥒|v|1,6,1||苦瓜150g|chilled bitter melon salad
+v24|絲瓜蛤蜊|🦪|v|7,8,1|pur|絲瓜150g,蛤蜊80g,薑5g|sponge gourd with clams
+v25|韭菜炒豆芽|🌱|v|4,6,3||豆芽菜150g,韭菜20g|bean sprouts stir fried with chives
+s8|奇異果×2|🥝|s|2,24,1|kf,fib|奇異果2顆|two kiwi fruits halved
+s9|蘋果|🍎|s|0,25,0|fib|蘋果1顆|a fresh red apple sliced
+s10|小番茄|🍅|s|2,12,0||小番茄200g|a bowl of cherry tomatoes
+s11|無糖豆漿|🥛|s|14,6,8||無糖豆漿400ml|a glass of unsweetened soy milk
+s12|鮮奶|🥛|s|8,12,8|ca|鮮奶240ml|a glass of fresh milk
+s13|烤地瓜（小）|🍠|s|2,34,0|fib,kf|地瓜120g|small roasted sweet potato
+s14|水煮蛋×2|🥚|s|13,1,10||雞蛋2顆|two hard boiled eggs halved
+s15|無調味堅果|🌰|s|4,4,11||綜合堅果20g|a small dish of unsalted mixed nuts
+s16|希臘優格＋堅果|🥣|s|13,7,9|ca|希臘優格120g,綜合堅果10g|greek yogurt topped with nuts
+s17|燕麥豆漿|🥛|s|11,18,6|fib|無糖豆漿250ml,燕麥片20g|soy milk with oats in a glass
+s18|蒸玉米|🌽|s|4,30,2|fib|玉米1根|steamed corn on the cob
+s19|滷豆干|🟫|s|14,4,7|salt,ca|豆干80g,醬油|Taiwanese braised dried tofu slices
+s20|起司＋全麥蘇打餅|🧀|s|7,15,7|ca|起司片1片,全麥蘇打餅3片|cheese with whole wheat crackers
+s21|香蕉＋無糖優格|🍌|s|11,37,5|ca,kf|香蕉1根,無糖優格1杯|banana with plain yogurt
+s22|柳丁×2|🍊|s|2,26,0||柳丁2顆|two oranges cut in wedges
+s23|藍莓|🫐|s|1,14,0|fib|藍莓100g|a bowl of fresh blueberries
+s24|即食雞胸肉|🍗|s|23,1,2|pro|即食雞胸肉1包|sliced ready to eat chicken breast
+s25|鳳梨|🍍|s|1,20,0||鳳梨150g|fresh pineapple chunks
+s26|木瓜|🧡|s|1,20,0||木瓜200g|fresh papaya slices
+l18|香煎雞胸＋烤南瓜糙米|🍗|ld|42,70,8|fib|雞胸肉150g,糙米70g,南瓜100g|pan seared chicken breast with roasted pumpkin and brown rice
+l19|照燒雞腿便當（去皮）|🍱|ld|36,70,14|salt|去皮雞腿150g,白米80g,青花菜80g,醬油|teriyaki skinless chicken thigh bento with broccoli
+l20|三杯雞（少油）＋糙米|🐔|ld|34,60,20|oil,salt|去皮雞腿150g,九層塔10g,薑10g,蒜頭10g,糙米70g|Taiwanese three cup chicken with basil, light oil, brown rice
+l21|宮保雞丁（少油）|🌶️|ld|38,66,18|oil|雞胸肉130g,花生15g,乾辣椒3g,小黃瓜50g,白米80g|kung pao chicken with peanuts, light oil, rice
+l22|白斬雞＋燙青菜飯|🍗|ld|36,64,12||去皮雞腿150g,白米80g,地瓜葉100g|Taiwanese poached chicken with blanched greens and rice
+l23|雞肉咖哩（少油）|🍛|ld|36,84,16|hc|雞胸肉120g,咖哩塊20g,馬鈴薯80g,紅蘿蔔50g,洋蔥50g,白米80g|chicken curry with potato and carrot, rice
+l24|鹽烤鯖魚＋五穀飯|🐟|ld|30,64,24|fish,pur|鯖魚120g,五穀米80g,高麗菜80g|salt grilled mackerel with multigrain rice
+l25|蒜香鮭魚＋烤蔬菜|🐟|ld|32,36,24|fish|鮭魚130g,櫛瓜80g,甜椒80g,地瓜100g|garlic salmon fillet with roasted vegetables and sweet potato
+l26|紅燒鱈魚＋糙米|🐟|ld|30,56,6|fish,salt|鱈魚150g,糙米70g,薑5g,蔥10g,醬油|braised cod with ginger and scallion, brown rice
+l27|鮪魚蛋沙拉＋全麥麵包|🥗|ld|32,40,14||鮪魚罐頭80g,綜合生菜100g,雞蛋1顆,全麥麵包1個|tuna egg salad with a whole wheat roll
+l28|鮮蝦蔬菜烏龍麵|🍜|ld|30,62,6|pur,hc|烏龍麵200g,蝦仁100g,高麗菜80g,紅蘿蔔30g|udon noodle soup with shrimp and vegetables
+l29|蛤蜊豆腐湯＋五穀飯|🦪|ld|26,58,8|pur,ca|蛤蜊200g,嫩豆腐100g,五穀米70g,薑5g|clam and tofu soup with multigrain rice
+l30|秋刀魚定食|🐟|ld|26,64,26|fish,pur|秋刀魚1條,白米80g,白蘿蔔50g|grilled saury set meal with grated daikon and rice
+l31|鮭魚炒飯（少油）|🍳|ld|28,66,18|fish,oil|鮭魚80g,白米80g,雞蛋1顆,蔥10g,高麗菜50g|salmon fried rice, light oil
+l32|番茄豆腐蛋花湯麵|🍜|ld|24,62,10|ca|麵條130g,番茄100g,嫩豆腐100g,雞蛋1顆|tomato tofu egg drop noodle soup
+l33|麻婆豆腐（少油）＋糙米|🌶️|ld|28,58,18|salt,ca|板豆腐150g,豬絞肉40g,辣豆瓣醬10g,糙米70g|mapo tofu, light oil, with brown rice
+l34|滷豆干海帶＋燙青菜飯（素）|🥢|ld|22,68,10|salt,ca|豆干100g,海帶80g,白米80g,青江菜100g,醬油|vegetarian braised tofu and kelp with greens and rice
+l35|毛豆高麗菜糙米飯（素）|🫛|ld|18,72,8|fib|高麗菜150g,毛豆60g,糙米80g,紅蘿蔔30g|vegetarian brown rice bowl with edamame and cabbage
+l36|蔬菜豆腐鍋（素）|🍲|ld|20,40,10|ca|嫩豆腐150g,白菜150g,金針菇50g,鴻喜菇50g,冬粉30g|vegetarian tofu and mushroom hot pot
+l37|蔥爆牛肉＋糙米|🥩|ld|32,58,18|fe|牛肉片120g,蔥30g,洋蔥50g,糙米70g|stir fried beef with scallions, brown rice
+l38|黑胡椒牛排＋烤時蔬|🥩|ld|38,26,22|fe|牛排150g,花椰菜80g,馬鈴薯100g,黑胡椒|black pepper steak with roasted vegetables
+l39|番茄燉牛腱＋白飯|🍅|ld|34,74,12|fe|牛腱120g,番茄150g,洋蔥50g,紅蘿蔔50g,白米80g|tomato braised beef shank with rice
+l40|牛肉蔬菜捲餅|🌯|ld|28,38,14|fe|全麥餅皮1片,牛肉片80g,生菜40g,洋蔥30g|beef and vegetable wrap
+l41|豬肉片菇菇鍋|🍲|ld|32,30,14||瘦豬肉片120g,高麗菜100g,鴻喜菇50g,金針菇50g,冬粉30g|lean pork and mushroom hot pot
+l42|薑燒豬肉＋高麗菜絲飯|🐖|ld|32,70,14|salt|豬里肌120g,洋蔥50g,薑10g,白米80g,高麗菜50g|ginger pork with shredded cabbage and rice
+l43|水餃 10 顆＋燙青菜|🥟|ld|22,60,18|hc|冷凍水餃10顆,青江菜100g|ten boiled dumplings with blanched greens
+l44|客家粄條（清湯）|🍜|ld|20,60,8|salt|粄條150g,瘦豬肉片60g,豆芽菜50g,韭菜20g|Hakka flat rice noodle soup with lean pork
+l45|雞絲涼麵（少醬）|🥢|ld|32,64,12|hc|涼麵150g,雞胸肉80g,小黃瓜60g,紅蘿蔔30g,芝麻醬10g|cold noodles with shredded chicken and cucumber
+l46|親子丼|🍚|ld|34,70,16||去皮雞腿120g,雞蛋1顆,洋蔥50g,白米80g|oyakodon chicken and egg rice bowl
+l47|瘦牛丼|🍚|ld|30,72,18|fe|牛肉片100g,洋蔥60g,白米80g,雞蛋1顆|lean beef rice bowl with onion and egg
+l48|鷹嘴豆雞肉地中海沙拉|🥗|ld|30,34,12|fib|鷹嘴豆80g,雞胸肉80g,綜合生菜100g,小番茄60g,小黃瓜50g,橄欖油5ml|mediterranean chickpea chicken salad
+l49|藜麥雞肉沙拉|🥗|ld|36,46,8|fib|藜麥50g,雞胸肉120g,綜合生菜80g,玉米粒40g|quinoa chicken salad bowl
+l50|越式鮮蝦春捲|🦐|ld|22,48,4|pur|越南春捲皮4張,蝦仁80g,生菜50g,米粉30g,小黃瓜30g|vietnamese fresh shrimp spring rolls
+l51|打拋豬（少油）＋糙米|🌿|ld|26,60,18|oil,salt|豬絞肉100g,九層塔10g,番茄50g,糙米70g|Thai basil pork, light oil, with brown rice
+l52|清炒花枝＋芥藍飯|🦑|ld|26,66,6|pur|花枝120g,芥藍100g,白米80g,薑5g|stir fried squid with chinese kale and rice
+l53|鮮魚湯＋五穀飯|🐟|ld|30,56,8|fish|鯛魚片120g,薑5g,五穀米70g,青江菜80g|clear fish soup with multigrain rice
+l54|番茄海鮮義大利麵|🍝|ld|28,66,8|pur,hc|義大利麵80g,蝦仁60g,蛤蜊100g,番茄120g|tomato seafood spaghetti with shrimp and clams
+l55|青醬雞肉義大利麵|🍝|ld|36,64,18|hc|義大利麵80g,雞胸肉100g,青醬20g,鴻喜菇50g|pesto chicken pasta with mushrooms
+l56|紅燒豆腐雞肉煲＋飯|🍲|ld|36,60,14|ca|板豆腐120g,雞胸肉80g,香菇30g,紅蘿蔔30g,白米70g,醬油|braised tofu and chicken claypot with rice
+l57|南瓜雞肉燉飯|🎃|ld|32,72,8||南瓜100g,雞胸肉100g,白米70g,洋蔥30g,鮮奶50ml|pumpkin chicken risotto
+l58|鮪魚蛋糙米壽司捲|🍣|ld|22,62,8|fib|糙米80g,鮪魚罐頭40g,雞蛋1顆,小黃瓜30g,海苔2片|brown rice sushi rolls with tuna, egg and cucumber
+l59|香菇雞湯＋糙米飯|🍲|ld|32,58,12||去皮雞腿130g,香菇40g,薑5g,糙米70g,高麗菜80g|shiitake chicken soup with brown rice
+l60|豆腐雞肉漢堡排＋地瓜|🍔|ld|30,42,12|ca|板豆腐100g,雞絞肉80g,洋蔥30g,地瓜120g,青花菜60g|tofu chicken patty with sweet potato and broccoli`;
 /* 營養師用的標籤：fib 高纖、fish 富含 Omega-3／維生素 D 的魚、fe 鐵、ca 鈣、kf 高鉀 */
 const XT={b3:['fib','ca'],b5:['fib','kf'],b6:['kf'],b7:['ca'],b9:['fib','ca'],l1:['fib'],l2:['fish','fib'],l3:['fe'],l5:['fish'],l7:['ca'],l10:['fe'],l11:['fish'],l13:['fe'],l14:['fish'],l15:['kf','fe'],l16:['ca'],l17:['fish','fib'],
   v1:['fib','kf','fe'],v2:['fib','ca'],v4:['kf','fe','ca'],v7:['fib'],s1:['kf'],s2:['fib'],s3:['ca'],s4:['ca'],s5:['fib'],s7:['ca']};
-FOODS.forEach(f=>f.x=[...(f.x||[]),...(XT[f.id]||[])]);
+FOODS.forEach(f=>{f.x=[...(f.x||[]),...(XT[f.id]||[])];f.g=G0[f.id]||''});
+MORE.split('\n').forEach(r=>{const[id,n,e,m,mac,x,g,en]=r.split('|'),[p,c,fa]=mac.split(',').map(Number);
+  FOODS.push({id,n,e,m,p,c,f:fa,k:Math.round(4*(p+c)+9*fa),x:x?x.split(","):[],g,en})});
 const BY_ID=Object.fromEntries(FOODS.map(f=>[f.id,f]));
 
 /* ================= 標準資料 ================= */
@@ -1512,6 +1648,10 @@ function openMemberEdit(id,focus){
       <label>每次多久</label>${sg('m-min',[20,30,45,60].map(d=>[d,d+' 分']))}
       <label>喜歡的運動（可複選）</label>${chips('m-like',Object.entries(EX).map(([k,e])=>[k,e.e+' '+e.n]),fp.like)}
       <label>行事曆提醒時間</label><input type="time" id="m-time" value="${fp.time}"></details>
+      ${(()=>{const dt=dietOf(m);return `<details class="box" id="m-dietbox"${focus==='diet'||dt.no.length||dt.ban.length?' open':''}><summary>不吃的食物 <span class="sub">菜單、採買清單會避開</span></summary>
+      <label>不吃的食材</label>${chips('m-no',EXG.map(([k,n])=>[k,n]),dt.no)}
+      <label>不要的菜（點一下取消＝恢復）</label>${dt.ban.length?`<div class="chips" id="m-ban">${dt.ban.map(id=>`<button type="button" class="chip on" data-k="${id}">${BY_ID[id].e} ${esc(BY_ID[id].n)}</button>`).join('')}</div>`:'<div class="sub">還沒有。在菜單點一餐 →「不要這道」就會加到這裡</div>'}
+      <p class="note">吃素：把牛肉、豬肉、雞肉、魚、蝦蟹貝都選起來。</p></details>`})()}
       <details class="box" id="m-vaxbox"${focus==='vax'?' open':''}><summary>疫苗紀錄 <span class="sub">影響疫苗建議</span></summary>
       <label>已經打過的（點選）</label>${chips('m-vax',VAX,VAX.filter(([k])=>vaxDone(m,k)).map(([k])=>k))}
       <p class="note">流感、新冠是「這一季」（每年 10 月開打）；破傷風算 10 年內。</p></details>`})()}
@@ -1526,7 +1666,7 @@ function openMemberEdit(id,focus){
   const lf0=lifeOf(m);let smoke=lf0.smoke,betel=lf0.betel,alc=lf0.alc;
   const smokeUI=()=>{$('#m-smokebox').hidden=smoke==='never';$('#m-quitbox').hidden=smoke!=='former'};
   seg('#m-smoke',smoke,v=>{smoke=v;smokeUI()});seg('#m-betel',betel,v=>betel=v);seg('#m-alc',alc,v=>alc=v);smokeUI();
-  $$('#m-fhbox .chip,#m-fitbox .chip,#m-vaxbox .chip').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
+  $$('#m-fhbox .chip,#m-fitbox .chip,#m-vaxbox .chip,#m-dietbox .chip').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
   const fp0=fitOf(m);let lvl=fp0.lvl,days=String(fp0.days),mins=String(fp0.min);seg('#m-lvl',lvl,v=>lvl=v);seg('#m-days',days,v=>days=v);seg('#m-min',mins,v=>mins=v);
   if(focus)setTimeout(()=>$('#m-'+focus+'box')?.scrollIntoView({behavior:'smooth',block:'start'}),350);
   $('#m-save').onclick=()=>{
@@ -1541,6 +1681,7 @@ function openMemberEdit(id,focus){
     m.life={smoke,betel,alc,abo:$('#m-abo').classList.contains('on'),ppd:smoke==='never'?0:Math.min(10,num($('#m-ppd').value)||0),yrs:smoke==='never'?0:Math.min(80,num($('#m-yrs').value)||0),
       quit:smoke==='former'?Math.min(80,num($('#m-quit').value)||0):0,colono:cy>=1950&&cy<=new Date().getFullYear()?cy:''};
     if($('#m-fitbox').open||m.fit)m.fit={lim:pick('#m-lim'),lvl,days:+days,min:+mins,like:pick('#m-like'),time:/^\d{2}:\d{2}$/.test($('#m-time').value)?$('#m-time').value:'07:00'};
+    m.diet={no:pick('#m-no'),ban:pick('#m-ban')};
     const vx={},on=pick('#m-vax'),y=new Date().getFullYear();for(const k of on)vx[k]=vaxDone(m,k)?+obj(m.vax)[k]:(k==='flu'||k==='covid'?season():y);m.vax=vx;
     const i=MEM.findIndex(x=>x.id===m.id);if(i>=0)MEM[i]=m;else MEM.push(m);
     ACT=m.id;S.set('members',MEM);S.set('active',ACT);closeSheet();renderAll();toast('已儲存：'+name)};
@@ -1820,19 +1961,24 @@ function openLabDetail(id){
 function hash(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353);h=h<<13|h>>>19}return h>>>0}
 function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const pick=(arr,r)=>arr[Math.floor(r()*arr.length)];
+// 不吃的食材群組＋手動移除的菜（每位成員各自設定）
+const dietOf=m=>{const d=obj(m.diet);return{no:Array.isArray(d.no)?d.no.filter(k=>EXG.some(z=>z[0]===k)):[],ban:Array.isArray(d.ban)?d.ban.filter(id=>BY_ID[id]):[]}};
+const okFood=(f,dt)=>!dt.ban.includes(f.id)&&!ingOf(f).some(i=>EXG.some(([k,,re])=>dt.no.includes(k)&&re.test(i.n)));
 const TAGN={hc:'精緻澱粉',oil:'油炸重油',salt:'重鹹湯麵',pur:'高普林',pro:'蛋白補充品',kf:'高鉀蔬果',fib:'高纖全穀',fish:'魚',fe:'含鐵',ca:'高鈣'};
-// 依營養師重點評分挑菜：避開的標籤 −3、偏好 +1、蛋白質密度加減分，再加日期亂數（同一天結果固定、每天不同）
-function plan(dateStr){
-  const m=me(),n=nutriPlan(m),c=n.c,r=rng(hash(dateStr)),hp=c.goal!=='keep'||c.a>=65;
+// 依營養師重點評分挑菜：避開的標籤 −3、偏好 +1、蛋白質密度加減分＋每週不同的亂數；
+// 每週取分數最高的一批（午晚餐 14、早餐 7、蔬菜 14、點心 7）輪流排，一週內不重複、每週換一批
+function plan(dateStr,m=me()){
+  const n=nutriPlan(m),c=n.c,hp=c.goal!=='keep'||c.a>=65,dt=dietOf(m),wk=mondayOf(dateStr),di=Math.round(dayDiff(dateStr,wk));
   const score=f=>{let v=0;for(const x of f.x){if(n.avd.has(x))v-=3;if(n.pref.has(x))v+=1}if(hp&&!c.mode.kidney)v+=(f.p*4/f.k-.2)*4;if(c.goal==='cut'&&f.m==='ld'&&f.k<=560)v+=.5;return v};
-  const top=(t,ex=[])=>FOODS.filter(f=>f.m===t&&!ex.includes(f.id)).map(f=>({f,v:score(f)+r()*1.6})).sort((x,y)=>y.v-x.v)[0].f;
-  const lunch=top('ld'),dinner=top('ld',[lunch.id]),v1=top('v'),v2=top('v',[v1.id]);
+  const pool=(t,K)=>FOODS.filter(f=>f.m===t&&okFood(f,dt)).map(f=>({f,v:score(f)+hash(wk+f.id)%1000/1000*1.5})).sort((x,y)=>y.v-x.v).slice(0,K).map(x=>x.f);
+  const LD=pool('ld',14),V=pool('v',14),B=pool('b',7),SN=pool('s',7),at=(L,i)=>L.length?L[i%L.length]:null;
+  const top=t=>at(t==='b'?B:SN,di),lunch=at(LD,di*2),dinner=at(LD,di*2+1),v1=at(V,di*2),v2=at(V,di*2+1);
   // 份量調整：控糖時主食減量（碳水 −35%），重鹹、高普林提醒湯不喝
   const tune=f=>{const a=[];let k=f.k,cb=f.c;
     if(n.lowC&&f.m==='ld'&&f.c>=55){a.push('主食半碗');k-=f.c*.35*4;cb=f.c*.65}
     if(n.avd.has('salt')&&f.x.includes('salt'))a.push('湯不喝完');if(n.avd.has('pur')&&f.x.includes('pur'))a.push('湯底不喝');if(n.avd.has('oil')&&f.x.includes('oil'))a.push('少油');
     return{f,k,p:f.p,c:cb,fa:f.f,a}};
-  const slots=[{n:'早餐',share:.25,items:[top('b')]},{n:'午餐',share:.35,items:[lunch,v1]},{n:'晚餐',share:.30,items:[dinner,v2]},{n:'點心',share:.10,items:[top('s')]}].map(sl=>({...sl,t:sl.items.map(tune)}));
+  const slots=[{n:'早餐',share:.25,items:[top('b')]},{n:'午餐',share:.35,items:[lunch,v1]},{n:'晚餐',share:.30,items:[dinner,v2]},{n:'點心',share:.10,items:[top('s')]}].map(sl=>({...sl,items:sl.items.filter(Boolean)})).filter(sl=>sl.items.length).map(sl=>({...sl,t:sl.items.map(tune)}));
   slots.forEach(sl=>{const base=sl.t.reduce((a,x)=>a+x.k,0);sl.x=Math.min(1.75,Math.max(.5,Math.round(c.target*sl.share/base*4)/4));
     sl.adj=[...new Set(sl.t.flatMap(x=>x.a))];if(n.lowC&&sl.items.length>1)sl.adj.unshift('先吃菜再吃飯')});
   return{slots,c,n};
@@ -1849,13 +1995,19 @@ function renderMenu(){
   $('#menuTitle').textContent=(curDate===ymd(new Date())?'今日菜單':curDate+' 菜單')+'・'+me().name;
   $('#menuMode').innerHTML=[...n.avd].map(t=>`<span class="tg warn">避開${TAGN[t]||t}</span>`).concat([...n.pref].filter(t=>!n.avd.has(t)).map(t=>`<span class="tg">多吃${TAGN[t]||t}</span>`)).join('');
   $('#meals').innerHTML=slots.map(s=>{const k=s.t.reduce((a,x)=>a+x.k,0)*s.x;K+=k;s.t.forEach(x=>{Pp+=x.p*s.x;C+=x.c*s.x;F+=x.fa*s.x});
-    return `<div class="meal"><div class="thumb">${thumb(s.items[0])}</div><div style="flex:1;min-width:0"><div class="slot">${s.n} · ×${s.x} 份</div><div class="t">${s.items.map(f=>f.n).join(' ＋ ')}</div><div class="s">${Math.round(k)} kcal · 蛋白 ${Math.round(s.t.reduce((a,x)=>a+x.p,0)*s.x)}g</div>${s.adj.length?`<div class="adj">${s.adj.map(a=>`<i>${esc(a)}</i>`).join('')}</div>`:''}</div></div>`}).join('');
+    return `<div class="meal" data-meal="${slots.indexOf(s)}" role="button"><div class="thumb">${thumb(s.items[0])}</div><div style="flex:1;min-width:0"><div class="slot">${s.n} · ×${s.x} 份</div><div class="t">${s.items.map(f=>f.n).join(' ＋ ')}</div><div class="s">${Math.round(k)} kcal · 蛋白 ${Math.round(s.t.reduce((a,x)=>a+x.p,0)*s.x)}g</div>${s.adj.length?`<div class="adj">${s.adj.map(a=>`<i>${esc(a)}</i>`).join('')}</div>`:''}</div><span class="chev" style="align-self:center">›</span></div>`}).join('')||'<div class="empty">沒有符合的菜色，請到「我的 → 編輯 → 不吃的食物」放寬設定</div>';
   const line=(nm,v,t,col)=>`<div class="row"><span>${nm}</span><span>${Math.round(v)} / ${Math.round(t)}</span></div><div class="bar"><i style="width:${Math.min(100,v/t*100)}%;background:${col}"></i></div>`;
   const gap=Math.round(c.prot-Pp);
   $('#menuSum').innerHTML=line('熱量 kcal',K,c.target,'linear-gradient(90deg,var(--cyan),var(--lime))')+line('蛋白質 g',Pp,c.prot,'var(--cyan)')+line('碳水 g',C,c.carb,'var(--lime)')+line('脂肪 g',F,c.fat,'var(--pink)')+
     (gap>10&&!c.mode.kidney?`<div class="hl" style="margin-top:12px">🥚 蛋白質還差約 ${gap} g：加 ${Math.ceil(gap/7)} 顆蛋，或一杯無糖豆漿（約 10 g）＋一盒板豆腐（約 15 g）</div>`:'')+
-    '<p class="note">全家同一份菜單、各自份量（以 0.25 份為單位縮放）。菜色依上方營養師重點自動挑選與調整份量。</p>';
+    '<p class="note">點一餐可看食材、移除不要的菜。每位家人依自己的體檢、目標和不吃的食材排菜（同一天會盡量排一樣的菜，方便一起煮），份量以 0.25 份為單位。</p>';
 }
+const fmtQ=(q,u)=>u==='g'||u==='ml'?`${Math.round(q)} ${u}`:`${Math.round(q*10)/10} ${u}`;
+const stapleK=(t,x)=>t.a.includes('主食半碗')&&CAT_OF[x.n]==='主食'?.6:1;   // 控糖時主食減量，食材也跟著少
+function openMeal(i){const m=me(),{slots}=plan(curDate,m),s=slots[i];if(!s)return;
+  openSheet(sheetHead(`${s.n}・×${s.x} 份`,`${esc(curDate)}・${esc(m.name)}`)+'<div style="margin-top:8px">'+s.t.map(t=>{const f=t.f,ing=ingOf(f).map(x=>x.q!=null?`${x.n} ${fmtQ(x.q*s.x*stapleK(t,x),x.u)}`:x.n).join('、');
+    return `<div class="blk"><span class="ic">${f.e}</span><div class="m"><b>${esc(f.n)}</b><div class="s">${Math.round(t.k*s.x)} kcal・蛋白 ${Math.round(t.p*s.x)} g・碳水 ${Math.round(t.c*s.x)} g・脂肪 ${Math.round(t.fa*s.x)} g</div><div class="s">🧺 ${esc(ing)}</div>${t.a.length?`<div class="adj">${t.a.map(a=>`<i>${esc(a)}</i>`).join('')}</div>`:''}<button class="btn sm ghost" data-ban="${f.id}" style="margin-top:8px">🚫 不要這道（之後不再排）</button></div></div>`}).join('')+
+    `</div><button class="btn ghost" data-editmem="${esc(m.id)}" data-diet="1">⚙️ 設定不吃的食材（牛肉、海鮮、蛋奶、吃素…）</button>`)}
 function plateSVG(){const R=46,cx=58,cy=60,P=a=>[(cx+R*Math.cos(a*Math.PI/180)).toFixed(1),(cy+R*Math.sin(a*Math.PI/180)).toFixed(1)];
   const sec=(a0,a1,col,t,tx,ty,d)=>{const[x0,y0]=P(a0),[x1,y1]=P(a1);return `<g class="pl" style="animation-delay:${d}s"><path d="M${cx} ${cy}L${x0} ${y0}A${R} ${R} 0 ${a1-a0>180?1:0} 1 ${x1} ${y1}Z" fill="${col}" stroke="#0a1120" stroke-width="2"/><text x="${tx}" y="${ty}" text-anchor="middle" font-size="9" font-weight="800" fill="#04121a">${t}</text></g>`};
   return `<svg viewBox="0 0 124 120" width="118" role="img" aria-label="211 餐盤：蔬菜一半、蛋白質四分之一、全穀四分之一"><circle cx="${cx}" cy="${cy}" r="${R+6}" fill="#0d1628" stroke="rgba(255,255,255,.12)"/>
@@ -1869,6 +2021,47 @@ function renderNutri(m){const n=nutriPlan(m),t=n.tgt,tile=(v,k)=>`<div><b>${v}</
     <div class="tgt">${tile(t.kcal,'熱量 kcal')}${tile(t.p+'g','蛋白質')}${tile(t.cb+'g','碳水')}${tile(t.f+'g','脂肪')}${tile(t.fib+'g','纖維 ≥')}${tile(t.na,'鈉 mg ≤')}${tile(t.sug+'g','添加糖 ≤')}${tile(t.water.toFixed(1)+'L','喝水')}</div>
     ${n.F.map((f,i)=>`<details class="box"${i<1?' open':''}><summary><span>${f.ic} ${esc(f.t)}</span></summary>${f.why?`<div class="sub" style="color:var(--amber);margin:-4px 0 8px">📋 ${esc(f.why)}</div>`:''}<ul class="steps" style="color:var(--text)">${f.do.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><div class="chips">${f.eat.map(x=>`<span class="tg">✓ ${esc(x)}</span>`).join('')}${f.avoid.map(x=>`<span class="tg warn">✕ ${esc(x)}</span>`).join('')}</div></details>`).join('')}
     <p class="note">下方菜單已照這些重點自動挑菜、調整份量；數值為一般建議，有慢性病請以醫師、營養師指示為準。</p>`}
+
+/* ================= 一週採買清單 ================= */
+const addDays=(s,n)=>{const d=new Date(s+'T00:00');d.setDate(d.getDate()+n);return ymd(d)};
+const mondayOf=s=>{const d=new Date(s+'T00:00');d.setDate(d.getDate()-(d.getDay()+6)%7);return ymd(d)};
+const mdT=s=>`${+s.slice(5,7)}/${+s.slice(8,10)}`;
+// 依每位成員自己的菜單與份量加總食材（生重；控糖的主食減量也算進去）
+function shopList(ids,from,to){const map=new Map();
+  for(const id of ids){const m=MEM.find(x=>x.id===id);if(!m)continue;
+    for(let d=from;d<=to;d=addDays(d,1))for(const s of plan(d,m).slots)for(const t of s.t)for(const x of ingOf(t.f)){const key=x.n+'|'+x.u;
+      const o=map.get(key)||{key,n:x.n,u:x.u,q:x.q==null?null:0,cat:CAT_OF[x.n]||'調味乾貨',from:new Set()};
+      if(o.q!=null&&x.q!=null)o.q+=x.q*s.x*stapleK(t,x);o.from.add(t.f.n);map.set(key,o)}}
+  return[...map.values()].sort((a,b)=>CATS.indexOf(a.cat)-CATS.indexOf(b.cat)||(b.q??-1)-(a.q??-1))}
+// 買的量：g 進位到 50 g（≥1 kg 改 kg）、ml 進位到 100 ml（≥1 L 改 L）、顆／根等無條件進位
+const buyQ=(q,u)=>q==null?'':u==='g'?(q>=950?`${(Math.ceil(q/100)/10).toFixed(1)} kg`:`${Math.max(50,Math.ceil(q/50)*50)} g`):u==='ml'?(q>=950?`${(Math.ceil(q/100)/10).toFixed(1)} L`:`${Math.max(100,Math.ceil(q/100)*100)} ml`):`${Math.ceil(q-1e-9)} ${u}`;
+let shopSel=null,shopWk=null,shopCache={};
+const shopRange=()=>{const t=ymd(new Date()),mon=mondayOf(t),wk=shopWk==='next'?addDays(mon,7):mon;return{wk,from:shopWk==='next'?wk:t,to:addDays(wk,6)}};
+const shopSt=wk=>{const v=obj(obj(S.get('shop',{}))[wk]);return{done:new Set(Array.isArray(v.done)?v.done:[]),rm:new Set(Array.isArray(v.rm)?v.rm:[])}};
+function shopSave(wk,st){const all=obj(S.get('shop',{}));all[wk]={done:[...st.done],rm:[...st.rm]};for(const k of Object.keys(all))if(k<addDays(wk,-14))delete all[k];S.set('shop',all)}
+function shopData(){const{wk,from,to}=shopRange(),key=[from,to,shopSel.join(),JSON.stringify(MEM.map(m=>[m.id,m.diet,m.goal]))].join('|');
+  if(shopCache.key!==key)shopCache={key,list:shopList(shopSel,from,to)};return{wk,from,to,list:shopCache.list}}
+function openShop(){shopSel=(shopSel||MEM.map(m=>m.id)).filter(id=>MEM.some(m=>m.id===id));if(!shopSel.length)shopSel=MEM.map(m=>m.id);
+  if(!shopWk)shopWk=(new Date().getDay()+6)%7>=4?'next':'this';
+  openSheet(sheetHead('🛒 一週採買清單','依菜單自動加總，點一項打勾＝已買')+'<div id="shopBody"></div>');
+  $('#shopBody').onclick=e=>{const b=e.target.closest('button');if(!b)return;const{wk}=shopRange(),st=shopSt(wk),d=b.dataset;
+    if(d.wk){shopWk=d.wk}else if(d.who){shopSel=shopSel.includes(d.who)?shopSel.filter(x=>x!==d.who):[...shopSel,d.who];if(!shopSel.length)shopSel=[d.who]}
+    else if(d.shopk){st.done.has(d.shopk)?st.done.delete(d.shopk):st.done.add(d.shopk);shopSave(wk,st)}
+    else if(d.shoprm){st.rm.has(d.shoprm)?st.rm.delete(d.shoprm):st.rm.add(d.shoprm);shopSave(wk,st)}
+    else if('shopcopy' in d)return copyText(shopText(),'已複製採買清單，可以貼到 LINE 或備忘錄');else return;renderShop()};
+  renderShop()}
+function renderShop(){const{wk,from,to,list}=shopData(),st=shopSt(wk),rows=list.filter(o=>!st.rm.has(o.key)),gone=list.filter(o=>st.rm.has(o.key)),left=rows.filter(o=>!st.done.has(o.key)).length;
+  let html='',cat='';
+  for(const o of rows){if(o.cat!==cat){cat=o.cat;html+=`<div class="h4">${esc(cat)}</div>`}const dn=st.done.has(o.key);
+    html+=`<div class="shop${dn?' done':''}"><button class="sk" data-shopk="${esc(o.key)}" aria-pressed="${dn}"><span class="bx">${dn?'✓':''}</span><span class="m"><b>${esc(o.n)}</b><span class="q">${buyQ(o.q,o.u)}</span><small>${esc([...o.from].slice(0,3).join('、'))}${o.from.size>3?` 等 ${o.from.size} 道`:''}</small></span></button><button class="x" data-shoprm="${esc(o.key)}" aria-label="不買 ${esc(o.n)}">✕</button></div>`}
+  $('#shopBody').innerHTML=`<div class="seg" style="margin-top:10px"><button data-wk="this" class="${shopWk==='this'?'on':''}">本週（${mdT(from)}–${mdT(shopWk==='this'?to:addDays(mondayOf(from),6))}）</button><button data-wk="next" class="${shopWk==='next'?'on':''}">下週（${mdT(addDays(mondayOf(ymd(new Date())),7))}–${mdT(addDays(mondayOf(ymd(new Date())),13))}）</button></div>
+    <label>誰要吃（份量加總）</label><div class="chips">${MEM.map(m=>`<button class="chip${shopSel.includes(m.id)?' on':''}" data-who="${esc(m.id)}">${esc(m.name)}</button>`).join('')}</div>
+    <div class="row" style="margin-top:12px"><span class="sub">共 ${rows.length} 項・還沒買 <b style="color:var(--text)">${left}</b> 項</span><button class="btn sm ghost" data-shopcopy>📋 複製清單</button></div>
+    ${html||'<div class="empty">這段期間沒有菜單</div>'}
+    ${gone.length?`<details class="box"><summary>已移除 ${gone.length} 項（家裡有／不買）</summary><div class="chips">${gone.map(o=>`<button class="chip" data-shoprm="${esc(o.key)}">↩ ${esc(o.n)}</button>`).join('')}</div></details>`:''}
+    <p class="note">份量是生重，依每個人的菜單與份量加總，已進位成好買的量。打勾＝已買，✕＝家裡有或不買；狀態會記住到下週。不想吃的菜，在菜單點一餐 →「不要這道」。</p>`}
+function shopText(){const{wk,from,to,list}=shopData(),st=shopSt(wk),rows=list.filter(o=>!st.rm.has(o.key)&&!st.done.has(o.key));let cat='',out=[`🛒 採買清單 ${mdT(from)}–${mdT(to)}（${MEM.filter(m=>shopSel.includes(m.id)).map(m=>m.name).join('、')}）`];
+  for(const o of rows){if(o.cat!==cat){cat=o.cat;out.push('',`【${cat}】`)}out.push(`□ ${o.n}${o.q!=null?' '+buyQ(o.q,o.u):''}`)}return out.join('\n')}
 
 /* ================= 圖片工坊 ================= */
 /* 免金鑰：AI Horde 社群志工算力（匿名金鑰 0000000000，排隊時間看當下人數）。
@@ -2030,7 +2223,7 @@ function cleanBackup(d){
       if(m.fh)c.fh={ca:ok(m.fh.ca,FH_CA),chr:ok(m.fh.chr,FH_CHR),early:!!m.fh.early};else delete c.fh;
       if(m.life){const l=obj(m.life),e=(v,a)=>a.includes(v)?v:a[0];c.life={smoke:e(l.smoke,['never','former','current']),betel:e(l.betel,['never','former','current']),alc:e(l.alc,['none','some','often']),
         abo:!!l.abo,ppd:Math.min(10,num(l.ppd)||0),yrs:Math.min(80,num(l.yrs)||0),quit:Math.min(80,num(l.quit)||0),colono:num(l.colono)||''}}else delete c.life;
-      c.goal=GOALT[m.goal]?m.goal:'auto';if(m.fit)c.fit=fitOf(m);else delete c.fit;
+      c.goal=GOALT[m.goal]?m.goal:'auto';if(m.diet){const t=dietOf(m);c.diet={no:t.no,ban:t.ban}}else delete c.diet;if(m.fit)c.fit=fitOf(m);else delete c.fit;
       if(m.vax){const v={};for(const[k,y]of Object.entries(obj(m.vax)))if(VAX.some(z=>z[0]===k)&&+y>=1950&&+y<=2100)v[k]=Math.floor(+y);c.vax=v}else delete c.vax;return c});
   const recs=(o,re)=>{const r={};for(const[k,arr]of Object.entries(obj(o)))if(okId(k)&&Array.isArray(arr))r[k]=arr.filter(x=>x&&okId(x.id)&&re.test(String(x.t)));return r};
   const img={};for(const[k,v]of Object.entries(obj(d.img)))if(BY_ID[k]&&/^https:\/\//.test(String(v)))img[k]=String(v);
@@ -2057,13 +2250,16 @@ $('#memChip').onclick=openMemberPicker;
 $$('#recSeg button').forEach(b=>b.onclick=()=>{recTab=b.dataset.v;$$('#recSeg button').forEach(x=>x.classList.toggle('on',x===b));renderRecs()});
 $('#hud').addEventListener('click',e=>{const t=e.target.closest('[data-o]');if(t)showOrgan(t.dataset.o)});
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-close],[data-closeorgan],[data-copy],[data-show],[data-pick],[data-editmem],[data-addmem],[data-sid],[data-lid],[data-addscale],[data-addlab],[data-copyplan],[data-goplan],[data-autogoal],[data-go],[data-golab],[data-goback],[data-fday],[data-timer],[data-ics]');if(!t)return;const d=t.dataset;
+  const t=e.target.closest('[data-close],[data-closeorgan],[data-copy],[data-show],[data-pick],[data-editmem],[data-addmem],[data-sid],[data-lid],[data-addscale],[data-addlab],[data-copyplan],[data-goplan],[data-autogoal],[data-go],[data-golab],[data-goback],[data-fday],[data-timer],[data-ics],[data-meal],[data-ban],[data-shop]');if(!t)return;const d=t.dataset;
   if('close' in d)closeSheet();
   else if('closeorgan' in d){$('#organPanel').innerHTML='';$$('#hud .sel').forEach(e=>e.classList.remove('sel'))}
   else if(d.copy)copyText(d.copy==='scale'?promptScale():promptLab());
   else if(d.show){const p=$('#pv-'+d.show);p.hidden=!p.hidden;if(!p.hidden)p.textContent=d.show==='scale'?promptScale():promptLab()}
   else if(d.pick){ACT=d.pick;S.set('active',ACT);closeSheet();renderAll();toast('已切換：'+me().name)}
-  else if(d.editmem)openMemberEdit(d.editmem,'fh' in d?'fh':'fit' in d?'fit':'vax' in d?'vax':'');
+  else if(d.editmem)openMemberEdit(d.editmem,['fh','fit','vax','diet'].find(k=>k in d)||'');
+  else if(d.meal!=null)openMeal(+d.meal);
+  else if(d.ban){const m=me(),dt=dietOf(m);m.diet={...dt,ban:[...new Set([...dt.ban,d.ban])]};S.set('members',MEM);closeSheet();renderMenu();toast(`已移除「${BY_ID[d.ban].n}」，之後不再排（「我的 → 編輯 → 不吃的食物」可恢復）`)}
+  else if('shop' in d)openShop();
   else if(d.fday!=null){fitDay=+d.fday;renderFit()}
   else if(d.timer!=null)openTimer(+d.timer);
   else if('ics' in d)shareICS();

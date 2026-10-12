@@ -19,7 +19,9 @@ iPhone 瀏覽器（加入主畫面）
       ├─ 身體地圖：SVG 全息人體（男／女體型、器官、骨架、動脈），異常器官發紅光＋熱區，點部位或標註看細節
       ├─ 營養師：依 BMI／體脂／腰圍建議目標（自動），依體檢給飲食重點與每日目標，菜單直接挑菜、調份量
       ├─ 健身教練：依身體限制、體檢、目標排每週課表、心率區間、肌力動作；計時器＋超慢跑節拍器；行事曆提醒（.ics）
-      ├─ 菜單引擎：日期種子＋營養師評分（避開 −3、偏好 +1、蛋白質密度）
+      ├─ 菜單引擎：137 道菜（早餐 26、午晚餐 60、蔬菜 25、點心 26），營養師評分（避開 −3、偏好 +1、蛋白質密度）＋每週亂數，
+      │            每週取最高分一批輪流排（一週內午晚餐不重複）；成員可設定不吃的食材群組、手動移除不要的菜
+      ├─ 一週採買清單：依每位家人的菜單與份量加總食材（生重、主食減量也算進去），進位成好買的量，分區列出、可打勾／移除／複製
       ├─ 儲存：localStorage（nc_members / nc_scale / nc_labs / nc_img 索引）＋ IndexedDB（菜色圖片）＋ JSON 備份
       ├─ 圖片工坊 → AI Horde 社群算力（免金鑰，單一佇列、每次請求 30 秒逾時、429 照 Retry-After 或 15/30/60 秒退避、整體 15 分鐘上限）
       │            或 GAS → Cloudflare Workers AI（FLUX，免費額度；成功才扣每日額度；設定錯誤不重試，直接說要去哪裡改）
@@ -48,6 +50,8 @@ iPhone 瀏覽器（加入主畫面）
 **熱量**：減脂 TDEE×0.8、增肌 ×1.1，下限 BMR；碳水 50%（控糖 40%），脂肪補足並限制 20–35%；蛋白質 g/kg：減脂 2、維持 1.6、增肌 1.8、65 歲以上至少 1.2、腎功能異常 0.8。
 **飲食重點**（每項列出報告數值、做法、宜吃／少吃，並給菜單引擎偏好／避開標籤）：減脂、增肌、控糖（血糖／HbA1c／胰島素／TG／內臟脂肪）、降 LDL、降 TG、升 HDL、降血壓（得舒、鈉 ≤2000 mg）、降尿酸、護肝、護腎、限鉀、補鐵、維生素 D、顧骨本、B12／葉酸、長者防肌少症。
 **菜單調整**：控糖時主食半碗（碳水 −35%）並提示「先吃菜再吃飯」；重鹹、高普林提示湯不喝；蛋白質不足時提示補幾顆蛋。
+**不吃的食物**（比對食材名稱）：牛肉（牛奶、牛蒡不算）、豬肉、雞肉（雞蛋不算）、魚、蝦蟹貝、蛋、奶類、黃豆製品、堅果花生芝麻、麵食（小麥）、辣；吃素＝勾選全部肉類與海鮮。
+**菜色資料**：`FOODS`（原 43 道）＋`MORE`（`id|名稱|圖示|餐別|蛋白,碳水,脂肪|標籤|食材|英文`），熱量＝4×(蛋白＋碳水)＋9×脂肪；食材格式「名稱＋數量＋單位」、沒數量＝常備調味料；新食材要加進 `ING_CAT` 分類（測試會檢查）。
 **運動課表**：WHO／ACSM：有氧每週 150–300 分（減脂目標 250、維持 150、增肌 120）、肌力 ≥2 天（增肌 3 天）、65 歲以上平衡 3 天；休息日用快走補足有氧缺口（每天 10–30 分）。
 
 | 狀況 | 不排的運動 |
@@ -96,7 +100,9 @@ member = {id, name, sex:'m'|'f', birth:'YYYY-MM-DD', h, w, waist, neck, hip, act
           life:{smoke:'never'|'former'|'current', ppd, yrs, quit, betel, alc:'none'|'some'|'often', abo:bool, colono:年份},
           goal:'auto'|'cut'|'keep'|'bulk',
           fit:{lim:['knee','back','shoulder','ankle','heart','asthma','osteo','preg'], lvl:'new'|'mid'|'pro', days:2–6, min:20|30|45|60, like:[EX 鍵], time:'HH:MM'},
-          vax:{flu:季別年, covid:季別年, pneu|zoster|tdap|hbv|hav|hpv|rsv:接種年}}
+          vax:{flu:季別年, covid:季別年, pneu|zoster|tdap|hbv|hav|hpv|rsv:接種年},
+          diet:{no:['beef','pork','chicken','fish','shell','egg','dairy','soy','nut','wheat','spicy'], ban:[菜色 id]}}
+shop   = {本週週一日期: {done:[食材鍵], rm:[食材鍵]}}   // nc_shop；只留最近 3 週
 scale  = {id, t:'YYYY-MM-DDTHH:mm', weight, bmi, fat, ..., status:{fat:'偏高'}, derived:['weight']}
 lab    = {id, t:'YYYY-MM-DD', hospital, items:{glu:{v, lo, hi, ref, flag, conv}, us_liver:{v:'輕度脂肪肝', ref:'原文：…'}}, extra:[{name, value, unit, ref, flag}]}
 img    = {菜色id: 'idb'}   // 圖片本體在 IndexedDB「nutricore / img」，壓成 384px JPEG
