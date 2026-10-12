@@ -92,6 +92,8 @@ textarea{width:100%;min-height:110px;background:rgba(0,0,0,.35);border:1px solid
 .toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 14px);transform:translateX(-50%) translateY(-120px);background:#0f1a30;border:1px solid var(--cyan);
   padding:10px 16px;border-radius:12px;font-size:13px;transition:.3s;z-index:50;max-width:88vw;text-align:center}
 .toast.on{transform:translateX(-50%) translateY(0)}
+#updBar{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 14px);transform:translateX(-50%);z-index:45;background:var(--cyan);color:#04121f;border:0;
+  border-radius:999px;padding:10px 18px;font-family:inherit;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap}
 .scan{position:absolute;inset:0;border-radius:var(--r);pointer-events:none;overflow:hidden}
 .scan::after{content:"";position:absolute;left:0;right:0;height:40%;top:-40%;background:linear-gradient(to bottom,transparent,rgba(34,228,255,.08),transparent);animation:scan 4s linear infinite}
 @keyframes scan{to{top:100%}}
@@ -304,8 +306,10 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 
 <div class="sheet" id="sheet"><div class="sheet-bg" data-close></div><div class="sheet-panel"><div class="grab"></div><div id="sheetBody"></div></div></div>
 <div class="toast" id="toast"></div>
+<button id="updBar" hidden onclick="location.reload()">有新版本，點這裡更新</button>
 
 <script>
+const APP_VER='dev';   // 推上 main 後，.github/workflows/pages-sync.yml 會換成 commit 編號；App 回到前景時用它比對線上版本
 /* ================= 基礎工具 ================= */
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -318,7 +322,7 @@ const r1=v=>Math.round(v*10)/10;
 const fmt=v=>v==null||v===''?'—':typeof v==='number'?(Math.abs(v)>=100?Math.round(v):Math.abs(v)>=10?r1(v):+v.toPrecision(3)):esc(v);   // 小於 10 保留 3 位有效數字（TSH 0.05 不會變 0.1）
 const fmtDT=s=>s?esc(String(s).replace('T',' ')):'';
 const short=(s,n)=>{s=String(s||'');return s.length>n?s.slice(0,n)+'…':s};
-let toastT;const toast=t=>{const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),2800)};
+let toastT;const toast=t=>{const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),Math.max(2800,t.length*90))};
 const S={get(k,d){try{const v=localStorage.getItem('nc_'+k);return v!=null?JSON.parse(v):d}catch(e){return d}},
          set(k,v){try{localStorage.setItem('nc_'+k,JSON.stringify(v));return true}catch(e){toast('儲存失敗：空間不足或瀏覽器限制，請先匯出備份');return false}}};
 const PALETTE=['#22e4ff','#b6ff3c','#ff4fa3','#ffb547','#a78bfa','#5eead4'];
@@ -1550,7 +1554,7 @@ async function saveImage(id,src){
   let blob=null;
   try{blob=await toThumb(src)}catch(e){                      // 跨網域圖片畫不進 canvas：先下載成 Blob 再壓
     if(/^https:/.test(src)){try{const r=await fetch(src);if(r.ok)blob=await toThumb(await r.blob())}catch(e2){}}}
-  if(blob){try{await IDB.put(id,blob);IMG[id]='idb'}catch(e){IMG[id]=await new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.readAsDataURL(blob)})}
+  if(blob){try{await IDB.put(id,blob);IMG[id]='idb'}catch(e){IMG[id]=await new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.readAsDataURL(blob)})}   /* guardrails: ignore（只轉一張約 30KB 的 384px 縮圖，IndexedDB 不能用時的備援） */
     setImg(id,blob)}
   else if(/^https:/.test(src))IMG[id]=src;                   // 最後手段：只存網址
   else throw new Error('圖片無法儲存');
@@ -1561,10 +1565,25 @@ async function saveImage(id,src){
 const HORDE='https://aihorde.net/api/v2';
 const HORDE_H={'Content-Type':'application/json',apikey:'0000000000','Client-Agent':'NutriCore:3:github.com/xin7355-collab/NC'};
 const HORDE_MODELS=['AlbedoBase XL (SDXL)','Juggernaut XL','ICBINP - I Can\'t Believe It\'s Not Photography','Deliberate','Realistic Vision','stable_diffusion'];
-async function hordeJSON(path,opt={}){
-  for(let i=0;;i++){const r=await fetch(HORDE+path,{...opt,headers:HORDE_H});
-    if(r.status===429&&i<3){await sleep(15000*2**i);continue}            // 限流：15、30、60 秒指數退避
-    const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.message||('HTTP '+r.status)),{status:r.status});return j}}
+// 限流時伺服器指定等多久（秒數或日期），限 1–120 秒；讀不到回傳 0
+const retryAfter=r=>{const v=r.headers.get('Retry-After');if(!v)return 0;const ms=/^\d+$/.test(v)?v*1000:Date.parse(v)-Date.now();return ms>0?Math.min(Math.max(ms,1000),120e3):0};
+function hordeMsg(st,j){const m=String(j.message||'').slice(0,80);
+  if(st===429)return 'AI Horde 太忙（限流），請 5 分鐘後再試';
+  if(st===404)return '排隊工作已過期（AI Horde 找不到），請重新生成';
+  if(st===401||st===403)return 'AI Horde 拒絕匿名請求'+(m?`（${m}）`:'')+'，可到「我的 → 圖片後端」改用 GAS';
+  if(st>=500)return `AI Horde 伺服器暫時故障（${st}），稍後再試`;
+  return 'AI Horde 不接受這個請求'+(m?`：${m}`:`（${st}）`)}
+// 每次請求 30 秒逾時（不回應也不會卡住佇列）；讀取類斷線重試 2 次；429 照 Retry-After，沒有就 15、30、60 秒退避
+async function hordeJSON(path,opt={}){const get=!opt.method||opt.method==='GET';
+  for(let i=0;;i++){const ac=new AbortController(),to=setTimeout(()=>ac.abort(),30000);
+    try{const r=await fetch(HORDE+path,{...opt,headers:HORDE_H,signal:ac.signal});
+      if(r.status===429&&i<3){clearTimeout(to);await sleep(retryAfter(r)||15000*2**i);continue}
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok)throw Object.assign(new Error(hordeMsg(r.status,j)),{status:r.status,fatal:[400,401,403].includes(r.status)});return j}
+    catch(e){if(e.status)throw e;                                             // 伺服器明確回錯：不在這層重試
+      if(get&&i<2){clearTimeout(to);await sleep(5000*2**i);continue}          // 送出（POST）不重送，避免重複排隊
+      throw new Error(e.name==='AbortError'?'AI Horde 30 秒沒有回應，可能暫時當機，稍後再試':'連不上 AI Horde，請確認網路後再試')}
+    finally{clearTimeout(to)}}}
 async function hordeGen(prompt,seed,onTick){
   const body={prompt:prompt+' ### text, watermark, logo, people, hands, cartoon, anime, illustration, drawing, blurry, deformed',
     params:{sampler_name:'k_euler_a',cfg_scale:7,steps:22,width:512,height:512,seed:String(seed),karras:true,n:1},
@@ -1576,7 +1595,7 @@ async function hordeGen(prompt,seed,onTick){
     while(true){
       if(Date.now()-t0>15*60e3){fetch(HORDE+'/generate/status/'+id,{method:'DELETE',headers:HORDE_H}).catch(()=>{});throw new Error('排隊超過 15 分鐘，稍後再試')}
       await sleep(wait);s=await hordeJSON('/generate/check/'+id);
-      if(s.faulted)throw new Error('志工主機生成失敗');
+      if(s.faulted)throw new Error('志工主機生成失敗，稍後再試');
       if(s.is_possible===false)break;                          // 指定模型目前沒人跑：換成任意模型重送
       onTick?.(s);if(s.done)break;
       wait=Math.min(Math.max((s.wait_time||10)*1000/3,5000),20000)}
@@ -1589,13 +1608,32 @@ async function hordeGen(prompt,seed,onTick){
   throw new Error('目前沒有可用的志工主機');
 }
 // ---- GAS 後端（選用，Cloudflare Workers AI）----
+// GAS 錯誤代碼 → 使用者能照著做的說明；第二欄 1 = 設定問題，重試也不會好，直接停
+const GAS_ERR={
+  NOT_CONFIGURED:['GAS 還沒設定金鑰：到 Apps Script「專案設定 → 指令碼屬性」填 CF_ACCOUNT_ID 和 CF_API_TOKEN',1],
+  DAILY_CAP:['今日生成上限已到（GAS 的 DAILY_CAP），明天再試，或到指令碼屬性調高',1],
+  CF_400:['Cloudflare 不接受這段提示詞，換個菜色或風格再試',1],
+  CF_401:['Cloudflare Token 無效或過期：重新建立「Workers AI」範本的 API Token，更新 CF_API_TOKEN',1],
+  CF_403:['Cloudflare Token 權限不足或帳戶 ID 不對：Token 要有 Workers AI 權限，並檢查 CF_ACCOUNT_ID',1],
+  CF_404:['Cloudflare 找不到帳戶或模型：檢查 CF_ACCOUNT_ID 是否正確',1],
+  BAD_JSON:['App 與 GAS 程式版本不符：用 repo 裡最新的 gas/Code.gs 重新部署',1],
+  NO_PROMPT:['App 與 GAS 程式版本不符：用 repo 裡最新的 gas/Code.gs 重新部署',1],
+  BUSY:['Cloudflare 忙線或今天的免費額度用完，稍後或明天再試',0],
+  NO_IMAGE:['Cloudflare 這次沒有回傳圖片，稍後再試',0],
+  LOCKED:['GAS 同時收到太多請求，稍後再試',0]};
+function gasErr(j){const[t,fatal]=GAS_ERR[j.error]||[j.error==='GAS_ERROR'?'GAS 執行出錯：'+String(j.detail||'').slice(0,80)+'（UrlFetch 每日配額用完要等明天）'
+  :/^CF_/.test(j.error)?`Cloudflare 暫時錯誤（${String(j.error).slice(3,8)}），稍後再試`:'GAS 回傳未知錯誤：'+String(j.error||'').slice(0,40),0];
+  return Object.assign(new Error(t),{fatal:!!fatal})}
 async function gasGen(f,prompt,seed){
   for(let i=0;i<3;i++){const ac=new AbortController(),to=setTimeout(()=>ac.abort(),60000);   // GAS 卡住時 60 秒放棄，避免整個佇列停住
-    try{const res=await fetch(GAS,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({id:f.id,prompt,seed}),signal:ac.signal});
-      const j=await res.json();
+    try{let res,j;
+      try{res=await fetch(GAS,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({id:f.id,prompt,seed}),signal:ac.signal})}
+      catch(e){throw new Error(ac.signal.aborted?'GAS 後端 60 秒沒有回應，稍後再試':'連不上 GAS 後端：請確認網路，以及部署時「存取權」選「所有人」')}
+      try{j=await res.json()}catch(e){if(ac.signal.aborted)throw new Error('GAS 後端 60 秒沒有回應，稍後再試');
+        throw Object.assign(new Error(`GAS 回傳的不是圖片資料（${res.status}）：網址要用 /exec 結尾的部署網址，或到 Apps Script「執行項目」看錯誤`),{fatal:true})}
       if(j.ok&&j.b64)return `data:${j.mime||b64mime(j.b64)};base64,${j.b64}`;if(j.ok&&j.url)return j.url;
-      if(j.error==='DAILY_CAP')throw new Error('今日生成上限已到');throw new Error(j.error||'後端錯誤')}
-    catch(e){if(e.name==='AbortError')e=new Error('後端逾時');if(i===2||/上限/.test(e.message))throw e;await sleep(1000*2**i)}finally{clearTimeout(to)}}}
+      throw gasErr(j)}
+    catch(e){if(e.fatal||i===2)throw e;await sleep(1000*2**i)}finally{clearTimeout(to)}}}
 const genProvider=()=>GAS?'GAS 後端（Cloudflare FLUX，約 10 秒）':'AI Horde 社群志工算力（免金鑰，排隊約 1–10 分鐘）';
 async function generate(f,st,onTick){const prompt=promptOf(f,st||'studio'),seed=seedOf(f);return GAS?gasGen(f,prompt,seed):hordeGen(prompt,seed,onTick)}
 
@@ -1606,7 +1644,7 @@ async function run(){if(busy||!queue.length)return;const q=queue.shift(),f=q.f;b
   const wait=2500-(Date.now()-lastGen);if(wait>0)await sleep(wait);
   for(let i=0;i<2;i++){                                       // 整張失敗再退避重來一次
     try{const src=await generate(f,q.st,s=>{busy.s=s;genStatus()});await saveImage(f.id,src);err=null;break}
-    catch(e){err=e;if(i===0&&!/上限|過濾/.test(e.message)){busy.s={retry:true};genStatus();await sleep(20000)}}}
+    catch(e){err=e;if(e.fatal||/上限|過濾/.test(e.message))break;if(i===0){busy.s={retry:true};genStatus();await sleep(20000)}}}
   if(err)toast('失敗：'+f.n+'（'+err.message+'）');else{renderGallery();renderMenu();toast('已儲存：'+f.n)}
   lastGen=Date.now();q.cb.forEach(cb=>{try{cb(err)}catch(e){}});busy=null;genStatus();run()}
 function genStatus(){const el=$('#genState');if(!el)return;
@@ -1619,7 +1657,7 @@ function renderGallery(){$('#gallery').innerHTML=FOODS.filter(f=>f.m!=='v'||imgS
 
 /* ================= 備份 ================= */
 async function exportData(){
-  const data={app:'NutriCore',v:2,exported:new Date().toISOString(),members:MEM,active:ACT,scale:SCALE,labs:LABS,img:IMG,gas:GAS};
+  const data={app:'NutriCore',v:2,exported:new Date().toISOString(),members:MEM,active:ACT,scale:SCALE,labs:LABS,img:Object.fromEntries(Object.entries(IMG).filter(([,v])=>/^https:/.test(v))),gas:GAS};
   const name=`nutricore-backup-${ymd(new Date())}.json`,json=JSON.stringify(data);
   try{const file=new File([json],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return}   /* iOS：同時帶 title 會只送出文字、把檔案丟掉 */}catch(e){if(e.name==='AbortError')return}
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);toast('已下載備份檔');
@@ -1637,8 +1675,10 @@ function cleanBackup(d){
   return{mem,scale:recs(d.scale,/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/),labs:recs(d.labs,/^\d{4}-\d{2}-\d{2}$/),img,
     gas:typeof d.gas==='string'&&(!d.gas||/^https:\/\/script\.google(usercontent)?\.com\//.test(d.gas))?d.gas:null};
 }
+const MAX_BACKUP=5*1048576;   // 正常備份只有幾十 KB；超過 5MB 一定不是備份檔，整個讀進記憶體會讓 iPhone 分頁當掉
 function importData(file){
-  const rd=new FileReader();rd.onload=()=>{try{const d=JSON.parse(rd.result);
+  if(file.size>MAX_BACKUP){toast(`這個檔案 ${(file.size/1048576).toFixed(1)} MB，不是 NutriCore 備份（正常只有幾十 KB）。請選 nutricore-backup-日期.json`);return}
+  const rd=new FileReader();rd.onerror=()=>toast('讀不到這個檔案，請重新下載備份後再試');rd.onload=()=>{try{const d=JSON.parse(rd.result);
     if(d.app!=='NutriCore')throw new Error('不是 NutriCore 備份檔');
     const c=cleanBackup(d);if(!c.mem.length)throw new Error('備份檔裡沒有有效的成員資料');
     if(!confirm(`將以備份覆蓋目前資料（${c.mem.length} 位成員）。確定？`))return;
@@ -1681,11 +1721,24 @@ $$('#labStyle button').forEach(b=>b.onclick=()=>{style=b.dataset.v;$$('#labStyle
 $('#copyPrompt').onclick=async()=>{try{await navigator.clipboard.writeText($('#labPrompt').textContent);toast('已複製')}catch(e){toast('請長按提示詞手動複製')}};
 $('#genOne').onclick=()=>{const f=BY_ID[$('#labDish').value],box=$('#labOut');
   box.innerHTML=`<div class="note" style="margin:0">已排入：${esc(f.n)}（進度顯示在下方圖庫）</div>`;
-  enqueue(f,style,err=>{box.innerHTML=err?`<div class="note" style="color:var(--red);margin:0">生成失敗：${esc(err.message)}。請稍後再試。</div>`
+  enqueue(f,style,err=>{box.innerHTML=err?`<div class="note" style="color:var(--red);margin:0">生成失敗：${esc(err.message)}</div>`
     :`<img src="${esc(imgSrc(f.id))}" alt="${esc(f.n)}" style="width:100%;border-radius:14px">`})};
 $('#genMissing').onclick=()=>{const{slots}=plan(curDate);let n=0;slots.forEach(s=>s.items.forEach(f=>{if(!imgSrc(f.id)){enqueue(f);n++}}));toast(n?`已排入 ${n} 張，${GAS?'約 10 秒一張':'社群算力要排隊，可以先做別的事'}`:'今日菜單圖片已齊全')};
 
-document.addEventListener('visibilitychange',()=>{if(document.hidden)return;const t=ymd(new Date());if(t!==TODAY){if(curDate===TODAY)curDate=t;TODAY=t;renderDays();renderMenu()}});
+/* ---- 版本自動更新：GitHub Pages 的網頁會被快取約 10 分鐘，加入主畫面的 App 可能一直停在舊版 ----
+   回到前景時（最多每分鐘一次）抓線上 index.html 比對 APP_VER；不同就重新載入。
+   用 cache:'reload'：繞過快取抓新版，並把新版寫回快取，重新載入時才不會又拿到舊檔。
+   正在填表、開著視窗或還在生圖時不打斷，改顯示「有新版本」按鈕。資料都在手機裡，重新載入不會遺失。 */
+let verAt=0,newVer=false;
+function applyUpdate(){if(!newVer)return;const a=document.activeElement;
+  if(!$('#sheet').classList.contains('on')&&!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))&&!busy&&!queue.length)location.reload();else $('#updBar').hidden=false}
+async function checkUpdate(){if(APP_VER==='dev'||!/^https?:$/.test(location.protocol))return;
+  if(newVer)return applyUpdate();if(Date.now()-verAt<60e3)return;verAt=Date.now();
+  const ac=new AbortController(),to=setTimeout(()=>ac.abort(),8000);
+  try{const r=await fetch(location.href.split('#')[0],{cache:'reload',signal:ac.signal});if(!r.ok)return;
+    const v=((await r.text()).match(/^const APP_VER='([\w.-]+)';/m)||[])[1];if(v&&v!==APP_VER){newVer=true;applyUpdate()}}
+  catch(e){}finally{clearTimeout(to)}}                                 // 離線或抓不到：下次回到前景再試
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;const t=ymd(new Date());if(t!==TODAY){if(curDate===TODAY)curDate=t;TODAY=t;renderDays();renderMenu()}checkUpdate()});
 fillDish();renderAll();loadImages();
 if(FRESH)setTimeout(()=>{go('me');openMemberEdit(MEM[0].id);toast('先建立你的資料，30 秒完成')},400);
 </script>

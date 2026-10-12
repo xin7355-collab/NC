@@ -19,7 +19,9 @@ iPhone 瀏覽器（加入主畫面）
       ├─ 身體地圖：SVG 全息人體（男／女體型、器官、骨架、動脈），異常器官發紅光＋熱區，點部位或標註看細節
       ├─ 菜單引擎：日期種子＋依體檢狀況自動避開不適合的菜色
       ├─ 儲存：localStorage（nc_members / nc_scale / nc_labs / nc_img 索引）＋ IndexedDB（菜色圖片）＋ JSON 備份
-      └─ 圖片工坊 → AI Horde 社群算力（免金鑰，單一佇列、輪詢退避、15 分鐘逾時）或 GAS → Cloudflare Workers AI（FLUX，免費額度）
+      ├─ 圖片工坊 → AI Horde 社群算力（免金鑰，單一佇列、每次請求 30 秒逾時、429 照 Retry-After 或 15/30/60 秒退避、整體 15 分鐘上限）
+      │            或 GAS → Cloudflare Workers AI（FLUX，免費額度；成功才扣每日額度；設定錯誤不重試，直接說要去哪裡改）
+      └─ 版本自動更新：APP_VER 由部署流程寫入 commit 編號；回到前景時抓線上 index.html 比對，不同就重新載入（開著視窗、輸入中、生圖中改顯示按鈕）
 ```
 
 ## 2. 判讀規則摘要
@@ -78,5 +80,7 @@ img    = {菜色id: 'idb'}   // 圖片本體在 IndexedDB「nutricore / img」�
 
 ## 6. 部署與開發
 1. 原始碼在 `main`；推到 `main` 後，`.github/workflows/pages-sync.yml` 會把同一版同步到 `gh-pages`，GitHub Pages 從 `gh-pages` 發布（約 1 分鐘）。網址：https://xin7355-collab.github.io/NC/
-2. 測試：`node tests/e2e.js`（iPhone 尺寸無頭瀏覽器，外部 API 全部模擬）。
+2. 測試：`node tests/e2e.js`（iPhone 尺寸無頭瀏覽器，外部 API 全部模擬；含 AI Horde 不回應、GAS 錯誤、版本更新、GAS 額度）。
+   `index.html` 的 `const APP_VER='dev'` 不要手改：`pages-sync.yml` 部署時會換成 commit 編號。
+   匯入備份上限 5MB（正常只有幾十 KB），超過直接拒絕，不讀進記憶體。
 3. 用 iPhone Safari 開啟網站 → 分享 → 加入主畫面；到「我的」頁建立家人並填家族史；體脂與體檢從「身體」頁新增。
