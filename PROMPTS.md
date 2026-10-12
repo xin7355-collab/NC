@@ -39,17 +39,35 @@ weight＝體重（kg）、bmi＝BMI、fat＝體脂率（%）、fatMass＝脂肪�
 5. unit 照抄報告原文（mg/dL、mmol/L、μmol/L、g/L、U/L…），不要自行換算單位。
 6. ref 照抄報告的參考範圍原文（例如 "70-99"、"<200"、"陰性"）；lo、hi 填參考範圍的下限、上限數字，沒有就填 null。
 7. flag 照抄報告的異常標記（H、L、*、↑、↓），沒有填 null。
-8. 血壓若寫成 "128/82"，請拆成 sbp=128、dbp=82。
+8. 血壓若寫成 "128/82"，請拆成 sbp=128、dbp=82。眼壓左右眼取較高值；骨密度取最低的 T 值（腰椎、髖部取較低者）。
 9. 姓名、身分證字號、病歷號、生日、電話、地址一律不要輸出。
 10. date 填檢查（採檢）日期，格式 YYYY-MM-DD 的西元年；報告若寫民國年（例如 115/09/20），請加 1911 換算成 2026-09-20。
-11. 輸出前逐項自我核對：每個數字都必須能在報告中找到原文，小數點位置正確。
+11. 影像與檢查（超音波、X 光、心電圖、內視鏡、乳房攝影、抹片等）：value 只能填下方括號內其中一個選項，報告原文的描述放進 "note"。
+12. hbsab、antihbc、antihav 是抗體保護力，照抄原文（陽性／陰性或數值）。
+13. 輸出前逐項自我核對：每個數字都必須能在報告中找到原文，小數點位置正確。
 
 【items 可用 key】
-sbp＝收縮壓、dbp＝舒張壓、glu＝空腹血糖、hba1c＝糖化血色素、tc＝總膽固醇、tg＝三酸甘油酯、hdl＝高密度膽固醇 HDL、ldl＝低密度膽固醇 LDL、ast＝GOT (AST)、alt＝GPT (ALT)、ggt＝γ-GT、alp＝鹼性磷酸酶 ALP、tbil＝總膽紅素、alb＝白蛋白、hbsag＝B型肝炎表面抗原、antihcv＝C型肝炎抗體、afp＝甲型胎兒蛋白 AFP、cr＝肌酸酐、egfr＝腎絲球過濾率 eGFR、bun＝尿素氮 BUN、ua＝尿酸、upro＝尿蛋白、uglu＝尿糖、uob＝尿潛血、hb＝血紅素、wbc＝白血球、plt＝血小板、mcv＝平均紅血球容積 MCV、tsh＝甲狀腺刺激素 TSH、ft4＝游離甲狀腺素 Free T4、cea＝癌胚抗原 CEA、ca199＝CA19-9、psa＝攝護腺特異抗原 PSA、ca125＝CA-125、fobt＝糞便潛血、waist＝腰圍
+waist＝腰圍、pulse＝脈搏、sbp＝收縮壓、dbp＝舒張壓、glu＝空腹血糖、pcg＝飯後兩小時血糖、hba1c＝糖化血色素、ins＝空腹胰島素、tc＝總膽固醇、tg＝三酸甘油酯、hdl＝高密度膽固醇 HDL、ldl＝低密度膽固醇 LDL、lpa＝脂蛋白(a) Lp(a)、ast＝GOT (AST)、alt＝GPT (ALT)、ggt＝γ-GT、alp＝鹼性磷酸酶 ALP、tbil＝總膽紅素、dbil＝直接膽紅素、tp＝總蛋白、alb＝白蛋白、afp＝甲型胎兒蛋白 AFP、hbsag＝B型肝炎表面抗原、hbeag＝B型肝炎e抗原、antihcv＝C型肝炎抗體、hbsab＝B型肝炎表面抗體、antihbc＝B型肝炎核心抗體、antihav＝A型肝炎抗體 IgG、cr＝肌酸酐、egfr＝腎絲球過濾率 eGFR、bun＝尿素氮 BUN、ua＝尿酸、uacr＝尿液微量白蛋白 UACR、na＝鈉 Na、k＝鉀 K、cl＝氯 Cl、ca＝鈣 Ca、p＝磷 P、mg＝鎂 Mg、upro＝尿蛋白、uglu＝尿糖、uob＝尿潛血、uket＝尿酮體、ubil＝尿膽紅素、uro＝尿膽素原、unit＝亞硝酸鹽、uleu＝白血球酯酶、usg＝尿比重、uph＝尿液酸鹼值 pH、urbc＝尿沉渣紅血球、uwbc＝尿沉渣白血球、hb＝血紅素、rbc＝紅血球、hct＝血球容積比 Hct、mcv＝平均紅血球容積 MCV、mch＝平均紅血球血紅素 MCH、mchc＝平均紅血球血紅素濃度 MCHC、rdw＝紅血球分布寬度 RDW、wbc＝白血球、neut＝嗜中性球、lymph＝淋巴球、mono＝單核球、eos＝嗜酸性球、baso＝嗜鹼性球、plt＝血小板、esr＝紅血球沉降速率 ESR、ferritin＝鐵蛋白、fe＝血清鐵、b12＝維生素 B12、folate＝葉酸、vitd＝維生素 D (25-OH)、tsh＝甲狀腺刺激素 TSH、ft4＝游離甲狀腺素 Free T4、t4＝甲狀腺素 T4、t3＝三碘甲狀腺素 T3、ft3＝游離 T3、antitpo＝甲狀腺過氧化酶抗體 Anti-TPO、hscrp＝高敏感度 C 反應蛋白 hs-CRP、crp＝C 反應蛋白 CRP、hcy＝同半胱胺酸、ck＝肌酸激酶 CK、ldh＝乳酸脫氫酶 LDH、ntprobnp＝NT-proBNP、amy＝澱粉酶 Amylase、lip＝脂肪酶 Lipase、cea＝癌胚抗原 CEA、ca199＝CA19-9、ca724＝CA72-4、cyfra＝CYFRA 21-1、nse＝神經元特異性烯醇化酶 NSE、scc＝鱗狀上皮細胞癌抗原 SCC、ebv＝EB 病毒抗體（鼻咽癌篩檢）、psa＝攝護腺特異抗原 PSA、fpsa＝游離 PSA、ca125＝CA-125、ca153＝CA15-3、hp＝幽門桿菌、rf＝類風濕因子 RF、ana＝抗核抗體 ANA、fobt＝糞便潛血、iop＝眼壓（取較高的一眼）、dxa＝骨密度 T 值、testo＝睪固酮
+
+【影像與檢查 key（value 只能填括號內選項）】
+us_liver＝腹部超音波：肝臟（正常／輕度脂肪肝／中度脂肪肝／重度脂肪肝／肝囊腫／血管瘤（良性）／慢性肝病／肝硬化／肝腫瘤或結節（待查））
+us_gb＝腹部超音波：膽囊（正常／膽結石（無症狀）／膽囊瘜肉 <1 公分／膽囊瘜肉 ≥1 公分／膽囊壁增厚／疑似腫瘤）
+us_kidney＝腹部超音波：腎臟（正常／腎囊腫（良性）／腎結石／腎水腫／腎臟腫瘤（待查））
+cxr＝胸部 X 光（正常／輕微變化（如主動脈鈣化、陳舊病灶）／肺結節或陰影（待查）／疑似腫瘤）
+ldct＝低劑量胸部 CT（Lung-RADS）（Lung-RADS 1（陰性）／Lung-RADS 2（良性）／Lung-RADS 3（可能良性）／Lung-RADS 4A（可疑）／Lung-RADS 4B／4X（高度可疑））
+ekg＝心電圖（正常／非特異性變化／心律不整／疑似心肌缺血／傳導阻滯）
+gastro＝胃鏡（正常／胃炎／逆流性食道炎／胃或十二指腸潰瘍／萎縮性胃炎／腸化生／疑似腫瘤）
+colono＝大腸鏡（正常／增生性瘜肉（已切除）／腺瘤性瘜肉（已切除）／進行性腺瘤／疑似腫瘤）
+thyus＝甲狀腺超音波（TI-RADS）（正常／TR1／TR2（良性）／TR3（輕度可疑）／TR4（中度可疑）／TR5（高度可疑））
+mammo＝乳房攝影（BI-RADS 1（陰性）／BI-RADS 2（良性）／BI-RADS 0（需加做檢查）／BI-RADS 3（可能良性）／BI-RADS 4（可疑）／BI-RADS 5（高度懷疑））
+breastus＝乳房超音波（BI-RADS 1（陰性）／BI-RADS 2（良性）／BI-RADS 0（需加做檢查）／BI-RADS 3（可能良性）／BI-RADS 4（可疑）／BI-RADS 5（高度懷疑））
+pap＝子宮頸抹片（正常（陰性）／發炎／反應性變化／ASC-US（意義未明）／LSIL（輕度病變）／ASC-H／HSIL 以上）
+hpv＝HPV 檢測（陰性／陽性（非 16／18 型）／16／18 型陽性）
+fundus＝眼底攝影（正常／輕微異常／視網膜病變／疑似青光眼）
 
 【輸出格式】
-{"type":"nutricore.lab","v":1,"date":"YYYY-MM-DD","hospital":null,"items":{"glu":{"value":105,"unit":"mg/dL","ref":"70-99","lo":70,"hi":99,"flag":"H"}},"extra":[{"name":"項目原名","value":null,"unit":null,"ref":null,"lo":null,"hi":null,"flag":null}]}
-（glu 只是格式範例，請以實際報告內容為準）
+{"type":"nutricore.lab","v":1,"date":"YYYY-MM-DD","hospital":null,"items":{"glu":{"value":105,"unit":"mg/dL","ref":"70-99","lo":70,"hi":99,"flag":"H"},"us_liver":{"value":"輕度脂肪肝","note":"Mild fatty liver"}},"extra":[{"name":"項目原名","value":null,"unit":null,"ref":null,"lo":null,"hi":null,"flag":null}]}
+（glu、us_liver 只是格式範例，請以實際報告內容為準）
 ```
 
 ## 常見問題
@@ -59,4 +77,6 @@ sbp＝收縮壓、dbp＝舒張壓、glu＝空腹血糖、hba1c＝糖化血色素
 - **白血球、血小板寫成 6500、250000（/µL）**：App 會自動換算成 10³/µL（6.5、250），手動輸入也一樣。
 - **民國年（115/09/20）**：App 會自動換算成西元年；日期讀不到時會跳黃字提醒，請手動改成檢查日期，不要留著「今天」。
 - **糞便潛血、B 肝抗原給的是數字**（例如 FIT 135 ng/mL）：App 會依報告上限或 H 標記判讀為陽性。
+- **超音波、X 光、乳房攝影、抹片等檢查**：AI 會從固定選項挑一個（例如「輕度脂肪肝」、「BI-RADS 2（良性）」），報告原文放在 note；寫法不同時（BI-RADS 4A、Lung-RADS 4X、Mild fatty liver）App 也會自動對應，對不上的會放進「其他項目」。
+- **B 肝表面抗體、A 肝抗體**：只用來判斷要不要打疫苗，不列入異常扣分。
 - **一次很多頁體檢報告**：可分次丟給 AI，每次匯入後再補填；或請 AI 合併成一個 JSON。
