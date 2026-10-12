@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#060912">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NutriCore">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>NutriCore</title>
+<style>
+:root{
+  --bg:#060912;--glass:rgba(255,255,255,.05);--line:rgba(255,255,255,.09);
+  --text:#e8f0ff;--mute:#8a97b4;--cyan:#22e4ff;--lime:#b6ff3c;--pink:#ff4fa3;--amber:#ffb547;--red:#ff5d6c;
+  --r:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;font-size:15px}
+body{min-height:100vh;padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 96px);
+  background:radial-gradient(600px 400px at 90% -10%,rgba(34,228,255,.18),transparent 60%),
+  radial-gradient(500px 400px at -10% 30%,rgba(182,255,60,.10),transparent 60%),var(--bg);overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.25;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:32px 32px;mask-image:linear-gradient(to bottom,#000,transparent 70%);-webkit-mask-image:linear-gradient(to bottom,#000,transparent 70%)}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;position:relative;gap:10px}
+.logo{font-weight:800;font-size:22px;letter-spacing:.5px}
+.logo b{background:linear-gradient(90deg,var(--cyan),var(--lime));-webkit-background-clip:text;background-clip:text;color:transparent}
+.mchip{display:flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:4px 12px 4px 4px;font-size:13px;max-width:62%;white-space:nowrap;overflow:hidden}
+.mchip .sub{margin-left:2px}
+.av{flex:0 0 28px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;color:#04121a}
+.sub{font-size:11px;color:var(--mute)}
+.card{position:relative;background:var(--glass);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.card h2{font-size:13px;color:var(--mute);font-weight:600;letter-spacing:1px;margin-bottom:12px}
+.h4{font-size:13px;color:var(--mute);font-weight:600;letter-spacing:1px;margin:18px 0 6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid2>div{min-width:0}
+.stat{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:14px;padding:12px;min-width:0}
+.stat .k{font-size:11px;color:var(--mute)}
+.stat .v{font-size:22px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat .u{font-size:11px;color:var(--mute);font-weight:500;margin-left:2px}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;margin-top:6px;font-weight:600}
+.view{display:none;animation:in .35s ease}
+.view.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+nav{position:fixed;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 10px);display:flex;justify-content:space-around;
+  background:rgba(12,18,34,.85);border:1px solid var(--line);border-radius:22px;padding:6px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:10}
+nav button{flex:1;background:none;border:0;color:var(--mute);font-size:10px;padding:6px 0;border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button svg{width:22px;height:22px}
+nav button.on{color:var(--cyan);background:rgba(34,228,255,.08)}
+label{display:block;font-size:12px;color:var(--mute);margin:10px 0 6px}
+input,select{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px;font-size:16px;outline:none;-webkit-appearance:none;appearance:none}
+input[type=date],input[type=datetime-local]{min-height:46px}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--mute) 50%),linear-gradient(135deg,var(--mute) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:28px}
+input:focus,select:focus,textarea:focus{border-color:var(--cyan)}
+input.bad,select.bad{border-color:var(--red)!important;background-color:rgba(255,93,108,.08)}
+textarea{width:100%;min-height:110px;background:rgba(0,0,0,.35);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:10px;font:16px/1.45 ui-monospace,Menlo,monospace;outline:none;resize:vertical}
+.seg{display:flex;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:3px}
+.seg button{flex:1;background:none;border:0;color:var(--mute);padding:9px 0;border-radius:9px;font-size:14px}
+.seg button.on{background:linear-gradient(90deg,rgba(34,228,255,.25),rgba(182,255,60,.18));color:var(--text);font-weight:700}
+.seg button:disabled{opacity:.4}
+.btn{width:100%;border:0;border-radius:14px;padding:14px;font-size:15px;font-weight:700;color:#04121a;
+  background:linear-gradient(90deg,var(--cyan),var(--lime));margin-top:14px}
+.btn.ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--line)}
+.btn.danger{background:rgba(255,45,85,.12);color:#ff6b81;border:1px solid rgba(255,45,85,.35)}
+.btn.sm{width:auto;padding:9px 12px;font-size:13px;margin:0}
+.row2{display:flex;gap:8px;margin-top:14px}
+.row2 .btn{margin:0}
+.days{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none}
+.days::-webkit-scrollbar{display:none}
+.day{flex:0 0 56px;text-align:center;padding:10px 0;border-radius:14px;border:1px solid var(--line);background:var(--glass);color:var(--mute);font-size:12px}
+.day b{display:block;font-size:18px;color:var(--text)}
+.day.on{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan),0 0 18px rgba(34,228,255,.35);color:var(--cyan)}
+.meal{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.meal:first-of-type{border-top:0}
+.thumb{flex:0 0 72px;height:72px;border-radius:14px;background:linear-gradient(135deg,#13203a,#0b1324);display:grid;place-items:center;font-size:30px;overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.meal .t{font-weight:700}
+.meal .s{font-size:12px;color:var(--mute);margin-top:3px}
+.slot{font-size:11px;color:var(--cyan);font-weight:700;letter-spacing:1px}
+.bar{height:8px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;border-radius:99px;transition:width .6s}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-top:10px;gap:8px}
+.prompt{font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.5;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:10px;color:#bfe9ff;word-break:break-word;white-space:pre-wrap;max-height:260px;overflow:auto;margin-bottom:8px;-webkit-user-select:text;user-select:text}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gallery .g{aspect-ratio:1;border-radius:12px;overflow:hidden;background:#0b1324;border:1px solid var(--line);position:relative;display:grid;place-items:center;font-size:26px}
+.gallery .g img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.gallery .g span{position:absolute;bottom:0;left:0;right:0;font-size:10px;padding:3px 4px;background:rgba(0,0,0,.6);text-align:center}
+.note{font-size:11px;color:var(--mute);line-height:1.7;margin-top:10px}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 14px);transform:translateX(-50%) translateY(-120px);background:#0f1a30;border:1px solid var(--cyan);
+  padding:10px 16px;border-radius:12px;font-size:13px;transition:.3s;z-index:50;max-width:88vw;text-align:center}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.scan{position:absolute;inset:0;border-radius:var(--r);pointer-events:none;overflow:hidden}
+.scan::after{content:"";position:absolute;left:0;right:0;height:40%;top:-40%;background:linear-gradient(to bottom,transparent,rgba(34,228,255,.08),transparent);animation:scan 4s linear infinite}
+@keyframes scan{to{top:100%}}
+.spin{width:22px;height:22px;border:2px solid var(--line);border-top-color:var(--cyan);border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* v2 */
+details.box{border:1px solid var(--line);border-radius:14px;padding:0 12px;margin:10px 0;background:rgba(255,255,255,.025)}
+details.box>summary{list-style:none;padding:13px 0;font-weight:700;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:14px}
+details.box>summary::-webkit-details-marker{display:none}
+details.box>summary::after{content:'＋';color:var(--mute);font-weight:400}
+details.box[open]>summary::after{content:'－'}
+details.box[open]{padding-bottom:12px}
+details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135deg,rgba(34,228,255,.09),rgba(182,255,60,.04))}
+.steps{padding-left:18px;font-size:12px;color:var(--mute);line-height:1.8;margin-bottom:10px}
+.lrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.lrow label{flex:1;margin:0;color:var(--text);font-size:13px;min-width:0}
+.lrow label small{display:block;color:var(--mute);font-size:10px;margin-top:2px;line-height:1.4}
+.lrow input,.lrow select{flex:0 0 104px;width:104px;padding:9px 10px}
+.dev.ok{background:rgba(182,255,60,.12);color:var(--lime)}
+.dev{font-style:normal;font-size:10px;padding:1px 6px;border-radius:99px;margin-left:4px;background:rgba(255,181,71,.15);color:var(--amber);white-space:nowrap}
+.lv{display:inline-block;flex:0 0 auto;min-width:42px;text-align:center;font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;white-space:nowrap}
+.lv0{background:rgba(182,255,60,.12);color:var(--lime)}
+.lv1{background:rgba(255,122,69,.16);color:#ff8a5c}
+.lv2{background:rgba(255,45,85,.2);color:#ff5c7a}
+.lv3{background:#ff1f4b;color:#fff;box-shadow:0 0 12px rgba(255,31,75,.6)}
+.issue{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.issue:first-child{border-top:0}
+.issue .t{font-weight:700;font-size:14px}
+.issue .s{font-size:12px;color:var(--mute);margin-top:2px;line-height:1.55}
+.issue .v{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.banner{border-radius:14px;padding:12px;font-size:13px;line-height:1.6;margin:12px 0;background:rgba(255,31,75,.14);border:1px solid rgba(255,31,75,.5)}
+.dept{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid var(--line);margin-top:8px}
+.dept b{font-size:15px}
+.rec{display:flex;align-items:center;gap:10px;padding:12px 0;border:0;border-top:1px solid var(--line);width:100%;background:none;color:var(--text);text-align:left;font-size:14px}
+.rec:first-child{border-top:0}
+.rec .m{flex:1;min-width:0}
+.rec .m small{display:block;color:var(--mute);font-size:11px;margin-top:3px}
+.chev{color:var(--mute);font-size:18px}
+.mrow{flex:1;display:flex;align-items:center;gap:10px;background:none;border:0;color:var(--text);text-align:left;font-size:15px;min-width:0}
+.mrow .on{color:var(--cyan);font-size:11px}
+.x{flex:0 0 32px;background:rgba(255,255,255,.08);border:0;color:var(--text);width:32px;height:32px;border-radius:50%;font-size:14px}
+.sheet{position:fixed;inset:0;z-index:30;pointer-events:none}
+.sheet.on{pointer-events:auto}
+.sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.62);opacity:0;transition:opacity .25s}
+.sheet.on .sheet-bg{opacity:1}
+.sheet-panel{position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  background:linear-gradient(180deg,#0f1930,#0a1120);border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;
+  padding:8px 16px calc(env(safe-area-inset-bottom) + 28px);transform:translateY(105%);transition:transform .32s cubic-bezier(.2,.8,.2,1)}
+.sheet.on .sheet-panel{transform:none;visibility:visible;transition:transform .32s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.sheet:not(.on) .sheet-panel{visibility:hidden;transition:transform .32s cubic-bezier(.2,.8,.2,1),visibility 0s .32s}
+.grab{width:40px;height:5px;border-radius:99px;background:rgba(255,255,255,.2);margin:4px auto 12px}
+.sheet h3{font-size:18px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hud svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:12px;justify-content:center;font-size:11px;color:var(--mute);margin-top:4px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.pulse{animation:pulse 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.22)}}
+.vflow{stroke-dasharray:.1 12;animation:vflow 1.2s linear infinite}
+@keyframes vflow{to{stroke-dashoffset:-12.1}}
+.hud [data-org].sel{stroke:#fff;stroke-width:1.4px;stroke-opacity:1}
+@media (prefers-reduced-motion:reduce){.pulse,.vflow,.scan::after,.view{animation:none}}
+.callout{cursor:pointer}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tg{font-size:11px;padding:4px 10px;border-radius:99px;background:rgba(34,228,255,.1);color:var(--cyan);border:1px solid rgba(34,228,255,.25);white-space:nowrap}
+.tg.warn{background:rgba(255,181,71,.1);color:var(--amber);border-color:rgba(255,181,71,.3)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:9px 12px;font-size:13px;align-items:center}
+.kv>span:nth-child(odd){color:var(--mute)}
+.kv>span:nth-child(even){text-align:right}
+.spark{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.spark .stat{padding:10px}
+.spark .stat .v{font-size:17px}
+.empty{text-align:center;color:var(--mute);font-size:13px;padding:18px 0;line-height:1.7}
+.organ-pop{margin-top:10px;padding:12px;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid rgba(255,77,109,.35)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Nutri<b>Core</b></div>
+  <button class="mchip" id="memChip" aria-label="切換成員"></button>
+</header>
+
+<!-- 總覽 -->
+<section class="view on" id="v-dash">
+  <div class="card"><div class="scan"></div>
+    <h2>身體掃描</h2>
+    <div id="gauge"></div>
+    <div class="grid2" id="coreStats" style="margin-top:12px"></div>
+  </div>
+  <div class="card" id="latestCard"></div>
+  <div class="card">
+    <h2>每日能量</h2>
+    <div style="display:flex;gap:14px;align-items:center">
+      <div id="ring" style="flex:0 0 130px"></div>
+      <div style="flex:1" id="macroList"></div>
+    </div>
+    <div class="tags" id="modeTags" style="margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <h2>進階指標</h2>
+    <div class="grid2" id="advStats"></div>
+    <p class="note">所有數值為公式估算，僅供參考，不能取代醫師或營養師的專業評估。</p>
+  </div>
+</section>
+
+<!-- 身體 -->
+<section class="view" id="v-body">
+  <div class="card" style="padding:12px 10px">
+    <div class="row" style="margin:0 6px 4px;align-items:flex-start">
+      <div style="min-width:0"><b id="bodyWho"></b><div class="sub" id="bodySrc"></div></div>
+      <div class="tags" id="bodyScore" style="justify-content:flex-end"></div>
+    </div>
+    <div class="hud" id="hud"></div>
+    <div class="legend"><span><i style="background:#ff8a5c"></i>注意</span><span><i style="background:#ff4d6d"></i>異常</span><span><i style="background:#ff1f4b;box-shadow:0 0 6px #ff1f4b"></i>嚴重</span><span>點部位看細節</span></div>
+    <div id="organPanel"></div>
+  </div>
+  <div class="row2" style="margin:0 0 14px">
+    <button class="btn" data-addscale>＋ 體脂紀錄</button>
+    <button class="btn ghost" data-addlab>＋ 體檢報告</button>
+  </div>
+  <div class="card"><h2>需要注意</h2><div id="issueList"></div></div>
+  <div class="card"><h2>建議掛號科別</h2><div id="deptList"></div>
+    <p class="note">依數值規則自動建議，不是醫療診斷。身體不適請直接就醫，不必等報告。</p></div>
+  <div class="card">
+    <div class="seg" id="recSeg"><button data-v="scale" class="on">體脂紀錄</button><button data-v="lab">體檢報告</button></div>
+    <div id="recList" style="margin-top:12px"></div>
+  </div>
+</section>
+
+<!-- 菜單 -->
+<section class="view" id="v-menu">
+  <div class="days" id="days"></div>
+  <div class="tags" id="menuMode" style="margin-bottom:12px"></div>
+  <div class="card">
+    <h2 id="menuTitle">今日菜單</h2>
+    <div id="meals"></div>
+  </div>
+  <div class="card">
+    <h2>當日營養達成</h2>
+    <div id="menuSum"></div>
+  </div>
+</section>
+
+<!-- 圖片工坊 -->
+<section class="view" id="v-lab">
+  <div class="card">
+    <h2>AI 料理攝影</h2>
+    <label>選擇菜色</label>
+    <select id="labDish"></select>
+    <label>風格</label>
+    <div class="seg" id="labStyle">
+      <button data-v="studio" class="on">棚拍</button><button data-v="home">家常</button><button data-v="neon">賽博</button>
+    </div>
+    <label>提示詞</label>
+    <div class="prompt" id="labPrompt"></div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn ghost sm" id="copyPrompt">複製提示詞</button>
+      <button class="btn sm" id="genOne" style="flex:1">生成並儲存</button>
+    </div>
+    <div id="labOut" style="margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <h2>圖庫（每道菜只生成一次）</h2>
+    <div class="gallery" id="gallery"></div>
+    <button class="btn ghost" id="genMissing">補齊今日菜單缺圖（排隊生成）</button>
+  </div>
+</section>
+
+<!-- 我的 -->
+<section class="view" id="v-me">
+  <div class="card">
+    <h2>家庭成員</h2>
+    <div id="memList"></div>
+    <button class="btn ghost" data-addmem>＋ 新增成員</button>
+  </div>
+  <div class="card">
+    <h2>資料備份</h2>
+    <p class="note" style="margin-top:0">所有健康資料只存在這支手機的瀏覽器裡，不會上傳。iPhone 的 Safari 若 7 天沒開這個網站，可能自動清除資料，請<b>加入主畫面</b>（分享 → 加入主畫面）並定期匯出備份。</p>
+    <div class="row2"><button class="btn" id="exportBtn">匯出備份</button><button class="btn ghost" id="importBtn">匯入備份</button></div>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+  </div>
+  <div class="card">
+    <h2>圖片後端（選用）</h2>
+    <label>GAS Web App 網址（留空＝直接用免金鑰圖片服務）</label>
+    <input id="f-gas" placeholder="https://script.google.com/macros/s/.../exec" inputmode="url">
+    <p class="note">金鑰只放在 GAS 的指令碼屬性，絕不放這裡。健康資料不會傳到這個後端。</p>
+  </div>
+</section>
+
+<nav id="nav">
+  <button data-v="dash" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>總覽</button>
+  <button data-v="body"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4.5" r="2.5"/><path d="M12 8v7M7 9.5l5-1.5 5 1.5M12 15l-3 6M12 15l3 6"/></svg>身體</button>
+  <button data-v="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>菜單</button>
+  <button data-v="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="12" cy="12" r="3.5"/></svg>圖片</button>
+  <button data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.3-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.6c2.4.2 4 1.8 4.5 4.4"/></svg>我的</button>
+</nav>
+
+<div class="sheet" id="sheet"><div class="sheet-bg" data-close></div><div class="sheet-panel"><div class="grab"></div><div id="sheetBody"></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= 基礎工具 ================= */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;           // 本地時區（修正 v1 用 UTC 造成早上 8 點前日期錯一天）
+const dtLocal=d=>`${ymd(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const num=v=>{if(v==null||v==='')return null;if(typeof v==='number')return isFinite(v)?v:null;const m=String(v).replace(/,/g,'').match(/-?\d+(\.\d+)?/);return m?parseFloat(m[0]):null};
+const r1=v=>Math.round(v*10)/10;
+const fmt=v=>v==null||v===''?'—':typeof v==='number'?(Math.abs(v)>=100?Math.round(v):Math.abs(v)>=10?r1(v):+v.toPrecision(3)):esc(v);   // 小於 10 保留 3 位有效數字（TSH 0.05 不會變 0.1）
+const fmtDT=s=>s?esc(String(s).replace('T',' ')):'';
+const short=(s,n)=>{s=String(s||'');return s.length>n?s.slice(0,n)+'…':s};
+let toastT;const toast=t=>{const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),2800)};
+const S={get(k,d){try{const v=localStorage.getItem('nc_'+k);return v!=null?JSON.parse(v):d}catch(e){return d}},
+         set(k,v){try{localStorage.setItem('nc_'+k,JSON.stringify(v));return true}catch(e){toast('儲存失敗：空間不足或瀏覽器限制，請先匯出備份');return false}}};
+const PALETTE=['#22e4ff','#b6ff3c','#ff4fa3','#ffb547','#a78bfa','#5eead4'];
+const avColor=id=>PALETTE[[...String(id)].reduce((a,c)=>a+c.charCodeAt(0),0)%PALETTE.length];
+const LVT=['正常','注意','異常','嚴重'];
+const obj=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+// 日期解析：2026-09-05、2026/9/5、2026年9月5日、20260905、民國 115/09/05 → YYYY-MM-DD；不合理回傳 null
+function parseYMD(s){
+  s=String(s??'').trim();let m=s.match(/^(\d{4})(\d{2})(\d{2})$/);if(m)s=`${m[1]}-${m[2]}-${m[3]}`;
+  m=s.match(/^(?:民國)?\s*(\d{2,4})\s*[-\/.年]\s*(\d{1,2})\s*[-\/.月]\s*(\d{1,2})/);if(!m)return null;
+  let y=+m[1];if(y<1911)y+=1911;const mo=+m[2],d=+m[3],dt=new Date(y,mo-1,d);
+  if(y<1900||dt.getMonth()!==mo-1||dt.getDate()!==d||dt>new Date(Date.now()+864e5))return null;
+  return `${y}-${pad(mo)}-${pad(d)}`}
+// 報告的異常標記 → 'hi' / 'lo' / null（不能用 /[HL]/i，否則 "Normal" 也會被當成異常）
+function flagDir(f){f=String(f??'').trim();if(!f||/^(n|normal|neg|negative|正常|陰性|[-—–]|\(-\))$/i.test(f))return null;
+  if(/^(l|ll|low|\(l\)|偏低|低)$/i.test(f)||/↓/.test(f))return 'lo';
+  if(/^(h|hh|high|\(h\)|a|abn|abnormal|偏高|高|異常|陽性|\*+|!+)$/i.test(f)||/[↑*]/.test(f))return 'hi';return null}
+
+/* ================= 菜色庫（x 標籤：hc 高碳水 / oil 油 / salt 鹽 / pur 高普林 / pro 蛋白補充） ================= */
+const FOODS=[
+ {id:'b1',n:'鮪魚蛋餅',e:'🥚',m:'b',k:330,p:18,c:30,f:15,x:['oil'],en:'Taiwanese egg crepe with tuna, rolled and sliced'},
+ {id:'b2',n:'無糖豆漿＋飯糰',e:'🍙',m:'b',k:420,p:16,c:62,f:11,x:['hc','oil'],en:'Taiwanese sticky rice ball with unsweetened soy milk'},
+ {id:'b3',n:'希臘優格莓果燕麥',e:'🫐',m:'b',k:340,p:20,c:45,f:8,en:'greek yogurt bowl with oats and mixed berries'},
+ {id:'b4',n:'全麥雞胸三明治',e:'🥪',m:'b',k:380,p:28,c:40,f:10,en:'whole wheat chicken breast sandwich with lettuce and tomato'},
+ {id:'b5',n:'地瓜＋茶葉蛋×2',e:'🍠',m:'b',k:300,p:14,c:42,f:9,en:'roasted sweet potato with two tea eggs'},
+ {id:'b6',n:'酪梨蛋吐司',e:'🥑',m:'b',k:390,p:16,c:34,f:21,en:'avocado toast with soft boiled egg'},
+ {id:'b7',n:'鹹豆漿',e:'🥣',m:'b',k:280,p:15,c:28,f:11,x:['salt'],en:'Taiwanese savory soy milk soup with scallion and fried dough bits'},
+ {id:'b8',n:'蘿蔔糕＋荷包蛋',e:'🍳',m:'b',k:360,p:12,c:44,f:15,x:['hc','oil'],en:'pan fried turnip cake with sunny side up egg'},
+ {id:'l1',n:'舒肥雞胸糙米便當',e:'🍱',m:'ld',k:560,p:42,c:62,f:14,en:'sous vide chicken breast bento with brown rice and vegetables'},
+ {id:'l2',n:'鮭魚藜麥碗',e:'🐟',m:'ld',k:600,p:36,c:52,f:26,en:'grilled salmon quinoa bowl with greens'},
+ {id:'l3',n:'牛肉麵（清燉）',e:'🍜',m:'ld',k:620,p:34,c:70,f:20,x:['pur','salt'],en:'Taiwanese clear broth beef noodle soup'},
+ {id:'l4',n:'滷雞腿飯（去皮）',e:'🍗',m:'ld',k:640,p:38,c:78,f:18,x:['salt'],en:'Taiwanese braised skinless chicken leg rice'},
+ {id:'l5',n:'鯖魚定食',e:'🐠',m:'ld',k:620,p:32,c:64,f:24,x:['pur'],en:'grilled mackerel set meal with rice and miso soup'},
+ {id:'l6',n:'蝦仁炒飯（少油）',e:'🍤',m:'ld',k:560,p:26,c:76,f:15,x:['pur','hc','oil'],en:'shrimp fried rice, light oil'},
+ {id:'l7',n:'豆腐蔬菜咖哩',e:'🍛',m:'ld',k:540,p:22,c:74,f:17,en:'tofu vegetable curry with rice'},
+ {id:'l8',n:'涼麵＋茶碗蒸',e:'🥢',m:'ld',k:520,p:22,c:70,f:16,x:['hc'],en:'Taiwanese cold sesame noodles with steamed egg custard'},
+ {id:'l9',n:'韓式拌飯',e:'🥘',m:'ld',k:600,p:28,c:76,f:19,en:'korean bibimbap with egg and vegetables'},
+ {id:'l10',n:'越式牛肉河粉',e:'🍲',m:'ld',k:500,p:30,c:62,f:12,x:['pur','salt'],en:'vietnamese beef pho with herbs'},
+ {id:'l11',n:'烤鯛魚＋烤時蔬',e:'🐡',m:'ld',k:430,p:38,c:30,f:16,en:'baked sea bream fillet with roasted vegetables'},
+ {id:'l12',n:'雞肉蔬菜鍋',e:'🍲',m:'ld',k:480,p:40,c:36,f:18,x:['pur'],en:'chicken and vegetable hot pot'},
+ {id:'l13',n:'番茄牛肉義大利麵',e:'🍝',m:'ld',k:650,p:34,c:82,f:18,x:['hc'],en:'tomato beef spaghetti'},
+ {id:'l14',n:'虱目魚肚粥',e:'🥣',m:'ld',k:420,p:28,c:44,f:14,en:'Taiwanese milkfish belly congee'},
+ {id:'l15',n:'嫩煎豬里肌＋地瓜',e:'🥩',m:'ld',k:540,p:38,c:46,f:20,en:'pan seared pork tenderloin with roasted sweet potato'},
+ {id:'l16',n:'味噌豆腐蕎麥麵',e:'🍜',m:'ld',k:460,p:24,c:66,f:10,x:['salt'],en:'soba noodles with miso and tofu'},
+ {id:'v1',n:'燙地瓜葉',e:'🥬',m:'v',k:70,p:3,c:6,f:4,en:'blanched sweet potato leaves with garlic'},
+ {id:'v2',n:'蒜炒芥藍',e:'🥦',m:'v',k:80,p:4,c:7,f:4,en:'stir fried chinese kale with garlic'},
+ {id:'v3',n:'清炒青江菜',e:'🥬',m:'v',k:60,p:2,c:5,f:3,en:'stir fried bok choy'},
+ {id:'v4',n:'和風菠菜',e:'🌿',m:'v',k:55,p:4,c:4,f:2,en:'japanese style spinach with sesame dressing'},
+ {id:'v5',n:'涼拌小黃瓜',e:'🥒',m:'v',k:45,p:1,c:5,f:2,en:'Taiwanese smashed cucumber salad'},
+ {id:'v6',n:'番茄炒蛋',e:'🍅',m:'v',k:180,p:10,c:9,f:12,en:'tomato scrambled eggs'},
+ {id:'s1',n:'香蕉＋無調味堅果',e:'🍌',m:'s',k:200,p:5,c:28,f:9,en:'banana with a handful of unsalted mixed nuts'},
+ {id:'s2',n:'芭樂',e:'🍐',m:'s',k:80,p:2,c:17,f:1,en:'sliced guava fruit'},
+ {id:'s3',n:'高蛋白豆花（無糖）',e:'🍮',m:'s',k:150,p:12,c:16,f:4,en:'Taiwanese unsweetened tofu pudding'},
+ {id:'s4',n:'無糖優格',e:'🥛',m:'s',k:120,p:10,c:9,f:5,en:'plain unsweetened yogurt cup'},
+ {id:'s5',n:'毛豆',e:'🫛',m:'s',k:130,p:11,c:9,f:6,en:'steamed edamame with sea salt'},
+ {id:'s6',n:'乳清蛋白飲',e:'🥤',m:'s',k:140,p:24,c:6,f:2,x:['pro'],en:'protein shake in a glass bottle'}
+];
+const BY_ID=Object.fromEntries(FOODS.map(f=>[f.id,f]));
+
+/* ================= 標準資料 ================= */
+// 國健署 兒童及青少年 BMI 建議值：[年齡, 男過輕<, 男過重≥, 男肥胖≥, 女過輕<, 女過重≥, 女肥胖≥]
+const CHILD=[[2,14.2,17.4,18.3,13.7,17.2,18.1],[2.5,13.9,17.2,18,13.6,17,17.9],[3,13.7,17,17.8,13.5,16.9,17.8],[3.5,13.6,16.8,17.7,13.3,16.8,17.8],
+[4,13.4,16.7,17.6,13.2,16.8,17.9],[4.5,13.3,16.7,17.6,13.1,16.9,18],[5,13.3,16.7,17.7,13.1,17,18.1],[5.5,13.4,16.7,18,13.1,17,18.3],
+[6,13.5,16.9,18.5,13.1,17.2,18.8],[6.5,13.6,17.3,19.2,13.2,17.5,19.2],[7,13.8,17.9,20.3,13.4,17.7,19.6],[7.5,14,18.6,21.2,13.7,18,20.3],
+[8,14.1,19,21.6,13.8,18.4,20.7],[8.5,14.2,19.3,22,13.9,18.8,21],[9,14.3,19.5,22.3,14,19.1,21.3],[9.5,14.4,19.7,22.5,14.1,19.3,21.6],
+[10,14.5,20,22.7,14.3,19.7,22],[10.5,14.6,20.3,22.9,14.4,20.1,22.3],[11,14.8,20.7,23.2,14.7,20.5,22.7],[11.5,15,21,23.5,14.9,20.9,23.1],
+[12,15.2,21.3,23.9,15.2,21.3,23.5],[12.5,15.4,21.5,24.2,15.4,21.6,23.9],[13,15.7,21.9,24.5,15.7,21.9,24.3],[13.5,16,22.2,24.8,16,22.2,24.6],
+[14,16.3,22.5,25,16.3,22.5,24.9],[14.5,16.6,22.7,25.2,16.5,22.7,25.1],[15,16.9,22.9,25.4,16.7,22.7,25.2],[15.5,17.2,23.1,25.5,16.9,22.7,25.3],
+[16,17.4,23.3,25.6,17.1,22.7,25.3],[16.5,17.6,23.4,25.6,17.2,22.7,25.3],[17,17.8,23.5,25.6,17.3,22.7,25.3],[17.5,18,23.6,25.6,17.3,22.7,25.3]];
+function childRow(a,sex){let r=CHILD[0];for(const x of CHILD)if(a>=x[0])r=x;return sex==='f'?r.slice(4,7):r.slice(1,4)}
+
+// 體脂機欄位
+const SF=[
+ {k:'weight',n:'體重',u:'kg',min:2,max:300},{k:'bmi',n:'BMI',u:'',min:8,max:80},
+ {k:'fat',n:'體脂率',u:'%',min:2,max:70},{k:'fatMass',n:'脂肪量',u:'kg',min:.3,max:200},
+ {k:'visceral',n:'內臟脂肪等級',u:'級',min:1,max:60},{k:'muscle',n:'肌肉量',u:'kg',min:3,max:150},
+ {k:'muscleRate',n:'肌肉率',u:'%',min:20,max:95},{k:'skeletal',n:'骨骼肌量',u:'kg',min:2,max:100},
+ {k:'lean',n:'去脂體重',u:'kg',min:3,max:200},{k:'water',n:'體水分量',u:'kg',min:2,max:120},
+ {k:'waterRate',n:'身體水分率',u:'%',min:20,max:85},{k:'protein',n:'蛋白質量',u:'kg',min:.3,max:40},
+ {k:'proteinRate',n:'蛋白質率',u:'%',min:5,max:30},{k:'bone',n:'骨鹽量',u:'kg',min:.2,max:8},
+ {k:'boneRate',n:'骨鹽率',u:'%',min:1,max:10},{k:'bmr',n:'基礎代謝',u:'kcal',min:300,max:4500},
+ {k:'whr',n:'腰臀比',u:'',min:.5,max:1.6},{k:'bodyAge',n:'身體年齡',u:'歲',min:3,max:110},
+ {k:'hr',n:'心率',u:'次/分',min:30,max:220},{k:'score',n:'身體得分',u:'分',min:0,max:100},
+ {k:'stdWeight',n:'標準體重',u:'kg',min:2,max:200}
+];
+const SFN=Object.fromEntries(SF.map(f=>[f.k,f]));
+
+/* 體檢項目：H 高側門檻 [注意(>)、異常(≥)、嚴重(≥)]；L 低側門檻 [注意(<)、異常(<)、嚴重(<)]；可依性別 {m,f}
+   報告有附參考範圍時，「注意」門檻改用報告的上下限（各院參考值不同，以報告為準） */
+const LAB=[
+ {g:'血壓',k:'sbp',n:'收縮壓',u:'mmHg',H:[119,130,160],L:[90,80,70],o:'vessel',d:'心臟內科',hi:'依 2022 台灣高血壓指引 ≥130/80 即為高血壓，請居家量測 7 天確認（722 原則）'},
+ {g:'血壓',k:'dbp',n:'舒張壓',u:'mmHg',H:[79,80,100],L:[60,50,40],o:'vessel',d:'心臟內科',hi:'舒張壓 ≥80 即達高血壓標準，請居家量測確認'},
+ {g:'血糖',k:'glu',n:'空腹血糖',u:'mg/dL',H:[99,126,200],L:[70,60,50],o:'pancreas',d:'新陳代謝科',hi:'100–125 為糖尿病前期；≥126 疑似糖尿病，需複檢確認',lo:'血糖偏低，注意頭暈手抖'},
+ {g:'血糖',k:'hba1c',n:'糖化血色素',u:'%',H:[5.6,6.5,9],o:'pancreas',d:'新陳代謝科',hi:'5.7–6.4% 為糖尿病前期；≥6.5% 達糖尿病標準'},
+ {g:'血脂',k:'tc',n:'總膽固醇',u:'mg/dL',H:[199,240,300],o:'vessel',d:'心臟內科'},
+ {g:'血脂',k:'tg',n:'三酸甘油酯',u:'mg/dL',H:[149,200,500],o:'vessel',d:'新陳代謝科',hi:'≥500 有急性胰臟炎風險'},
+ {g:'血脂',k:'hdl',n:'高密度膽固醇 HDL',u:'mg/dL',L:{m:[40,35,25],f:[50,40,30]},o:'vessel',d:'心臟內科',lo:'好的膽固醇偏低，規律有氧運動可提升'},
+ {g:'血脂',k:'ldl',n:'低密度膽固醇 LDL',u:'mg/dL',H:[129,160,190],o:'vessel',d:'心臟內科',hi:'壞的膽固醇偏高，動脈硬化風險上升'},
+ {g:'肝膽',k:'ast',n:'GOT (AST)',u:'U/L',H:[40,80,200],o:'liver',d:'腸胃肝膽科',hi:'肝指數偏高，常見於脂肪肝、飲酒、藥物'},
+ {g:'肝膽',k:'alt',n:'GPT (ALT)',u:'U/L',H:[40,80,200],o:'liver',d:'腸胃肝膽科',hi:'肝指數偏高，常見於脂肪肝、肝炎、藥物'},
+ {g:'肝膽',k:'ggt',n:'γ-GT',u:'U/L',H:{m:[60,120,300],f:[40,80,200]},o:'liver',d:'腸胃肝膽科',hi:'常與飲酒、脂肪肝、膽道問題相關'},
+ {g:'肝膽',k:'alp',n:'鹼性磷酸酶 ALP',u:'U/L',H:[130,260,500],o:'liver',d:'腸胃肝膽科'},
+ {g:'肝膽',k:'tbil',n:'總膽紅素',u:'mg/dL',H:[1.2,2,5],o:'liver',d:'腸胃肝膽科'},
+ {g:'肝膽',k:'alb',n:'白蛋白',u:'g/dL',L:[3.5,3,2.5],o:'liver',d:'腸胃肝膽科',lo:'營養不良或肝腎功能問題'},
+ {g:'肝膽',k:'hbsag',n:'B型肝炎表面抗原',t:'q',Q:2,o:'liver',d:'腸胃肝膽科',hi:'B肝帶原：每 6–12 個月追蹤肝功能＋腹部超音波'},
+ {g:'肝膽',k:'antihcv',n:'C型肝炎抗體',t:'q',Q:2,o:'liver',d:'腸胃肝膽科',hi:'需驗 HCV RNA 確認；現有口服藥治癒率很高'},
+ {g:'肝膽',k:'afp',n:'甲型胎兒蛋白 AFP',u:'ng/mL',H:[20,100,400],o:'liver',d:'腸胃肝膽科',hi:'需配合腹部超音波判讀'},
+ {g:'腎臟',k:'cr',n:'肌酸酐',u:'mg/dL',H:{m:[1.3,2,4],f:[1.1,2,4]},o:'kidney',d:'腎臟科'},
+ {g:'腎臟',k:'egfr',n:'腎絲球過濾率 eGFR',u:'mL/min',L:[60,45,30],o:'kidney',d:'腎臟科',lo:'腎功能下降；<60 持續 3 個月即為慢性腎臟病'},
+ {g:'腎臟',k:'bun',n:'尿素氮 BUN',u:'mg/dL',H:[20,40,80],o:'kidney',d:'腎臟科'},
+ {g:'腎臟',k:'ua',n:'尿酸',u:'mg/dL',H:{m:[7,9,11],f:[6,8,10]},o:'joint',d:'新陳代謝科／風濕免疫科',hi:'高尿酸，痛風與腎結石風險上升'},
+ {g:'尿液',k:'upro',n:'尿蛋白',t:'q',o:'kidney',d:'腎臟科',hi:'尿蛋白陽性，可能是腎臟早期受損，需複驗'},
+ {g:'尿液',k:'uglu',n:'尿糖',t:'q',o:'pancreas',d:'新陳代謝科',hi:'尿糖陽性，需確認血糖'},
+ {g:'尿液',k:'uob',n:'尿潛血',t:'q',o:'pelvis',d:'泌尿科',hi:'尿潛血陽性，女性需排除生理期後複驗'},
+ {g:'血液',k:'hb',n:'血紅素',u:'g/dL',L:{m:[13,10,8],f:[12,10,8]},H:[18,19.5,21],o:'blood',d:'血液腫瘤科',lo:'貧血，需查原因（缺鐵、海洋性貧血、出血）'},
+ {g:'血液',k:'wbc',n:'白血球',u:'10³/µL',L:[4,3,2],H:[10,15,30],o:'blood',d:'血液腫瘤科'},
+ {g:'血液',k:'plt',n:'血小板',u:'10³/µL',L:[150,100,50],H:[400,600,1000],o:'blood',d:'血液腫瘤科'},
+ {g:'血液',k:'mcv',n:'平均紅血球容積 MCV',u:'fL',L:[80,70,60],H:[100,110,120],o:'blood',d:'血液腫瘤科',lo:'紅血球偏小，常見缺鐵或海洋性貧血'},
+ {g:'甲狀腺',k:'tsh',n:'甲狀腺刺激素 TSH',u:'µIU/mL',L:[.4,.1,.01],H:[4,10,20],o:'thyroid',d:'新陳代謝科',hi:'可能甲狀腺功能低下',lo:'可能甲狀腺功能亢進'},
+ {g:'甲狀腺',k:'ft4',n:'游離甲狀腺素 Free T4',u:'ng/dL',L:[.8,.6,.4],H:[1.8,2.5,4],o:'thyroid',d:'新陳代謝科'},
+ {g:'腫瘤標記',k:'cea',n:'癌胚抗原 CEA',u:'ng/mL',H:[5,10,20],o:'intestine',d:'腸胃科',hi:'抽菸者也可能偏高，需配合影像或內視鏡判讀'},
+ {g:'腫瘤標記',k:'ca199',n:'CA19-9',u:'U/mL',H:[37,100,300],o:'pancreas',d:'腸胃肝膽科'},
+ {g:'腫瘤標記',k:'psa',n:'攝護腺特異抗原 PSA',u:'ng/mL',H:[4,10,20],sex:'m',o:'pelvis',d:'泌尿科'},
+ {g:'腫瘤標記',k:'ca125',n:'CA-125',u:'U/mL',H:[35,100,300],sex:'f',o:'pelvis',d:'婦產科'},
+ {g:'其他',k:'fobt',n:'糞便潛血',t:'q',Q:2,o:'intestine',d:'腸胃科',hi:'陽性一定要做大腸鏡，不要只重驗糞便'},
+ {g:'其他',k:'waist',n:'腰圍',u:'cm',H:{m:[89,100,110],f:[79,90,100]},o:'abdomen',d:'家醫科',hi:'腹部肥胖（男 ≥90、女 ≥80 cm），代謝症候群指標之一'}
+];
+const LABK=Object.fromEntries(LAB.map(x=>[x.k,x]));
+const LSHORT={glu:'空腹血糖',hba1c:'HbA1c',tc:'總膽固醇',tg:'三酸甘油酯',hdl:'HDL',ldl:'LDL',ast:'GOT',alt:'GPT',ggt:'γ-GT',alp:'ALP',tbil:'膽紅素',alb:'白蛋白',
+ hbsag:'B肝抗原',antihcv:'C肝抗體',afp:'AFP',egfr:'eGFR',bun:'BUN',upro:'尿蛋白',uglu:'尿糖',uob:'尿潛血',mcv:'MCV',tsh:'TSH',ft4:'Free T4',cea:'CEA',psa:'PSA',ca125:'CA-125',ca199:'CA19-9',fobt:'糞便潛血'};
+const ALIAS={glu:['空腹血糖','飯前血糖','血糖','glucoseac','glucose','fbg','ac'],hba1c:['糖化血色素','糖化血紅素','hba1c','a1c'],
+ tc:['總膽固醇','cholesterol','tcho','t-cho','tc'],tg:['三酸甘油酯','三酸甘油脂','甘油三酯','triglyceride','tg'],
+ hdl:['高密度膽固醇','高密度脂蛋白膽固醇','高密度脂蛋白','hdl','hdl-c'],ldl:['低密度膽固醇','低密度脂蛋白膽固醇','低密度脂蛋白','ldl','ldl-c'],
+ ast:['got','ast','sgot','麩草酸轉胺酶'],alt:['gpt','alt','sgpt','麩丙酮酸轉胺酶'],ggt:['ggt','γ-gt','r-gt','γgt','rgt','麩胺醯轉移酶'],
+ alp:['alp','alk-p','鹼性磷酸酶'],tbil:['總膽紅素','t-bil','tbil','bilirubin'],alb:['白蛋白','albumin','alb'],
+ hbsag:['hbsag','b肝表面抗原','b型肝炎表面抗原'],antihcv:['antihcv','anti-hcv','c肝抗體','c型肝炎抗體'],afp:['afp','甲型胎兒蛋白','胎兒蛋白'],
+ cr:['肌酸酐','creatinine','cre','crea','cr'],egfr:['egfr','腎絲球過濾率'],bun:['bun','尿素氮'],ua:['尿酸','uricacid','ua'],
+ upro:['尿蛋白','urineprotein','protein(u)'],uglu:['尿糖','urineglucose','glucose(u)'],uob:['尿潛血','尿液潛血','occultblood(u)','ob(u)'],
+ hb:['血紅素','血紅蛋白','hb','hgb','hemoglobin'],wbc:['白血球','wbc'],plt:['血小板','plt','platelet'],mcv:['mcv','平均紅血球容積'],
+ tsh:['tsh','甲狀腺刺激素','促甲狀腺素'],ft4:['ft4','freet4','游離甲狀腺素'],cea:['cea','癌胚抗原'],ca199:['ca19-9','ca199'],
+ psa:['psa','攝護腺特異抗原','前列腺特異抗原'],ca125:['ca-125','ca125'],fobt:['糞便潛血','fobt','fit','ifobt'],waist:['腰圍','waist'],
+ sbp:['收縮壓','sbp','systolic'],dbp:['舒張壓','dbp','diastolic']};
+// 單位換算（mmol/L、μmol/L、g/L → 台灣常用 mg/dL、g/dL）
+const CONV={glu:['mmol',18.016],tc:['mmol',38.67],hdl:['mmol',38.67],ldl:['mmol',38.67],tg:['mmol',88.57],cr:['mol',1/88.4],ua:['mol',1/59.48],bun:['mmol',2.8],tbil:['mol',1/17.1],hb:['g/l',.1],alb:['g/l',.1]};
+const GUESS={glu:v=>v<35,tc:v=>v<20,hdl:v=>v<5,ldl:v=>v<15,tg:v=>v<15,cr:v=>v>20,ua:v=>v>25,hb:v=>v>30,alb:v=>v>10};
+// 白血球、血小板常以 /µL 回報（6500、250000），App 以 10³/µL 判讀，超過門檻視為 /µL 自動 ÷1000
+const PERUL={wbc:300,plt:2000};
+
+const ORG={
+ brain:{n:'腦部',tip:'控制好血壓、血糖、血脂是護腦根本'},
+ thyroid:{n:'甲狀腺',tip:'依醫囑追蹤，勿自行補碘或吃偏方'},
+ lung:{n:'肺部',tip:'戒菸，空汙嚴重時避免戶外運動'},
+ heart:{n:'心臟',tip:'靜止心率持續偏快：減少咖啡因、改善睡眠，並檢查甲狀腺'},
+ vessel:{n:'心血管',tip:'少油炸與加工肉、每日鹽 <6 g、每週運動 150 分鐘、戒菸'},
+ liver:{n:'肝臟',tip:'戒酒；減重 5–10% 可明顯改善脂肪肝；勿亂吃保健品偏方'},
+ stomach:{n:'胃',tip:''},
+ pancreas:{n:'胰臟／血糖',tip:'戒含糖飲料、主食換全穀；先吃菜和肉再吃飯；飯後散步 15 分鐘'},
+ kidney:{n:'腎臟',tip:'勿長期吃止痛藥、控制血壓血糖、蛋白質勿過量、適量喝水'},
+ intestine:{n:'腸道',tip:'高纖飲食；50 歲以上定期做糞便潛血篩檢'},
+ pelvis:{n:'泌尿生殖',tip:'多喝水、不憋尿'},
+ blood:{n:'血液',tip:'貧血可多吃紅肉、深綠蔬菜並搭配維生素 C；原因需醫師確認'},
+ bone:{n:'骨骼',tip:'鈣質＋維生素 D＋負重運動'},
+ joint:{n:'關節／痛風',tip:'少喝含糖飲料與酒（尤其啤酒）、少吃內臟與濃湯、多喝水'},
+ abdomen:{n:'腹部脂肪',tip:'熱量赤字＋足夠蛋白質＋阻力訓練，睡滿 7 小時'}
+};
+const orgName=(o,m)=>o==='pelvis'?(m.sex==='f'?'膀胱／子宮':'膀胱／攝護腺'):ORG[o].n;
+
+/* ================= 狀態 ================= */
+let FRESH=false;
+let MEM=S.get('members',null);
+if(!Array.isArray(MEM)||!MEM.length){
+  const P=S.get('profile',null);FRESH=!P;const y=new Date().getFullYear();
+  MEM=[{id:uid(),name:'我',sex:P?.sex||'m',birth:`${y-(+P?.age||35)}-01-01`,h:+P?.h||170,w:+P?.w||70,waist:P?.waist||'',neck:P?.neck||'',hip:P?.hip||'',act:P?.act||'1.375',goal:P?.goal||'keep'}];
+  S.set('members',MEM);
+}
+let ACT=S.get('active',MEM[0].id);if(!MEM.some(m=>m.id===ACT))ACT=MEM[0].id;
+let SCALE=obj(S.get('scale',{})),LABS=obj(S.get('labs',{})),IMG=obj(S.get('img',{})),GAS=String(S.get('gas','')||'');
+const me=()=>MEM.find(m=>m.id===ACT)||MEM[0];
+const scalesOf=m=>(SCALE[m.id]||[]).slice().sort((a,b)=>String(b.t).localeCompare(String(a.t)));
+const labsOf=m=>(LABS[m.id]||[]).slice().sort((a,b)=>String(b.t).localeCompare(String(a.t)));
+function ageOf(m){const p=String(m.birth||'').split('-').map(Number);if(p.length<3||!p[0])return 30;return Math.max(0,(Date.now()-new Date(p[0],p[1]-1,p[2]))/(365.2425*864e5))}
+const stageOf=a=>a<2?'嬰幼兒':a<12?'兒童':a<18?'青少年':a<65?'成人':'長者';
+const sexT=s=>s==='f'?'女':'男';
+
+/* ================= 判讀引擎 ================= */
+const DEVW=[['嚴重',3],['危險',2],['肥胖',2],['過高',2],['超標',2],['警戒',1],['偏高',1],['偏低',1],['不足',1],['偏瘦',1],['偏胖',1],['過低',1],['標準',0],['正常',0],['理想',0],['良好',0],['優秀',0]];
+function devLv(s){if(!s)return 0;s=String(s);for(const[k,v]of DEVW)if(s.includes(k))return v;return 0}
+
+function scaleEval(rec,m){
+  const a=ageOf(m),male=m.sex!=='f',kid=a<18,st=rec.status||{},out=[];
+  // 體脂機是生物電阻估算的慢性指標：最高只到「異常」，不觸發「1–2 週內就診」與分數上限
+  const push=(k,lv,msg,organ,dept)=>{const d=devLv(st[k]),L=Math.min(2,Math.max(lv,d));if(!L)return;
+    out.push({src:'體脂',k,name:SFN[k].n,short:SFN[k].n,val:rec[k],unit:SFN[k].u,lv:L,msg:lv?msg:`設備判定「${st[k]}」`,dev:st[k]||null,organ,dept})};
+  const v=k=>rec[k];
+  if(v('bmi')!=null){const b=v('bmi');let lv,msg;
+    if(kid){const[lo,ov,ob]=childRow(a,m.sex);lv=b<lo?1:b>=ob?2:b>=ov?1:0;msg=b<lo?'低於同齡標準（國健署兒童標準）':'高於同齡標準（國健署兒童標準）'}
+    else{lv=b<18.5?1:b>=27?2:b>=24?1:0;msg=b<18.5?'體重過輕':b>=35?'重度肥胖（BMI ≥35），建議與醫師討論減重計畫':b>=27?'肥胖（國健署 BMI ≥27）':'過重（BMI 24–27）'}
+    push('bmi',lv,msg,'abdomen','家醫科')}
+  if(v('fat')!=null&&!kid){const f=v('fat'),T=male?[20,25,30]:[27,30,35],lo=male?8:15;
+    push('fat',f<lo?1:f>=T[2]?3:f>=T[1]?2:f>=T[0]?1:0,f<lo?'體脂過低':'體脂偏高（國健署：男 >25%、女 >30% 為肥胖）','abdomen','家醫科')}
+  if(v('visceral')!=null){const x=v('visceral'),lv=x>=15?2:x>=10?1:0;
+    push('visceral',lv,'內臟脂肪過高，代謝症候群與脂肪肝風險上升','abdomen','家醫科');
+    if(Math.max(lv,devLv(st.visceral))>=1)out.push({src:'體脂',k:'visceral_liver',name:'內臟脂肪 → 脂肪肝風險',short:'內臟脂肪',val:x,unit:'級',lv:1,msg:'建議腹部超音波確認是否有脂肪肝',organ:'liver',dept:'腸胃肝膽科'})}
+  if(v('whr')!=null){const x=v('whr');push('whr',male?(x>=1?2:x>=.9?1:0):(x>=.95?2:x>=.85?1:0),'腰臀比偏高（中央型肥胖，WHO 男 ≥0.9、女 ≥0.85）','abdomen','家醫科')}
+  if(v('hr')!=null){const x=v('hr');push('hr',x>120?2:x>100?1:x<50?1:0,x<50?'心率偏慢（運動員可能正常）':'靜止心率偏快','heart','心臟內科')}
+  if(v('waterRate')!=null&&!kid)push('waterRate',v('waterRate')<(male?50:45)?1:0,'體水分偏低，注意補水',null,null);
+  if(v('bodyAge')!=null&&!kid)push('bodyAge',v('bodyAge')>=a+5?1:0,'身體年齡高於實際年齡 5 歲以上',null,null);
+  ['weight','fatMass','muscle','muscleRate','skeletal','lean','water','protein','proteinRate','bone','boneRate','bmr'].forEach(k=>{if(v(k)!=null)push(k,0,'',k.startsWith('bone')?'bone':null,null)});
+  return out;
+}
+const thr=(x,key,sex)=>{const t=x[key];if(!t)return null;return Array.isArray(t)?t:t[sex==='f'?'f':'m']};
+function refText(x,sex){if(x.t==='q')return '陰性';const H=thr(x,'H',sex),L=thr(x,'L',sex);if(H&&L)return `${L[0]}–${H[0]}`;if(H)return `≤${H[0]}`;if(L)return `≥${L[0]}`;return ''}
+function qLv(s,Q){s=String(s??'').trim().toLowerCase().replace(/\s/g,'');if(!s)return 0;
+  if(/陰|neg|non|未檢出|normal|^-$|^\(-\)$|^無$/.test(s))return 0;
+  if(/±|trace|微量|弱陽/.test(s))return Q||1;
+  const d=s.match(/(\d)\+/);let n=d?+d[1]:(s.match(/\+/g)||[]).length;
+  if(!n&&/陽|pos|reactive/.test(s))n=1;
+  return n?(Q||Math.min(3,n)):0}
+function labEval(rec,m){
+  const sex=m.sex,out=[];
+  for(const[k,it]of Object.entries(rec.items||{})){
+    const x=LABK[k];if(!x)continue;let lv=0,dir='hi';
+    if(x.t==='q'){lv=qLv(it.v,x.Q);
+      // 定量回報（如 FIT 135 ng/mL、HBsAg 1250 S/CO）：沒有「陽性」字樣時，改看報告上限或異常標記，避免漏判
+      if(!lv){const v=num(it.v);if(flagDir(it.flag)==='hi'||(v!=null&&it.hi!=null&&v>it.hi))lv=x.Q||1}}
+    else{let v=num(it.v);if(v==null)continue;if(PERUL[k]&&v>=PERUL[k])v=v/1000;const H=thr(x,'H',sex),L=thr(x,'L',sex);
+      if(H){const h1=it.hi!=null?it.hi:H[0],h2=Math.max(H[1],h1),h3=Math.max(H[2],h2);lv=v>=h3?3:v>=h2?2:v>h1?1:0}
+      if(!lv&&L){const l1=it.lo!=null?it.lo:L[0],l2=Math.min(L[1],l1),l3=Math.min(L[2],l2);lv=v<l3?3:v<l2?2:v<l1?1:0;if(lv)dir='lo'}
+      if(!lv){const fd=flagDir(it.flag);if(fd){lv=1;dir=fd}}}
+    if(lv)out.push({src:'體檢',k,name:x.n,short:LSHORT[k]||x.n,val:it.v,unit:x.u||'',lv,msg:(dir==='lo'?x.lo:x.hi)||(dir==='lo'?'低於參考值':'高於參考值'),organ:x.o,dept:x.d,ref:it.ref||refText(x,sex)});
+  }
+  for(const e of rec.extra||[]){const v=num(e.value);let lv=0;
+    if(flagDir(e.flag))lv=1;else if(v!=null&&((e.hi!=null&&v>e.hi)||(e.lo!=null&&v<e.lo)))lv=1;
+    if(lv)out.push({src:'體檢',k:'x_'+e.name,name:e.name,val:e.value,unit:e.unit||'',lv,msg:'報告標示異常，請諮詢醫師',organ:null,dept:null,ref:e.ref||''})}
+  return out;
+}
+const DED=[0,3,8,15];
+// 同一器官：最嚴重一項全扣，其餘項目扣 40%（避免血壓收縮/舒張、血脂多項重複重扣）
+function scoreOf(iss){const g={};iss.forEach(i=>{const k=i.organ||('x_'+i.k);(g[k]=g[k]||[]).push(DED[i.lv])});
+  let d=0;for(const a of Object.values(g)){a.sort((x,y)=>y-x);d+=a[0]+a.slice(1).reduce((t,x)=>t+x*.4,0)}
+  const sc=Math.max(0,Math.round(100-d));return iss.some(i=>i.lv===3)?Math.min(sc,59):sc}   // 有任何「嚴重」項目，分數上限 59（強制顯示建議就醫）
+const grade=s=>s>=90?['優良','var(--lime)']:s>=75?['良好','var(--cyan)']:s>=60?['需注意','var(--amber)']:['建議就醫評估','var(--red)'];
+const URG=['','生活調整，3–6 個月後複檢','建議 1 個月內門診追蹤','建議 1–2 週內儘速就診'];
+function deptPlan(iss){const mp={};for(const i of iss){if(!i.dept)continue;const d=mp[i.dept]||(mp[i.dept]={lv:0,items:[]});d.lv=Math.max(d.lv,i.lv);if(!d.items.includes(i.name))d.items.push(i.name)}
+  return Object.entries(mp).sort((a,b)=>b[1].lv-a[1].lv).map(([d,o])=>({d,...o,when:URG[o.lv]}))}
+function issuesOf(m){const s=scalesOf(m)[0],l=labsOf(m)[0];return{scale:s?scaleEval(s,m):[],lab:l?labEval(l,m):[],s,l}}
+function dietMode(m){
+  const{scale,lab}=issuesOf(m),all=[...scale,...lab],o={};all.forEach(i=>{if(i.organ)o[i.organ]=Math.max(o[i.organ]||0,i.lv)});
+  const md={lowCarb:(o.pancreas||0)>=1,heart:(o.vessel||0)>=1,liver:(o.liver||0)>=1,lowPur:all.some(i=>i.k==='ua'),kidney:all.some(i=>['egfr','cr','upro'].includes(i.k)&&i.lv>=2)};
+  md.tags=[md.lowCarb&&'控醣：碳水降、脂肪 30%',md.heart&&'護心：少油少鹽',md.liver&&'護肝：禁酒、少油炸',md.lowPur&&'低普林：避開海鮮濃湯',md.kidney&&'護腎：蛋白質 0.8 g/kg'].filter(Boolean);
+  return md;
+}
+
+/* ================= 計算引擎 ================= */
+function calc(m){
+  const a=ageOf(m),kid=a<18,male=m.sex!=='f',h=+m.h||170,hm=h/100,sc=scalesOf(m)[0],w=sc?.weight||+m.w||60,bmi=w/(hm*hm);
+  const cuts=kid?childRow(a,m.sex):[18.5,24,27];
+  const cat=kid?(bmi<cuts[0]?['過輕','var(--amber)']:bmi<cuts[1]?['正常','var(--lime)']:bmi<cuts[2]?['過重','var(--amber)']:['肥胖','var(--red)'])
+               :(bmi<18.5?['過輕','var(--amber)']:bmi<24?['正常','var(--lime)']:bmi<27?['過重','var(--amber)']:bmi<35?['肥胖','var(--red)']:['重度肥胖','var(--red)']);
+  // 成人 Mifflin-St Jeor；未滿 18 歲改用 WHO Schofield（成人公式不適用兒童）
+  const bmr=kid?(male?(a<3?60.9*w-54:a<10?22.7*w+495:17.5*w+651):(a<3?61*w-51:a<10?22.5*w+499:12.2*w+746)):10*w+6.25*h-5*a+(male?5:-161);
+  const tdee=bmr*(+m.act||1.375),goal=kid?'keep':(m.goal||'keep');
+  let target=goal==='cut'?tdee*.8:goal==='bulk'?tdee*1.1:tdee;target=Math.max(target,bmr);
+  const mode=dietMode(m);
+  let pk=kid?1.1:{cut:2,keep:1.6,bulk:1.8}[goal];if(mode.kidney)pk=.8;   // 腎功能異常時禁止高蛋白
+  const prot=w*pk,fat=target*(mode.lowCarb?.3:.25)/9,carb=Math.max(0,(target-prot*4-fat*9)/4);
+  let bf=sc?.fat??null,bfSrc=bf!=null?'體脂機':'';
+  const wa=+m.waist,ne=+m.neck,hi=+m.hip;
+  if(bf==null&&wa&&ne&&!kid){if(male&&wa>ne)bf=495/(1.0324-.19077*Math.log10(wa-ne)+.15456*Math.log10(h))-450;
+    if(!male&&hi&&wa+hi>ne)bf=495/(1.29579-.35004*Math.log10(wa+hi-ne)+.221*Math.log10(h))-450;if(bf!=null)bfSrc='圍度估算'}
+  return{a,kid,h,w,bmi,cuts,cat,bmr,tdee,target,goal,prot,fat,carb,bf,bfSrc,wMin:cuts[0]*hm*hm,wMax:cuts[1]*hm*hm,water:w*35,whtr:wa?wa/h:null,mode,sc};
+}
+
+/* ================= 視覺元件 ================= */
+function gauge(b,cuts){
+  const[c1,c2,c3]=cuts,min=Math.floor(c1-4),max=Math.ceil(c3+8);
+  const P=v=>Math.PI*(1-(Math.min(max,Math.max(min,v))-min)/(max-min)),pt=a=>[110+86*Math.cos(a),110-86*Math.sin(a)];
+  const seg=(a,b2,c)=>{const[x1,y1]=pt(P(a)),[x2,y2]=pt(P(b2));return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A86 86 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${c}" stroke-width="12" fill="none" stroke-linecap="round"/>`};
+  const g=.4,[x,y]=pt(P(b));
+  return `<svg viewBox="0 0 220 130" width="100%">${seg(min,c1-g,'#ffb547')}${seg(c1+g,c2-g,'#b6ff3c')}${seg(c2+g,c3-g,'#ffb547')}${seg(c3+g,max,'#ff5d6c')}
+    <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="8" fill="#fff" style="filter:drop-shadow(0 0 8px #22e4ff)"/>
+    <text x="110" y="100" text-anchor="middle" fill="#e8f0ff" font-size="32" font-weight="800">${b.toFixed(1)}</text>
+    <text x="110" y="122" text-anchor="middle" fill="#8a97b4" font-size="11">BMI</text></svg>`;
+}
+function ring(c){
+  const tot=c.prot*4+c.fat*9+c.carb*4,R=52,L=2*Math.PI*R;let off=0;
+  const arc=(kc,col)=>{const len=L*kc/tot,s=`<circle cx="65" cy="65" r="${R}" fill="none" stroke="${col}" stroke-width="12" stroke-dasharray="${Math.max(0,len-3)} ${L}" stroke-dashoffset="${-off}" transform="rotate(-90 65 65)" stroke-linecap="round"/>`;off+=len;return s};
+  return `<svg viewBox="0 0 130 130" width="130">${arc(c.prot*4,'#22e4ff')}${arc(c.carb*4,'#b6ff3c')}${arc(c.fat*9,'#ff4fa3')}
+  <text x="65" y="64" text-anchor="middle" fill="#e8f0ff" font-size="22" font-weight="800">${Math.round(c.target)}</text>
+  <text x="65" y="82" text-anchor="middle" fill="#8a97b4" font-size="10">kcal / 日</text></svg>`;
+}
+function scoreRing(sc,col){const R=40,L=2*Math.PI*R;return `<svg viewBox="0 0 100 100" width="96" height="96" style="flex:0 0 96px"><circle cx="50" cy="50" r="${R}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="9"/><circle cx="50" cy="50" r="${R}" fill="none" stroke="${col}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${L*sc/100} ${L}" transform="rotate(-90 50 50)" style="filter:drop-shadow(0 0 6px ${col})"/><text x="50" y="56" text-anchor="middle" font-size="24" font-weight="800" fill="#e8f0ff">${sc}</text></svg>`}
+const stat=(k,v,u,tag)=>`<div class="stat"><div class="k">${k}</div><div class="v">${v}<span class="u">${u||''}</span></div>${tag||''}</div>`;
+const tagH=(t,c)=>`<span class="tag" style="background:${c}22;color:${c}">${t}</span>`;
+function spark(vals,col){const v=vals.filter(x=>x!=null);if(v.length<2)return '<div class="sub" style="margin-top:6px">2 筆以上顯示趨勢</div>';
+  const mn=Math.min(...v),mx=Math.max(...v),rg=mx-mn||1;const pts=v.map((y,i)=>`${(i/(v.length-1)*100).toFixed(1)},${(28-(y-mn)/rg*24).toFixed(1)}`).join(' ');
+  return `<svg viewBox="0 0 100 30" preserveAspectRatio="none" style="width:100%;height:30px;margin-top:6px;display:block"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.8" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`}
+
+/* ================= 全息身體地圖 ================= */
+/* 器官形狀以女性較窄的軀幹為基準設計，男性橫向放大 1.05 倍；座標系寬 200（中線 x=100），頭頂 y=8、腳底 y=458 */
+const ORGAN_D={
+ brain:'M100 13.5C91 13.5 84.6 19 83.8 27.5C83.2 34 85.4 40.5 90 44C93 46.2 96.8 46 100 44.6C103.2 46 107 46.2 110 44C114.6 40.5 116.8 34 116.2 27.5C115.4 19 109 13.5 100 13.5Z',
+ thyroid:'M100 81.6C98.4 78.6 96.2 75.6 93.6 76.6C90.8 77.8 91 83.4 94.2 84.8C96.6 85.8 98.6 84.2 100 81.6C101.4 84.2 103.4 85.8 105.8 84.8C109 83.4 109.2 77.8 106.4 76.6C103.8 75.6 101.6 78.6 100 81.6Z',
+ lung:'M87 89C80.5 89.5 75.8 95.5 73.4 105C71 114.5 70 128 70 142C70 151.6 70.8 159.4 72.6 164.8C78 161.6 86.6 157.6 94.2 156.8C96.8 156.5 97.4 152.6 97.2 146.5C97 133 97.6 113 96 102C95 94.5 91.8 89 87 89Z'+
+      'M113 89C119.5 89.5 124.2 95.5 126.6 105C129 114.5 130 128 130 142C130 151.6 129.2 159.4 127.4 164.8C122.6 161.8 116.6 159.6 111 159.4C107.8 159.2 107 156.4 108.8 153.2C110.8 149.6 112.2 144.4 111 139.2C109.6 133.6 104.8 130.2 104.2 122.6C103.6 113.6 103.8 103 105 96.8C106.4 91.8 109 89 113 89Z',
+ heart:'M95.6 120.4C99.6 114.6 108.6 114.2 113.2 117.6C118.6 121.4 122.4 129.2 123.4 137C124.4 144.6 122.4 150.6 118.8 152.4C113 154.6 103.6 150.4 98.4 145.4C94 141 91.6 134.4 92.2 127.6C92.5 124.6 93.6 122.4 95.6 120.4Z',
+ liver:'M74 160.4C77.6 153.6 86.6 151 96 152.6C105 154 113.4 155.4 119.6 157.6C121.8 158.4 121.6 160.6 119.2 162.6C112.8 168.2 105.2 175.2 97.6 179.8C90 184.2 82.4 186 77.6 184.4C73.8 183 72.8 177.6 73 172C73.2 167.2 73.4 163.2 74 160.4Z',
+ stomach:'M107.6 159C109.6 154.2 116.8 151.8 122.2 154.2C127.6 156.6 129.4 164 128.4 172.2C127.4 180.6 123 187.4 115.6 189.4C108.8 191 102 189.8 97.8 186.6C95.4 184.8 96.2 181.6 98.8 181.2C103.4 180.6 109 180.6 112.8 177.4C116.2 174.4 117 168.6 115 164.6C113.2 161.2 110.4 160.8 107.6 159Z',
+ pancreas:'M91.6 196.8C92.2 192.4 96.8 191.4 101.4 192.8C107.6 194.6 114.4 192.2 119.8 189.8C123.4 188.2 125.8 188.8 125.6 191.4C125.4 194 122 196 117.4 197.8C110.6 200.4 104.4 201.8 98.8 202.6C94.6 203.2 91.2 201.2 91.6 196.8Z',
+ kidney:'M83.4 177.8C78.6 177.4 75.8 183.8 76 191.4C76.2 199.2 79.4 204.6 83.6 204.4C87.4 204.2 89 200.4 87.8 197.2C87 194.8 87 191.8 88.2 189.4C89.8 186 88.4 178.2 83.4 177.8Z'+
+        'M116.6 175.4C121.4 175 124.2 181.4 124 189C123.8 196.8 120.6 202.2 116.4 202C112.6 201.8 111 198 112.2 194.8C113 192.4 113 189.4 111.8 187C110.2 183.6 111.6 175.8 116.6 175.4Z',
+ bladder:'M100 225.6C105.2 225.6 108.6 229 108.4 233.2C108.2 237.6 104.6 240.2 100 240.2C95.4 240.2 91.8 237.6 91.6 233.2C91.4 229 94.8 225.6 100 225.6Z',
+ prostate:'M100 240.6C102.6 240.6 104.2 241.8 104 243.2C103.8 244.6 102.2 245.2 100 245.2C97.8 245.2 96.2 244.6 96 243.2C95.8 241.8 97.4 240.6 100 240.6Z',
+ uterus:'M100 206C105 206 107.8 209.4 107.4 213.6C107 217.6 104 220.2 102.6 223L102.4 226L97.6 226L97.4 223C96 220.2 93 217.6 92.6 213.6C92.2 209.4 95 206 100 206Z',
+ ovary:'M83.4 214.6m-2.9 0a2.9 2.2 0 1 0 5.8 0a2.9 2.2 0 1 0-5.8 0M116.6 214.6m-2.9 0a2.9 2.2 0 1 0 5.8 0a2.9 2.2 0 1 0-5.8 0'
+};
+// 細節線（不填色）
+const ORGAN_LINE={
+ brain:'M100 14.6V44M87.6 22.8c3 1.6 5.6-1 8.6.5M85.4 31c3.6-1.1 6.2 1.5 9.8 0M88 38.8c2.6-1.6 5.2.5 7.8-.5M112.4 22.8c-3 1.6-5.6-1-8.6.5M114.6 31c-3.6-1.1-6.2 1.5-9.8 0M112 38.8c-2.6-1.6-5.2.5-7.8-.5',
+ lung:'M71.2 124C78.6 121.4 88.8 124.4 96.8 122M71 147C80 139.4 89 128 96.2 112M129 145C121 137 112.6 128 104.6 112M100 64V106M100 106C97 109.6 93.2 112 89.6 114.6M100 106C103 109.6 106.8 112 110.4 114.6',
+ heart:'M108.2 118.6C111 129.6 113.6 141 118.4 152',
+ liver:'M88.6 181.6C86.6 184.8 87 189.4 89.8 189.6C92.6 189.8 93.2 185.6 91.8 182.4',
+ kidney:'M88 194.6C90.6 210 93.4 222 96 229M112 192.2C109.4 208 106.6 222 104 229',
+ uterus:'M92.6 210.4C88.6 208.2 85.4 208.8 83.8 211.6M107.4 210.4C111.4 208.2 114.6 208.8 116.2 211.6'
+};
+// 大腸：中心線（之後擴成管狀）＋小腸
+const COLON=[[82,232],[79.8,220],[79.2,206],[80.6,194.6],[84.4,190.2],[92.4,194],[100,197.4],[108,194],[116,188.4],[120.2,186.6],[121.8,192],[121.6,206],[121.2,219],[119,229],[112.6,234.6],[106.4,236.6]];
+const SMALL_INT='M90.2 202.4C95.6 200.2 104.6 200.2 110.4 202C114.4 203.4 115.2 208 114.8 213.4C114.4 220 115 226.4 111.8 230.6C108.4 234.4 100.8 235 94.6 233.6C89.8 232.6 87.4 228 87.4 222C87.4 215.4 86 204.8 90.2 202.4Z';
+const SMALL_COIL='M90.4 207.4c3.8 2.8 7.6-2.8 11.4 0s7.6 2.8 11.4 0M89.6 214c3.8-2.8 7.6 2.8 11.4 0s7.6-2.8 12 0M89.6 220.6c3.8 2.8 7.6-2.8 11.4 0s7.6 2.8 12 0M90.6 227.2c3.8-2.8 7.6 2.8 11.4 0s6.6-2.8 10.2 0';
+
+const HUD_F=v=>Math.round(v*10)/10;
+function crPath(pts,g0,g1){
+  const n=pts.length,P=[g0||[2*pts[0][0]-pts[1][0],2*pts[0][1]-pts[1][1]],...pts,g1||[2*pts[n-1][0]-pts[n-2][0],2*pts[n-1][1]-pts[n-2][1]]];
+  const L=(a,b)=>Math.sqrt(Math.hypot(b[0]-a[0],b[1]-a[1]))||1e-4;let d='';
+  for(let i=1;i<P.length-2;i++){const p0=P[i-1],p1=P[i],p2=P[i+1],p3=P[i+2],a=L(p0,p1),b=L(p1,p2),c=L(p2,p3);
+    const c1=[0,1].map(k=>(a*a*p2[k]-b*b*p0[k]+(2*a*a+3*a*b+b*b)*p1[k])/(3*a*(a+b)));
+    const c2=[0,1].map(k=>(c*c*p1[k]-b*b*p3[k]+(2*c*c+3*c*b+b*b)*p2[k])/(3*c*(c+b)));
+    d+=`C${HUD_F(c1[0])} ${HUD_F(c1[1])} ${HUD_F(c2[0])} ${HUD_F(c2[1])} ${HUD_F(p2[0])} ${HUD_F(p2[1])}`}
+  return d}
+const mirP=p=>p&&[200-p[0],p[1]];
+const openPath=pts=>`M${HUD_F(pts[0][0])} ${HUD_F(pts[0][1])}`+crPath(pts);
+function mirrorOutline(runs){
+  let d=`M${HUD_F(runs[0].p[0][0])} ${HUD_F(runs[0].p[0][1])}`;
+  for(const r of runs)d+=crPath(r.p,r.g0,r.g1);
+  for(const r of runs.slice().reverse())d+=crPath(r.p.slice().reverse().map(mirP),mirP(r.g1),mirP(r.g0));
+  return d+'Z'}
+// 中心線 [x,y,寬] → 外緣 out、內緣 inn；k 給定時回傳偏移線（-1 內緣 … 1 外緣）
+function limbEdge(cl,k){
+  return cl.map((c,i)=>{const a=cl[Math.max(0,i-1)],b=cl[Math.min(cl.length-1,i+1)],l=Math.hypot(b[0]-a[0],b[1]-a[1]),tx=(b[0]-a[0])/l,ty=(b[1]-a[1])/l,h=c[2]/2*k;return[c[0]+ty*h,c[1]-tx*h]})}
+const BODY_GEO={
+ m:{head:[[100,8],[110.5,9.4],[117.5,15],[120.6,24],[120.8,34],[122.6,38],[122.7,46],[119.8,51],[117.8,57],[114.5,62.5],[112.2,66.5]],
+    neck:[[112.2,66.5],[112.4,72],[113.6,79],[120.4,84.4],[131.6,88.2],[142,91.2],[150.4,94.6],[156.6,100.2],[160.8,107.6]],
+    arm:[[146,101,29],[152.2,122,26.6],[157,146,22.8],[161.4,170,19.6],[165.4,193,21.6],[169.2,217,17.6],[172.4,239,13.6],[173.8,252,16.6],[174.6,264,15.6],[174.6,275,13],[174,283.5,10.6]],
+    axilla:[[143,131],[142.3,125.6],[141.3,123.4],[140.5,125.6],[140.8,132]],
+    torso:[[140.8,132],[140.4,146],[136.8,162],[133.8,177],[133.8,190],[136,204],[139.4,218],[141.6,232],[141.8,246]],
+    leg:[[121.2,252,41.6],[120.6,272,39.4],[119.8,294,35.8],[118.8,314,30],[117.8,328,26.5],[117.4,338,26],[117.6,348,25.5],[118.2,366,29.5],[118,386,25.5],[117.2,406,20],[116.6,425,15.5],[116.4,436,14.6]],
+    foot:[[9.4,441.5],[11.8,448.5],[11.6,455],[7,458.4],[-1.4,459.2],[-8.6,457.8],[-10.2,452.8],[-9,446]],crotch:244,ox:1.05,clav:136},
+ f:{head:[[100,8.5],[109.5,9.8],[116.3,15],[119.4,24],[119.6,34],[121.2,37.8],[121.3,45.5],[118.7,50.5],[116.5,56.5],[113,62],[110.4,66]],
+    neck:[[110.4,66],[110.6,72],[111.6,79],[117,84],[127,87.8],[136,90.6],[143,94],[148.4,99.2],[152,106]],
+    arm:[[140.5,101,23],[145.5,123,21],[149.8,147,18.5],[153.8,170,16],[157.6,192,17.5],[161.2,215,14.5],[164.2,237,11.2],[165.3,250,13.6],[165.9,262,12.6],[165.9,272,10.8],[165.3,280.5,9]],
+    axilla:[[138.6,130],[137.8,124.8],[136.9,122.6],[136.1,124.8],[136.4,131]],
+    torso:[[136.4,131],[135.8,142],[132.6,158],[128.8,174],[129,186],[133.6,201],[141.6,216],[146.6,230],[147.4,244]],
+    leg:[[123.5,252,44],[122.2,272,40],[120.5,294,35],[118.8,314,28.5],[117.6,328,24.5],[117.2,338,23.5],[117.4,348,23],[118,366,26.5],[117.8,386,23],[117,406,18],[116.4,425,14],[116.2,436,13]],
+    foot:[[8.4,441.5],[10.6,448],[10.4,454.2],[6.4,457.6],[-1,458.6],[-7.6,457.4],[-9.2,452.6],[-8.2,446]],crotch:246,ox:1,clav:132}
+};
+const BODY_CACHE={};
+function bodyGeo(sex){
+  const key=sex==='f'?'f':'m';if(BODY_CACHE[key])return BODY_CACHE[key];
+  const G=BODY_GEO[key],out=limbEdge(G.arm,1),inn=limbEdge(G.arm,-1),tip=G.arm[G.arm.length-1],tw=tip[2]/2;
+  const cap=[[tip[0]+tw*.66,tip[1]+tw*.82],[tip[0]-.2,tip[1]+tw*1.1],[tip[0]-tw*.7,tip[1]+tw*.78]];
+  const run={p:[...G.neck,...out.slice(1),...cap,...inn.slice(1).reverse().filter(p=>p[1]>G.axilla[0][1]+6),...G.axilla,...G.torso.slice(1)]};
+  const lo=limbEdge(G.leg,1),li=limbEdge(G.leg,-1),lastT=G.torso[G.torso.length-1];
+  run.p.push(...lo.filter(p=>p[1]>lastT[1]+4));
+  const fx=G.leg[G.leg.length-1][0],foot=[run.p[run.p.length-1],...G.foot.map(([dx,y])=>[fx+dx,y])];
+  const inRun={p:[foot[foot.length-1],...li.slice().reverse().filter(p=>p[1]>G.crotch+8&&p[1]<437),[101.2,G.crotch+4.5],[100,G.crotch]]};
+  inRun.g1=mirP(inRun.p[inRun.p.length-2]);
+  const body=mirrorOutline([{p:G.head,g0:mirP(G.head[1])},run,{p:foot},inRun]);
+  // 骨架與血管（右半邊算好再鏡像）
+  const both=d=>d+d.replace(/(-?\d+\.?\d*) (-?\d+\.?\d*)/g,(s,x,y)=>`${HUD_F(200-+x)} ${y}`);
+  const armBone=openPath(limbEdge(G.arm.slice(0,4),0))+openPath(limbEdge(G.arm.slice(3,7),.18))+openPath(limbEdge(G.arm.slice(3,7),-.22));
+  const legBone=openPath(limbEdge(G.leg.slice(0,5),.06))+openPath(limbEdge(G.leg.slice(6,12),-.1))+openPath(limbEdge(G.leg.slice(7,12),.42));
+  const sx=key==='f'?.93:1;
+  let ribs='';for(let i=0;i<7;i++){const y=101+i*8.4,xe=100+(31.5-(i>3?(i-3)*1.6:0))*sx;ribs+=`M102.6 ${HUD_F(y)}Q${HUD_F(100+22*sx)} ${HUD_F(y-4.5+i*.4)} ${HUD_F(xe)} ${HUD_F(y+8+i*1.3)}`}
+  const pelvis=key==='f'?'M100 238C92 238 84 234 79.4 227.4C73.8 219.4 71.2 208.6 70 199.4C77.4 201.4 85.4 206.6 89.6 212.6C93.2 217.6 96.6 221.6 100 222.6':'M100 236C93 236 86 232 82 226C76.6 218 74.2 208.4 73 199.6C79.6 201.8 86.6 206.6 90.4 212.4C93.6 217.2 96.8 221 100 222';
+  const bones=both(`M102.6 93.8C110 97 121 96.6 ${G.clav} 92.6`+ribs+pelvis+armBone+legBone)+'M97.8 95.4h4.4v50l-2.2 3.6-2.2-3.6z';
+  // 動脈：主動脈弓 → 腹主動脈 → 髂動脈 → 股動脈；鎖骨下 → 肱動脈；頸動脈
+  const aL=limbEdge(G.arm.slice(1,8),-.3),lg=limbEdge(G.leg.slice(0,12),-.34).map((p,i)=>i>5?[p[0]+G.leg[i][2]*.5,p[1]]:p);
+  const artR=openPath([[108.6,100.6],[124,96.2],[137,99.8],...aL])+openPath([[101.6,196],[107.8,210],[111.4,226],...lg.slice(0)])+openPath([[105.8,101.4],[105.4,86],[105,70],[104.4,52]]);
+  const vessels=both(artR)+'M103.6 117C102.6 108 104.4 101.2 109.6 100.4C114.6 99.8 116.8 104.6 115.4 110C113.6 120 104.4 128 103.4 160L101.6 196';
+  return BODY_CACHE[key]={G,body,bones,vessels,colon:colonPath()};
+}
+// 大腸管狀外框（中心線往兩側偏移 3.8）
+function colonPath(){
+  const c=COLON.map(p=>[p[0],p[1],7.6]),o=limbEdge(c,1),i=limbEdge(c,-1);
+  return openPath(o)+`L${HUD_F(i[i.length-1][0])} ${HUD_F(i[i.length-1][1])}`+crPath(i.slice().reverse())+'Z';
+}
+
+const HCOL=['rgba(34,228,255,.9)','#ff8a5c','#ff4d6d','#ff1f4b'];
+// 文字寬度估算（中日韓全形 1em、其他 0.58em），超出就截斷加 …
+function fitText(s,maxW,fs){s=String(s??'');const cw=ch=>/[\u2e80-\uffff]/.test(ch)?fs:fs*.58;let w=0;for(const ch of s)w+=cw(ch);if(w<=maxW)return s;
+  let o='';w=fs*.9;for(const ch of s){w+=cw(ch);if(w>maxW)break;o+=ch}return o.trimEnd()+'…'}
+function bodySVG(m,issues,p){
+  const fem=m.sex==='f',B=bodyGeo(m.sex),G=B.G,TX=70,ox=G.ox,sxo=x=>100+(x-100)*ox;
+  const lv={},worst={},cnt={};
+  for(const i of issues){if(!i.organ||!ORG[i.organ])continue;cnt[i.organ]=(cnt[i.organ]||0)+1;if(!(lv[i.organ]>=i.lv)){lv[i.organ]=i.lv;worst[i.organ]=i}}
+  const L=o=>lv[o]||0,legX=G.leg[5][0],kneeY=G.leg[5][1],toe=G.leg[11][0]-5.4;
+  // 熱區（器官座標，男性同步放大）
+  const HALO={brain:[[100,30,26,22]],thyroid:[[100,81,13,11]],lung:[[84,126,20,30],[116,126,20,30]],heart:[[108,135,19,19]],liver:[[95,168,28,20]],stomach:[[114,172,18,20]],
+    pancreas:[[108,196,20,11]],kidney:[[82,191,13,17],[118,189,13,17]],intestine:[[100,214,28,24]],pelvis:[[100,232,15,14]],abdomen:[[100,205,40,30]]};
+  const SKH={blood:[[legX+3,288,8,38]],bone:[[118.6,233,12,12],[100,212,7,24]],joint:[[legX,kneeY,13,13],[toe,451,7,6]]};
+  const halo=(o,[x,y,rx,ry],org)=>{const l=L(o),cls=l===3?' class="pulse"':'';const cx=org?sxo(x):x;
+    return `<ellipse cx="${HUD_F(cx)}" cy="${y}" rx="${HUD_F(rx*(org?ox:1)*(.9+l*.12))}" ry="${HUD_F(ry*(.9+l*.12))}" fill="url(#${p}h${l})" opacity="${[0,.7,.85,1][l]}"${cls}/>`};
+  const mirE=a=>a.flatMap(e=>e[0]===100?[e]:[e,[200-e[0],...e.slice(1)]]);
+  let heat='';
+  for(const o of Object.keys(lv)){if(HALO[o])heat+=HALO[o].map(e=>halo(o,e,true)).join('');if(SKH[o])heat+=mirE(SKH[o]).map(e=>halo(o,e,false)).join('')}
+  // 器官
+  const og=(o,d,extra='')=>{const l=L(o);return `<path data-org="${o}" d="${d}" fill="${l?`rgba(255,45,85,${[0,.2,.32,.46][l]})`:'rgba(34,228,255,.07)'}" stroke="${l?HCOL[l]:'rgba(120,235,255,.55)'}" stroke-width="${l?1:.6}"${l?` filter="url(#${p}glow)"`:''}${extra}/>`};
+  const ln=(o,d)=>`<path d="${d}" fill="none" stroke="${L(o)?HCOL[L(o)]:'rgba(120,235,255,.32)'}" stroke-width=".45" stroke-linecap="round"/>`;
+  const pel=fem?ORGAN_D.bladder+ORGAN_D.uterus:ORGAN_D.bladder+ORGAN_D.prostate;
+  const organs=og('lung',ORGAN_D.lung)+ln('lung',ORGAN_LINE.lung)+og('liver',ORGAN_D.liver)+ln('liver',ORGAN_LINE.liver)+og('kidney',ORGAN_D.kidney)+ln('kidney',ORGAN_LINE.kidney)+
+    og('intestine',SMALL_INT)+ln('intestine',SMALL_COIL)+og('intestine',B.colon)+og('stomach',ORGAN_D.stomach)+og('pancreas',ORGAN_D.pancreas)+
+    og('pelvis',pel)+(fem?og('pelvis',ORGAN_D.ovary)+ln('pelvis',ORGAN_LINE.uterus):'')+og('heart',ORGAN_D.heart)+ln('heart',ORGAN_LINE.heart)+og('brain',ORGAN_D.brain)+ln('brain',ORGAN_LINE.brain)+og('thyroid',ORGAN_D.thyroid);
+  const OT=ox===1?'':` transform="matrix(${ox} 0 0 1 ${HUD_F(100-100*ox)} 0)"`;
+  // 血管：異常時發紅光，≥異常時流動
+  const vl=L('vessel');
+  const vessel=`<path data-org="vessel" d="${B.vessels}" fill="none" stroke="${vl?HCOL[vl]:'rgba(120,200,255,.26)'}" stroke-width="${vl?1.2:.7}" stroke-opacity="${vl?.7:1}" stroke-linecap="round"${vl?` filter="url(#${p}glow)"`:''}/>`+
+    (vl>=2?`<path d="${B.vessels}" fill="none" stroke="#ffe3ea" stroke-width="1.7" stroke-linecap="round" class="vflow"/>`:'');
+  const bl=L('bone');
+  const bones=`<g data-org="bone" fill="none" stroke="${bl?HCOL[bl]:'rgba(165,225,255,.17)'}" stroke-opacity="${bl?.5:1}" stroke-width="${bl?.7:.55}" stroke-linecap="round"><path d="${B.bones}"/>`+
+    `<ellipse cx="${legX}" cy="${kneeY-1}" rx="4.4" ry="5.6"/><ellipse cx="${200-legX}" cy="${kneeY-1}" rx="4.4" ry="5.6"/></g>`+
+    `<path d="M100 92V238" stroke="rgba(165,225,255,.10)" stroke-width="5" stroke-dasharray="3.2 1.6"/>`;
+  // 點擊熱區：小器官在上層
+  const hitO=(o,d,w=6)=>`<path data-o="${o}" d="${d}" fill="transparent" stroke="transparent" stroke-width="${w}"/>`;
+  const hitE=(o,arr,org)=>arr.map(([x,y,rx,ry])=>`<ellipse data-o="${o}" cx="${HUD_F(org?sxo(x):x)}" cy="${y}" rx="${Math.max(rx,9)}" ry="${Math.max(ry,9)}" fill="transparent"/>`).join('');
+  const hits=hitE('abdomen',HALO.abdomen,true)+`<path data-o="vessel" d="${B.vessels}" fill="none" stroke="transparent" stroke-width="7"/>`+
+    hitE('blood',mirE(SKH.blood))+hitE('bone',mirE(SKH.bone))+hitE('joint',mirE(SKH.joint))+
+    `<g${OT}>${hitO('intestine',SMALL_INT+B.colon)+hitO('liver',ORGAN_D.liver)+hitO('stomach',ORGAN_D.stomach)+hitO('kidney',ORGAN_D.kidney)+hitO('pancreas',ORGAN_D.pancreas)+
+    hitO('pelvis',pel)+hitO('lung',ORGAN_D.lung,3)+hitO('heart',ORGAN_D.heart)+hitO('brain',ORGAN_D.brain)+hitO('thyroid',ORGAN_D.thyroid,8)}</g>`;
+  // 標註：左右兩欄，依高度排開避免重疊
+  const AN={brain:[100,26],thyroid:[100,81],lung:[80,120],heart:[112,132],liver:[84,170],stomach:[122,166],pancreas:[118,195],kidney:[80,195],intestine:[100,222],pelvis:[100,233],abdomen:[100,204]};
+  const anc=o=>AN[o]?[TX+sxo(AN[o][0]),AN[o][1]]:o==='vessel'?[TX+G.arm[2][0]-G.arm[2][2]*.15,G.arm[2][1]]:o==='blood'?[TX+legX+3,292]:o==='bone'?[TX+200-118.6,233]:[TX+200-legX,kneeY];
+  const items=Object.keys(lv).map(o=>{const[x,y]=anc(o);return{o,x,y,side:x<TX+96?'L':x>TX+104?'R':''}});
+  for(const it of items.filter(i=>!i.side).sort((a,b)=>a.y-b.y)){const n=s=>items.filter(i=>i.side===s).length;it.side=n('L')<=n('R')?'L':'R'}
+  const GAP=31,TOP=40,BOT=456;
+  for(const sd of['L','R']){const col=items.filter(i=>i.side===sd).sort((a,b)=>a.y-b.y);let last=-1e9;
+    col.forEach(i=>{i.ly=Math.max(i.y,last+GAP,TOP);last=i.ly});
+    for(let k=col.length-1,nx=BOT+GAP;k>=0;k--){col[k].ly=Math.min(col[k].ly,nx-GAP);nx=col[k].ly}}
+  const call=items.map(i=>{const l=lv[i.o],c=HCOL[l],Lf=i.side==='L',tx=Lf?84:256,ex=Lf?94:246,an=Lf?'end':'start',w=worst[i.o],more=cnt[i.o]-1;
+    const sub=fitText(`${w.short||w.name} ${typeof w.val==='number'?fmt(w.val):String(w.val??'')}`.trim(),80-(more>0?18:0),9.2)+(more>0?` +${more}`:'');
+    const nm=fitText(orgName(i.o,m),80,12),nw=[...nm].length*12;
+    const dots=[...Array(l)].map((_,k)=>`<circle cx="${Lf?tx-nw-5-k*4.6:tx+nw+5+k*4.6}" cy="${HUD_F(i.ly-7.2)}" r="1.7" fill="${c}"/>`).join('');
+    return `<g data-o="${i.o}" class="callout"><rect x="${Lf?2:250}" y="${i.ly-14}" width="88" height="30" fill="transparent"/>`+
+      `<polyline points="${HUD_F(i.x)},${HUD_F(i.y)} ${ex},${HUD_F(i.ly)} ${tx+(Lf?2:-2)},${HUD_F(i.ly)}" fill="none" stroke="${c}" stroke-width=".7" stroke-opacity=".85"/>`+
+      `<circle cx="${HUD_F(i.x)}" cy="${HUD_F(i.y)}" r="2.2" fill="${c}"/><circle cx="${HUD_F(i.x)}" cy="${HUD_F(i.y)}" r="4.2" fill="none" stroke="${c}" stroke-width=".6" opacity=".7"/>`+
+      `<text x="${tx}" y="${HUD_F(i.ly-3)}" text-anchor="${an}" font-size="12" font-weight="800" fill="${c}">${esc(nm)}</text>${dots}`+
+      `<text x="${tx}" y="${HUD_F(i.ly+9.5)}" text-anchor="${an}" font-size="9.2" fill="#a9b8d4">${esc(sub)}</text></g>`}).join('');
+  const hg=(id,c1,c2,o1,o2)=>`<radialGradient id="${p}${id}"><stop offset="0" stop-color="${c1}" stop-opacity="${o1}"/><stop offset=".55" stop-color="${c2}" stop-opacity="${o2}"/><stop offset="1" stop-color="${c2}" stop-opacity="0"/></radialGradient>`;
+  return `<svg viewBox="0 0 340 472" role="img" aria-label="身體健康地圖">
+  <defs>
+    <linearGradient id="${p}bg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="460"><stop offset="0" stop-color="#13456b"/><stop offset=".5" stop-color="#0d2d4b"/><stop offset="1" stop-color="#0a1c33"/></linearGradient>
+    <filter id="${p}edge" x="-15%" y="-5%" width="130%" height="110%"><feMorphology in="SourceAlpha" operator="dilate" radius="1.1" result="d"/><feComposite in="d" in2="SourceAlpha" operator="out" result="ring"/><feFlood flood-color="#22e4ff"/><feComposite in2="ring" operator="in" result="line"/><feGaussianBlur in="line" stdDeviation="3" result="glow"/>
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4.5" result="ba"/><feComposite in="SourceAlpha" in2="ba" operator="arithmetic" k2="1" k3="-1" result="rim"/><feFlood flood-color="#3fe9ff" flood-opacity=".55"/><feComposite in2="rim" operator="in" result="rimc"/>
+      <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/><feMergeNode in="rimc"/><feMergeNode in="line"/></feMerge></filter>
+    <filter id="${p}glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <clipPath id="${p}clip"><path d="${B.body}"/></clipPath>
+    <pattern id="${p}grid" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M8 0H0V8" fill="none" stroke="rgba(34,228,255,.11)" stroke-width=".5"/></pattern>
+    <linearGradient id="${p}scan" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22e4ff" stop-opacity="0"/><stop offset=".85" stop-color="#22e4ff" stop-opacity=".18"/><stop offset="1" stop-color="#b6ff3c" stop-opacity=".5"/></linearGradient>
+    <radialGradient id="${p}floor"><stop offset="0" stop-color="#22e4ff" stop-opacity=".35"/><stop offset="1" stop-color="#22e4ff" stop-opacity="0"/></radialGradient>
+    ${hg('h1','#ff9a4d','#ff5a3c',.9,.38)}${hg('h2','#ff2d55','#ff2d55',.9,.45)}${hg('h3','#ff0033','#d4002a',1,.6)}
+  </defs>
+  <path d="M4 22V4H22M318 4H336V22M336 450V468H318M22 468H4V450" fill="none" stroke="rgba(34,228,255,.5)" stroke-width="1"/>
+  <text x="10" y="17" font-size="8.5" fill="#22e4ff" letter-spacing="2">BODY·SCAN</text>
+  <text x="330" y="17" text-anchor="end" font-size="8.5" fill="#8a97b4">${esc(fitText(m.name,70,8.5))}・${sexT(m.sex)}・${Math.floor(ageOf(m))}歲</text>
+  <g transform="translate(${TX} 0)">
+    <ellipse cx="100" cy="459" rx="58" ry="8" fill="url(#${p}floor)"/>
+    <ellipse cx="100" cy="459" rx="66" ry="9.5" fill="none" stroke="rgba(34,228,255,.35)" stroke-dasharray="3 4"><animate attributeName="stroke-dashoffset" from="0" to="-14" dur="1.4s" repeatCount="indefinite"/></ellipse>
+    <g fill="url(#${p}bg)" filter="url(#${p}edge)"><path d="${B.body}"/></g>
+    <g clip-path="url(#${p}clip)">
+      <rect x="0" y="0" width="200" height="470" fill="url(#${p}grid)"/>${bones}${vessel}
+      ${heat}
+      <g${OT}>${organs}</g>
+      <rect x="0" y="-60" width="200" height="60" fill="url(#${p}scan)"><animate attributeName="y" values="-60;470" dur="4.5s" repeatCount="indefinite"/></rect>
+    </g>
+    <g>${hits}</g>
+  </g>${call}
+  </svg>`;
+}
+function issueHTML(list,showRef){return list.map(i=>`<div class="issue"><span class="lv lv${i.lv}">${LVT[i.lv]}</span><div style="flex:1;min-width:0"><div class="t">${esc(i.name)}</div><div class="s">${esc(i.src)}・${esc(i.msg)}${showRef&&i.ref?`<br>參考值 ${esc(i.ref)}`:''}${i.dev&&i.msg.indexOf('設備')<0?`<br>設備判定：${esc(i.dev)}`:''}</div></div><div class="v">${fmt(i.val)}<div class="sub">${esc(i.unit||'')}</div></div></div>`).join('')}
+function deptHTML(dp){return dp.length?dp.map(d=>`<div class="dept"><span class="lv lv${d.lv}">${LVT[d.lv]}</span><div style="flex:1;min-width:0"><b>${esc(d.d)}</b><div class="sub" style="margin-top:2px">${d.when}</div><div class="sub" style="margin-top:2px">${esc(d.items.join('、'))}</div></div></div>`).join(''):'<div class="empty">目前不需要特別就診，維持每年健康檢查即可</div>'}
+
+/* ================= 渲染：總覽 ================= */
+function renderHeader(){const m=me();$('#memChip').innerHTML=`<span class="av" style="background:${avColor(m.id)}">${esc(m.name.slice(0,1)||'?')}</span><span>${esc(short(m.name,6))}</span><span class="sub">${sexT(m.sex)}・${Math.floor(ageOf(m))}歲 ▾</span>`}
+function renderDash(){
+  const m=me(),c=calc(m);
+  $('#gauge').innerHTML=gauge(c.bmi,c.cuts);
+  $('#coreStats').innerHTML=
+    stat('BMI 分級',c.cat[0],'',tagH(c.kid?'國健署兒童標準':'國健署成人標準',c.cat[1]))+
+    stat('健康體重',`${c.wMin.toFixed(0)}–${c.wMax.toFixed(0)}`,'kg',c.sc?tagH('體脂機 '+fmt(c.w)+' kg','#22e4ff'):'')+
+    stat('基礎代謝 BMR',Math.round(c.bmr),'kcal',c.sc?.bmr?tagH('體脂機實測 '+c.sc.bmr,'#22e4ff'):tagH(c.kid?'Schofield 兒童公式':'Mifflin 公式','#8a97b4'))+
+    stat('每日消耗 TDEE',Math.round(c.tdee),'kcal');
+  $('#ring').innerHTML=ring(c);
+  const mrow=(n,g,col)=>`<div class="row"><span>${n}</span><b>${Math.round(g)} g</b></div><div class="bar"><i style="width:100%;background:${col}"></i></div>`;
+  $('#macroList').innerHTML=mrow('蛋白質',c.prot,'var(--cyan)')+mrow('碳水',c.carb,'var(--lime)')+mrow('脂肪',c.fat,'var(--pink)');
+  $('#modeTags').innerHTML=(c.kid?['<span class="tg warn">成長期：不做熱量赤字</span>']:[]).concat(c.mode.tags.map(t=>`<span class="tg warn">${t}</span>`)).join('');
+  $('#advStats').innerHTML=
+    stat('體脂率',c.bf!=null?c.bf.toFixed(1):'—',c.bf!=null?'%':'',c.bf!=null?tagH(c.bfSrc,'#8a97b4'):'<span class="tag" style="color:var(--mute)">填腰/頸圍或體脂紀錄</span>')+
+    stat('腰高比',c.whtr?c.whtr.toFixed(2):'—','',c.whtr?tagH(c.whtr>.5?'偏高':'良好',c.whtr>.5?'#ff5d6c':'#b6ff3c'):'')+
+    stat('建議飲水',(c.water/1000).toFixed(1),'L')+
+    stat('目標',c.kid?'成長期':{cut:'減脂',keep:'維持',bulk:'增肌'}[c.goal],'',`<span class="tag" style="color:var(--cyan)">${Math.round(c.target-c.tdee)} kcal</span>`);
+  const s=scalesOf(m)[0],l=labsOf(m)[0];
+  $('#latestCard').innerHTML=`<h2>最新紀錄</h2>`+
+    (s?`<button class="rec" data-sid="${esc(s.id)}"><div class="m"><b>體脂機</b><small>${fmtDT(s.t)}・體重 ${fmt(s.weight)} kg・體脂 ${fmt(s.fat)}%・內臟 ${fmt(s.visceral)}</small></div><span class="chev">›</span></button>`
+       :`<button class="rec" data-addscale><div class="m"><b>尚無體脂紀錄</b><small>手動輸入或 AI 截圖匯入</small></div><span class="chev">＋</span></button>`)+
+    (l?(()=>{const sc=scoreOf(labEval(l,m)),g=grade(sc);return `<button class="rec" data-lid="${esc(l.id)}"><div class="m"><b>體檢報告</b><small>${esc(l.t)}${l.hospital?'・'+esc(l.hospital):''}</small></div><span class="lv" style="background:${g[1]}22;color:${g[1]}">${sc} 分</span><span class="chev">›</span></button>`})()
+       :`<button class="rec" data-addlab><div class="m"><b>尚無體檢報告</b><small>拍照給 AI 讀數字後匯入，App 自動評分</small></div><span class="chev">＋</span></button>`);
+}
+
+/* ================= 渲染：身體 ================= */
+let recTab='scale';
+function renderBody(){
+  const m=me(),{scale,lab,s,l}=issuesOf(m),all=[...lab,...scale].sort((a,b)=>b.lv-a.lv),a=ageOf(m);
+  $('#bodyWho').textContent=`${m.name}・${sexT(m.sex)}・${Math.floor(a)} 歲・${stageOf(a)}`;
+  $('#bodySrc').innerHTML=[s&&'體脂 '+fmtDT(s.t),l&&'體檢 '+esc(l.t)].filter(Boolean).map(x=>`<span style="white-space:nowrap;margin-right:10px">${x}</span>`).join('')||'尚無資料，先新增體脂或體檢紀錄';
+  const chips=[];
+  if(l){const sc=scoreOf(lab),g=grade(sc);chips.push(`<span class="tg" style="color:${g[1]};border-color:${g[1]}55">體檢 ${sc}</span>`)}
+  if(s){const sc=s.score??scoreOf(scale);chips.push(`<span class="tg">體脂 ${sc}</span>`)}
+  $('#bodyScore').innerHTML=chips.join('');
+  $('#hud').innerHTML=bodySVG(m,all,'b');$('#organPanel').innerHTML='';
+  $('#issueList').innerHTML=all.length?issueHTML(all.slice(0,12),true)+(all.length>12?`<div class="note">另有 ${all.length-12} 項，請點紀錄看完整分析</div>`:''):`<div class="empty">${s||l?'目前沒有異常指標 👍':'尚無資料'}</div>`;
+  $('#deptList').innerHTML=deptHTML(deptPlan(all));
+  $$('#recSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===recTab));
+  renderRecs();
+}
+function renderRecs(){
+  const m=me();
+  if(recTab==='scale'){const recs=scalesOf(m);
+    if(!recs.length){$('#recList').innerHTML='<div class="empty">尚無體脂紀錄<br>按上方「＋ 體脂紀錄」手動輸入，或用 AI 截圖匯入</div>';return}
+    const asc=recs.slice(0,30).reverse(),last=recs[0],prev=recs[1];
+    const tr=(k,n,u,col)=>{const d=prev&&last[k]!=null&&prev[k]!=null?last[k]-prev[k]:null;
+      return `<div class="stat"><div class="k">${n}</div><div class="v">${fmt(last[k])}<span class="u">${u}</span></div><div class="sub">${d==null?'&nbsp;':(d>0?'▲':d<0?'▼':'＝')+' '+Math.abs(r1(d))}</div>${spark(asc.map(r=>r[k]),col)}</div>`};
+    $('#recList').innerHTML=`<div class="spark">${tr('weight','體重','kg','#22e4ff')}${tr('fat','體脂率','%','#ff4fa3')}${tr('visceral','內臟脂肪','','#ffb547')}</div>`+
+      recs.map(r=>{const lv=scaleEval(r,m).reduce((a,i)=>Math.max(a,i.lv),0);
+        return `<button class="rec" data-sid="${esc(r.id)}"><div class="m"><b>${fmtDT(r.t)}</b><small>體重 ${fmt(r.weight)} kg・體脂 ${fmt(r.fat)}%・內臟 ${fmt(r.visceral)}・肌肉 ${fmt(r.muscle)} kg</small></div><span class="lv lv${lv}">${LVT[lv]}</span><span class="chev">›</span></button>`}).join('');
+  }else{const recs=labsOf(m);
+    if(!recs.length){$('#recList').innerHTML='<div class="empty">尚無體檢報告<br>按上方「＋ 體檢報告」，拍照給 AI 讀出數字後匯入</div>';return}
+    $('#recList').innerHTML=recs.map(r=>{const iss=labEval(r,m),sc=scoreOf(iss),g=grade(sc);
+      return `<button class="rec" data-lid="${esc(r.id)}"><div class="m"><b>${esc(r.t)}${r.hospital?'・'+esc(r.hospital):''}</b><small>${Object.keys(r.items||{}).length+(r.extra||[]).length} 項・異常 ${iss.length} 項</small></div><span class="lv" style="background:${g[1]}22;color:${g[1]}">${sc} 分</span><span class="chev">›</span></button>`}).join('');
+  }
+}
+function showOrgan(o){
+  const m=me(),{scale,lab}=issuesOf(m),list=[...lab,...scale].filter(i=>i.organ===o).sort((a,b)=>b.lv-a.lv);
+  $$('#hud [data-org]').forEach(e=>e.classList.toggle('sel',e.dataset.org===o));
+  $('#organPanel').innerHTML=`<div class="organ-pop"><div class="row" style="margin:0 0 6px"><b>${esc(orgName(o,m))}</b><button class="x" data-closeorgan>✕</button></div>${list.length?issueHTML(list,true):'<div class="empty" style="padding:8px 0">這個部位目前沒有異常指標</div>'}${ORG[o].tip?`<p class="note">💡 ${esc(ORG[o].tip)}</p>`:''}</div>`;
+  $('#organPanel').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* ================= 渲染：我的 ================= */
+function memRows(){return MEM.map(m=>`<div class="rec"><button class="mrow" data-pick="${esc(m.id)}"><span class="av" style="background:${avColor(m.id)}">${esc(m.name.slice(0,1)||'?')}</span><span style="min-width:0"><b>${esc(m.name)}</b> ${m.id===ACT?'<span class="on">● 使用中</span>':''}<div class="sub">${sexT(m.sex)}・${Math.floor(ageOf(m))} 歲・${stageOf(ageOf(m))}・體脂 ${(SCALE[m.id]||[]).length} 筆・體檢 ${(LABS[m.id]||[]).length} 份</div></span></button><button class="x" data-editmem="${esc(m.id)}" aria-label="編輯">✎</button></div>`).join('')}
+function renderMe(){$('#memList').innerHTML=memRows();$('#f-gas').value=GAS}
+
+/* ================= 底部面板 ================= */
+function openSheet(html){$('#sheetBody').innerHTML=html;$('#sheet').classList.add('on');document.body.style.overflow='hidden';$('.sheet-panel').scrollTop=0}
+function closeSheet(){$('#sheet').classList.remove('on');document.body.style.overflow=''}
+const sheetHead=(t,sub)=>`<h3>${t}<button class="x" data-close aria-label="關閉">✕</button></h3>${sub?`<div class="sub">${sub}</div>`:''}`;
+function openMemberPicker(){openSheet(sheetHead('切換成員','點名字切換，✎ 編輯資料')+`<div style="margin-top:10px">${memRows()}</div><button class="btn ghost" data-addmem>＋ 新增成員</button>`)}
+
+const ACTS=[['1.2','久坐（幾乎不運動）'],['1.375','輕度（每週 1–3 天）'],['1.55','中度（每週 3–5 天）'],['1.725','高度（每週 6–7 天）'],['1.9','極高（勞力工作＋訓練）']];
+function openMemberEdit(id){
+  const ex=id?MEM.find(x=>x.id===id):null;
+  const m=ex?{...ex}:{id:uid(),name:'',sex:'m',birth:'',h:'',w:'',waist:'',neck:'',hip:'',act:'1.375',goal:'keep'};
+  openSheet(sheetHead(ex?'編輯成員':'新增成員','性別＋出生日期會自動判斷兒童／青少年／成人／長者')+`
+    <label>名稱</label><input id="m-name" value="${esc(m.name)}" placeholder="例如：爸爸、小明" maxlength="12">
+    <label>性別</label><div class="seg" id="m-sex"><button data-v="m">男</button><button data-v="f">女</button></div>
+    <div class="grid2">
+      <div><label>出生日期</label><input type="date" id="m-birth" value="${esc(m.birth)}" max="${ymd(new Date())}"></div>
+      <div><label>身高 cm</label><input id="m-h" inputmode="decimal" value="${esc(m.h)}"></div>
+      <div><label>體重 kg</label><input id="m-w" inputmode="decimal" value="${esc(m.w)}"></div>
+      <div><label>腰圍 cm（選填）</label><input id="m-waist" inputmode="decimal" value="${esc(m.waist)}"></div>
+      <div><label>頸圍 cm（選填）</label><input id="m-neck" inputmode="decimal" value="${esc(m.neck)}"></div>
+      <div><label>臀圍 cm（女性選填）</label><input id="m-hip" inputmode="decimal" value="${esc(m.hip)}"></div>
+    </div>
+    <div class="sub" id="m-stage" style="margin-top:10px;color:var(--cyan)"></div>
+    <label>活動量</label><select id="m-act">${ACTS.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select>
+    <label>目標</label><div class="seg" id="m-goal"><button data-v="cut">減脂</button><button data-v="keep">維持</button><button data-v="bulk">增肌</button></div>
+    <div class="note" id="m-kidnote"></div>
+    <p class="note">有體脂紀錄時，計算會自動改用最新一筆體脂機體重。</p>
+    <div class="row2">${ex&&MEM.length>1?'<button class="btn danger" id="m-del" style="flex:0 0 30%">刪除</button>':''}<button class="btn" id="m-save">儲存</button></div>`);
+  let sex=m.sex,goal=m.goal;
+  const upd=()=>{const b=$('#m-birth').value,a=ageOf({birth:b}),kid=!!b&&a<18;
+    $('#m-stage').textContent=b?`${Math.floor(a)} 歲・${stageOf(a)}${kid?'・使用國健署兒童青少年 BMI 標準與 Schofield 代謝公式':''}`:'';
+    $$('#m-goal button').forEach(x=>x.disabled=kid);
+    $('#m-kidnote').textContent=kid?'未滿 18 歲不設減脂熱量赤字，以成長所需為主；體重管理請與兒科醫師討論。':''};
+  const seg=(sel,val,set)=>$$(sel+' button').forEach(b=>{b.classList.toggle('on',b.dataset.v===val);b.onclick=()=>{set(b.dataset.v);$$(sel+' button').forEach(x=>x.classList.toggle('on',x===b))}});
+  seg('#m-sex',sex,v=>sex=v);seg('#m-goal',goal,v=>goal=v);$('#m-act').value=m.act||'1.375';$('#m-birth').onchange=upd;upd();
+  $('#m-save').onclick=()=>{
+    const name=$('#m-name').value.trim(),birth=$('#m-birth').value,h=num($('#m-h').value),w=num($('#m-w').value);
+    if(!name)return toast('請輸入名稱');
+    if(!birth||new Date(birth+'T00:00')>new Date())return toast('請選擇正確的出生日期');
+    if(!(h>=40&&h<=250))return toast('身高請輸入 40–250 cm');
+    if(!(w>=2&&w<=300))return toast('體重請輸入 2–300 kg');
+    Object.assign(m,{name,sex,birth,h,w,waist:num($('#m-waist').value)??'',neck:num($('#m-neck').value)??'',hip:num($('#m-hip').value)??'',act:$('#m-act').value,goal});
+    const i=MEM.findIndex(x=>x.id===m.id);if(i>=0)MEM[i]=m;else MEM.push(m);
+    ACT=m.id;S.set('members',MEM);S.set('active',ACT);closeSheet();renderAll();toast('已儲存：'+name)};
+  if($('#m-del'))$('#m-del').onclick=()=>{
+    if(!confirm(`確定刪除「${m.name}」以及這位成員的所有體脂、體檢紀錄？此動作無法復原。`))return;
+    MEM=MEM.filter(x=>x.id!==m.id);delete SCALE[m.id];delete LABS[m.id];if(ACT===m.id)ACT=MEM[0].id;
+    S.set('members',MEM);S.set('scale',SCALE);S.set('labs',LABS);S.set('active',ACT);closeSheet();renderAll();toast('已刪除')};
+}
+
+/* ================= AI 提示詞 ================= */
+function promptScale(){return `你是「體脂計數據擷取器」。我會附上體脂計 App 的截圖（可能多張、可能是簡體中文介面）。你的任務只有「讀取畫面上的數字」，不要分析、不要給建議。
+
+【規則】
+1. 只輸出一個 JSON 物件，前後不要有任何文字，也不要用 \`\`\` 包起來。
+2. 截圖上找不到的欄位一律填 null，禁止推算或猜測（例如畫面沒有「體重」就填 null，不要用其他數字算）。
+3. 數值只填數字，不含單位。重量一律用 kg（畫面是「斤」請 ÷2，「lb」請 ×0.4536）。
+4. 數字旁的 ↑0.2、↓0.3 是「與上次比較的變化量」，不是數值本身，不要填入。
+5. status 填畫面上各項目的原始判定文字（如：標準、偏高、警戒、偏低），簡體轉繁體，key 用下方欄位名，例如 {"fat":"偏高","visceral":"警戒"}；沒有判定的項目不要列。
+6. measuredAt：畫面有量測日期時間才填 "YYYY-MM-DD HH:mm"（西元年；民國年請加 1911），沒有填 null（手機狀態列的時鐘不是量測時間）。
+7. 不要輸出姓名、電話、帳號等個人資料。
+8. 輸出前逐欄自我核對：每個數字都必須能在截圖中找到原文，小數點位置正確。
+
+【欄位對照】
+${SF.map(f=>`${f.k}＝${f.n}${f.u?`（${f.u}）`:''}`).join('、')}、bodyType＝身體類型（文字）、device＝體脂計品牌或 App 名稱
+
+【輸出格式】
+{"type":"nutricore.scale","v":1,"measuredAt":null,"device":null,${SF.map(f=>`"${f.k}":null`).join(',')},"bodyType":null,"status":{}}`}
+function promptLab(){return `你是「健康檢查報告數據擷取器」。我會附上體檢報告的照片或截圖（可能多張）。你的任務只有「逐字讀取數據」，不要診斷、不要給建議。
+
+【規則】
+1. 只輸出一個 JSON 物件，前後不要有任何文字，也不要用 \`\`\` 包起來。
+2. 報告上沒有的項目不要輸出；看不清楚的數值填 null，並加上 "note":"模糊"。禁止推算或猜測。
+3. 下方清單內的項目用指定 key 放進 items；清單外的所有檢驗項目都放進 extra，不要遺漏任何一項。
+4. value：數值型只填數字；定性項目（例如 B肝表面抗原、尿蛋白、糞便潛血）照抄報告原文，例如 "陰性"、"陽性"、"-"、"±"、"+"、"++"。
+5. unit 照抄報告原文（mg/dL、mmol/L、μmol/L、g/L、U/L…），不要自行換算單位。
+6. ref 照抄報告的參考範圍原文（例如 "70-99"、"<200"、"陰性"）；lo、hi 填參考範圍的下限、上限數字，沒有就填 null。
+7. flag 照抄報告的異常標記（H、L、*、↑、↓），沒有填 null。
+8. 血壓若寫成 "128/82"，請拆成 sbp=128、dbp=82。
+9. 姓名、身分證字號、病歷號、生日、電話、地址一律不要輸出。
+10. date 填檢查（採檢）日期，格式 YYYY-MM-DD 的西元年；報告若寫民國年（例如 115/09/20），請加 1911 換算成 2026-09-20。
+11. 輸出前逐項自我核對：每個數字都必須能在報告中找到原文，小數點位置正確。
+
+【items 可用 key】
+${LAB.map(x=>`${x.k}＝${x.n}`).join('、')}
+
+【輸出格式】
+{"type":"nutricore.lab","v":1,"date":"YYYY-MM-DD","hospital":null,"items":{"glu":{"value":105,"unit":"mg/dL","ref":"70-99","lo":70,"hi":99,"flag":"H"}},"extra":[{"name":"項目原名","value":null,"unit":null,"ref":null,"lo":null,"hi":null,"flag":null}]}
+（glu 只是格式範例，請以實際報告內容為準）`}
+async function copyText(t){
+  try{await navigator.clipboard.writeText(t);toast('已複製提示詞，貼到 AI 對話框並附上截圖');return}catch(e){}
+  const ta=document.createElement('textarea');ta.value=t;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,t.length);
+  let ok=false;try{ok=document.execCommand('copy')}catch(e){}ta.remove();toast(ok?'已複製提示詞':'無法自動複製，請按「查看」後長按全選複製')}
+function parseAI(text){
+  const s=String(text||'').trim().replace(/```(?:json)?/gi,'');
+  // 依序嘗試「[…]」與「{…}」兩種切法：AI 前言裡若有 [ 字元（例如「[體檢] 結果如下」）也不會切錯
+  const a=s.indexOf('{'),b=s.lastIndexOf('}'),c=s.indexOf('['),d=s.lastIndexOf(']'),tries=[];
+  if(c>=0&&d>c&&(a<0||c<a))tries.push(s.slice(c,d+1));if(a>=0&&b>a)tries.push(s.slice(a,b+1));
+  if(!tries.length)throw new Error('找不到 JSON');
+  const fix=t=>t.replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/：/g,':').replace(/，/g,',').replace(/,\s*([}\]])/g,'$1').replace(/\bNaN\b|\bundefined\b/g,'null');
+  for(const t of tries){try{return JSON.parse(t)}catch(e){}try{return JSON.parse(fix(t))}catch(e){}}
+  throw new Error('JSON 格式錯誤（可能沒複製完整）');
+}
+function aiBox(kind){const what=kind==='scale'?'體脂機 App 截圖':'體檢報告照片或截圖';return `<details class="box ai"><summary>🤖 AI 截圖匯入（推薦）</summary>
+  <ol class="steps"><li>按「複製提示詞」</li><li>打開 ChatGPT／Gemini／Claude，貼上提示詞並附上${what}</li><li>複製 AI 回覆的整段 JSON，貼到下方</li><li>按「解析並填入表單」，核對紅框數字後儲存</li></ol>
+  <div class="row2" style="margin:0 0 8px"><button class="btn sm" data-copy="${kind}" style="flex:1">📋 複製提示詞</button><button class="btn ghost sm" data-show="${kind}">查看</button></div>
+  <pre class="prompt" id="pv-${kind}" hidden></pre>
+  <textarea id="ai-in" placeholder="把 AI 回覆的 JSON 貼在這裡" autocapitalize="off" autocomplete="off" spellcheck="false"></textarea>
+  <button class="btn" id="ai-go">解析並填入表單</button><div class="note" id="ai-msg"></div>
+  <p class="note">🔒 截圖傳給 AI 前，請先塗掉姓名、身分證字號、病歷號。AI 只負責讀數字，評分與建議由 App 用固定規則計算，避免 AI 亂判讀。</p></details>`}
+function bindAI(kind){$('#ai-go').onclick=()=>{
+  try{let o=parseAI($('#ai-in').value);
+    if(Array.isArray(o)){if(!o.length)throw new Error('內容是空的');if(o.length>1)toast(`偵測到 ${o.length} 筆，已填入第 1 筆`);o=o[0]}
+    if(!o||typeof o!=='object')throw new Error('不是有效的資料物件');
+    $('#ai-msg').innerHTML=kind==='scale'?fillScale(o):fillLab(o);
+  }catch(e){$('#ai-msg').innerHTML=`<span style="color:var(--red)">解析失敗：${esc(e.message)}。請確認貼上的是 AI 回覆的完整 JSON。</span>`}}}
+
+/* ================= 體脂紀錄 ================= */
+let sStatus={},sEditId=null;
+function openScaleSheet(rec){
+  const m=me();sEditId=rec?.id||null;sStatus={...(rec?.status||{})};
+  openSheet(sheetHead(rec?'編輯體脂紀錄':'新增體脂紀錄',`${esc(m.name)}・${sexT(m.sex)}・${Math.floor(ageOf(m))} 歲`)+aiBox('scale')+`
+    <label>量測時間</label><input type="datetime-local" id="s-t" value="${esc(rec?.t||dtLocal(new Date()))}">
+    <div class="grid2">${SF.map(f=>`<div><label>${f.n}${f.u?` <span class="sub">${f.u}</span>`:''}<em class="dev" id="st-${f.k}" hidden></em></label><input id="s-${f.k}" type="text" inputmode="decimal" value="${rec?.[f.k]??''}" placeholder="—"></div>`).join('')}</div>
+    <label>身體類型（選填）</label><input id="s-bodyType" value="${esc(rec?.bodyType||'')}">
+    <label>體脂機品牌（選填）</label><input id="s-device" value="${esc(rec?.device||'')}">
+    <p class="note">有的欄位填就好。沒有「體重」時，會用「去脂體重＋脂肪量」或「BMI × 身高²」自動推算。體脂機是生物電阻估算，請每天固定在早上起床、如廁後、進食前量測，看趨勢比看單次重要。</p>
+    <div class="row2">${rec?'<button class="btn danger" id="sDel" style="flex:0 0 30%">刪除</button>':''}<button class="btn" id="sSave">儲存</button></div>`);
+  paintStatus();bindAI('scale');$('#sSave').onclick=saveScale;if(rec)$('#sDel').onclick=()=>delScale(rec.id);
+}
+function paintStatus(){SF.forEach(f=>{const e=$('#st-'+f.k);if(!e)return;const s=sStatus[f.k];e.hidden=!s;e.textContent=s||'';e.classList.toggle('ok',!!s&&!devLv(s))})}
+function fillScale(o){
+  if(/lab/i.test(o.type||''))throw new Error('這是體檢報告的 JSON，請改到「體檢報告」匯入');
+  const d=o.data&&typeof o.data==='object'?o.data:o;let n=0;const bad=[];
+  SF.forEach(f=>{const v=num(d[f.k]),el=$('#s-'+f.k);el.value=v==null?'':v;el.classList.remove('bad');
+    if(v!=null){n++;if(v<f.min||v>f.max){el.classList.add('bad');bad.push(f.n)}}});
+  sStatus={};if(d.status&&typeof d.status==='object')for(const[k,v]of Object.entries(d.status))if(v)sStatus[k]=String(v);paintStatus();
+  let dtNote='';
+  if(d.measuredAt){const day=parseYMD(d.measuredAt),hm=String(d.measuredAt).match(/(\d{1,2})[:：時](\d{2})/);
+    if(day)$('#s-t').value=`${day}T${hm&&+hm[1]<24&&+hm[2]<60?pad(+hm[1])+':'+hm[2]:($('#s-t').value.slice(11,16)||'08:00')}`;
+    else dtNote=`<br><span style="color:var(--amber)">⚠️ 看不懂量測時間「${esc(d.measuredAt)}」，請手動確認</span>`}
+  if(d.bodyType)$('#s-bodyType').value=d.bodyType;if(d.device)$('#s-device').value=d.device;
+  if(!n)throw new Error('JSON 裡沒有任何可用數值');
+  return `✅ 已填入 ${n} 個欄位${bad.length?`，<span style="color:var(--red)">${esc(bad.join('、'))} 超出合理範圍，請核對是否讀錯</span>`:''}。請往下檢查後按「儲存」。${dtNote}`;
+}
+function saveScale(){
+  const m=me(),r={id:sEditId||uid(),t:$('#s-t').value||dtLocal(new Date())},bad=[];
+  SF.forEach(f=>{const el=$('#s-'+f.k),raw=el.value.trim(),v=num(raw);el.classList.remove('bad');
+    if(raw&&v==null){bad.push(f.n);el.classList.add('bad');return}
+    if(v!=null){if(v<f.min||v>f.max){bad.push(f.n);el.classList.add('bad')}else r[f.k]=v}});
+  if(bad.length)return toast('數值不合理：'+bad.join('、'));
+  r.derived=[];const hm=(+m.h||0)/100;
+  if(r.weight==null){if(r.lean!=null&&r.fatMass!=null){r.weight=r1(r.lean+r.fatMass);r.derived.push('weight')}else if(r.bmi!=null&&hm){r.weight=r1(r.bmi*hm*hm);r.derived.push('weight')}}
+  if(r.weight==null)return toast('至少需要「體重」，或「去脂體重＋脂肪量」，或「BMI」');
+  if(r.bmi==null&&hm){r.bmi=r1(r.weight/(hm*hm));r.derived.push('bmi')}
+  if(r.fat==null&&r.fatMass!=null){r.fat=r1(r.fatMass/r.weight*100);r.derived.push('fat')}
+  r.status={};for(const[k,v]of Object.entries(sStatus))if(r[k]!=null)r.status[k]=v;
+  const bt=$('#s-bodyType').value.trim(),dv=$('#s-device').value.trim();if(bt)r.bodyType=bt;if(dv)r.device=dv;
+  const arr=SCALE[m.id]||(SCALE[m.id]=[]),i=arr.findIndex(x=>x.id===r.id);if(i>=0)arr[i]=r;else arr.push(r);
+  if(!S.set('scale',SCALE))return;
+  closeSheet();recTab='scale';renderAll();go('body');toast(r.derived.includes('weight')?`已儲存（體重由其他數值推算為 ${r.weight} kg）`:'已儲存體脂紀錄');
+}
+function delScale(id){if(!confirm('確定刪除這筆體脂紀錄？'))return;const m=me();SCALE[m.id]=(SCALE[m.id]||[]).filter(x=>x.id!==id);S.set('scale',SCALE);closeSheet();renderAll();toast('已刪除')}
+function openScaleDetail(id){
+  const m=me(),r=scalesOf(m).find(x=>x.id===id);if(!r)return;const iss=scaleEval(r,m).sort((a,b)=>b.lv-a.lv);
+  openSheet(sheetHead('體脂紀錄',`${esc(m.name)}・${fmtDT(r.t)}${r.device?'・'+esc(r.device):''}`)+`
+    <div class="kv" style="margin:14px 0">${SF.filter(f=>r[f.k]!=null).map(f=>`<span>${f.n}${(r.derived||[]).includes(f.k)?' <em class="dev">推算</em>':''}</span><span><b>${fmt(r[f.k])}</b> <span class="sub">${f.u}</span>${r.status?.[f.k]?` <em class="dev${devLv(r.status[f.k])?'':' ok'}">${esc(r.status[f.k])}</em>`:''}</span>`).join('')}${r.bodyType?`<span>身體類型</span><span>${esc(r.bodyType)}</span>`:''}</div>
+    <div class="h4">判讀</div>${iss.length?issueHTML(iss):'<div class="empty">各項指標正常 👍</div>'}
+    <p class="note">內建判定採國健署成人標準與一般體脂計分級（內臟脂肪 1–9 標準、10–14 偏高、≥15 過高）。各品牌標準不同，設備判定與內建判定並列，取較嚴重者。</p>
+    <div class="row2"><button class="btn danger" id="sd-del" style="flex:0 0 30%">刪除</button><button class="btn ghost" id="sd-edit">編輯</button></div>`);
+  $('#sd-edit').onclick=()=>openScaleSheet(r);$('#sd-del').onclick=()=>delScale(r.id);
+}
+
+/* ================= 體檢報告 ================= */
+let lMeta={},lExtra=[],lEditId=null;
+const QO=['陰性','±','+','++','+++','陽性'];
+const qOpts=v=>'<option value="">—</option>'+[...QO,...(v&&!QO.includes(v)?[v]:[])].map(o=>`<option${o===v?' selected':''}>${esc(o)}</option>`).join('');
+function setQ(el,v){v=String(v??'').trim();if(!v){el.value='';return}
+  const mp={'-':'陰性','(-)':'陰性','negative':'陰性','neg':'陰性','nonreactive':'陰性','non-reactive':'陰性','positive':'陽性','pos':'陽性','reactive':'陽性','(+)':'+','1+':'+','2+':'++','3+':'+++','4+':'+++','trace':'±'};
+  const n=mp[v.toLowerCase()]||v;if(![...el.options].some(o=>o.value===n)){const op=document.createElement('option');op.textContent=n;el.appendChild(op)}el.value=n}
+const normK=s=>String(s||'').toLowerCase().replace(/[\s_．·]/g,'').replace(/（/g,'(').replace(/）/g,')');
+function resolveKey(name){
+  const n=normK(name);if(!n)return null;if(LABK[n])return n;
+  const cands=[n,...n.split(/[()\/、,，]/),n.replace(/[a-z0-9\-()\/.+]+/g,''),n.replace(/[^\x00-\x7f]/g,'')].map(s=>s.trim()).filter(s=>s.length>=2);
+  for(const c of cands)for(const[k,al]of Object.entries(ALIAS))if(al.some(a=>normK(a)===c))return k;
+  return null;
+}
+function convUnit(k,v,unit,lo,hi){
+  if(PERUL[k]&&v>=PERUL[k]){const R=x=>x==null||x<PERUL[k]/10?x:Math.round(x/10)/100;return{v:R(v),lo:R(lo),hi:R(hi),note:`${unit||'/µL'} 已換算為 10³/µL`}}
+  const c=CONV[k];if(!c)return{v,lo,hi,note:null};
+  const u=String(unit||'').toLowerCase().replace(/[μµ]/g,'u');
+  const hit=u?u.includes(c[0]):!!GUESS[k]?.(v);
+  if(!hit)return{v,lo,hi,note:null};
+  const f=c[0]==='mol'&&u.includes('mmol')?c[1]*1000:c[1],R=x=>x==null?null:Math.round(x*f*100)/100;
+  return{v:R(v),lo:R(lo),hi:R(hi),note:`${unit||'依數值推定'} 已換算`};
+}
+const implausible=(x,v,sex)=>{const H=thr(x,'H',sex),L=thr(x,'L',sex);return v<0||(H&&v>H[2]*3)||(L&&v<L[2]/3)};
+function metaTxt(x){const mt=lMeta[x.k],sex=me().sex;let s=x.u||'';const ref=mt?.ref||refText(x,sex);
+  if(ref)s+=(s?'・':'')+(mt?.ref?'報告參考 ':'參考 ')+ref;if(mt?.conv)s+='・'+mt.conv;if(mt?.flag)s+='・標記 '+mt.flag;return esc(s)}
+function openLabSheet(rec){
+  const m=me();lEditId=rec?.id||null;lMeta={};lExtra=(rec?.extra||[]).map(e=>({...e}));
+  if(rec)for(const[k,it]of Object.entries(rec.items||{}))lMeta[k]={lo:it.lo??null,hi:it.hi??null,ref:it.ref||'',flag:it.flag||null,conv:it.conv||null};
+  const groups=[...new Set(LAB.map(x=>x.g))];
+  const rows=g=>LAB.filter(x=>x.g===g&&(!x.sex||x.sex===m.sex)).map(x=>{const v=rec?.items?.[x.k]?.v??'';
+    const inp=x.t==='q'?`<select id="l-${x.k}">${qOpts(String(v))}</select>`:`<input id="l-${x.k}" type="text" inputmode="decimal" value="${esc(v)}" placeholder="${esc(x.u||'')}">`;
+    return `<div class="lrow"><label for="l-${x.k}">${x.n}<small id="lm-${x.k}">${metaTxt(x)}</small></label>${inp}</div>`}).join('');
+  openSheet(sheetHead(rec?'編輯體檢報告':'新增體檢報告',`${esc(m.name)}・${sexT(m.sex)}・${Math.floor(ageOf(m))} 歲`)+aiBox('lab')+`
+    <div class="grid2"><div><label>檢查日期</label><input type="date" id="l-date" value="${esc(rec?.t||ymd(new Date()))}"></div><div><label>醫院／健檢中心</label><input id="l-hosp" value="${esc(rec?.hospital||'')}" placeholder="選填"></div></div>
+    <p class="note">只填報告上有的項目。數值請用台灣常用單位（mg/dL）；AI 匯入時，mmol/L、μmol/L 會自動換算。</p>
+    ${groups.map(g=>{const r=rows(g);return r?`<details class="box"${rec&&LAB.some(x=>x.g===g&&rec.items?.[x.k])?' open':''}><summary>${g}</summary>${r}</details>`:''}).join('')}
+    <details class="box"${lExtra.length?' open':''}><summary>其他項目 <span class="sub" id="exCnt"></span></summary><div id="exList"></div>
+      <div class="grid2" style="margin-top:10px"><input id="ex-n" placeholder="項目名稱"><input id="ex-v" placeholder="數值" inputmode="decimal"></div>
+      <div class="row2" style="margin-top:8px"><select id="ex-f" style="flex:1"><option value="">報告標示正常</option><option value="H">偏高 H</option><option value="L">偏低 L</option></select><button class="btn ghost sm" id="ex-add">加入</button></div></details>
+    <div class="row2">${rec?'<button class="btn danger" id="lDel" style="flex:0 0 30%">刪除</button>':''}<button class="btn" id="lSave">儲存並分析</button></div>`);
+  renderExtra();bindAI('lab');
+  $('#ex-add').onclick=()=>{const n=$('#ex-n').value.trim();if(!n)return toast('請輸入項目名稱');const raw=$('#ex-v').value.trim();
+    lExtra.push({name:n,value:num(raw)??raw,unit:'',ref:'',lo:null,hi:null,flag:$('#ex-f').value||null});$('#ex-n').value='';$('#ex-v').value='';renderExtra()};
+  $('#lSave').onclick=saveLab;if(rec)$('#lDel').onclick=()=>delLab(rec.id);
+}
+function renderExtra(){const box=$('#exList');if(!box)return;$('#exCnt').textContent=lExtra.length?`（${lExtra.length}）`:'';
+  box.innerHTML=lExtra.length?lExtra.map((e,i)=>`<div class="lrow"><label>${esc(e.name)}<small>${esc([e.unit,e.ref&&'參考 '+e.ref,e.flag&&'標記 '+e.flag].filter(Boolean).join('・'))}</small></label><b style="${flagDir(e.flag)?'color:#ff8a5c':''}">${fmt(e.value)}</b><button class="x" data-exdel="${i}" aria-label="移除">✕</button></div>`).join('')
+    :'<div class="sub" style="padding:6px 0">AI 匯入時，清單外的項目會自動放在這裡</div>';
+  $$('[data-exdel]').forEach(b=>b.onclick=()=>{lExtra.splice(+b.dataset.exdel,1);renderExtra()})}
+const normExtra=e=>({name:String(e.name||e.key||'未命名'),value:e.value??e.v??null,unit:e.unit||'',ref:e.ref||'',lo:num(e.lo),hi:num(e.hi),flag:e.flag||null});
+function fillLab(o){
+  if(/scale/i.test(o.type||''))throw new Error('這是體脂機的 JSON，請改到「體脂紀錄」匯入');
+  const m=me(),items=o.items||{},entries=Array.isArray(items)?items.map(it=>[it.key||it.k||it.name,it]):Object.entries(items);
+  LAB.forEach(x=>{const el=$('#l-'+x.k);if(el){el.value='';el.classList.remove('bad')}});
+  lMeta={};lExtra=[];let n=0;const conv=[],warn=[],skip=[];
+  for(const[rk,raw]of entries){
+    const it=raw&&typeof raw==='object'?raw:{value:raw};
+    const k=LABK[rk]?rk:(resolveKey(rk)||resolveKey(it.name));
+    if(!k){lExtra.push(normExtra({name:rk,...it}));continue}
+    const x=LABK[k],el=$('#l-'+k);
+    if(!el){skip.push(x.n);continue}
+    const val=it.value??it.v;
+    if(x.t==='q'){if(val==null||val==='')continue;setQ(el,val);lMeta[k]={lo:num(it.lo),hi:num(it.hi),ref:it.ref||'',flag:it.flag||null}}
+    else{
+      if(k==='sbp'&&typeof val==='string'&&val.includes('/')){const d=num(val.split('/')[1]);if(d!=null&&$('#l-dbp'))$('#l-dbp').value=d}
+      const v=num(val);if(v==null)continue;
+      const c=convUnit(k,v,it.unit,num(it.lo),num(it.hi));
+      el.value=c.v;lMeta[k]={lo:c.lo,hi:c.hi,ref:it.ref?(c.note?`${it.ref} ${it.unit||''}`.trim():String(it.ref)):'',flag:it.flag||null,conv:c.note};
+      if(c.note)conv.push(x.n);
+      if(implausible(x,c.v,m.sex)){el.classList.add('bad');warn.push(x.n)}
+    }
+    n++;const det=el.closest('details');if(det)det.open=true;$('#lm-'+k).innerHTML=metaTxt(x);
+  }
+  for(const e of Array.isArray(o.extra)?o.extra:[])lExtra.push(normExtra(e));
+  const seen=new Set();lExtra=lExtra.filter(e=>{const key=e.name+'|'+e.value;if(seen.has(key))return false;seen.add(key);return true});
+  renderExtra();if(lExtra.length)$('#exList').closest('details').open=true;
+  // 日期讀不到時不要默默用今天：歷年比較會錯位
+  const day=parseYMD(o.date);if(day)$('#l-date').value=day;
+  const dateNote=day?'':`<br><span style="color:var(--amber)">⚠️ ${o.date?`看不懂日期「${esc(o.date)}」`:'JSON 沒有檢查日期'}，目前是今天，請手動改成檢查日期</span>`;
+  if(o.hospital)$('#l-hosp').value=o.hospital;
+  if(!n&&!lExtra.length)throw new Error('JSON 裡沒有任何檢驗項目');
+  return `✅ 已填入 ${n} 項${lExtra.length?`＋其他 ${lExtra.length} 項`:''}`+
+    (conv.length?`<br>🔁 已自動換算單位：${esc(conv.join('、'))}`:'')+
+    (warn.length?`<br><span style="color:var(--red)">⚠️ ${esc(warn.join('、'))} 數值離譜，請核對是否讀錯小數點</span>`:'')+
+    (skip.length?`<br>略過（與性別不符）：${esc(skip.join('、'))}`:'')+dateNote+'<br>請往下核對後按「儲存並分析」。';
+}
+const cleanMeta=mt=>{const o={};if(!mt)return o;for(const k of['lo','hi','ref','flag','conv'])if(mt[k]!=null&&mt[k]!=='')o[k]=mt[k];return o};
+function saveLab(){
+  const m=me(),items={},bad=[],conv=[];
+  for(const x of LAB){const el=$('#l-'+x.k);if(!el)continue;el.classList.remove('bad');
+    if(x.t==='q'){const v=el.value.trim();if(v)items[x.k]={v,...cleanMeta(lMeta[x.k])}}
+    else{const raw=el.value.trim();if(!raw)continue;let v=num(raw);if(v==null||v<0){bad.push(x.n);el.classList.add('bad');continue}
+      if(PERUL[x.k]&&v>=PERUL[x.k]){v=Math.round(v/10)/100;conv.push(`${x.n} ${raw} → ${v}`)}items[x.k]={v,...cleanMeta(lMeta[x.k])}}}
+  if(bad.length)return toast('數值格式錯誤：'+bad.join('、'));
+  if(!Object.keys(items).length&&!lExtra.length)return toast('請至少輸入一個檢驗項目');
+  const rec={id:lEditId||uid(),t:$('#l-date').value||ymd(new Date()),hospital:$('#l-hosp').value.trim(),items,extra:lExtra};
+  const arr=LABS[m.id]||(LABS[m.id]=[]),i=arr.findIndex(x=>x.id===rec.id);if(i>=0)arr[i]=rec;else arr.push(rec);
+  if(!S.set('labs',LABS))return;
+  recTab='lab';renderAll();go('body');openLabDetail(rec.id);if(conv.length)toast('已換算為 10³/µL：'+conv.join('、'));
+}
+function delLab(id){if(!confirm('確定刪除這份體檢報告？'))return;const m=me();LABS[m.id]=(LABS[m.id]||[]).filter(x=>x.id!==id);S.set('labs',LABS);closeSheet();renderAll();toast('已刪除')}
+function openLabDetail(id){
+  const m=me(),rec=labsOf(m).find(r=>r.id===id);if(!rec)return;
+  const iss=labEval(rec,m).sort((a,b)=>b.lv-a.lv),sc=scoreOf(iss),[gt,gc]=grade(sc),dp=deptPlan(iss);
+  const orgs=[...new Set(iss.map(i=>i.organ).filter(o=>o&&ORG[o].tip))];
+  const normal=Object.entries(rec.items||{}).filter(([k])=>!iss.some(i=>i.k===k));
+  openSheet(sheetHead('體檢分析',`${esc(m.name)}・${esc(rec.t)}${rec.hospital?'・'+esc(rec.hospital):''}`)+`
+    <div style="display:flex;gap:14px;align-items:center;margin:14px 0 4px">${scoreRing(sc,gc)}<div><div style="font-size:22px;font-weight:800;color:${gc}">${gt}</div><div class="sub" style="margin-top:4px">異常 ${iss.length} 項・正常 ${normal.length} 項</div><div class="sub">扣分：每個器官最嚴重一項全扣（注意 −3／異常 −8／嚴重 −15），同器官其他項扣 40%</div></div></div>
+    ${iss.some(i=>i.lv===3)?'<div class="banner">⚠️ 有「嚴重」等級的項目，建議 1–2 週內就醫。若有胸痛、呼吸困難、單側無力、意識改變等症狀，請立即掛急診。</div>':''}
+    <div class="hud">${bodySVG(m,iss,'d')}</div>
+    <div class="h4">建議掛號</div>${deptHTML(dp)}
+    <div class="h4">異常項目</div>${iss.length?issueHTML(iss,true):'<div class="empty">全部項目都在參考範圍內 👍</div>'}
+    ${orgs.length?`<div class="h4">注意事項</div>${orgs.map(o=>`<div class="issue"><span class="lv lv1">${esc(orgName(o,m))}</span><div class="s" style="flex:1;margin:0">${esc(ORG[o].tip)}</div></div>`).join('')}`:''}
+    ${normal.length?`<details class="box"><summary>正常項目（${normal.length}）</summary>${normal.map(([k,it])=>`<div class="lrow"><label>${esc(LABK[k]?.n||k)}</label><span>${fmt(it.v)} <span class="sub">${esc(LABK[k]?.u||'')}</span></span></div>`).join('')}</details>`:''}
+    <p class="note">評分由 App 內建規則計算（參考國健署與常用臨床參考值）。各醫院參考值不同，報告有附參考範圍時以報告為準。本分析不能取代醫師診斷。</p>
+    <div class="row2"><button class="btn danger" id="ld-del" style="flex:0 0 30%">刪除</button><button class="btn ghost" id="ld-edit">編輯數值</button></div>`);
+  $('#ld-edit').onclick=()=>openLabSheet(rec);$('#ld-del').onclick=()=>delLab(rec.id);
+}
+
+/* ================= 每日菜單引擎 ================= */
+function hash(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353);h=h<<13|h>>>19}return h>>>0}
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const pick=(arr,r)=>arr[Math.floor(r()*arr.length)];
+function plan(dateStr){
+  const m=me(),c=calc(m),md=c.mode,r=rng(hash(dateStr));
+  const avoid=new Set([...(md.lowCarb?['hc']:[]),...(md.lowPur?['pur']:[]),...(md.heart?['oil','salt']:[]),...(md.liver?['oil']:[]),...(md.kidney?['pro']:[])]);
+  const pool=t=>{const all=FOODS.filter(f=>f.m===t),ok=all.filter(f=>!(f.x||[]).some(x=>avoid.has(x)));return ok.length>=3?ok:all};
+  const L=pool('ld'),lunch=pick(L,r);let dinner;do{dinner=pick(L,r)}while(dinner.id===lunch.id);
+  const V=pool('v'),v1=pick(V,r);let v2;do{v2=pick(V,r)}while(v2.id===v1.id);
+  const slots=[{n:'早餐',share:.25,items:[pick(pool('b'),r)]},{n:'午餐',share:.35,items:[lunch,v1]},{n:'晚餐',share:.30,items:[dinner,v2]},{n:'點心',share:.10,items:[pick(pool('s'),r)]}];
+  slots.forEach(s=>{const base=s.items.reduce((a,f)=>a+f.k,0);s.x=Math.min(1.75,Math.max(.5,Math.round(c.target*s.share/base*4)/4))});
+  return{slots,c};
+}
+let curDate=ymd(new Date()),TODAY=curDate;
+function renderDays(){
+  const box=$('#days');box.innerHTML='';const wk='日一二三四五六';
+  for(let i=-2;i<5;i++){const d=new Date();d.setDate(d.getDate()+i);const s=ymd(d);
+    const b=document.createElement('button');b.className='day'+(s===curDate?' on':'');
+    b.innerHTML=`${i===0?'今天':'週'+wk[d.getDay()]}<b>${d.getDate()}</b>`;b.onclick=()=>{curDate=s;renderDays();renderMenu()};box.appendChild(b)}
+}
+function thumb(f){return IMG[f.id]?`<img src="${esc(IMG[f.id])}" alt="${esc(f.n)}" data-e="${f.e}" loading="lazy" onerror="this.replaceWith(this.dataset.e)">`:f.e}
+function renderMenu(){
+  const{slots,c}=plan(curDate);let K=0,Pp=0,C=0,F=0;
+  $('#menuTitle').textContent=(curDate===ymd(new Date())?'今日菜單':curDate+' 菜單')+'・'+me().name;
+  $('#menuMode').innerHTML=c.mode.tags.map(t=>`<span class="tg warn">${t}</span>`).join('');
+  $('#meals').innerHTML=slots.map(s=>{const k=s.items.reduce((a,f)=>a+f.k,0)*s.x;K+=k;s.items.forEach(f=>{Pp+=f.p*s.x;C+=f.c*s.x;F+=f.f*s.x});
+    return `<div class="meal"><div class="thumb">${thumb(s.items[0])}</div><div style="flex:1"><div class="slot">${s.n} · ×${s.x} 份</div><div class="t">${s.items.map(f=>f.n).join(' ＋ ')}</div><div class="s">${Math.round(k)} kcal · 蛋白 ${Math.round(s.items.reduce((a,f)=>a+f.p,0)*s.x)}g</div></div></div>`}).join('');
+  const line=(n,v,t,col)=>`<div class="row"><span>${n}</span><span>${Math.round(v)} / ${Math.round(t)}</span></div><div class="bar"><i style="width:${Math.min(100,v/t*100)}%;background:${col}"></i></div>`;
+  $('#menuSum').innerHTML=line('熱量 kcal',K,c.target,'linear-gradient(90deg,var(--cyan),var(--lime))')+line('蛋白質 g',Pp,c.prot,'var(--cyan)')+line('碳水 g',C,c.carb,'var(--lime)')+line('脂肪 g',F,c.fat,'var(--pink)')+
+    '<p class="note">全家同一份菜單、各自份量（以 0.25 份為單位縮放）。體檢有血糖、血脂、尿酸、腎功能異常時，會自動避開不適合的菜色。</p>';
+}
+
+/* ================= 圖片工坊 ================= */
+let style='studio';
+const STYLE={studio:'professional food photography, 45-degree angle, softbox lighting, matte ceramic plate, dark slate background, shallow depth of field, 85mm lens',
+  home:'warm home kitchen food photo, top-down view, natural window light, wooden table, linen napkin, cozy',
+  neon:'futuristic food photography, dark background with cyan and lime neon rim light, glossy reflections, cinematic'};
+const promptOf=(f,st=style)=>`${f.en}, ${STYLE[st]}, appetizing, highly detailed, realistic, no text, no watermark, no people`;
+const seedOf=f=>hash(f.id)%100000;
+function fillDish(){$('#labDish').innerHTML=FOODS.map(f=>`<option value="${f.id}">${f.e} ${f.n}</option>`).join('');updPrompt()}
+function updPrompt(){$('#labPrompt').textContent=promptOf(BY_ID[$('#labDish').value])}
+// 單一佇列依序生成：免金鑰服務匿名額度約每 15 秒 1 張，所以間隔 16 秒；走 GAS 後端則間隔 2 秒
+const queue=[];let busy=false,lastGen=0;
+function enqueue(f,st='studio',cb){const q=queue.find(x=>x.f.id===f.id);if(q){if(cb)q.cb.push(cb)}else queue.push({f,st,cb:cb?[cb]:[]});run()}
+async function run(){if(busy||!queue.length)return;busy=true;const q=queue.shift(),f=q.f;let err=null;
+  const wait=(GAS?2000:16000)-(Date.now()-lastGen);if(wait>0)await sleep(wait);
+  try{const url=await generate(f,q.st);IMG[f.id]=url;S.set('img',IMG);renderGallery();renderMenu();toast('已儲存：'+f.n)}catch(e){err=e;toast('失敗：'+f.n+'（'+e.message+'）')}
+  lastGen=Date.now();q.cb.forEach(cb=>{try{cb(err)}catch(e){}});busy=false;run()}
+const loadImg=url=>new Promise((ok,no)=>{const im=new Image(),t=setTimeout(()=>{im.src='';no(new Error('逾時'))},60000);im.onload=()=>{clearTimeout(t);ok()};im.onerror=()=>{clearTimeout(t);no(new Error('服務無回應'))};im.src=url});
+async function generate(f,st){
+  const prompt=promptOf(f,st||'studio'),seed=seedOf(f);
+  if(GAS){for(let i=0;i<3;i++){const ac=new AbortController(),to=setTimeout(()=>ac.abort(),60000);   // GAS 卡住時 60 秒放棄，避免整個佇列停住
+    try{const res=await fetch(GAS,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({id:f.id,prompt,seed}),signal:ac.signal});
+      const j=await res.json();if(j.ok)return j.url;if(j.error==='DAILY_CAP')throw new Error('今日生成上限已到');throw new Error(j.error||'後端錯誤')}
+    catch(e){if(e.name==='AbortError')e=new Error('後端逾時');if(i===2||/上限/.test(e.message))throw e;await sleep(1000*2**i)}finally{clearTimeout(to)}}}
+  // 免金鑰服務：被限流或暫時失敗時指數退避（16、32 秒）重試，最多 3 次，仍失敗就略過這張
+  const base=`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=768&seed=${seed}&nologo=true`;
+  for(let i=0;i<3;i++){const url=i?`${base}&r=${i}`:base;
+    try{await loadImg(url);return url}catch(e){if(i===2)throw e;toast(`圖片服務忙碌，${16*2**i} 秒後重試：${f.n}`);await sleep(16000*2**i)}}
+}
+function renderGallery(){$('#gallery').innerHTML=FOODS.filter(f=>f.m!=='v'||IMG[f.id]).map(f=>`<div class="g">${IMG[f.id]?`<img src="${esc(IMG[f.id])}" alt="" data-e="${f.e}" loading="lazy" onerror="this.replaceWith(this.dataset.e)">`:f.e}<span>${f.n}</span></div>`).join('')}
+
+/* ================= 備份 ================= */
+async function exportData(){
+  const data={app:'NutriCore',v:2,exported:new Date().toISOString(),members:MEM,active:ACT,scale:SCALE,labs:LABS,img:IMG,gas:GAS};
+  const name=`nutricore-backup-${ymd(new Date())}.json`,json=JSON.stringify(data);
+  try{const file=new File([json],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return}}catch(e){if(e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);toast('已下載備份檔');
+}
+// 備份檔可能被改過：id、日期格式不對的資料一律丟掉，避免壞資料或惡意內容進到畫面
+function cleanBackup(d){
+  const okId=v=>typeof v==='string'&&/^[\w-]{1,40}$/.test(v);
+  const mem=(Array.isArray(d.members)?d.members:[]).filter(m=>m&&okId(m.id)&&typeof m.name==='string'&&m.name.trim())
+    .map(m=>({...m,name:m.name.trim().slice(0,20),sex:m.sex==='f'?'f':'m',birth:parseYMD(m.birth)||'1990-01-01'}));
+  const recs=(o,re)=>{const r={};for(const[k,arr]of Object.entries(obj(o)))if(okId(k)&&Array.isArray(arr))r[k]=arr.filter(x=>x&&okId(x.id)&&re.test(String(x.t)));return r};
+  const img={};for(const[k,v]of Object.entries(obj(d.img)))if(BY_ID[k]&&/^https:\/\//.test(String(v)))img[k]=String(v);
+  return{mem,scale:recs(d.scale,/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/),labs:recs(d.labs,/^\d{4}-\d{2}-\d{2}$/),img,
+    gas:typeof d.gas==='string'&&(!d.gas||/^https:\/\/script\.google(usercontent)?\.com\//.test(d.gas))?d.gas:null};
+}
+function importData(file){
+  const rd=new FileReader();rd.onload=()=>{try{const d=JSON.parse(rd.result);
+    if(d.app!=='NutriCore')throw new Error('不是 NutriCore 備份檔');
+    const c=cleanBackup(d);if(!c.mem.length)throw new Error('備份檔裡沒有有效的成員資料');
+    if(!confirm(`將以備份覆蓋目前資料（${c.mem.length} 位成員）。確定？`))return;
+    MEM=c.mem;SCALE=c.scale;LABS=c.labs;IMG={...IMG,...c.img};GAS=c.gas??GAS;ACT=MEM.some(m=>m.id===d.active)?d.active:MEM[0].id;
+    S.set('members',MEM);S.set('scale',SCALE);S.set('labs',LABS);S.set('img',IMG);S.set('gas',GAS);S.set('active',ACT);renderAll();toast('備份已還原')}
+    catch(e){toast('匯入失敗：'+e.message)}};rd.readAsText(file);
+}
+
+/* ================= 導覽 / 事件 ================= */
+function go(v){$$('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));$$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));scrollTo({top:0,behavior:'smooth'})}
+function renderAll(){renderHeader();renderDash();renderBody();renderDays();renderMenu();renderMe();renderGallery()}
+$$('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.v));
+$('#memChip').onclick=openMemberPicker;
+$$('#recSeg button').forEach(b=>b.onclick=()=>{recTab=b.dataset.v;$$('#recSeg button').forEach(x=>x.classList.toggle('on',x===b));renderRecs()});
+$('#hud').addEventListener('click',e=>{const t=e.target.closest('[data-o]');if(t)showOrgan(t.dataset.o)});
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-close],[data-closeorgan],[data-copy],[data-show],[data-pick],[data-editmem],[data-addmem],[data-sid],[data-lid],[data-addscale],[data-addlab]');if(!t)return;const d=t.dataset;
+  if('close' in d)closeSheet();
+  else if('closeorgan' in d){$('#organPanel').innerHTML='';$$('#hud .sel').forEach(e=>e.classList.remove('sel'))}
+  else if(d.copy)copyText(d.copy==='scale'?promptScale():promptLab());
+  else if(d.show){const p=$('#pv-'+d.show);p.hidden=!p.hidden;if(!p.hidden)p.textContent=d.show==='scale'?promptScale():promptLab()}
+  else if(d.pick){ACT=d.pick;S.set('active',ACT);closeSheet();renderAll();toast('已切換：'+me().name)}
+  else if(d.editmem)openMemberEdit(d.editmem);
+  else if('addmem' in d)openMemberEdit();
+  else if(d.sid)openScaleDetail(d.sid);
+  else if(d.lid)openLabDetail(d.lid);
+  else if('addscale' in d)openScaleSheet();
+  else if('addlab' in d)openLabSheet();
+});
+$('#exportBtn').onclick=exportData;
+$('#importBtn').onclick=()=>$('#importFile').click();
+$('#importFile').onchange=e=>{const f=e.target.files[0];if(f)importData(f);e.target.value=''};
+$('#f-gas').onchange=()=>{const v=$('#f-gas').value.trim();
+  if(v&&!/^https:\/\/script\.google(usercontent)?\.com\//.test(v)){toast('請貼上 https://script.google.com/ 開頭的 GAS 網址');$('#f-gas').value=GAS;return}
+  GAS=v;S.set('gas',GAS);toast(v?'已儲存圖片後端設定':'已改回免金鑰圖片服務')};
+$('#labDish').onchange=updPrompt;
+$$('#labStyle button').forEach(b=>b.onclick=()=>{style=b.dataset.v;$$('#labStyle button').forEach(x=>x.classList.toggle('on',x===b));updPrompt()});
+$('#copyPrompt').onclick=async()=>{try{await navigator.clipboard.writeText($('#labPrompt').textContent);toast('已複製')}catch(e){toast('請長按提示詞手動複製')}};
+$('#genOne').onclick=()=>{const f=BY_ID[$('#labDish').value],box=$('#labOut');
+  box.innerHTML=`<div style="display:flex;gap:10px;align-items:center"><div class="spin"></div><span class="note" style="margin:0">${busy||queue.length?'排隊中，':''}生成中，約 15–60 秒…</span></div>`;
+  enqueue(f,style,err=>{box.innerHTML=err?`<div class="note" style="color:var(--red);margin:0">生成失敗：${esc(err.message)}。請稍後再試。</div>`
+    :`<img src="${esc(IMG[f.id])}" alt="${esc(f.n)}" style="width:100%;border-radius:14px">`})};
+$('#genMissing').onclick=()=>{const{slots}=plan(curDate);let n=0;slots.forEach(s=>s.items.forEach(f=>{if(!IMG[f.id]){enqueue(f);n++}}));toast(n?`已排入 ${n} 張`:'今日菜單圖片已齊全')};
+
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;const t=ymd(new Date());if(t!==TODAY){if(curDate===TODAY)curDate=t;TODAY=t;renderDays();renderMenu()}});
+fillDish();renderAll();
+if(FRESH)setTimeout(()=>{go('me');openMemberEdit(MEM[0].id);toast('先建立你的資料，30 秒完成')},400);
+</script>
+</body>
+</html>
