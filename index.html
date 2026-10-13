@@ -247,6 +247,7 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 .pr1{background:rgba(255,45,85,.18);color:#ff6b81}.pr2{background:rgba(255,181,71,.15);color:var(--amber)}.pr3{background:rgba(34,228,255,.1);color:var(--cyan)}
 .pt{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.pt i{font-style:normal;font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(255,255,255,.06);color:var(--text)}
 .lrow.wide{flex-wrap:wrap}.lrow.wide label{flex:1 1 100%}.lrow.wide select{flex:1 1 100%;width:100%}
+.lrow.wide textarea.refin{flex:1 1 100%;width:100%;min-height:70px;padding:8px 10px;font-family:inherit}
 </style>
 </head>
 <body>
@@ -812,7 +813,7 @@ const ALIAS={glo:['球蛋白','globulin','glo'],ag:['白蛋白球蛋白比','白
  ca125:['ca-125','ca125'],ca153:['ca15-3','ca153'],hp:['幽門桿菌','幽門螺旋桿菌','h.pylori','hpylori','hp'],rf:['類風濕因子','rf'],ana:['抗核抗體','ana'],
  fobt:['糞便潛血','糞便潛血檢驗值','糞便潛血檢查','免疫法糞便潛血','fobt','fit','ifobt'],iop:['眼壓','右眼壓','左眼壓','眼內壓','iop'],dxa:['骨密度','骨質密度','骨質密度攝影檢查','骨密度檢查','骨密度t值','tscore','t值','bmd'],testo:['睪固酮','testosterone'],waist:['腰圍','waist'],pulse:['脈搏','心跳','pulse','hr'],
  us_liver:['腹部超音波','肝臟超音波','肝超音波'],us_gb:['膽囊超音波','膽囊'],us_kidney:['腎臟超音波','腎超音波'],cxr:['胸部x光','胸部x光檢查','cxr','chestx-ray'],ldct:['低劑量電腦斷層','ldct','低劑量胸部電腦斷層'],
- ekg:['心電圖','ekg','ecg'],cac:['冠狀動脈鈣化分數','冠狀動脈鈣化指數','冠狀動脈鈣化','鈣化分數','calciumscore','cacscore','agatston'],gastro:['胃鏡','上消化道內視鏡'],colono:['大腸鏡','大腸鏡檢查'],thyus:['甲狀腺超音波'],mammo:['乳房攝影','乳房x光攝影','mammography'],breastus:['乳房超音波'],
+ ekg:['心電圖','ekg','ecg'],cac:['冠狀動脈鈣化分數','冠狀動脈鈣化指數','鈣化分數','calciumscore','cacscore','agatston'],gastro:['胃鏡','上消化道內視鏡'],colono:['大腸鏡','大腸鏡檢查'],thyus:['甲狀腺超音波'],mammo:['乳房攝影','乳房x光攝影','mammography'],breastus:['乳房超音波'],
  pap:['子宮頸抹片','抹片','pap'],hpv:['hpv','人類乳突病毒'],fundus:['眼底攝影','眼底'],
  sbp:['收縮壓','sbp','systolic'],dbp:['舒張壓','dbp','diastolic']};
 // 單位換算（mmol/L、μmol/L、g/L … → 台灣常用單位）
@@ -830,7 +831,7 @@ const ORG={
  thyroid:{n:'甲狀腺',tip:'依醫囑追蹤，勿自行補碘或吃偏方'},
  breast:{n:'乳房',tip:'40–74 歲每 2 年乳房攝影；摸到硬塊或乳頭分泌物要立即就醫'},
  lung:{n:'肺部',tip:'戒菸，空汙嚴重時避免戶外運動'},
- heart:{n:'心臟',tip:'靜止心率持續偏快：減少咖啡因、改善睡眠，並檢查甲狀腺'},
+ heart:{n:'心臟',tip:'胸悶、胸痛、心悸或很喘要立刻就醫；控制血壓、血脂、血糖並戒菸，是保護心臟的根本'},
  vessel:{n:'心血管',tip:'少油炸與加工肉、每日鹽 <6 g、每週運動 150 分鐘、戒菸'},
  liver:{n:'肝臟',tip:'戒酒；減重 5–10% 可明顯改善脂肪肝；勿亂吃保健品偏方'},
  stomach:{n:'胃',tip:'幽門桿菌陽性要除菌；少吃醃燻、過鹹食物'},
@@ -920,7 +921,14 @@ function labEval(rec,m){
   if(m.sex!=='f'&&ps!=null&&fp!=null&&ps>=4&&ps<=10&&fp/ps<.15&&!out.some(i=>i.k==='psa'&&i.lv>=2))
     out.push({src:'體檢',k:'psa_ratio',name:'游離 PSA 比例',short:'PSA比例',val:Math.round(fp/ps*100),unit:'%',lv:2,dir:'lo',msg:'PSA 灰色地帶且游離比例 <15%，攝護腺癌風險較高，建議泌尿科評估',organ:'pelvis',dept:'泌尿科',ref:'≥25% 風險較低'});
   if(g0!=null&&in0!=null){const h=g0*in0/405;if(h>=2.5)out.push({src:'體檢',k:'homa',name:'胰島素阻抗 HOMA-IR',short:'HOMA-IR',val:Math.round(h*10)/10,unit:'',lv:h>=4?2:1,dir:'hi',msg:'HOMA-IR ≥2.5 代表胰島素阻抗，是糖尿病與脂肪肝的前兆',organ:'pancreas',dept:'新陳代謝科',ref:'<2.5'})}
-  for(const e of rec.extra||[]){const g=xgOf(e.name);if(g==='imp'||g==='inbody')continue;   // 身體組成另外彙整（分段分析），原始阻抗不判讀，避免重複扣分
+  // 影像附帶發現：每種只算一次；有冠狀動脈鈣化分數（數值）時以分數為準
+  const seenF=new Set(),used=new Set(),hasCacScore=num(rec.items?.cac?.v)!=null;
+  const scan=(txt,srcN,e,skip=[])=>{for(const{f,clause}of imgFind(txt)){if(skip.includes(f[0]))continue;if(f[0]==='cac'&&hasCacScore){if(e)used.add(e);continue}if(e)used.add(e);if(seenF.has(f[0]))continue;seenF.add(f[0]);
+    out.push({src:'體檢',k:'img_'+f[0],name:f[1],short:f[1],val:srcN,unit:'',lv:f[3],dir:'hi',bl:null,msg:`報告：「${clause.slice(0,40)}」。${f[6]}`,organ:f[4],dept:f[5],ref:''})}};
+  // 只掃報告原文（選項名稱本身如「輕微變化（如主動脈鈣化…）」不算）；胸部 X 光已判「輕微變化」時，主動脈鈣化就是它，不重複算
+  for(const[k,it]of Object.entries(rec.items||{}))if(LABK[k]?.t==='opt')scan(`${LABK[k].O.some(([l])=>l===it.v)?'':it.v}，${String(it.ref||'').replace(/^原文：/,'')}`,`${LABK[k].s||LABK[k].n}附帶發現`,null,k==='cxr'&&out.some(i=>i.k==='cxr')?['aorta']:[]);
+  for(const e of rec.extra||[])scan(`${e.name}，${e.value??''}`,'報告其他項目',e);
+  for(const e of rec.extra||[]){const g=xgOf(e.name);if(g==='imp'||g==='inbody'||used.has(e))continue;   // 身體組成另外彙整（分段分析），原始阻抗不判讀；已算成附帶發現的不重複
     const lv=extraLv(e);if(!lv)continue;const tx=!flagDir(e.flag)&&typeof e.value==='string'&&txtAbn(e.value);
     out.push({src:'體檢',k:'x_'+e.name,name:e.name,val:e.value,unit:e.unit||'',lv,dir:flagDir(e.flag)||'hi',msg:tx?'報告文字提到異常，請看原文並諮詢醫師':'報告標示異常，請諮詢醫師',organ:null,dept:null,ref:e.ref||''})}
   return out;
@@ -952,6 +960,28 @@ const ABN_TXT=/異常|雜音|腫大|結節|陽性|疑似|不整|肥大|病變|�
 // 左右分開列的項目（聽力）：兩側都異常 → 雙側
 const sideOf=n=>/右|right/i.test(n)?'r':/左|left/i.test(n)?'l':'';
 // 其他項目的判定：報告標記 H/L、超出報告自己的上下限、或文字提到異常（「無異常」這類否定不算）
+// 影像報告的附帶發現：LDCT、X 光、超音波的醫師總評常常不只一件事（例如 Lung-RADS 1 但有冠狀動脈鈣化、肋膜增厚）
+// [鍵, 名稱, 比對, 等級, 器官, 科別, 說明, 長期？]；前面 8 個字內有「無／未見／沒有」的不算
+const IMGF=[
+  ['cac','冠狀動脈鈣化',/冠狀動脈(血管)?(有|輕度|輕微|中度|重度|嚴重|多處|局部|明顯)?(的)?鈣化|coronary (artery )?calcification/i,2,'heart','心臟內科','冠狀動脈已有鈣化＝血管裡已有動脈硬化斑塊：建議心臟內科評估 LDL 要降到多少、需不需要用藥；可加做一次「冠狀動脈鈣化分數」量化。鈣化不會消失，不需要每年重照',1],
+  ['aorta','主動脈鈣化',/主動脈(弓)?(有|輕度|輕微|中度|明顯)?(的)?鈣化|aortic (arch )?calcification/i,1,'vessel',null,'血管老化的表現：控制血壓、血脂、戒菸比追加檢查重要',1],
+  ['pleura','肋膜增厚',/(肋膜|胸膜)(局部|輕度|輕微)?(增厚|肥厚)|pleural thickening/i,1,'lung','胸腔內科','多半是以前發炎留下的疤（良性），報告建議胸腔科追蹤：帶這份報告和舊片比較有沒有變化即可',1],
+  ['effusion','肋膜積水',/(肋膜|胸膜)(積水|積液)|pleural effusion/i,2,'lung','胸腔內科','需要找出積水原因，建議儘快看胸腔內科',0],
+  ['emphy','肺氣腫',/肺氣腫|emphysema/i,2,'lung','胸腔內科','和吸菸、空汙有關，會增加慢性阻塞性肺病與肺癌風險：建議胸腔科做肺功能；有吸菸一定要戒',1],
+  ['fibro','肺纖維化',/肺(部)?纖維化|間質性肺|interstitial|fibrosis/i,1,'lung','胸腔內科','少量條狀纖維化常是陳舊疤痕；範圍大，或有喘、久咳要看胸腔科',1],
+  ['bronch','支氣管擴張',/支氣管擴張|bronchiectasis/i,1,'lung','胸腔內科','容易反覆感染、咳痰；有症狀時看胸腔科',1],
+  ['lymph','淋巴結腫大',/淋巴結(腫大|增大)|lymphadenopathy/i,2,'lung','胸腔內科','建議門診評估是否需要追蹤影像',0],
+  ['aneur','主動脈擴張',/主動脈(擴張|瘤|膨大)|aortic (aneurysm|dilat)/i,2,'vessel','心臟血管外科','要定期量直徑變化，並控制血壓',1],
+  ['cardio','心臟擴大',/心臟(擴大|肥大|增大)|cardiomegaly/i,2,'heart','心臟內科','建議心臟超音波確認',0],
+  ['pericard','心包膜積液',/心包膜?(積水|積液)|pericardial effusion/i,2,'heart','心臟內科','建議心臟超音波確認',0],
+  ['thy','甲狀腺結節（影像附帶）',/甲狀腺.{0,4}(結節|腫塊)|thyroid nodule/i,1,'thyroid','新陳代謝科','建議做甲狀腺超音波確認大小與型態',0],
+  ['fracture','壓迫性骨折',/壓迫性骨折|compression fracture/i,2,'bone','骨科','可能和骨質疏鬆有關，建議骨科評估並驗骨密度',1]];
+const IMGK=Object.fromEntries(IMGF.map(f=>['img_'+f[0],f]));
+function imgFind(text){const out=[];if(!text)return out;
+  for(const cl of String(text).split(/[，,。；;\n]/)){const c=cl.trim();if(!c)continue;
+    for(const f of IMGF){const mm=c.match(f[2]);if(!mm||out.some(o=>o.f===f))continue;
+      if(/(無|未見|未發現|沒有|未有|排除|\bno\s|without)/i.test(c.slice(Math.max(0,mm.index-8),mm.index)))continue;out.push({f,clause:c})}}
+  return out}
 const extraLv=e=>{const v=num(e.value),txt=typeof e.value==='string'?e.value.trim():'';
   return flagDir(e.flag)||(v!=null&&!/[一-龥]/.test(txt)&&((e.hi!=null&&v>e.hi)||(e.lo!=null&&v<e.lo)))||(txt&&txtAbn(txt))?1:0};
 // InBody 分段：哪些部位脂肪超出參考、肌肉不足、左右是否平衡（只彙整，不當成異常扣分）
@@ -975,6 +1005,7 @@ const REVT={us_liver:'脂肪肝可逆：減重 5–10%，肝臟脂肪就會明�
   alt:'可逆：多半和脂肪肝、喝酒、藥物有關，原因去除就會下降',ast:'可逆：原因去除就會下降',ggt:'可逆：戒酒、減重後會下降',waist:'可逆：減重最先減的就是腹部',vfa:'可逆：內臟脂肪對運動和飲食的反應最快',
   vitd:'可逆：曬太陽或補充後就會上升',ferritin:'可逆：找到缺鐵原因並補鐵',bmi:'可逆',wt:'可逆',fat:'可逆',visceral:'可逆',whr:'可逆',bia_fat:'可逆',bia_fm:'可逆',fmi:'可逆',sfa:'可逆'};
 function revOf(k,v,ref){const s=String(v??'')+String(ref??''),n=num(v);
+  if(IMGK[k])return IMGK[k][7]?['perm',k==='img_cac'?PERM.cac:'影像上的結構變化不會消失，重點是追蹤有沒有變大']:null;
   if(k==='us_liver')return /硬化|慢性肝病/.test(s)?['perm','肝硬化無法回復，要延緩惡化並每 6 個月追蹤']:/脂肪肝/.test(s)?['rev',REVT.us_liver]:null;
   if(k==='cxr')return /鈣化|陳舊|側彎|纖維化|輕微變化/.test(s)?['perm','主動脈鈣化、陳舊病灶、脊椎側彎屬長期變化，追蹤有沒有變大即可']:null;
   if(k==='iop')return['ctl','眼壓可以用藥控制；但若已造成青光眼，視神經損傷無法回復，所以要早期追蹤'];
@@ -1079,7 +1110,7 @@ function watchEval(r,m){const a=ageOf(m),out=[],v=k=>num(r?.[k]);if(!r)return ou
 function issuesOf(m){const s=scalesOf(m)[0],l=labsOf(m)[0],w=watchOf(m)[0];return{scale:s?scaleEval(s,m):[],lab:l?labEval(l,m):[],watch:w?watchEval(w,m):[],s,l,w}}
 function dietMode(m){
   const{scale,lab}=issuesOf(m),all=[...scale,...lab],o={};all.forEach(i=>{if(i.organ)o[i.organ]=Math.max(o[i.organ]||0,i.lv)});
-  const md={lowCarb:(o.pancreas||0)>=1||all.some(i=>i.k==='tg'||(i.k==='visceral'&&i.lv>=1)),heart:(o.vessel||0)>=1,liver:(o.liver||0)>=1,lowPur:all.some(i=>i.k==='ua'),kidney:all.some(i=>['egfr','cr','upro'].includes(i.k)&&i.lv>=2)};
+  const md={lowCarb:(o.pancreas||0)>=1||all.some(i=>i.k==='tg'||(i.k==='visceral'&&i.lv>=1)),heart:(o.vessel||0)>=1||all.some(i=>i.k==='cac'||i.k==='img_cac'),liver:(o.liver||0)>=1,lowPur:all.some(i=>i.k==='ua'),kidney:all.some(i=>['egfr','cr','upro'].includes(i.k)&&i.lv>=2)};
   md.tags=[md.lowCarb&&'控醣：碳水降、脂肪 30%',md.heart&&'護心：少油少鹽',md.liver&&'護肝：禁酒、少油炸',md.lowPur&&'低普林：避開海鮮濃湯',md.kidney&&'護腎：蛋白質 0.8 g/kg'].filter(Boolean);
   return md;
 }
@@ -1095,7 +1126,7 @@ function nutriPlan(m){
   if(c.goal==='cut')add({ic:'🔥',t:'減脂',why:c.sg.why.join('、')||'目標設定為減脂',do:[`每天約 ${Math.round(c.target)} kcal，用「211 餐盤」：半盤蔬菜、¼ 蛋白質、¼ 全穀`,'每餐一個手掌大的蛋白質，飽足感高、減脂不掉肌肉','炸物、勾芡、濃湯、含糖飲料先停','晚餐 7 點前吃完，睡前 3 小時不進食'],eat:['燙青菜','魚、雞胸、豆腐、蛋','地瓜、糙米'],avoid:['炸雞排','手搖飲','宵夜']},[],['oil']);
   if(c.goal==='bulk')add({ic:'💪',t:a<18?'成長':'增肌增重',why:c.sg.why.join('、'),do:[`每天約 ${Math.round(c.target)} kcal，三餐＋2 次點心`,`蛋白質 ${Math.round(c.prot)} g，平均分到 4–5 餐（每餐 20–40 g）`,'重訓後 2 小時內吃蛋白質＋碳水（例：香蕉＋無糖豆漿）','睡前可吃無糖優格或豆花'],eat:['蛋、豆漿、優格','雞腿、牛肉、魚','香蕉、地瓜、燕麥'],avoid:['只吃澱粉不吃蛋白質']},['ca']);
   if(sugar||visc||lv('tg'))add({ic:'🩸',t:'控糖',why:why(['glu','hba1c','pcg','ins','homa','uglu','tg'])||`內臟脂肪 ${s?.visceral}（胰島素阻抗風險）`,do:['吃飯順序：先菜、再肉、最後飯，血糖升得慢','白飯換糙米／五穀／地瓜，一餐半碗到八分滿','戒含糖飲料（手搖飲一杯約 10 顆方糖）','水果一天 2 份、每份一個拳頭，不打成果汁','飯後散步 10–15 分鐘，降血糖效果最好'],eat:['糙米、燕麥、地瓜','芭樂、番茄','毛豆、豆腐'],avoid:['含糖飲料、果汁','白粥、麵包、甜點','勾芡、糖醋']},['fib'],['hc']);
-  if(lv('ldl')||lv('tc')||lv('lpa')||lv('sdldl'))add({ic:'🫀',t:'降壞膽固醇',why:why(['ldl','sdldl','tc','lpa']),do:['少飽和脂肪：肥肉、雞皮、豬油、奶油、椰子油、香腸培根','每天一碗燕麥或一份豆類（可溶性纖維降 LDL）','堅果一天一湯匙（約 10 顆杏仁）','魚每週至少 2 次，蒸、煮、烤'],eat:['燕麥、豆類','鯖魚、鮭魚','無調味堅果'],avoid:['肥肉、雞皮','加工肉','酥皮、奶油麵包']},['fib','fish'],['oil']);
+  if(lv('ldl')||lv('tc')||lv('lpa')||lv('sdldl')||lv('cac')||lv('img_cac'))add({ic:'🫀',t:'降壞膽固醇',why:[why(['ldl','sdldl','tc','lpa','cac']),lv('img_cac')?'影像看到冠狀動脈鈣化':''].filter(Boolean).join('、'),do:['少飽和脂肪：肥肉、雞皮、豬油、奶油、椰子油、香腸培根','每天一碗燕麥或一份豆類（可溶性纖維降 LDL）','堅果一天一湯匙（約 10 顆杏仁）','魚每週至少 2 次，蒸、煮、烤'],eat:['燕麥、豆類','鯖魚、鮭魚','無調味堅果'],avoid:['肥肉、雞皮','加工肉','酥皮、奶油麵包']},['fib','fish'],['oil']);
   if(lv('tg'))add({ic:'🧈',t:'降三酸甘油酯',why:why(['tg']),do:['甜食、精製澱粉、果汁、酒精是三酸甘油酯的主因，先減這些','鯖魚、鮭魚、秋刀魚每週 2–3 次（Omega-3）','晚餐澱粉減量'],eat:['青背魚','蔬菜'],avoid:['酒','甜點、果汁','精緻澱粉']},['fish'],['hc']);
   if(lv('hdl'))add({ic:'⬆️',t:'提升好膽固醇',why:why(['hdl']),do:['每週 150 分鐘有氧運動最能提升 HDL','用橄欖油、苦茶油、堅果取代動物油','戒菸'],eat:['橄欖油、苦茶油','酪梨、堅果'],avoid:['反式脂肪（酥油、奶精）']});
   if(lv('sbp')||lv('dbp'))add({ic:'🧂',t:'降血壓（得舒飲食）',why:why(['sbp','dbp']),do:['鹽一天 ≤5 g（鈉 2000 mg）：湯不喝完、醬料減半、少加工食品',kid||lv('k')?'蔬菜天天吃，但鉀要依腎功能控制':'得舒飲食：每天 5 份蔬菜＋2 份水果＋1.5 杯低脂乳','體重每減 1 kg，收縮壓約降 1 mmHg','酒一天最多 1 杯'],eat:['深綠蔬菜','低脂乳、豆漿','新鮮肉魚'],avoid:['泡麵、罐頭、醃漬物','火鍋湯、拉麵湯','香腸、火腿']},kid||lv('k')?[]:['kf'],['salt']);
@@ -1173,6 +1204,7 @@ function fitPlan(m){
   const mv=MOVES.filter(x=>!x.bad.some(y=>F.has(y))).sort((x,y)=>(a>=65&&y.n==='單腳站')-(a>=65&&x.n==='單腳站')).slice(0,6),sets=fp.lvl==='new'?2:3;
   const W=[];const w=(ic,t,d)=>W.push({ic,t,d});
   if(stop)w('🚨',`血壓 ${sbp}/${dbp} 太高`,'先就醫把血壓控制下來，再開始中高強度運動；目前只做輕鬆散步');
+  if(!F.has('heart')&&(lv('cac')||lv('img_cac')))w('❤️','冠狀動脈有鈣化：中等強度最好','快走、腳踏車、游泳對血管最有幫助；要做高強度（HIIT、比賽、重訓衝重量）前先問心臟科，必要時做運動心電圖；胸悶、胸痛立刻停');
   if(F.has('heart'))w('❤️','心臟：先讓心臟科評估','醫師同意前只做中低強度；胸悶、胸痛、心悸立刻停');
   if(F.has('knee'))w('🦵','膝蓋：不排跑步、超慢跑、跳躍、爬山爬樓梯、球類','改游泳（自由式／仰式）、水中走路、腳踏車；運動後膝蓋腫痛超過 2 小時代表太多，下次減量');
   if(F.has('ankle'))w('🦶','腳踝／足底：避免跑跳','選腳踏車、游泳；穿有足弓支撐的鞋');
@@ -1259,6 +1291,12 @@ function yearPlan(m){
   rule(['ldct'],(l,n)=>add(S[0],l>=2?1:2,'胸部低劑量 CT 追蹤',`${ago} ${n}`,'健保',l>=3?'儘快胸腔科':l>=2?'3 個月後':'6 個月後'));
   rule(['cxr'],(l,n)=>l>=2?add(S[0],l>=3?1:2,'胸腔科：胸部 X 光異常，安排電腦斷層確認',`${ago} ${n}`,'健保',l>=3?'儘快':'1 個月內')
     :add(S[0],3,'胸部 X 光：下次健檢再照即可',`${ago} ${n}${/鈣化/.test(L?.items?.cxr?.ref||'')?'；主動脈鈣化代表血管老化，控制血壓、血脂、戒菸比追加檢查重要':/側彎/.test(L?.items?.cxr?.ref||'')?'；脊椎側彎通常不需處理，有背痛再看復健科':''}`,'—','下次健檢'));
+  rule(['cac','img_cac'],(l,n)=>add(S[0],l>=2?1:2,'心臟內科：冠狀動脈有鈣化',`${ago} ${n}：已有動脈硬化斑塊，LDL 目標要更嚴格，和醫師討論是否用藥${hasL('cac')?'':'；可做一次冠狀動脈鈣化分數量化'}；鈣化不會消失，不需要每年重照`,'健保／自費',l>=3?'1 個月內':'1–3 個月內'));
+  rule(['img_pleura','img_effusion','img_emphy','img_fibro','img_bronch','img_lymph'],(l,n)=>add(S[0],l>=2?1:2,'胸腔內科：影像附帶發現追蹤',`${ago} ${n}；帶報告和舊片比較有沒有變化`,'健保',l>=2?'1 個月內':'3–6 個月內'));
+  rule(['img_aneur','img_cardio','img_pericard'],(l,n)=>add(S[0],1,'心臟內科：心臟超音波',`${ago} ${n}`,'健保','1 個月內'));
+  rule(['img_aorta'],(l,n)=>add(S[0],3,'主動脈鈣化：控制血壓、血脂、戒菸',`${ago} ${n}；屬血管老化，不需要追加檢查`,'—','長期'));
+  rule(['img_thy'],(l,n)=>add(S[0],2,'甲狀腺超音波（影像看到結節）',`${ago} ${n}`,'健保','3 個月內'));
+  rule(['img_fracture'],(l,n)=>add(S[0],1,'骨科：壓迫性骨折＋骨密度',`${ago} ${n}`,'健保','1 個月內'));
   rule(['ekg','ntprobnp','pulse','hr'],(l,n)=>add(S[0],l>=2?1:2,'心臟內科：心電圖／心臟超音波',`${ago} ${n}`,'健保','1–3 個月內'));
   rule(['iop','fundus'],(l,n)=>add(S[0],2,'眼科：眼底＋視野檢查（排除青光眼）',`${ago} ${n}`,'健保','3 個月內'));
   rule(['dxa','vitd','ca'],(l,n)=>add(S[0],lvOf('dxa')>=2?1:3,lvOf('dxa')>=2?'骨質疏鬆治療評估（骨科／新陳代謝科）':'補鈣與維生素 D、負重運動，之後複驗',`${ago} ${n}`,lvOf('dxa')>=2?'健保':'自費',lvOf('dxa')>=2?'1 個月內':'3 個月後複驗維生素 D、2 年後骨密度'));
@@ -1402,7 +1440,9 @@ function rotation(m){const a=Math.floor(ageOf(m)),fem=m.sex==='f',fh=fhOf(m),lf=
   if((lungFH&&win(fem?40:45)&&a<=74)||(heavy&&win(50)&&a<=74))add('ldct',{sa:lungFH?(fem?40:45):50,iv:2,need:true,big:false,ch:'公費',why:lungFH?'一等親有肺癌：公費每 2 年':`重度吸菸 ${pk} 包年：公費每 2 年`});
   else if(lc>=1)add('ldct',{iv:1,need:true,big:false,ch:'健保',why:'上次 Lung-RADS 3 以上：依醫師建議時間複查'});
   else if(ld.ldct)add('ldct',{iv:3,need:false,big:true,ch:'自費',why:'不是公費對象、上次正常：不需要每年照（輻射與偽陽性），想再照隔 3 年以上並和醫師討論'});
-  if(fh.chr.includes('cvd')&&a>=40){const cv=num(ld.cac?.r?.items?.cac?.v);add('cac',{iv:cv>0?0:5,need:false,big:true,ch:'自費',why:cv>0?'已有鈣化：分數只會增加，不需重複照，重點是控制血脂血壓':'早發心血管疾病家族史：可照一次；0 分的話約 5 年後再評估'})}
+  const imgCac=!ld.cac&&labs.slice(0,3).some(r=>labEval(r,m).some(i=>i.k==='img_cac'));
+  if(imgCac)add('cac',{iv:0,need:false,big:true,ch:'自費',why:'影像已看到冠狀動脈鈣化：可和心臟科討論要不要做一次「鈣化分數」量化（決定 LDL 目標），之後不需重複照'});
+  else if(fh.chr.includes('cvd')&&a>=40){const cv=num(ld.cac?.r?.items?.cac?.v);add('cac',{iv:cv>0?0:5,need:false,big:true,ch:'自費',why:cv>0?'已有鈣化：分數只會增加，不需重複照，重點是控制血脂血壓':'早發心血管疾病家族史：可照一次；0 分的話約 5 年後再評估'})}
   const liverRisk=ab('us_liver')||ab('alt')||ab('ast')||ab('ggt')||hbv||ever('antihcv',v=>qLv(v)>0)||lf.alc==='often'||fh.ca.includes('liver');
   if(liverRisk||win(40))add('abdus',{sa:liverRisk?0:40,iv:liverRisk?1:2,need:liverRisk,big:false,ch:liverRisk?'健保／自費':'自費',why:hbv?'B 肝帶原：每 6–12 個月':liverRisk?'脂肪肝、肝指數異常、常喝酒或肝癌家族史：每年':'40 歲以上一般風險：約 2 年看一次肝膽腎'});
   const tl=lastLv('thyus','thyus');
@@ -2120,7 +2160,7 @@ function promptLab(){const OPT=LAB.filter(x=>x.t==='opt'),QI=LAB.filter(x=>x.t==
 8. 血壓若寫成 "128/82"，請拆成 sbp=128、dbp=82。眼壓左右眼取較高值；骨密度取最低的 T 值（腰椎、髖部取較低者）；聽力左右任一耳異常就填異常。InBody 的「阻抗（kHz）」原始數據不用輸出。
 9. 姓名、身分證字號、病歷號、生日、電話、地址一律不要輸出。
 10. date 填檢查（採檢）日期，格式 YYYY-MM-DD 的西元年；報告若寫民國年（例如 115/09/20），請加 1911 換算成 2026-09-20。
-11. 影像與檢查（超音波、X 光、心電圖、內視鏡、乳房攝影、抹片等）：value 只能填下方括號內其中一個選項，報告原文的描述放進 "note"。
+11. 影像與檢查（超音波、X 光、電腦斷層、心電圖、內視鏡、乳房攝影、抹片等）：value 只能填下方括號內其中一個選項；報告原文（醫師總評、結論）「每一句都完整照抄」放進 "note"，不要摘要。同一份報告裡的其他發現（例如冠狀動脈鈣化、肋膜增厚、肺氣腫、甲狀腺結節），另外各自放進 extra（name 寫發現名稱，value 照抄原文句子）。
 12. ${QI.map(x=>x.k).join('、')} 是抗體保護力，照抄原文（陽性／陰性或數值）。
 13. 輸出前逐項自我核對：每個數字都必須能在報告中找到原文，小數點位置正確。
 
@@ -2307,15 +2347,15 @@ function convUnit(k,v,unit,lo,hi){
   return{v:R(v),lo:R(lo),hi:R(hi),note:`${unit||'依數值推定'} 已換算`};
 }
 const implausible=(x,v,sex)=>{if(x.neg)return Math.abs(v)>6;const H=thr(x,'H',sex),L=thr(x,'L',sex);return v<0||(H&&v>H[2]*3)||(L&&v<L[2]/3)};
-function metaTxt(x){const mt=lMeta[x.k],sex=me().sex;let s=x.u||'';const ref=mt?.ref||refText(x,sex);
-  if(ref)s+=(s?'・':'')+(mt?.ref?'報告參考 ':'參考 ')+ref;if(mt?.conv)s+='・'+mt.conv;if(mt?.flag)s+='・標記 '+mt.flag;return esc(s)}
+function metaTxt(x){const mt=lMeta[x.k],sex=me().sex;let s=x.u||'';const ref=(/^原文：/.test(mt?.ref||'')?'':mt?.ref)||refText(x,sex);   // 影像原文顯示在下方「報告原文」欄，不重複
+  if(ref)s+=(s?'・':'')+(mt?.ref&&ref===mt.ref?'報告參考 ':'參考 ')+ref;if(mt?.conv)s+='・'+mt.conv;if(mt?.flag)s+='・標記 '+mt.flag;return esc(s)}
 function openLabSheet(rec){
   const m=me();lEditId=rec?.id||null;lMeta={};lExtra=(rec?.extra||[]).map(e=>({...e}));
   if(rec)for(const[k,it]of Object.entries(rec.items||{}))lMeta[k]={lo:it.lo??null,hi:it.hi??null,ref:it.ref||'',flag:it.flag||null,conv:it.conv||null};
   const groups=[...new Set(LAB.map(x=>x.g))];
   const rows=g=>LAB.filter(x=>x.g===g&&(!x.sex||x.sex===m.sex)).map(x=>{const v=String(rec?.items?.[x.k]?.v??'');
     const inp=x.t==='q'?`<select id="l-${x.k}">${qOpts(v)}</select>`
-      :x.t==='opt'?`<select id="l-${x.k}"><option value="">—</option>${x.O.map(([l])=>`<option${l===v?' selected':''}>${esc(l)}</option>`).join('')}${v&&!x.O.some(([l])=>l===v)?`<option selected>${esc(v)}</option>`:''}</select>`
+      :x.t==='opt'?`<select id="l-${x.k}"><option value="">—</option>${x.O.map(([l])=>`<option${l===v?' selected':''}>${esc(l)}</option>`).join('')}${v&&!x.O.some(([l])=>l===v)?`<option selected>${esc(v)}</option>`:''}</select><textarea class="refin" id="lr-${x.k}" rows="2" placeholder="報告原文／醫師總評（選填）"${v||lMeta[x.k]?.ref?'':' hidden'}>${esc(String(lMeta[x.k]?.ref||'').replace(/^原文：/,''))}</textarea>`
       :`<input id="l-${x.k}" type="text" inputmode="${x.t==='qi'||x.neg?'text':'decimal'}" value="${esc(v)}" placeholder="${esc(x.ph||x.u||'')}">`;
     return `<div class="lrow${x.t==='opt'?' wide':''}"><label for="l-${x.k}">${x.n}<small id="lm-${x.k}">${metaTxt(x)}</small></label>${inp}</div>`}).join('');
   openSheet(sheetHead(rec?'編輯體檢報告':'新增體檢報告',`${esc(m.name)}・${sexT(m.sex)}・${Math.floor(ageOf(m))} 歲`)+aiBox('lab')+`
@@ -2327,6 +2367,9 @@ function openLabSheet(rec){
       <div class="row2" style="margin-top:8px"><select id="ex-f" style="flex:1"><option value="">報告標示正常</option><option value="H">偏高 H</option><option value="L">偏低 L</option></select><button class="btn ghost sm" id="ex-add">加入</button></div></details>
     <div class="row2">${rec?'<button class="btn danger" id="lDel" style="flex:0 0 30%">刪除</button>':''}<button class="btn" id="lSave">儲存並分析</button></div>`);
   renderExtra();bindAI('lab');
+  // 影像項目的「報告原文」：選了結果才出現；醫師總評的附帶發現（冠狀動脈鈣化、肋膜增厚…）靠它判讀
+  $$('textarea.refin').forEach(t=>{const k=t.id.slice(3);t.oninput=()=>{const v=t.value.trim().slice(0,400);lMeta[k]={...(lMeta[k]||{}),ref:v?'原文：'+v:''}};
+    $('#l-'+k).addEventListener('change',e=>{if(e.target.value)t.hidden=false})});
   $('#ex-add').onclick=()=>{const n=$('#ex-n').value.trim();if(!n)return toast('請輸入項目名稱');const raw=$('#ex-v').value.trim();
     lExtra.push({name:n,value:num(raw)??raw,unit:'',ref:'',lo:null,hi:null,flag:$('#ex-f').value||null});$('#ex-n').value='';$('#ex-v').value='';renderExtra()};
   $('#lSave').onclick=saveLab;if(rec)$('#lDel').onclick=()=>delLab(rec.id);
@@ -2340,8 +2383,8 @@ const normExtra=e=>({name:String(e.name||e.key||'未命名'),value:e.value??e.v?
 function fillLab(o){
   if(/scale/i.test(o.type||''))throw new Error('這是體脂機的 JSON，請改到「體脂紀錄」匯入');
   const m=me(),items=o.items||{},entries=[...(Array.isArray(items)?items.map(it=>[it.key||it.k||it.name,it]):Object.entries(items)),...(Array.isArray(o.extra)?o.extra.filter(e=>e&&typeof e==='object').map(e=>[e.name||e.key,{...e,_x:1}]):[])];
-  LAB.forEach(x=>{const el=$('#l-'+x.k);if(el){el.value='';el.classList.remove('bad')}});
-  lMeta={};lExtra=[];let n=0;const conv=[],warn=[],skip=[],hs=new Set();
+  // 只補 JSON 裡有的項目，不清掉表單上已經有的：多頁報告可以分次匯入，舊報告也能只補一頁
+  let n=0;const conv=[],warn=[],skip=[],hs=new Set(),now=new Set();   // now：這次匯入已經填過的項目（左右眼、左右耳、多個骨密度才取較差／較高）
   for(const[rk,raw]of entries){
     const it=raw&&typeof raw==='object'?raw:{value:raw};
     const k=LABK[rk]?rk:(resolveKey(rk)||resolveKey(it.name));
@@ -2354,19 +2397,20 @@ function fillLab(o){
     else if(x.t==='opt'){if(val==null||val==='')continue;let o=optFind(x,val);
       if(!o){lExtra.push(normExtra({name:it._x?rk:x.n,value:String(val),ref:it.note||'',flag:it.flag}));continue}
       if(k==='hearing'&&o[1]){hs.add(sideOf(String(rk)+(it.name||'')));if(hs.has('r')&&hs.has('l'))o=x.O.find(([l])=>l.startsWith('雙'))||o}
-      const po=el.value&&optFind(x,el.value);if(po&&po[1]>=o[1]){n++;continue}   // 左右耳等多筆：留較差的
-      el.value=o[0];const raw=[val!==o[0]?val:'',it.note].filter(Boolean).join('；');lMeta[k]={ref:raw?'原文：'+String(raw).slice(0,60):'',flag:null}}
+      const po=now.has(k)&&el.value&&optFind(x,el.value);if(po&&po[1]>=o[1]){n++;continue}   // 同一次匯入有多筆（左右耳）：留較差的；舊值一律用新匯入的蓋過
+      el.value=o[0];const raw=[val!==o[0]?val:'',it.note].filter(Boolean).join('；');lMeta[k]={ref:raw?'原文：'+String(raw).slice(0,400):'',flag:null};   // 醫師總評整段保留：附帶發現要靠它判讀
+      const rt=$('#lr-'+k);if(rt){rt.value=String(raw||'').slice(0,400);rt.hidden=false}}
     else if(x.t==='qi'){if(val==null||val==='')continue;el.value=String(val);lMeta[k]={ref:it.ref||'',flag:it.flag||null}}
     else{
       if(k==='sbp'&&typeof val==='string'&&val.includes('/')){const d=num(val.split('/')[1]);if(d!=null&&$('#l-dbp'))$('#l-dbp').value=d}
-      const v=num(val);if(v==null)continue;
+      const v=num(val);if(v==null){if(String(val??'').trim())lExtra.push(normExtra({name:it._x?rk:(it.name||x.n),value:String(val),unit:it.unit,ref:it.ref,flag:it.flag}));continue}   // 數值項目卻是文字（例如「冠狀動脈鈣化：有」）→ 放其他項目，不要丟掉
       const c=convUnit(k,v,it.unit,num(it.lo),num(it.hi)),prev=num(el.value);
-      if(prev!=null&&(k==='dxa'||k==='iop'))c.v=k==='dxa'?Math.min(prev,c.v):Math.max(prev,c.v);
+      if(prev!=null&&now.has(k)&&(k==='dxa'||k==='iop'))c.v=k==='dxa'?Math.min(prev,c.v):Math.max(prev,c.v);
       el.value=c.v;lMeta[k]={lo:c.lo,hi:c.hi,ref:it.ref?(c.note?`${it.ref} ${it.unit||''}`.trim():String(it.ref)):'',flag:it.flag||null,conv:c.note};
       if(c.note)conv.push(x.n);
       if(implausible(x,c.v,m.sex)){el.classList.add('bad');warn.push(x.n)}
     }
-    n++;const det=el.closest('details');if(det)det.open=true;$('#lm-'+k).innerHTML=metaTxt(x);
+    n++;now.add(k);const det=el.closest('details');if(det)det.open=true;$('#lm-'+k).innerHTML=metaTxt(x);
   }
   const seen=new Set();lExtra=lExtra.filter(e=>{const key=e.name+'|'+e.value;if(seen.has(key))return false;seen.add(key);return true});
   renderExtra();if(lExtra.length)$('#exList').closest('details').open=true;
@@ -2402,6 +2446,7 @@ function openLabDetail(id){
   const normal=Object.entries(rec.items||{}).filter(([k])=>!iss.some(i=>i.k===k));
   openSheet(sheetHead('體檢分析',`${esc(m.name)}・${esc(rec.t)}${rec.hospital?'・'+esc(rec.hospital):''}`)+`
     <div style="display:flex;gap:14px;align-items:center;margin:14px 0 4px">${scoreRing(sc,gc)}<div><div style="font-size:22px;font-weight:800;color:${gc}">${gt}</div><div class="sub" style="margin-top:4px">異常 ${iss.length} 項・正常 ${normal.length} 項</div><div class="sub">扣分：每個器官最嚴重一項全扣（注意 −3／異常 −8／嚴重 −15），同器官其他項扣 40%；有「注意」最高 89、「異常」最高 74、「嚴重」最高 59 分</div></div></div>
+    ${Object.entries(rec.items||{}).some(([k,it])=>LABK[k]?.t==='opt'&&/^原文：/.test(it?.ref||'')&&[60,63].includes(it.ref.length))?'<div class="hl" style="margin:10px 0;border-color:rgba(255,181,71,.5)">⚠️ 這份報告是舊版匯入，影像報告的原文可能被截斷，附帶發現（例如冠狀動脈鈣化）可能沒判讀到：按下方「編輯數值」，在那一項的「報告原文」貼上完整的醫師總評，或用 AI 只匯入那一頁（不會清掉其他數值）。</div>':''}
     ${iss.some(i=>i.lv===3)?'<div class="banner">⚠️ 有「嚴重」等級的項目，建議 1–2 週內就醫。若有胸痛、呼吸困難、單側無力、意識改變等症狀，請立即掛急診。</div>':''}
     <div class="hud">${bodySVG(m,iss,'d')}</div>
     <div class="h4">建議掛號</div>${deptHTML(dp)}
@@ -2818,7 +2863,7 @@ function promoteExtras(r){if(!Array.isArray(r.extra)||!r.extra.length)return fal
   r.extra=r.extra.filter(e=>{const k=resolveKey(e?.name),x=k&&LABK[k];if(!x||e.value==null||e.value==='')return true;const old=r.items[k];
     if(x.t==='opt'){let o=optFind(x,String(e.value));if(!o)return true;const oo=old&&optFind(x,String(old.v));
       if(k==='hearing'&&o[1]){hs.add(sideOf(e.name));if(hs.has('r')&&hs.has('l'))o=x.O.find(([l])=>l.startsWith('雙'))||o}
-      if(!old||(oo&&o[1]>oo[1])){r.items[k]={v:o[0],...(String(e.value)!==o[0]?{ref:('原文：'+e.value).slice(0,60)}:{})};}ch=true;return false}
+      if(!old||(oo&&o[1]>oo[1])){r.items[k]={v:o[0],...(String(e.value)!==o[0]?{ref:('原文：'+e.value).slice(0,400)}:{})};}ch=true;return false}
     if(x.t){if(old)return true;r.items[k]={v:String(e.value),...(num(e.hi)!=null?{hi:num(e.hi)}:{}),...(e.ref?{ref:String(e.ref).slice(0,60)}:{}),...(e.flag?{flag:e.flag}:{})};ch=true;return false}
     const v=num(e.value);if(v==null)return true;const ov=num(old?.v);if(ov!=null&&k!=='dxa'&&k!=='iop')return true;
     const c=convUnit(k,v,e.unit,num(e.lo),num(e.hi));

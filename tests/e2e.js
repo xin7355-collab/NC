@@ -474,6 +474,48 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6k. 影像報告附帶發現（LDCT 醫師總評：Lung-RADS 1 ＋ 肋膜增厚 ＋ 冠狀動脈鈣化） ===============
+  {
+    page = await newPage({ members: [{ id: 'k', name: '測', sex: 'm', birth: '1984-03-15', h: 172, w: 73, act: '1.375', goal: 'auto' }], active: 'k' });
+    await page.click('#nav button[data-v="body"]'); await page.click('#v-body [data-addlab]'); await page.waitForTimeout(400); await page.click('details.box.ai > summary');
+    const note = '無明顯肺結節，肺癌篩檢分數(Lung-RADS)1級，建議定期追蹤。雙側肺尖肋膜增厚，建議胸腔科門診追蹤。冠狀動脈鈣化，建議心臟科門診追蹤。';
+    await page.fill('#ai-in', JSON.stringify({ type: 'nutricore.lab', v: 1, date: '2025-09-01', hospital: '臺安醫院', items: { ldct: { value: 'Lung-RADS 1（陰性）', note } }, extra: [] }));
+    await page.click('#ai-go'); await page.waitForTimeout(200); await page.click('#lSave'); await page.waitForTimeout(500);
+    const ct = await page.evaluate(() => { const m = me(), L = labsOf(m)[0], ev = labEval(L, m), P = yearPlan(m).items, N = nutriPlan(m), F = fitPlan(m), R = rotation(m);
+      return { ref: L.items.ldct.ref, ev: ev.map(i => `${i.k}:${i.lv}${i.dept ? '@' + i.dept : ''}`).join(), rv: (revOf('img_cac') || [])[0], plan: P.filter(o => o.pr <= 2).map(o => `${o.pr}${o.t}`).join('｜'),
+        nutri: N.F.map(f => f.t).join(), heart: dietMode(m).heart, fit: F.W.map(x => x.t).join('／'), rot: R.never.map(o => o.k + ':' + o.why.slice(0, 10)).join(), detail: (openLabDetail(L.id), $('#sheetBody').textContent) } });
+    check('LDCT 醫師總評整段保留（不再截在 60 字）', /冠狀動脈鈣化，建議心臟科門診追蹤/.test(ct.ref), ct.ref.slice(-24));
+    check('Lung-RADS 1 正常，但附帶發現要判讀：冠狀動脈鈣化 → 異常（心臟內科）、肋膜增厚 → 注意（胸腔內科）', ct.ev === 'img_pleura:1@胸腔內科,img_cac:2@心臟內科', ct.ev);
+    check('冠狀動脈鈣化：標長期、今年健檢優先看心臟內科、營養師加「降壞膽固醇」與護心、運動提醒高強度前先問心臟科、不用再為了有沒有鈣化去照', ct.rv === 'perm' && /1心臟內科：冠狀動脈有鈣化/.test(ct.plan) && /2胸腔內科：影像附帶發現追蹤/.test(ct.plan) && /降壞膽固醇/.test(ct.nutri) && ct.heart && /冠狀動脈有鈣化/.test(ct.fit) && /cac:影像已看到/.test(ct.rot), `${ct.plan}｜${ct.rot}`);
+    check('體檢分析頁看得到兩個附帶發現與報告原句', /冠狀動脈鈣化/.test(ct.detail) && /肋膜增厚/.test(ct.detail) && /LDCT附帶發現/.test(ct.detail), '');
+    const alt = await page.evaluate(() => { const m = me(), E = rec => labEval(rec, m).map(i => `${i.k}:${i.lv}`).join();
+      return { neg: E({ items: { ldct: { v: 'Lung-RADS 1（陰性）', ref: '原文：未見明顯冠狀動脈鈣化，無肋膜增厚' } }, extra: [] }),
+        extra: E({ items: {}, extra: [{ name: '冠狀動脈鈣化', value: '有，建議心臟科門診追蹤' }] }),
+        score: E({ items: { cac: { v: 35 }, ldct: { v: 'Lung-RADS 1（陰性）', ref: '原文：冠狀動脈鈣化' } }, extra: [] }),
+        cxrOpt: E({ items: { cxr: { v: '輕微變化（如主動脈鈣化、陳舊病灶）' } }, extra: [] }),
+        cxrOk: E({ items: { cxr: { v: '輕微變化（如主動脈鈣化、陳舊病灶）', ref: '原文：肺部無明顯異常，主動脈弓鈣化' } }, extra: [] }) } });
+    check('否定句（未見冠狀動脈鈣化、無肋膜增厚）不算；寫在其他項目也會對到、不重複；有鈣化分數時以分數為準', alt.neg === '' && alt.extra === 'img_cac:2' && alt.score === 'cac:1', JSON.stringify(alt));
+    check('胸部 X 光：選項名稱裡的「如主動脈鈣化」不算發現；X 光判正常但原文有主動脈弓鈣化 → 另外標注意', alt.cxrOpt === 'cxr:1' && alt.cxrOk === 'img_aorta:1', `${alt.cxrOpt}｜${alt.cxrOk}`);
+    await page.evaluate(() => closeSheet()); await page.click('#v-body [data-addlab]'); await page.waitForTimeout(400); await page.click('details.box.ai > summary');
+    await page.fill('#ai-in', JSON.stringify({ type: 'nutricore.lab', v: 1, date: '2025-09-01', items: { cac: { value: '輕度鈣化' } } }));
+    await page.click('#ai-go'); await page.waitForTimeout(200);
+    const tx = await page.evaluate(() => ({ cac: $('#l-cac').value, ex: lExtra.map(e => `${e.name}=${e.value}`).join() }));
+    check('數值項目讀到文字（冠狀動脈鈣化分數：輕度鈣化）→ 放進其他項目，不會默默丟掉', tx.cac === '' && /輕度鈣化/.test(tx.ex), JSON.stringify(tx));
+    // 多頁報告分次匯入：第二次匯入不會清掉第一次的數值
+    await page.fill('#ai-in', JSON.stringify({ type: 'nutricore.lab', v: 1, date: '2025-09-01', items: { glu: { value: 105 } } })); await page.click('#ai-go'); await page.waitForTimeout(150);
+    await page.fill('#ai-in', JSON.stringify({ type: 'nutricore.lab', v: 1, date: '2025-09-01', items: { ldct: { value: 'Lung-RADS 1（陰性）', note: '冠狀動脈鈣化，建議心臟科門診追蹤。' } } })); await page.click('#ai-go'); await page.waitForTimeout(150);
+    const mg2 = await page.evaluate(() => ({ glu: $('#l-glu').value, ldct: $('#l-ldct').value, rt: $('#lr-ldct').value, ex: lExtra.length }));
+    check('多頁報告分次匯入：第二頁不會清掉第一頁（血糖還在）、影像原文顯示在「報告原文」欄、其他項目保留', mg2.glu === '105' && /Lung-RADS 1/.test(mg2.ldct) && /冠狀動脈鈣化/.test(mg2.rt) && mg2.ex === 1, JSON.stringify(mg2));
+    await page.evaluate(() => closeSheet());
+    // 舊版匯入（原文被截在 63 字）→ 分析頁提示；在「報告原文」貼上完整總評 → 判讀到冠狀動脈鈣化
+    await page.evaluate(n => { const m = me(); (LABS[m.id] = LABS[m.id] || []).push({ id: 'old', t: '2025-09-01', hospital: '舊', items: { glu: { v: 92 }, ldct: { v: 'Lung-RADS 1（陰性）', ref: ('原文：醫師總評：' + n).slice(0, 63) } }, extra: [] }); S.set('labs', LABS); renderAll(); openLabDetail('old') }, note);   // 舊版截斷剛好切在「冠狀」
+    const hint = await page.evaluate(() => ({ hint: /原文可能被截斷/.test($('#sheetBody').textContent), cac: labEval(labsOf(me()).find(r => r.id === 'old'), me()).some(i => i.k === 'img_cac') }));
+    await page.click('#ld-edit'); await page.waitForTimeout(300); await page.fill('#lr-ldct', note); await page.click('#lSave'); await page.waitForTimeout(400);
+    const fixed = await page.evaluate(() => { const r = labsOf(me()).find(x => x.id === 'old'); return { glu: r.items.glu?.v, ev: labEval(r, me()).map(i => i.k).join() } });
+    check('舊版匯入原文被截斷 → 分析頁提示；編輯時在「報告原文」貼上完整總評 → 判讀到冠狀動脈鈣化，其他數值不受影響', hint.hint && !hint.cac && fixed.glu == 92 && /img_cac/.test(fixed.ev) && /img_pleura/.test(fixed.ev), JSON.stringify({ ...hint, ...fixed }));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
