@@ -516,6 +516,31 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6l. 醫院健檢手冊對照：幽門桿菌抗體、腫瘤標記跨醫院、eGFR 每年下降、新增項目 ===============
+  {
+    page = await newPage({ members: [{ id: 'h', name: '測', sex: 'm', birth: '1984-03-15', h: 172, w: 73, act: '1.375', goal: 'auto' }], active: 'h' });
+    await page.click('#nav button[data-v="body"]'); await page.click('#v-body [data-addlab]'); await page.waitForTimeout(400); await page.click('details.box.ai > summary');
+    await page.fill('#ai-in', JSON.stringify({ type: 'nutricore.lab', v: 1, date: '2026-09-14', items: { '幽門螺旋桿菌抗體(H.pylori Ab)': { value: '陽性' }, 'β-HCG': { value: 1.2, unit: 'mIU/mL' }, 'CK-MB': { value: 18, unit: 'U/L' }, 'CPK肌酸磷化酶': { value: 150, unit: 'U/L' } } }));
+    await page.click('#ai-go'); await page.waitForTimeout(200);
+    const hf = await page.evaluate(() => ({ hpab: $('#l-hpab').value, hp: $('#l-hp').value, bhcg: $('#l-bhcg').value, ckmb: $('#l-ckmb').value, ck: $('#l-ck').value }));
+    await page.click('#lSave'); await page.waitForTimeout(400);
+    const hpr = await page.evaluate(() => { const m = me(), L = labsOf(m)[0], P = yearPlan(m).items.map(o => o.t).join('｜');
+      const L2 = { items: { hp: { v: '陽性' } }, extra: [] }; return { ev: labEval(L, m).map(i => `${i.k}:${i.lv}`).join(), plan: P, hpOnly: labEval(L2, m).map(i => `${i.k}:${i.lv}`).join() } });
+    check('幽門桿菌「抗體」對到抗體項目（不是現在感染）：判注意、建議先用碳 13 呼氣或糞便抗原確認，不直接叫你除菌；呼氣／糞便抗原陽性才判異常', hf.hpab === '陽性' && hf.hp === '' && hpr.ev === 'hpab:1' && /碳 13 呼氣試驗或糞便抗原確認/.test(hpr.plan) && !/除菌治療/.test(hpr.plan) && hpr.hpOnly === 'hp:2', JSON.stringify({ hf, ev: hpr.ev }));
+    check('手冊上的項目都對得到：β-HCG、CK-MB、CPK 肌酸磷化酶', hf.bhcg === '1.2' && hf.ckmb === '18' && hf.ck === '150', JSON.stringify(hf));
+    const cm = await page.evaluate(() => { const m = me(), Y = '2026';
+      const mk = (a, b) => { LABS[m.id] = [{ id: 'a', t: '2024-09-01', hospital: a, items: { cea: { v: 3.0 }, egfr: { v: 110 } }, extra: [] }, { id: 'b', t: '2026-09-01', hospital: b, items: { cea: { v: 4.8 }, egfr: { v: 92 } }, extra: [] }]; const c = cmpData(m), R = k => c.rows.find(r => r.k === k); return { cea: `${R('cea').vd}|${R('cea').why}`, egfr: `${R('egfr').vd}|${R('egfr').why}` } };
+      const diff = mk('甲醫院', '乙醫院'), same = mk('甲醫院', '甲醫院');
+      LABS[m.id] = [{ id: 'a', t: '2023-09-01', hospital: '甲', items: { egfr: { v: 98 } }, extra: [] }, { id: 'b', t: '2026-09-01', hospital: '甲', items: { egfr: { v: 95 } }, extra: [] }];
+      const slow = cmpData(m).rows.find(r => r.k === 'egfr').vd;
+      return { diff, same, slow, bp: LABK.sbp.hi } });
+    check('腫瘤標記：不同醫院（試劑）數值不能比 → 不標變差趨勢；同一家醫院接近門檻才標', /^flat\|不同醫院（試劑）/.test(cm.diff.cea) && /^trend/.test(cm.same.cea), `${cm.diff.cea}｜${cm.same.cea}`);
+    check('eGFR 兩年 110 → 92（每年降 9）標變差趨勢並建議複驗；三年只降 3（每年 1）屬正常老化', /^trend\|每年下降約 9/.test(cm.same.egfr) && /同一家醫院/.test(cm.diff.egfr) && cm.slow === 'flat', `${cm.same.egfr}｜${cm.slow}`);
+    const tx = await page.evaluate(() => [txtAbn('子宮肌瘤 2 公分'), txtAbn('卵巢囊腫'), txtAbn('無結石'), txtAbn('膽結石')].map(Number).join(''));
+    check('文字判讀補上子宮肌瘤、結石；血壓說明提到舊標準 140/90（醫院手冊）', tx === '1101' && /舊標準是 140\/90/.test(cm.bp), tx);
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
