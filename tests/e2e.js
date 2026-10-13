@@ -570,6 +570,20 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6n. 運動紀錄加進飲食熱量（只補超過活動量的淨消耗；減脂補一半） ===============
+  {
+    page = await newPage({ members: [{ id: 'q', name: '測', sex: 'm', birth: '1984-03-15', h: 172, w: 70, act: '1.375', goal: 'cut' }], active: 'q' });
+    const r = await page.evaluate(() => { const m = me(), d = ymd(new Date()), c = calc(m), add = rs => { EXLOG[m.id] = rs.map((x, i) => ({ id: 'x' + i, d, ...x })); S.set('exlog', EXLOG); return exBonus(m, d) };
+      const b0 = plan(d, m).tgt, cut = add([{ k: 'swim', min: 60, int: 'mod' }]), p1 = plan(d, m), K = s => s.slots.reduce((t, sl) => t + sl.t.reduce((a, x) => a + x.k, 0) * sl.x, 0);
+      renderAll(); const menu = $('#menuSum').textContent, dash = $('#energyCard').textContent;
+      const small = add([{ k: 'walk', min: 15, int: 'easy' }]); m.goal = 'keep'; const keep = add([{ k: 'swim', min: 60, int: 'mod' }]); m.act = '1.2'; const sit = add([{ k: 'swim', min: 60, int: 'mod' }]); m.act = '1.375'; m.goal = 'cut';
+      const other = exBonus(m, addDays(d, -1));
+      return { target: Math.round(c.target), b0: Math.round(b0), cut, tgt: Math.round(p1.tgt), kMore: K(p1) >= K(plan(addDays(d, 1), m)), menu: /可多吃約 150 kcal/.test(menu) && /減脂只補回一半/.test(menu), dash: /今天運動後可多吃約 150 kcal/.test(dash), small: `${small.add}|${exBonusTxt(small, c).includes('不用多吃')}`, keep: keep.add, sit: sit.add, other: other.add } });
+    check('游泳 60 分（中等，MET 6）：淨消耗 368、扣掉輕度活動量已算的 61 → 減脂補一半 = 今天可多吃 150 kcal，菜單目標與份量跟著加，總覽和飲食頁都有說明', r.cut.net === 368 && r.cut.base === 61 && r.cut.add === 150 && r.tgt === r.target + 150 && r.b0 === r.target && r.kMore && r.menu && r.dash, JSON.stringify({ ...r, cut: [r.cut.net, r.cut.base, r.cut.add] }));
+    check('散步 15 分（輕鬆）在活動量內 → 不用多吃；維持目標補 75%（230）、久坐活動量全部算超出（280）；只影響當天', r.small === '0|true' && r.keep === 230 && r.sit === 280 && r.other === 0, JSON.stringify(r));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);

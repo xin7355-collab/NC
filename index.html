@@ -1812,6 +1812,7 @@ function renderEnergy(m,c){
     <div class="sub" style="margin:-20px 0 6px">每日消耗 TDEE <b style="color:var(--text)">${tdee}</b> kcal ＝ 基礎代謝 ${bmr} ＋ 活動 ${tdee-bmr}</div>
     <div class="stg">${row('🍽',eat[0],eat[1])}
     ${row('🛑',`底線：每天別低於 BMR ${bmr} kcal`,'BMR 是躺著不動也要燒掉的熱量（心跳、呼吸、體溫）。長期吃得比它少，會先掉肌肉、代謝變慢，停下來更容易復胖')}
+    ${(()=>{const b=exBonus(m,ymd(new Date()));return b.min?row('🏃',b.add?`今天運動後可多吃約 ${b.add} kcal（今天目標 ${tg+b.add}）`:'今天的運動已算在每日消耗裡',exBonusTxt(b,c)):''})()}
     ${row('🚶','想多吃一點？提高 TDEE',`TDEE ＝ BMR × ${esc(m.act||'1.375')}（${esc(act)}）。每天多快走 30 分鐘 ≈ +${w30} kcal，一個月 ≈ ${(w30*30/7700).toFixed(1)} kg 脂肪；搭電梯改走樓梯、站著講電話都算 <button class="btn sm ghost" data-go="fit" style="margin-top:6px">看我的運動課表 ›</button>`)}
     ${row('💪','提高 BMR 只有一招：增加肌肉',`每週 2–3 次肌力訓練＋每天蛋白質 ${Math.round(c.prot)} g（每餐一個手掌大的魚、肉、蛋或豆腐）。肌肉多了，血糖更穩、比較不會復胖`)}
     ${row('⚖️','用體重校正數字','公式誤差約 ±10%。照這個熱量吃 2–3 週：體重沒動就再少 100–200 kcal；每週掉超過 1 kg 就加回 100–200 kcal')}</div>
@@ -1863,6 +1864,7 @@ function exlogCard(m,P){const mon=mondayOf(ymd(new Date())),W=exWeek(m,mon),pw=e
     <div class="bar" style="margin-top:10px"><i style="width:${pct}%;background:linear-gradient(90deg,#22e4ff,#b6ff3c)"></i></div>
     ${W.L.length?W.L.map(r=>`<div class="rec"><span style="font-size:22px">${EX[r.k]?.e||'🏅'}</span><div class="m"><b>${esc(EX[r.k]?.n||r.note||'其他運動')} ${r.min} 分鐘</b><small>${mdT(r.d)}・${(INT.find(x=>x[0]===r.int)||INT[1])[1]}・約 ${r.kcal||0} kcal${r.note&&EX[r.k]?'・'+esc(r.note):''}</small></div><button class="x" data-exrm="${esc(r.id)}" aria-label="刪除這筆">✕</button></div>`).join('')
       :'<div class="empty" style="padding:10px 0">這週還沒有紀錄</div>'}
+    ${(()=>{const b=exBonus(m,ymd(new Date()));return b.min?`<div class="hl" style="margin-top:10px">🍽 ${exBonusTxt(b,P.c)} <button class="btn sm ghost" data-go="menu" style="margin-top:6px">看今天菜單 ›</button></div>`:''})()}
     <button class="btn ghost" data-exlog="1" style="margin-top:8px">＋ 手動記錄運動</button>
     <p class="note">「輕鬆」強度（散步、伸展）會記下來，但不算進每週 150 分鐘；中等＝微喘還能說完整句子。</p></div>`}
 function openExLog(pre){const m=me(),o={d:ymd(new Date()),k:'walk',min:30,int:'mod',note:'',...(pre||{})};
@@ -1882,8 +1884,17 @@ function openExLog(pre){const m=me(),o={d:ymd(new Date()),k:'walk',min:30,int:'m
   $('#xl-save').onclick=()=>{const d=$('#xl-d').value,mn=num($('#xl-min').value);
     if(!parseYMD(d)||d>ymd(new Date()))return toast('請選今天或以前的日期');if(!(mn>=1&&mn<=600))return toast('時間請填 1–600 分鐘');
     const r={id:uid(),d,k:st.k,min:Math.round(mn),int:st.int,note:$('#xl-note').value.trim().slice(0,30)};r.kcal=exKcal(r,calc(m).w);
-    (EXLOG[m.id]=EXLOG[m.id]||[]).push(r);if(!S.set('exlog',EXLOG))return;closeSheet();renderFit();toast(`已記錄：${EX[r.k]?.n||r.note||'其他運動'} ${r.min} 分鐘`)}}
-function delExLog(id){const m=me();EXLOG[m.id]=(EXLOG[m.id]||[]).filter(r=>r.id!==id);S.set('exlog',EXLOG);renderFit();toast('已刪除這筆紀錄')}
+    (EXLOG[m.id]=EXLOG[m.id]||[]).push(r);if(!S.set('exlog',EXLOG))return;closeSheet();renderAll();toast(`已記錄：${EX[r.k]?.n||r.note||'其他運動'} ${r.min} 分鐘`)}}
+// 運動加進飲食熱量：TDEE 已經用「活動量」算進一部分運動（輕度≈每天 15 分、中度≈30 分、高度≈50 分、極高≈70 分快走），只補回超過的部分；
+// 只算淨消耗（扣掉本來就會燒的基礎代謝 1 MET）；運動估算常偏高 → 減脂補一半、維持補 75%、增肌全補
+const ACT_MIN={'1.2':0,'1.375':15,'1.55':30,'1.725':50,'1.9':70};
+function exBonus(m,d){const c=calc(m),L=exlogOf(m).filter(r=>r.d===d);if(!L.length)return{min:0,gross:0,net:0,base:0,extra:0,add:0,eat:0,L};
+  const net=Math.round(L.reduce((t,r)=>{const e=EX[r.k],f=(INT.find(x=>x[0]===r.int)||INT[1])[2];return t+metK(Math.max(0,(e?e.met:4)*f-1),c.w,r.min)},0));
+  const base=Math.round(metK(3.3,c.w,ACT_MIN[String(m.act)]??15)),extra=Math.max(0,net-base),eat=c.kid?1:{cut:.5,keep:.75,bulk:1}[c.goal]??.75;
+  return{min:L.reduce((t,r)=>t+r.min,0),gross:L.reduce((t,r)=>t+(r.kcal||0),0),net,base,extra,eat,add:Math.min(800,Math.round(extra*eat/10)*10),L}}
+const exBonusTxt=(b,c)=>b.add?`今天記錄運動 ${b.min} 分鐘，淨消耗約 ${b.net} kcal；扣掉活動量已算進的 ${b.base} kcal，今天可多吃約 <b>${b.add} kcal</b>${c.goal==='cut'?'（減脂只補回一半，熱量缺口才會在）':''}，多補的以全穀、地瓜等碳水為主（運動後補充最有效）`
+  :b.min?`今天記錄運動 ${b.min} 分鐘（淨消耗約 ${b.net} kcal），還在你設定的活動量內、已經算在每日消耗裡，不用多吃`:'';
+function delExLog(id){const m=me();EXLOG[m.id]=(EXLOG[m.id]||[]).filter(r=>r.id!==id);S.set('exlog',EXLOG);renderAll();toast('已刪除這筆紀錄')}
 const cleanExLog=r=>{const o={id:r.id,d:r.d,k:EX[r.k]||r.k==='other'?r.k:'other',min:Math.min(600,Math.max(1,Math.round(num(r.min)||0))),int:INT.some(x=>x[0]===r.int)?r.int:'mod'};
   if(typeof r.note==='string'&&r.note.trim())o.note=r.note.trim().slice(0,30);const k=num(r.kcal);if(k!=null&&k>=0&&k<5000)o.kcal=Math.round(k);return o};
 
@@ -1916,7 +1927,7 @@ function openTimer(di){
     try{lock=await navigator.wakeLock?.request('screen')}catch(e){}paint()};
   $('#tmMetro').onclick=()=>{metro=!metro;$('#tmMetro').textContent=`${metro?'🔊':'🔈'} 節拍器 ${bpm}`;clearInterval(beat);beat=null;if(metro&&run){audio();beat=setInterval(sched,25)}paint()};
   $('#tmLog').onclick=()=>{const m=me(),d=ymd(new Date());for(const y of segs){const r={id:uid(),d,k:y.k,min:y.min,int:EX[y.k].t==='f'?'easy':'mod',note:''};r.kcal=exKcal(r,calc(m).w);(EXLOG[m.id]=EXLOG[m.id]||[]).push(r)}
-    if(!S.set('exlog',EXLOG))return;closeSheet();renderFit();toast('已記錄今天的運動 👏')};
+    if(!S.set('exlog',EXLOG))return;closeSheet();renderAll();toast('已記錄今天的運動 👏')};
   onSheetClose=()=>{stopAll();try{ac?.close()}catch(e){}ac=null};paint();
 }
 /* ---- 行事曆提醒：每週固定時間的重複事件（.ics），提前 10 分鐘通知；時間用手機當地時間 ---- */
@@ -2632,7 +2643,7 @@ const TAGN={hc:'精緻澱粉',oil:'油炸重油',salt:'重鹹湯麵',pur:'高普
 // 依營養師重點評分挑菜：避開的標籤 −3、偏好 +1、蛋白質密度加減分＋每週不同的亂數；
 // 每週取分數最高的一批（午晚餐 14、早餐 7、蔬菜 14、點心 7）輪流排，一週內不重複、每週換一批
 function plan(dateStr,m=me()){
-  const n=nutriPlan(m),c=n.c,hp=c.goal!=='keep'||c.a>=65,dt=dietOf(m),wk=mondayOf(dateStr),di=Math.round(dayDiff(dateStr,wk));
+  const n=nutriPlan(m),c=n.c,hp=c.goal!=='keep'||c.a>=65,dt=dietOf(m),wk=mondayOf(dateStr),di=Math.round(dayDiff(dateStr,wk)),xb=exBonus(m,dateStr),tgt=c.target+xb.add;
   const score=f=>{let v=0;for(const x of f.x){if(n.avd.has(x))v-=3;if(n.pref.has(x))v+=1}if(hp&&!c.mode.kidney)v+=(f.p*4/f.k-.2)*4;if(c.goal==='cut'&&f.m==='ld'&&f.k<=560)v+=.5;return v};
   const pool=(t,K)=>FOODS.filter(f=>f.m===t&&okFood(f,dt)).map(f=>({f,v:score(f)+hash(wk+f.id)%1000/1000*1.5})).sort((x,y)=>y.v-x.v).slice(0,K).map(x=>x.f);
   const LD=pool('ld',14),V=pool('v',14),B=pool('b',7),SN=pool('s',7),at=(L,i)=>L.length?L[i%L.length]:null;
@@ -2643,9 +2654,9 @@ function plan(dateStr,m=me()){
     if(n.avd.has('salt')&&f.x.includes('salt'))a.push('湯不喝完');if(n.avd.has('pur')&&f.x.includes('pur'))a.push('湯底不喝');if(n.avd.has('oil')&&f.x.includes('oil'))a.push('少油');
     return{f,k,p:f.p,c:cb,fa:f.f,a}};
   const slots=[{n:'早餐',share:.25,items:[top('b')]},{n:'午餐',share:.35,items:[lunch,v1]},{n:'晚餐',share:.30,items:[dinner,v2]},{n:'點心',share:.10,items:[top('s')]}].map(sl=>({...sl,items:sl.items.filter(Boolean)})).filter(sl=>sl.items.length).map(sl=>({...sl,t:sl.items.map(tune)}));
-  slots.forEach(sl=>{const base=sl.t.reduce((a,x)=>a+x.k,0);sl.x=Math.min(1.75,Math.max(.5,Math.round(c.target*sl.share/base*4)/4));
+  slots.forEach(sl=>{const base=sl.t.reduce((a,x)=>a+x.k,0);sl.x=Math.min(1.75,Math.max(.5,Math.round(tgt*sl.share/base*4)/4));
     sl.adj=[...new Set(sl.t.flatMap(x=>x.a))];if(n.lowC&&sl.items.length>1)sl.adj.unshift('先吃菜再吃飯')});
-  return{slots,c,n};
+  return{slots,c,n,xb,tgt};
 }
 let curDate=ymd(new Date()),TODAY=curDate;
 function renderDays(){
@@ -2655,14 +2666,14 @@ function renderDays(){
     b.innerHTML=`${i===0?'今天':'週'+wk[d.getDay()]}<b>${d.getDate()}</b>`;b.onclick=()=>{curDate=s;renderDays();renderMenu()};box.appendChild(b)}
 }
 function renderMenu(){
-  const{slots,c,n}=plan(curDate);let K=0,Pp=0,C=0,F=0;
+  const{slots,c,n,xb,tgt}=plan(curDate),xc=xb.add*.7/4,xf=xb.add*.3/9;let K=0,Pp=0,C=0,F=0;
   $('#menuTitle').textContent=(curDate===ymd(new Date())?'今日菜單':curDate+' 菜單')+'・'+me().name;
   $('#menuMode').innerHTML=[...n.avd].map(t=>`<span class="tg warn">避開${TAGN[t]||t}</span>`).concat([...n.pref].filter(t=>!n.avd.has(t)).map(t=>`<span class="tg">多吃${TAGN[t]||t}</span>`)).join('');
   $('#meals').innerHTML=slots.map(s=>{const k=s.t.reduce((a,x)=>a+x.k,0)*s.x;K+=k;s.t.forEach(x=>{Pp+=x.p*s.x;C+=x.c*s.x;F+=x.fa*s.x});
     return `<div class="meal" data-meal="${slots.indexOf(s)}" role="button"><div class="thumb">${thumb(s.items[0])}</div><div style="flex:1;min-width:0"><div class="slot">${s.n} · ×${s.x} 份</div><div class="t">${s.items.map(f=>f.n).join(' ＋ ')}</div><div class="s">${Math.round(k)} kcal · 蛋白 ${Math.round(s.t.reduce((a,x)=>a+x.p,0)*s.x)}g</div>${s.adj.length?`<div class="adj">${s.adj.map(a=>`<i>${esc(a)}</i>`).join('')}</div>`:''}</div><span class="chev" style="align-self:center">›</span></div>`}).join('')||'<div class="empty">沒有符合的菜色，請到「我的 → 編輯 → 不吃的食物」放寬設定</div>';
   const line=(nm,v,t,col)=>`<div class="row"><span>${nm}</span><span>${Math.round(v)} / ${Math.round(t)}</span></div><div class="bar"><i style="width:${Math.min(100,v/t*100)}%;background:${col}"></i></div>`;
   const gap=Math.round(c.prot-Pp);
-  $('#menuSum').innerHTML=line('熱量 kcal',K,c.target,'linear-gradient(90deg,var(--cyan),var(--lime))')+line('蛋白質 g',Pp,c.prot,'var(--cyan)')+line('碳水 g',C,c.carb,'var(--lime)')+line('脂肪 g',F,c.fat,'var(--pink)')+
+  $('#menuSum').innerHTML=(xb.min?`<div class="hl" style="margin-bottom:10px">🏃 ${exBonusTxt(xb,c)}</div>`:'')+line('熱量 kcal',K,tgt,'linear-gradient(90deg,var(--cyan),var(--lime))')+line('蛋白質 g',Pp,c.prot,'var(--cyan)')+line('碳水 g',C,c.carb+xc,'var(--lime)')+line('脂肪 g',F,c.fat+xf,'var(--pink)')+
     (gap>10&&!c.mode.kidney?`<div class="hl" style="margin-top:12px">🥚 蛋白質還差約 ${gap} g：加 ${Math.ceil(gap/7)} 顆蛋，或一杯無糖豆漿（約 10 g）＋一盒板豆腐（約 15 g）</div>`:'')+
     '<p class="note">點一餐可看食材、移除不要的菜。每位家人依自己的體檢、目標和不吃的食材排菜（同一天會盡量排一樣的菜，方便一起煮），份量以 0.25 份為單位。</p>';
 }
