@@ -444,15 +444,18 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       watch: { w: [{ id: 'w0', t: '2026-09-01', rhr: 70, steps: 8000 }], x: [{ id: 'x0', t: '2026-09-01', rhr: 60 }] } });
     const ev = await page.evaluate(() => { const m = me(), E = r => watchEval(r, m).map(i => `${i.k}:${i.lv}${i.dept ? '@' + i.dept : ''}`).join();
       return { a: E({ rhr: 91, hrv: 18, spo2: 93, sleep: 5.6, steps: 3500, exmin: 12, vo2: 33.1, resp: 16, sbp: 136, dbp: 84 }), b: E({ rhr: 105, spo2: 89, sleep: 4.8, vo2: 44, afib: true }), c: E({ rhr: 42, sleep: 7.5, steps: 9000, exmin: 30, vo2: 44 }),
-        bp: watchEval({ sbp: 136, dbp: 84 }, m)[0]?.val, s5: watchEval({ sleep: 4.8 }, m)[0]?.msg, cat: [vo2Cat(33.1, 42, 'm'), vo2Cat(44, 42, 'm'), vo2Cat(30, 55, 'f')] } });
+        bp: watchEval({ sbp: 136, dbp: 84 }, m)[0]?.val, s5: watchEval({ sleep: 4.8 }, m)[0]?.msg, cat: [vo2Cat(33.1, 42, 'm'), vo2Cat(44, 42, 'm'), vo2Cat(30, 55, 'f')],
+        st: [E({ stress: 33, rhr: 63, sleep: 6.9 }), E({ stress: 55 })], pw: promptWatch() } });
     check('手錶判讀：心率 91、HRV 18、血氧 93、睡 5.6 h、3500 步、運動不足、VO₂max 差、手錶血壓 136/84 都標注意', ev.a === 'w_rhr:1,w_hrv:1,w_spo2:1,w_sleep:1,w_steps:1,w_exmin:1,w_vo2:1,w_bp:1' && ev.bp === '136/84', ev.a);
     check('靜止心率 >100、血氧 <90、心律不整 → 異常並建議心臟內科／胸腔科；VO₂max 44（42 歲男）良好不提醒；睡不到 5 小時加重提醒', /w_rhr:2@心臟內科/.test(ev.b) && /w_spo2:2@胸腔內科/.test(ev.b) && /w_afib:2@心臟內科/.test(ev.b) && !/w_vo2/.test(ev.b) && /5 小時/.test(ev.s5), ev.b);
     check('心率 42 只提醒（運動員常見、不叫你掛號）；VO₂max 分級（42 歲男）：33.1 差、44 優秀；55 歲女性 30 良好', ev.c === 'w_rhr:1' && ev.cat.join() === '1,4,3', `${ev.c}｜${ev.cat}`);
+    check('平均壓力：33（小米截圖）＋安靜心率 63＋睡 6.9 小時都不提醒；平均 ≥50 提醒', ev.st[0] === '' && ev.st[1] === 'w_stress:1', JSON.stringify(ev.st));
+    check('手錶提示詞：靜止心率要用「安靜心率」不是平均心率；心率區間加總燃脂以上當運動時間；睡眠分數、深淺睡比例不用填', /安靜心率/.test(ev.pw) && /不要填平均心率/.test(ev.pw) && /燃脂＋有氧＋無氧＋極限，不含熱身/.test(ev.pw) && /不用填：睡眠分數、睡眠結構/.test(ev.pw) && /"stress":null/.test(ev.pw), '');
     await page.click('#nav button[data-v="body"]'); await page.click('#v-body [data-addwatch]'); await page.waitForTimeout(400); await page.click('details.box.ai > summary');
-    await page.fill('#ai-in', '```json\n' + JSON.stringify({ type: 'nutricore.watch', v: 1, date: '115/10/12', device: 'Apple Watch', rhr: 91, hrv: 18, spo2: 0.93, sleep: 5.6, steps: 3500, exmin: null, vo2: 33.1, resp: null, kcal: 380, sbp: null, dbp: null, afib: true }) + '\n```');
+    await page.fill('#ai-in', '```json\n' + JSON.stringify({ type: 'nutricore.watch', v: 1, date: '115/10/12', device: 'Apple Watch', rhr: 91, hrv: 18, stress: 33, spo2: 0.93, sleep: 5.6, steps: 3500, exmin: null, vo2: 33.1, resp: null, kcal: 380, sbp: null, dbp: null, afib: true }) + '\n```');
     await page.click('#ai-go'); await page.waitForTimeout(200);
-    const fw = await page.evaluate(() => ({ msg: $('#ai-msg').textContent, t: $('#w-t').value, o2: $('#w-spo2').value, af: $('#w-afib').classList.contains('on'), dev: $('#w-device').value }));
-    check('手錶 AI 匯入：民國年日期、血氧 0.93 → 93、心律不整勾選、裝置名稱', fw.t === '2026-10-12' && fw.o2 === '93' && fw.af && fw.dev === 'Apple Watch' && /已填入 8 項/.test(fw.msg), JSON.stringify(fw));
+    const fw = await page.evaluate(() => ({ msg: $('#ai-msg').textContent, t: $('#w-t').value, o2: $('#w-spo2').value, st: $('#w-stress').value, af: $('#w-afib').classList.contains('on'), dev: $('#w-device').value }));
+    check('手錶 AI 匯入：民國年日期、血氧 0.93 → 93、平均壓力、心律不整勾選、裝置名稱', fw.t === '2026-10-12' && fw.o2 === '93' && fw.st === '33' && fw.af && fw.dev === 'Apple Watch' && /已填入 9 項/.test(fw.msg), JSON.stringify(fw));
     await page.click('#wSave'); await page.waitForTimeout(500);
     const after = await page.evaluate(() => { closeSheet(); const m = me(), P = fitPlan(m);
       return { recs: watchOf(m).length, issue: [...document.querySelectorAll('#issueList .issue')].some(e => /手錶/.test(e.textContent) && /心律不整提醒/.test(e.textContent)), dept: /心臟內科/.test($('#deptList').textContent),

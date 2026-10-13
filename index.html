@@ -1042,7 +1042,7 @@ const URG=['','生活調整，3–6 個月後複檢','建議 1 個月內門診�
 function deptPlan(iss){const mp={};for(const i of iss){if(!i.dept)continue;const d=mp[i.dept]||(mp[i.dept]={lv:0,items:[]});d.lv=Math.max(d.lv,i.lv);if(!d.items.includes(i.name))d.items.push(i.name)}
   return Object.entries(mp).sort((a,b)=>b[1].lv-a[1].lv).map(([d,o])=>({d,...o,when:URG[o.lv]}))}
 /* ===== 手錶（近 7 天平均）：光學感測只能參考，看自己的趨勢；異常只提醒、不列入體檢分數 ===== */
-const WF=[{k:'rhr',n:'靜止心率',u:'bpm',min:25,max:200},{k:'hrv',n:'心率變異 HRV',u:'ms',min:3,max:300},{k:'spo2',n:'血氧',u:'%',min:70,max:100},{k:'sleep',n:'睡眠',u:'小時',min:0,max:16},
+const WF=[{k:'rhr',n:'靜止心率',u:'bpm',min:25,max:200},{k:'hrv',n:'心率變異 HRV',u:'ms',min:3,max:300},{k:'stress',n:'平均壓力',u:'/100',min:0,max:100},{k:'spo2',n:'血氧',u:'%',min:70,max:100},{k:'sleep',n:'睡眠',u:'小時',min:0,max:16},
   {k:'steps',n:'步數',u:'步／天',min:0,max:80000},{k:'exmin',n:'運動時間',u:'分鐘／天',min:0,max:600},{k:'vo2',n:'最大攝氧量 VO₂max',u:'ml/kg/min',min:10,max:90},{k:'resp',n:'睡眠呼吸速率',u:'次／分',min:5,max:40},
   {k:'kcal',n:'活動消耗',u:'kcal／天',min:0,max:6000},{k:'sbp',n:'收縮壓（手錶）',u:'mmHg',min:60,max:260},{k:'dbp',n:'舒張壓（手錶）',u:'mmHg',min:30,max:160}];
 const WFN=Object.fromEntries(WF.map(f=>[f.k,f]));
@@ -1057,6 +1057,8 @@ function watchEval(r,m){const a=ageOf(m),out=[],v=k=>num(r?.[k]);if(!r)return ou
   if(hr!=null){if(hr>100)P('rhr',2,'靜止心率持續超過 100：先排除發燒、脫水、甲狀腺亢進、貧血、心律不整，建議看心臟內科',{organ:'heart',dept:'心臟內科',ref:'50–90'});
     else if(hr>=90)P('rhr',1,'偏高：常見於睡眠不足、壓力、咖啡因、體能較差；規律有氧運動 2–3 個月通常會下降',{organ:'heart',ref:'50–90'});
     else if(hr<45)P('rhr',1,'偏低：規律耐力運動的人常見；若有頭暈、容易喘、快昏倒，要看心臟內科',{organ:'heart',dir:'lo',ref:'50–90'})}
+  // 壓力：小米、Garmin、華為、Samsung 用心率變異推估（0–100）；小米、Garmin 約 50 以上屬中度
+  if(v('stress')!=null&&v('stress')>=50)P('stress',1,'平均壓力偏高（小米、Garmin 約 50 以上屬中度）：手錶是用心率變異推估身體承受的壓力，睡不夠、生病、喝酒、咖啡因、過度訓練也會讓它變高；各品牌算法不同，請和自己平常比',{organ:'brain',ref:'<50（看自己的趨勢）'});
   if(v('hrv')!=null&&v('hrv')<20)P('hrv',1,'偏低：睡眠不足、壓力、生病、喝酒後都會下降；各家手錶算法不同，請和自己平常的數字比',{dir:'lo',ref:'因人而異，看趨勢'});
   const o2=v('spo2');
   if(o2!=null){if(o2<90)P('spo2',2,'低於 90%：先確認手錶戴緊、手不冰冷再量；反覆偏低（尤其睡覺時）要看胸腔科，排除睡眠呼吸中止或肺部問題',{organ:'lung',dept:'胸腔內科',dir:'lo',ref:'≥95%'});
@@ -2087,16 +2089,20 @@ function promptWatch(){return `你是「健康數據擷取器」。我會附上�
 
 【規則】
 1. 只輸出一個 JSON 物件，前後不要有任何文字，也不要用 \`\`\` 包起來。
-2. 優先填「近 7 天平均」或「週平均」；畫面只有單日數字時才填單日。找不到的欄位一律填 null，禁止推算或猜測。
+2. 優先填「近 7 天平均」或「週平均」（畫面有「日／週／月」時用「週」）；畫面只有單日數字時才填單日。找不到的欄位一律填 null；除了第 6 條的加總，禁止推算或猜測。
 3. 數值只填數字，不含單位。睡眠換算成小時（7 小時 30 分 → 7.5）；HRV 填毫秒；血氧填百分比數字（例如 96）。
-4. 畫面上的「目標」「範圍」「上次」不是數值本身，不要填入。
-5. 有「心律不整通知」「心房顫動」「AFib」「不規則心律」的紀錄或提醒，afib 填 true；沒看到填 null。
-6. date：截圖上的日期（7 天區間就填最後一天），格式 "YYYY-MM-DD"（西元年；民國年請加 1911），沒有填 null；device：手錶或 App 名稱。
-7. 不要輸出姓名、電話、帳號等個人資料。
-8. 輸出前逐欄自我核對：每個數字都必須能在截圖中找到原文，小數點位置正確。
+4. 畫面上的「目標」「範圍」「參考」「上次」不是數值本身，不要填入。
+5. rhr 只能填「靜止心率／安靜心率／靜息心率」，不要填平均心率、即時心率、心率範圍、步行平均心率。
+6. exmin：有「中高強度」「運動時間」「熱血時間」的分鐘數就用它；只有「心率區間」時，加總「燃脂」以上各區（燃脂＋有氧＋無氧＋極限，不含熱身）。畫面是一週總和請 ÷7。
+7. sleep：有「夜間睡眠」就用夜間；含午睡的「全天睡眠」只在沒有夜間數字時才用。
+8. 不用填：睡眠分數、睡眠結構（深睡／淺睡／快速動眼比例）、睡眠效率、清醒次數、同齡排名、App 自己的「健康摘要」。
+9. 有「心律不整通知」「心房顫動」「AFib」「不規則心律」的紀錄或提醒，afib 填 true；沒看到填 null。
+10. date：截圖上的日期（7 天區間就填最後一天），格式 "YYYY-MM-DD"（西元年；民國年請加 1911），沒有填 null；device：手錶或 App 名稱。
+11. 不要輸出姓名、電話、帳號等個人資料。
+12. 輸出前逐欄自我核對：每個數字（第 6 條的加總、÷7 除外）都必須能在截圖中找到原文，小數點位置正確。
 
 【欄位對照】
-rhr＝靜止心率（bpm）、hrv＝心率變異 HRV（ms）、spo2＝血氧（%）、sleep＝每晚睡眠時數（小時）、steps＝每日步數、exmin＝每日運動分鐘（Apple「運動」圓圈、Garmin「熱血時間」；畫面是一週總分鐘請 ÷7）、vo2＝最大攝氧量 VO2max（ml/kg/min，Apple 健康叫「有氧體能」）、resp＝睡眠時呼吸速率（次／分）、kcal＝每日活動消耗（Apple「動態能量」，kcal）、sbp／dbp＝手錶量的收縮壓／舒張壓（mmHg）
+rhr＝靜止心率（bpm；小米叫「安靜心率」）、hrv＝心率變異 HRV（ms）、stress＝平均壓力（0–100；小米、華為、Garmin、Samsung 的「壓力」）、spo2＝血氧（%）、sleep＝每晚睡眠時數（小時）、steps＝每日步數、exmin＝每日運動分鐘（Apple「運動」圓圈、Garmin「熱血時間」；畫面是一週總分鐘請 ÷7）、vo2＝最大攝氧量 VO2max（ml/kg/min，Apple 健康叫「有氧體能」）、resp＝睡眠時呼吸速率（次／分）、kcal＝每日活動消耗（Apple「動態能量」，kcal）、sbp／dbp＝手錶量的收縮壓／舒張壓（mmHg）
 
 【輸出格式】
 {"type":"nutricore.watch","v":1,"date":null,"device":null,${WF.map(f=>`"${f.k}":null`).join(',')},"afib":null}`}
@@ -2162,7 +2168,7 @@ function openWatchSheet(rec){const m=me();wEditId=rec?.id||null;
     <div class="grid2"><div><label>日期</label><input type="date" id="w-t" value="${esc(rec?.t||ymd(new Date()))}"></div><div><label>手錶（選填）</label><input id="w-device" value="${esc(rec?.device||'')}" placeholder="Apple Watch、Garmin…"></div></div>
     <div class="grid2">${WF.map(f=>`<div><label>${f.n} <span class="sub">${f.u}</span></label><input id="w-${f.k}" type="text" inputmode="decimal" value="${rec?.[f.k]??''}" placeholder="—"></div>`).join('')}</div>
     <div class="chips" style="margin-top:12px"><button type="button" class="chip${rec?.afib?' on':''}" id="w-afib">手錶提示過心律不整／心房顫動</button></div>
-    <p class="note">iPhone 看「健康」App →「瀏覽」各項目的「週」平均；Garmin、華為、小米看 App 的 7 天平均。有的欄位填就好。手錶是光學感測只能參考，App 看趨勢提醒，不列入體檢分數。</p>
+    <p class="note">iPhone 看「健康」App →「瀏覽」各項目切到「週」；小米運動健康、Garmin、華為點進睡眠、心率、壓力、步數各卡片，切到「週」再截圖（早上截的「日」只有半天資料）。有的欄位填就好。睡眠分數、深睡淺睡比例、睡眠效率準確度低，App 不收。手錶是光學感測只能參考，App 看趨勢提醒，不列入體檢分數。</p>
     <div class="row2">${rec?'<button class="btn danger" id="wDel" style="flex:0 0 30%">刪除</button>':''}<button class="btn" id="wSave">儲存</button></div>`);
   bindAI('watch');$('#w-afib').onclick=e=>e.currentTarget.classList.toggle('on');$('#wSave').onclick=saveWatch;if(rec)$('#wDel').onclick=()=>delWatch(rec.id)}
 function saveWatch(){const m=me(),r={id:wEditId||uid(),t:$('#w-t').value||ymd(new Date())},bad=[];
