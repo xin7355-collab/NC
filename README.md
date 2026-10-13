@@ -1,6 +1,6 @@
 # NutriCore 健康飲食站
 
-家庭健康紀錄、今年健檢與疫苗建議、營養師飲食建議與菜單（137 道菜、可設定不吃的食物）、一週採買清單、健身教練課表的單頁 App（iPhone 優先）。設定在右上角 ⚙️。健康資料只存在手機瀏覽器，不會上傳。
+家庭健康紀錄（體脂、體檢報告、手錶）、體檢歷年比較（3 年內）、今年健檢與疫苗建議、未來 3 年檢查輪替、營養師飲食建議與菜單（137 道菜、可設定不吃的食物）、一週採買清單、健身教練課表的單頁 App（iPhone 優先）。設定在右上角 ⚙️。健康資料只存在手機瀏覽器，不會上傳。
 
 - **網址**：https://xin7355-collab.github.io/NC/
 - **安裝**：iPhone Safari 開網址 → 分享 → 加入主畫面（避免 Safari 7 天清除資料），並定期在「我的」頁匯出備份。
@@ -12,7 +12,7 @@
 | `gas/Code.gs` | 選用的圖片後端（Google Apps Script → Cloudflare Workers AI 免費額度） |
 | `tests/e2e.js` | 端對端測試：`node tests/e2e.js` |
 | `PLAN.md` | 架構、判讀規則、公費篩檢資格 |
-| `PROMPTS.md` | AI 截圖擷取提示詞（與 App 內相同） |
+| `PROMPTS.md` | AI 截圖擷取提示詞（體脂機、體檢報告、手錶；與 App 內相同）與 AI 醫生的問題結構 |
 | `CLAUDE.md` | 給 Claude 的工作規則（改完測試通過直接推 `main`） |
 
 **更新方式**：改完 `index.html` 推到 `main`，GitHub Actions 會把版本號（commit 編號）寫進 `APP_VER` 並同步到 `gh-pages` 發布，約 1 分鐘後網站更新。App 每次回到前景會比對線上版本，有新版就自動重新載入（正在填表時改顯示「有新版本」按鈕）。`gh-pages` 分支不要手動改。

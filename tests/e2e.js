@@ -49,7 +49,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   check('分數上限：異常≤74、注意≤89、嚴重≤59、無異常100', caps[0] <= 74 && caps[1] <= 89 && caps[2] <= 59 && caps[3] === 100, caps.join(','));
   await page.click('#nav button[data-v="body"]'); await page.waitForTimeout(600);
   const tap = async o => {
-    const pt = await page.evaluate(o => { const el = document.querySelector(`#hud [data-org="${o}"]`) || document.querySelector(`#hud [data-o="${o}"]`), b = el.getBoundingClientRect();
+    const pt = await page.evaluate(o => { const el = document.querySelector(`#hud [data-org="${o}"]`) || document.querySelector(`#hud [data-o="${o}"]`); document.querySelector('#hud').scrollIntoView({ block: 'center', behavior: 'instant' }); const b = el.getBoundingClientRect();   // 上一個器官的說明框會把頁面往下捲，先捲回人體圖
       const fx = { kidney: .12, lung: .12 }[o]; if (o === 'stomach') { const q = el.ownerSVGElement.createSVGPoint(); q.x = 124; q.y = 172; const r = q.matrixTransform(document.querySelector('#hud [data-o="stomach"]').getScreenCTM()); return { x: r.x, y: r.y } }
       return { x: b.x + b.width * (fx || .5), y: b.y + b.height / 2 } }, o);
     await page.mouse.click(pt.x, pt.y); await page.waitForTimeout(900);
@@ -81,9 +81,9 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   await page.click('#lSave'); await page.waitForTimeout(500);
   const ev = await page.evaluate(() => { const r = labsOf(me()).find(x => x.hospital === '台大醫院'); return labEval(r, me()).map(i => `${i.k}:${i.lv}`).join(',') });
   check('糞便潛血 135（H）判異常', /fobt:2/.test(ev), ev);
-  check('"Normal" 標記不算異常、/µL 換算後正常', !/hdl:|wbc:|plt:|x_鈉/.test(ev), ev);
+  check('"Normal" 標記不算異常、/µL 換算後正常', !/hdl:|wbc:|plt:|x_鈉|(^|,)na:/.test(ev), ev);
   check('鉀 6.2 判嚴重、骨密度 -2.7 判異常、乳房 4A 判嚴重、LDCT 4X 判嚴重', /k:3/.test(ev) && /dxa:2/.test(ev) && /mammo:3/.test(ev) && /ldct:3/.test(ev), ev);
-  check('ANA 1:80 不算異常、抗體保護力不計分、鐵蛋白 L 判注意', !/ana:/.test(ev) && !/hbsab/.test(ev) && /x_鐵蛋白:1/.test(ev), ev);
+  check('ANA 1:80 不算異常、抗體保護力不計分；「其他項目」的鐵蛋白 8 對到正式項目並判異常', !/ana:/.test(ev) && !/hbsab/.test(ev) && /(^|,)ferritin:[12]/.test(ev) && !/x_鐵蛋白/.test(ev), ev);
   const breast = await page.evaluate(() => { closeSheet(); go('body'); return [...document.querySelectorAll('#hud .callout')].map(c => c.dataset.o).join(',') });
   check('乳房出現在身體地圖', /breast/.test(breast), breast);
   await page.close();
@@ -164,15 +164,15 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   check('輸入框字級 ≥16px（iOS 不自動放大）', await page.evaluate(() => { const t = document.createElement('textarea'); document.body.appendChild(t); const v = parseFloat(getComputedStyle(t).fontSize); t.remove(); return v >= 16 }));
 
   // =============== 6. 文件一致性 ===============
-  const prompts = await page.evaluate(() => ({ scale: promptScale(), lab: promptLab() }));
+  const prompts = await page.evaluate(() => ({ scale: promptScale(), lab: promptLab(), watch: promptWatch() }));
   const md = p => '```text\n' + p + '\n```';
   const pfile = path.join(ROOT, 'PROMPTS.md');
   if (process.argv.includes('--update-prompts')) {
-    const doc = fs.readFileSync(pfile, 'utf8').replace(/(## 一、體脂機截圖\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.scale)).replace(/(## 二、體檢報告\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.lab));
+    const doc = fs.readFileSync(pfile, 'utf8').replace(/(## 一、體脂機截圖\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.scale)).replace(/(## 二、體檢報告\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.lab)).replace(/(## 四、手錶／健康 App 截圖\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.watch));
     fs.writeFileSync(pfile, doc); console.log('已更新 PROMPTS.md');
   }
   const doc = fs.readFileSync(pfile, 'utf8');
-  check('PROMPTS.md 與 App 內提示詞一致', doc.includes(md(prompts.scale)) && doc.includes(md(prompts.lab)), '不一致時執行 node tests/e2e.js --update-prompts');
+  check('PROMPTS.md 與 App 內提示詞一致（體脂機、體檢、手錶）', doc.includes(md(prompts.scale)) && doc.includes(md(prompts.lab)) && doc.includes(md(prompts.watch)), '不一致時執行 node tests/e2e.js --update-prompts');
   await page.close();
 
   // =============== 6b. 儀表、營養師、健身教練、疫苗 ===============
@@ -205,6 +205,11 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   const yp = await page.evaluate(() => MEM.map(m => yearPlan(m).items.filter(o => /大腸鏡|疫苗|皰疹/.test(o.t)).map(o => `${o.t}|${o.ch}`)));
   check('大腸鏡：家族史上次 2014 → 今年該做；一般人上次 2022 → 下次 2032', yp[0].some(x => /今年該做/.test(x)) && yp[1].some(x => /下次 2032/.test(x)), yp.map(x => x.filter(y => /大腸鏡/.test(y)).join('/')).join('｜'));
   check('疫苗：42 歲流感自費；68 歲肺炎鏈球菌公費、帶狀皰疹', yp[0].some(x => /^流感疫苗\|自費/.test(x)) && yp[1].some(x => /^肺炎鏈球菌疫苗\|公費/.test(x)) && yp[1].some(x => /帶狀皰疹/.test(x)), yp[1].join(' / ').slice(0, 120));
+  const cv = await page.evaluate(() => { const Y = new Date().getFullYear(), mk = age => ({ id: 'tmp' + age, name: 't', sex: 'm', birth: `${Y - age}-01-01`, h: 170, w: 65, act: '1.375', goal: 'keep' }),
+    f = m => yearPlan(m).items.filter(o => /^新冠疫苗|^流感疫苗/.test(o.t)).map(o => `${o.t.slice(0, 2)}:${o.ch}:${o.when}`).join(',');
+    return { a42: f(mk(42)), a55: f(mk(55)), a66: f(mk(66)), a10: f(mk(10)), season: [9, 10, 11, 0, 1, 2].includes(new Date().getMonth()) } });
+  check('新冠／流感公費資格（2026–27 疾管署）：42 歲自費；55 歲公費（11/2 起）；66 歲公費（10/1 起）；10 歲學生流感公費、新冠自費', /流感:自費/.test(cv.a42) && /新冠:自費/.test(cv.a42) && /新冠:公費/.test(cv.a55) && /新冠:公費/.test(cv.a66) && /流感:公費/.test(cv.a10) && /新冠:自費/.test(cv.a10)
+    && (!cv.season || (/新冠:公費:現在（公費 11\/2 起）/.test(cv.a55) && /新冠:公費:現在（公費 10\/1 起）/.test(cv.a66))), JSON.stringify(cv));
   await page.evaluate(() => openMemberEdit('z', 'vax')); await page.waitForTimeout(400);
   await page.click('#m-vax .chip[data-k="flu"]'); await page.click('#m-tabs [data-t="fit"]'); await page.click('#m-lim .chip[data-k="back"]'); await page.click('#m-save'); await page.waitForTimeout(300);
   const sv = await page.evaluate(() => ({ vax: me().vax, lim: me().fit.lim, flu: yearPlan(me()).items.some(o => o.t === '流感疫苗') }));
@@ -258,9 +263,9 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       X('骨質密度攝影檢查', '-0.2', '', '>-1.0', '', -1, null), X('骨質密度攝影檢查(右股骨頭)', '-0.4', '', '>-1.0', '', -1, null), X('體脂肪質量', '16.8', 'kg', '7.3~14.5', '', 7.3, 14.5), X('腰臀圍比', '0.87'), X('體脂肪率', '23.2', '%'), X('體重', '73.1', 'kg'),
       X('白蛋白/球蛋白比(A/G)', '1.7', 'mg/dl', '1.0~2.5', '', 1, 2.5), X('腰圍(InBody)', '83.7', 'cm'), X('肺功能檢查', '正常')] }] },
     scale: { z: [{ id: 's', t: `${new Date().getFullYear()}-10-11T20:57`, device: '小米', weight: 74.6, bmi: 24.9, fat: 21, fatMass: 15.7, visceral: 6, whr: 1, status: { bmi: '標準', whr: '偏高' } }] } });
-  const mg = await page.evaluate(() => { const L = LABS.z[0], pl = yearPlan(me()).items; return { it: Object.keys(L.items).join(), dxa: L.items.dxa?.v, alb: !!L.items.alb, ev: labEval(L, me()).map(i => i.k).join(), ex: L.extra.map(e => e.name).join('、'), plan: pl.map(o => o.t + '｜' + o.why).join(' / '), sec: SECS[0] } });
+  const mg = await page.evaluate(() => { const L = LABS.z[0], pl = yearPlan(me()).items; return { it: Object.keys(L.items).join(), dxa: L.items.dxa?.v, alb: !!L.items.alb, ag: L.items.ag?.v, pft: L.items.pft?.v, ev: labEval(L, me()).map(i => i.k).join(), ex: L.extra.map(e => e.name).join('、'), plan: pl.map(o => o.t + '｜' + o.why).join(' / '), sec: SECS[0] } });
   check('舊報告「其他項目」搬回正式項目：糞便潛血、眼壓、骨密度取最低、sdLDL、InBody', /fobt/.test(mg.it) && /iop/.test(mg.it) && mg.dxa === -0.4 && /sdldl/.test(mg.it) && /bia_fm/.test(mg.it) && /wt/.test(mg.it), mg.it);
-  check('「白蛋白/球蛋白比」不會被當成白蛋白；肺功能留在其他項目', !mg.alb && /白蛋白\/球蛋白比/.test(mg.ex) && /肺功能/.test(mg.ex), mg.ex);
+  check('「白蛋白/球蛋白比」對到 A/G 比、不會被當成白蛋白；肺功能「正常」對到肺功能項目', !mg.alb && mg.ag === 1.7 && mg.pft === '正常' && !/白蛋白|肺功能/.test(mg.ex), JSON.stringify([mg.ag, mg.pft, mg.ex]));
   check('BMI、體脂肪量只記錄不再叫你「複驗」；sdLDL 列入血脂追蹤', !/複驗 (身體質量|體脂肪|BMI)/.test(mg.plan) && /血脂/.test(mg.plan) && mg.ev === 'us_liver,cxr,sdldl', mg.ev);
   check('今年的報告不說「去年」；胸部 X 光輕微變化不追加 CT', !/去年/.test(mg.plan) && /這次報告/.test(mg.plan) && /下次健檢再照/.test(mg.plan) && !/低劑量 CT/.test(mg.plan) && mg.sec === '追蹤報告異常', mg.plan.slice(0, 80));
   const cmp = await page.evaluate(() => { const r = scalesOf(me())[0]; openScaleDetail(r.id); const t = document.querySelector('#sheetBody').textContent; closeSheet(); return { whr: scaleEval(r, me()).some(i => i.k === 'whr'), t } });
@@ -268,8 +273,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   await page.click('#nav button[data-v="body"]'); await page.click('#v-body [data-addlab]'); await page.waitForTimeout(400); await page.click('details.box.ai > summary');
   await page.fill('#ai-in', JSON.stringify({ type: 'nutricore.lab', v: 1, date: '2026-09-14', items: { '骨質密度攝影檢查(左股骨頭)': { value: -0.1 }, '骨質密度攝影檢查(右股骨頭)': { value: -0.4 }, '右眼壓': { value: 9 }, '左眼壓': { value: 12 }, '白蛋白/球蛋白比(A/G)': { value: 1.7 }, '握力 右手': { value: 36, unit: 'kgf' } } }));
   await page.click('#ai-go'); await page.waitForTimeout(200);
-  const imp = await page.evaluate(() => ({ dxa: $('#l-dxa').value, iop: $('#l-iop').value, alb: $('#l-alb')?.value || '', grip: $('#l-grip_r')?.value, ex: lExtra.map(e => e.name).join() }));
-  check('匯入：多個骨密度取最低、兩眼取較高眼壓、A/G 比放其他項目、握力對到', imp.dxa === '-0.4' && imp.iop === '12' && !imp.alb && /白蛋白/.test(imp.ex) && imp.grip === '36', JSON.stringify(imp));
+  const imp = await page.evaluate(() => ({ dxa: $('#l-dxa').value, iop: $('#l-iop').value, alb: $('#l-alb')?.value || '', ag: $('#l-ag')?.value, grip: $('#l-grip_r')?.value, ex: lExtra.map(e => e.name).join() }));
+  check('匯入：多個骨密度取最低、兩眼取較高眼壓、A/G 比對到 A/G（不是白蛋白）、握力對到', imp.dxa === '-0.4' && imp.iop === '12' && !imp.alb && imp.ag === '1.7' && imp.grip === '36', JSON.stringify(imp));
   await page.evaluate(() => closeSheet()); await page.waitForTimeout(200);
   await page.click('#gearBtn'); await page.waitForTimeout(400);
   const st1 = await page.evaluate(() => ({ title: document.querySelector('#sheetBody h3').textContent, vis: [...document.querySelectorAll('#sheetBody .tabp')].filter(p => !p.hidden).map(p => p.dataset.t).join(), smoke: $('#m-smokebox').offsetParent === null }));
@@ -343,6 +348,128 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   const np0 = await page.evaluate(() => { const P = fitPlan(me()); return { F: [...P.F].filter(k => LIM.some(z => z[0] === k)).join(), W: P.W.map(x => x.t).join('｜'), ai: aiPrompt(me(), { topic: 'all', fh: true, scale: true, normals: false, q: '' }), pl: planHTML(me()) } });
   check('沒填運動狀況 → 不預設任何身體限制（不會說膝蓋不好）；健檢費用標「健保給付」', !np0.F && !/膝蓋|下背|肩膀|腳踝/.test(np0.W) && !/身體限制/.test(np0.ai) && /健保給付|公費免費/.test(np0.pl) && !/>💰 健保</.test(np0.pl), np0.W.slice(0, 60));
   await page.close();
+
+  // =============== 6g. 報告「其他項目」：InBody 分段、原始阻抗、視力聽力、理學檢查、尿沉渣、球蛋白、A/G、RISK ===============
+  {
+    const X = (name, value, unit = '', lo = null, hi = null, flag = '') => ({ name, value, unit, ref: lo != null || hi != null ? `${lo ?? ''}~${hi ?? ''}` : '', lo, hi, flag });
+    const yr = new Date().getFullYear();
+    page = await newPage({ members: [{ id: 'g', name: '測試', sex: 'm', birth: '1984-03-15', h: 172, w: 73, act: '1.375', goal: 'auto' }], active: 'g',
+      labs: { g: [{ id: 'lg', t: `${yr}-09-14`, hospital: '甲醫院', items: {}, extra: [
+        X('右上肢瘦肉量', '3.6', 'kg', 2.9, 3.6), X('左上肢瘦肉量', '3.5', 'kg', 2.9, 3.6), X('軀幹瘦肉量', '27.1', 'kg', 22.4, 26.3), X('右下肢瘦肉量', '9.2', 'kg', 8, 9.5), X('左下肢瘦肉量', '9.1', 'kg', 8, 9.5),
+        X('右上肢體脂肪量', '0.9', 'kg', 0.5, 1), X('軀幹體脂肪量', '9.0', 'kg', 3.7, 7.4, '*'), X('右下肢體脂肪量', '2.6', 'kg', 1.6, 3.2),
+        X('右上肢阻抗(5kHz)', '312.4', 'Ω'), X('軀幹阻抗(250kHz)', '18.1', 'Ω'), X('左下肢阻抗(50kHz)', '255', 'Ω'),
+        X('矯正右眼', '1.0'), X('矯正左眼', '0.8'), X('聽力(右耳)', '正常'), X('聽力(左耳)', '異常'),
+        X('頭頸部', '無異常'), X('呼吸系統', '未見明顯異常'), X('心臟血管系統', '正常，但有心雜音'), X('肌肉骨骼系統', '無明顯腫塊'),
+        X('血小板平均體積MPV', '10.2', 'fL', 7.4, 10.4), X('血小板分布寬度PDW', '12', 'fL'), X('上皮細胞', '0-1', '/HPF'), X('結晶體', '(-)'), X('細菌', '(-)'),
+        X('球蛋白', '2.8', 'g/dL', 2, 3.5), X('白蛋白/球蛋白比(A/G)', '1.7', '', 1, 2.5), X('心臟血管疾病率(RISK)', '3.2', '%'),
+        X('水腫指數', '0.378', '', 0.36, 0.39), X('去脂肪質量', '57.3', 'kg'), X('體水分', '42.1', 'L'), X('骨骼肌質量指數SMI', '10.4', 'kg/m²'), X('健康分數(InBody)', '76', '分'),
+        X('皮下脂肪面積', '141', 'cm²'), X('體脂肪質量指數FMI', '5.7', 'kg/m²'), X('去脂肪質量指數FFMI', '19.4', 'kg/m²')] }] } });
+    const g = await page.evaluate(() => { const L = labsOf(me())[0], ev = labEval(L, me()), d = derivedOf(me()).find(x => x.k === 'bia');
+      openLabDetail(L.id); const t = document.querySelector('#sheetBody').textContent; closeSheet();
+      return { it: Object.keys(L.items).sort().join(), ag: L.items.ag?.v, hear: L.items.hearing?.v, ex: L.extra.map(e => e.name), ev: ev.map(i => `${i.k}:${i.lv}`).join(), bia: d && `${d.lv}|${d.txt}`, t } });
+    const want = ['glo', 'ag', 'mpv', 'pdw', 'uepi', 'ucry', 'ubact', 'cvrisk', 'va_r', 'va_l', 'hearing', 'ecw', 'sfa', 'bia_score', 'ffm', 'tbw', 'smi', 'ffmi', 'fmi'];
+    check('報告其他項目對到正式項目：球蛋白、A/G、MPV、PDW、尿沉渣、RISK、矯正視力、聽力、InBody 組成', want.every(k => g.it.split(',').includes(k)) && g.ag === 1.7, 'missing: ' + want.filter(k => !g.it.split(',').includes(k)).join());
+    check('InBody 分段、原始阻抗留在其他項目，但不逐項判異常、不扣分', g.ex.some(n => /阻抗/.test(n)) && g.ex.some(n => /右上肢瘦肉/.test(n)) && !/x_.*(上肢|下肢|軀幹|阻抗)/.test(g.ev), g.ev);
+    check('InBody 分段彙整：軀幹脂肪偏高、左右平衡', /^1\|/.test(g.bia || '') && /軀幹/.test(g.bia) && /左右肌肉平衡/.test(g.bia), g.bia);
+    check('聽力一耳異常 → 單側異常（取較差那耳）；理學檢查「正常，但有心雜音」判注意、「無異常／未見明顯異常／無明顯腫塊」不判', /^單側/.test(g.hear) && /x_心臟血管系統:1/.test(g.ev) && !/x_頭頸部|x_呼吸系統|x_肌肉骨骼/.test(g.ev) && /hearing:1/.test(g.ev), `${g.hear}｜${g.ev}`);
+    check('體檢分析頁：其他項目分組（理學檢查、原始阻抗收合）＋ InBody 分段摘要', /其他項目/.test(g.t) && /理學檢查/.test(g.t) && /InBody 原始阻抗/.test(g.t) && /InBody 分段/.test(g.t), '');
+    const neg = await page.evaluate(() => ['無異常', '未見明顯結節', '無心律不整', '心雜音(-)', '雜音：無', '甲狀腺未腫大', '正常，但有心雜音', '無法排除結節', '無力，有心雜音', '心臟：無雜音，有心律不整'].map(t => txtAbn(t) ? 1 : 0).join(''));
+    check('文字判讀：否定寫法（無心律不整、心雜音(-)、雜音：無）不算異常；「但有」「無法排除」算異常', neg === '0000001111', neg);
+    const both = await page.evaluate(() => { const r = { items: {}, extra: [{ name: '右耳聽力', value: '異常' }, { name: '左耳聽力', value: '聽力下降' }] }; promoteExtras(r); return r.items.hearing?.v });
+    check('左右耳都異常 → 雙側異常', /^雙側/.test(both || ''), both);
+    await page.click('#nav button[data-v="body"]'); await page.click('#v-body [data-addlab]'); await page.waitForTimeout(400); await page.click('details.box.ai > summary');
+    await page.fill('#ai-in', JSON.stringify({ type: 'nutricore.lab', v: 1, date: `${yr}-09-14`, items: { alb: { value: 4.5, unit: 'g/dL' } }, extra: [{ name: '矯正右眼', value: 1.0 }, { name: '聽力(右耳)', value: '異常' }, { name: '聽力(左耳)', value: '異常' }, { name: '右上肢阻抗(5kHz)', value: 312, unit: 'Ω' }, { name: '白蛋白', value: 3.1, unit: 'g/dL' }] }));
+    await page.click('#ai-go'); await page.waitForTimeout(200);
+    const fi = await page.evaluate(() => ({ va: $('#l-va_r').value, hear: $('#l-hearing').value, alb: $('#l-alb').value, ex: lExtra.map(e => e.name).join() }));
+    check('AI 匯入：其他項目也會對到表單（視力、雙耳）；已經有值的不被其他項目覆蓋；阻抗留在其他項目', fi.va === '1' && /^雙側/.test(fi.hear) && fi.alb === '4.5' && /阻抗/.test(fi.ex), JSON.stringify(fi));
+    await page.close();
+  }
+
+  // =============== 6h. 歷年比較（3 年內最多 3 份；不同醫院參考值；長期／可逆） ===============
+  {
+    const X = (name, value, unit = '', lo = null, hi = null) => ({ name, value, unit, ref: `${lo ?? ''}~${hi ?? ''}`, lo, hi, flag: null });
+    page = await newPage({ members: [{ id: 'c', name: '測試', sex: 'm', birth: '1984-03-15', h: 172, w: 73.1, act: '1.375', goal: 'auto' }], active: 'c',
+      labs: { c: [
+        { id: 'old', t: '2021-05-01', hospital: '丙醫院', items: { alt: { v: 90 } }, extra: [] },
+        { id: 'a', t: '2024-09-10', hospital: '甲醫院', items: { alt: { v: 25 }, tg: { v: 110 }, egfr: { v: 98 }, us_liver: { v: '正常' }, wt: { v: 70.2 }, fmi: { v: 4.7 }, smi: { v: 10.4 } }, extra: [X('軀幹體脂肪量', '7.0', 'kg', 3.7, 7.4), X('右上肢阻抗(5kHz)', '300', 'Ω')] },
+        { id: 'b', t: '2025-09-12', hospital: '乙醫院', items: { alt: { v: 32, hi: 40 }, egfr: { v: 95 }, sdldl: { v: 30.0, hi: 35 }, us_liver: { v: '輕度脂肪肝' }, wt: { v: 71.5 } }, extra: [] },
+        { id: 'n', t: '2026-09-14', hospital: '甲醫院', items: { alt: { v: 46 }, tg: { v: 112 }, egfr: { v: 58 }, sdldl: { v: 30.2, hi: 30 }, us_liver: { v: '輕度脂肪肝' }, wt: { v: 73.1 }, fmi: { v: 5.7 }, smi: { v: 10.4 } }, extra: [X('軀幹體脂肪量(InBody)', '9.0', 'kg', 3.7, 7.4), X('右上肢阻抗(5kHz)', '310', 'Ω')] }] } });
+    const c = await page.evaluate(() => { const d = cmpData(me()), R = k => d.rows.find(r => r.k === k) || d.rows.find(r => r.name.includes(k)) || {};
+      return { dates: d.rs.map(r => r.t).join(), diffH: d.diffH, sd: R('sdldl').vd, sdWhy: R('sdldl').why, eg: `${R('egfr').vd}|${R('egfr').rev?.[0]}`, liv: `${R('us_liver').vd}|${R('us_liver').rev?.[0]}`, tg: R('tg').vd,
+        wt: R('wt').vd, fmi: R('fmi').vd, seg: R('軀幹體脂肪量').vd, imp: d.rows.some(r => /阻抗/.test(r.name)), body: d.body && `${d.body.dw}|${d.body.df}|${d.body.txt}`, ai: aiPrompt(me(), { topic: 'all', fh: true, scale: true }) } });
+    check('歷年比較只取 3 年內最多 3 份（2021 年那份不算），舊 → 新', c.dates === '2024-09-10,2025-09-12,2026-09-14' && c.diffH, c.dates);
+    check('數值幾乎沒變、只是兩家醫院參考值不同 → 標「標準不同」不是「變差」', c.sd === 'std' && /參考值不同/.test(c.sdWhy), c.sd + '｜' + c.sdWhy);
+    check('eGFR 98 → 58 變差並標「長期／不可逆」；脂肪肝變差但標「可逆」；三酸甘油酯持平', c.eg === 'worse|perm' && c.liv === 'worse|rev' && c.tg === 'flat', `${c.eg} ${c.liv} ${c.tg}`);
+    check('身體組成：體重 +2.9、脂肪 +3（FMI×身高²）→「增加的幾乎都是脂肪」；體重、FMI 標變差趨勢、肌肉指數持平', /^2\.9\|3\|增加的幾乎都是脂肪/.test(c.body || '') && c.wt === 'trend' && c.fmi === 'trend', c.body);
+    check('InBody 分段同名比對（去掉「(InBody)」）、原始阻抗不比', c.seg === 'worse' && !c.imp, String(c.seg));
+    check('AI 醫生附上歷年比較，只寫「不同醫院」不寫醫院名稱', /【歷年比較（2024-09 → 2025-09 → 2026-09，不同醫院）】/.test(c.ai) && /標準不同（數值幾乎沒變/.test(c.ai) && !/甲醫院|乙醫院/.test(c.ai), (c.ai.match(/【歷年比較[^\n]*/) || [''])[0].slice(0, 90));
+    await page.click('#nav button[data-v="body"]'); await page.waitForTimeout(300);
+    const ui = await page.evaluate(() => ({ card: !$('#cmpCard').hidden && /增加的幾乎都是脂肪/.test($('#cmpBody').textContent), tag: [...document.querySelectorAll('#issueList .issue')].some(e => /eGFR/.test(e.textContent) && /長期／不可逆/.test(e.textContent)) }));
+    await page.click('#cmpBody [data-cmp]'); await page.waitForTimeout(400);
+    const sh = await page.evaluate(() => ({ cols: document.querySelectorAll('#sheetBody .cmp-cols > div').length, rows: document.querySelectorAll('#sheetBody .cmp-r').length, banner: /來自不同醫院/.test($('#sheetBody').textContent), w: document.querySelector('.sheet-panel').scrollWidth <= document.querySelector('.sheet-panel').clientWidth + 1 }));
+    await page.click('#cmpSeg [data-v="1"]'); await page.waitForTimeout(300);
+    const all = await page.evaluate(() => document.querySelectorAll('#sheetBody .cmp-r').length);
+    check('身體頁有歷年比較卡、異常清單標「長期／不可逆」；比較表 3 欄、不同醫院提示、手機不橫向捲動、「全部」比「重點」多', ui.card && ui.tag && sh.cols === 3 && sh.banner && sh.w && all > sh.rows && sh.rows > 0, JSON.stringify({ ...ui, ...sh, all }));
+    await page.close();
+  }
+
+  // =============== 6i. 檢查輪替（上次做的年份＋間隔；自費大項一年一項） ===============
+  {
+    const Y = new Date().getFullYear();
+    page = await newPage({ members: [
+      { id: 'r1', name: '五十', sex: 'm', birth: `${Y - 50}-01-01`, h: 170, w: 70, act: '1.375', goal: 'keep', life: { smoke: 'never', betel: 'never', alc: 'none', ldct: Y - 3 }, fh: { ca: [], chr: [], early: false } },
+      { id: 'r2', name: '胃癌家族', sex: 'f', birth: `${Y - 52}-06-01`, h: 158, w: 55, act: '1.375', goal: 'keep', life: { smoke: 'never', betel: 'never', alc: 'none' }, fh: { ca: ['stomach'], chr: [], early: false } },
+      { id: 'r3', name: '四十二', sex: 'm', birth: `${Y - 42}-03-15`, h: 172, w: 73, act: '1.375', goal: 'keep', life: { smoke: 'never', betel: 'never', alc: 'none', colono: Y - 10 }, fh: { ca: [], chr: [], early: false } }], active: 'r1',
+      labs: { r1: [{ id: 'a', t: `${Y - 1}-05-01`, hospital: '', items: { glu: { v: 90 }, iop: { v: 14 } }, extra: [] }], r2: [], r3: [] } });
+    const ro = await page.evaluate(() => { const f = id => { const m = MEM.find(x => x.id === id), r = rotation(m), at = y => (r.years.find(z => z.y === y)?.items || []).map(o => o.k + (o.need ? '' : '?') + (o.moved ? '>' : '')).join(); return { r, at, plan: yearPlan(m).items.map(o => o.t).join('｜') } };
+      const Y = new Date().getFullYear(), a = f('r1'), b = f('r2'), c = f('r3');
+      return { a0: a.at(Y), a1: a.at(Y + 1), done: a.r.done.map(d => d.k + d.y + d.src).join(), b0: b.at(Y), pair: b.r.pair, cLater: c.r.later.map(o => o.k + o.due).join(), cPlan: c.plan } });
+    check('50 歲：大腸鏡（可考慮自費）排今年；3 年前做過的自費肺部 CT 同年到期 → 輪到明年；公費糞便潛血、幽門桿菌今年', /colono\?/.test(ro.a0) && !/ldct/.test(ro.a0) && /ldct\?>/.test(ro.a1) && /fobt/.test(ro.a0) && /hp/.test(ro.a0), `${Y}:${ro.a0}｜${Y + 1}:${ro.a1}`);
+    check('做過的檢查：報告的眼壓、自填的肺部 CT 都算；眼科去年做過 → 不排今年', /eye\d{4}報告/.test(ro.done) && new RegExp(`ldct${Y - 3}自填`).test(ro.done) && !/eye/.test(ro.a0), ro.done);
+    check('胃癌家族史：胃鏡和大腸鏡排同一年 → 提示同一次麻醉', /gastro\?/.test(ro.b0) && /colono\?/.test(ro.b0) && ro.pair, ro.b0);
+    check('42 歲一般風險、10 年前做過大腸鏡：要等 45 歲（不是「今年該做」）', new RegExp(`colono${Y + 3}`).test(ro.cLater) && /大腸鏡：下次 \d{4} 年/.test(ro.cPlan) && !/大腸鏡（今年該做了）/.test(ro.cPlan), ro.cLater + '｜' + (ro.cPlan.match(/大腸鏡[^｜]*/) || [''])[0]);
+    await page.click('#nav button[data-v="body"]'); await page.waitForTimeout(300);
+    const card = await page.evaluate(() => ({ vis: !$('#rotCard').hidden, txt: $('#rotBody').textContent }));
+    check('身體頁有「檢查輪替（未來 3 年）」卡：今年、輪替標示、做過的年份', card.vis && /（今年）/.test(card.txt) && /輪替：原本/.test(card.txt) && /做過：/.test(card.txt), card.txt.slice(0, 60));
+    await page.evaluate(() => openMemberEdit('r1', 'fh')); await page.waitForTimeout(300);
+    await page.fill('#m-gastro', String(Y - 2)); await page.fill('#m-ldct', '1800'); await page.click('#m-save'); await page.waitForTimeout(300);
+    const lf = await page.evaluate(() => ({ g: MEM.find(x => x.id === 'r1').life.gastro, l: MEM.find(x => x.id === 'r1').life.ldct, cb: JSON.stringify(cleanBackup({ members: [{ id: 'q', name: 'x', sex: 'm', birth: '1990-01-01', life: { gastro: '<img>', ldct: 2020.7, colono: 'x' } }] }).mem[0].life) }));
+    check('「⚙️ → 家族史」可填上次胃鏡、肺部 CT 年份（不合理的年份不存）；備份檔會清洗', lf.g === Y - 2 && lf.l === '' && /"gastro":""/.test(lf.cb) && /"ldct":2020/.test(lf.cb) && /"colono":""/.test(lf.cb), JSON.stringify(lf));
+    await page.close();
+  }
+
+  // =============== 6j. 手錶指數（近 7 天平均）：判讀、AI 匯入、運動心率、AI 醫生、備份 ===============
+  {
+    page = await newPage({ members: [{ id: 'w', name: '錶', sex: 'm', birth: `${new Date().getFullYear() - 42}-03-15`, h: 172, w: 73, act: '1.375', goal: 'keep' }, { id: 'x', name: '另一位', sex: 'f', birth: '1990-01-01', h: 160, w: 52, act: '1.375', goal: 'keep' }], active: 'w',
+      watch: { w: [{ id: 'w0', t: '2026-09-01', rhr: 70, steps: 8000 }], x: [{ id: 'x0', t: '2026-09-01', rhr: 60 }] } });
+    const ev = await page.evaluate(() => { const m = me(), E = r => watchEval(r, m).map(i => `${i.k}:${i.lv}${i.dept ? '@' + i.dept : ''}`).join();
+      return { a: E({ rhr: 91, hrv: 18, spo2: 93, sleep: 5.6, steps: 3500, exmin: 12, vo2: 33.1, resp: 16, sbp: 136, dbp: 84 }), b: E({ rhr: 105, spo2: 89, sleep: 4.8, vo2: 44, afib: true }), c: E({ rhr: 42, sleep: 7.5, steps: 9000, exmin: 30, vo2: 44 }),
+        bp: watchEval({ sbp: 136, dbp: 84 }, m)[0]?.val, s5: watchEval({ sleep: 4.8 }, m)[0]?.msg, cat: [vo2Cat(33.1, 42, 'm'), vo2Cat(44, 42, 'm'), vo2Cat(30, 55, 'f')] } });
+    check('手錶判讀：心率 91、HRV 18、血氧 93、睡 5.6 h、3500 步、運動不足、VO₂max 差、手錶血壓 136/84 都標注意', ev.a === 'w_rhr:1,w_hrv:1,w_spo2:1,w_sleep:1,w_steps:1,w_exmin:1,w_vo2:1,w_bp:1' && ev.bp === '136/84', ev.a);
+    check('靜止心率 >100、血氧 <90、心律不整 → 異常並建議心臟內科／胸腔科；VO₂max 44（42 歲男）良好不提醒；睡不到 5 小時加重提醒', /w_rhr:2@心臟內科/.test(ev.b) && /w_spo2:2@胸腔內科/.test(ev.b) && /w_afib:2@心臟內科/.test(ev.b) && !/w_vo2/.test(ev.b) && /5 小時/.test(ev.s5), ev.b);
+    check('心率 42 只提醒（運動員常見、不叫你掛號）；VO₂max 分級（42 歲男）：33.1 差、44 優秀；55 歲女性 30 良好', ev.c === 'w_rhr:1' && ev.cat.join() === '1,4,3', `${ev.c}｜${ev.cat}`);
+    await page.click('#nav button[data-v="body"]'); await page.click('#v-body [data-addwatch]'); await page.waitForTimeout(400); await page.click('details.box.ai > summary');
+    await page.fill('#ai-in', '```json\n' + JSON.stringify({ type: 'nutricore.watch', v: 1, date: '115/10/12', device: 'Apple Watch', rhr: 91, hrv: 18, spo2: 0.93, sleep: 5.6, steps: 3500, exmin: null, vo2: 33.1, resp: null, kcal: 380, sbp: null, dbp: null, afib: true }) + '\n```');
+    await page.click('#ai-go'); await page.waitForTimeout(200);
+    const fw = await page.evaluate(() => ({ msg: $('#ai-msg').textContent, t: $('#w-t').value, o2: $('#w-spo2').value, af: $('#w-afib').classList.contains('on'), dev: $('#w-device').value }));
+    check('手錶 AI 匯入：民國年日期、血氧 0.93 → 93、心律不整勾選、裝置名稱', fw.t === '2026-10-12' && fw.o2 === '93' && fw.af && fw.dev === 'Apple Watch' && /已填入 8 項/.test(fw.msg), JSON.stringify(fw));
+    await page.click('#wSave'); await page.waitForTimeout(500);
+    const after = await page.evaluate(() => { closeSheet(); const m = me(), P = fitPlan(m);
+      return { recs: watchOf(m).length, issue: [...document.querySelectorAll('#issueList .issue')].some(e => /手錶/.test(e.textContent) && /心律不整提醒/.test(e.textContent)), dept: /心臟內科/.test($('#deptList').textContent),
+        score: $('#bodyScore').textContent, hr: `${P.hrRest}|${P.hrSrc}|${P.F.has('heart')}`, warn: P.W.map(x => x.t).join('／'), ai: aiPrompt(m, { topic: 'all', fh: true, scale: true, watch: true }) } });
+    check('存檔後：身體頁異常清單有手錶項目、心律不整 → 建議掛心臟內科；手錶不列入分數', after.recs === 2 && after.issue && after.dept && !/手錶/.test(after.score), JSON.stringify({ ...after, ai: '', warn: '' }));
+    check('運動教練：心率區間改用手錶靜止心率、心律不整先限制強度；步數與 VO₂max 給建議', after.hr === '91|手錶 7 天平均|true' && /步/.test(after.warn) && /VO₂max/.test(after.warn), after.hr + '｜' + after.warn.slice(0, 80));
+    check('AI 醫生附上手錶（近 7 天平均、VO₂max 同齡分級、異常說明）', /【手錶 2026-10-12（近 7 天平均、Apple Watch）】/.test(after.ai) && /同齡差/.test(after.ai) && /- 心律不整提醒/.test(after.ai), (after.ai.match(/【手錶[^\n]*/) || [''])[0].slice(0, 80));
+    await page.click('#recSeg [data-v="watch"]'); await page.waitForTimeout(200);
+    const tab = await page.evaluate(() => ({ rows: document.querySelectorAll('#recList [data-wid]').length, spark: document.querySelectorAll('#recList .stat').length }));
+    check('身體頁「手錶」分頁：趨勢卡＋紀錄列表', tab.rows === 2 && tab.spark === 3, JSON.stringify(tab));
+    const cb = await page.evaluate(() => cleanBackup({ members: [{ id: 'w', name: 'x', sex: 'm', birth: '1984-01-01' }], watch: { w: [{ id: 'a1', t: '2026-10-12', rhr: 61, spo2: 140, steps: '8000', device: '<b>Garmin</b>', afib: 'yes', evil: '<img src=x>' }, { id: 'bad id', t: '2026-10-12', rhr: 60 }, { id: 'a2', t: '10/12', rhr: 60 }] } }).watch);
+    check('備份檔的手錶資料會清洗：只留已知欄位與合理數值、afib 只認 true、壞 id／日期丟掉', JSON.stringify(cb) === '{"w":[{"id":"a1","t":"2026-10-12","rhr":61,"steps":8000,"device":"<b>Garmin</b>"}]}', JSON.stringify(cb));
+    await page.evaluate(() => { openMemberEdit('x'); }); await page.waitForTimeout(300); await page.click('#m-del'); await page.waitForTimeout(300);
+    const del = await page.evaluate(() => ({ x: 'x' in WATCH, store: 'x' in JSON.parse(localStorage.getItem('nc_watch')) }));
+    check('刪除成員時，手錶資料一起刪', !del.x && !del.store, JSON.stringify(del));
+    await page.close();
+  }
 
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');

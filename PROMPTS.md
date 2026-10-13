@@ -39,21 +39,24 @@ weight＝體重（kg）、bmi＝BMI、fat＝體脂率（%）、fatMass＝脂肪�
 5. unit 照抄報告原文（mg/dL、mmol/L、μmol/L、g/L、U/L…），不要自行換算單位。
 6. ref 照抄報告的參考範圍原文（例如 "70-99"、"<200"、"陰性"）；lo、hi 填參考範圍的下限、上限數字，沒有就填 null。
 7. flag 照抄報告的異常標記（H、L、*、↑、↓），沒有填 null。
-8. 血壓若寫成 "128/82"，請拆成 sbp=128、dbp=82。眼壓左右眼取較高值；骨密度取最低的 T 值（腰椎、髖部取較低者）。
+8. 血壓若寫成 "128/82"，請拆成 sbp=128、dbp=82。眼壓左右眼取較高值；骨密度取最低的 T 值（腰椎、髖部取較低者）；聽力左右任一耳異常就填異常。InBody 的「阻抗（kHz）」原始數據不用輸出。
 9. 姓名、身分證字號、病歷號、生日、電話、地址一律不要輸出。
 10. date 填檢查（採檢）日期，格式 YYYY-MM-DD 的西元年；報告若寫民國年（例如 115/09/20），請加 1911 換算成 2026-09-20。
 11. 影像與檢查（超音波、X 光、心電圖、內視鏡、乳房攝影、抹片等）：value 只能填下方括號內其中一個選項，報告原文的描述放進 "note"。
-12. hbsab、antihbc、antihav、ht、wt、bmi、bia_fat、bia_fm、bia_smm、bia_bmr、bia_whr、phase 是抗體保護力，照抄原文（陽性／陰性或數值）。
+12. hbsab、antihbc、antihav、uepi、mpv、pdw、colorv、ht、wt、bmi、bia_fat、bia_fm、bia_smm、bia_bmr、bia_whr、phase、sfa、bia_score、ffm、lbm、tbw、smi、ffmi、fmi 是抗體保護力，照抄原文（陽性／陰性或數值）。
 13. 輸出前逐項自我核對：每個數字都必須能在報告中找到原文，小數點位置正確。
 
 【items 可用 key】
-waist＝腰圍、pulse＝脈搏、sbp＝收縮壓、dbp＝舒張壓、glu＝空腹血糖、pcg＝飯後兩小時血糖、hba1c＝糖化血色素、ins＝空腹胰島素、tc＝總膽固醇、tg＝三酸甘油酯、hdl＝高密度膽固醇 HDL、ldl＝低密度膽固醇 LDL、sdldl＝小而密低密度膽固醇 sdLDL、lpa＝脂蛋白(a) Lp(a)、ast＝GOT (AST)、alt＝GPT (ALT)、ggt＝γ-GT、alp＝鹼性磷酸酶 ALP、tbil＝總膽紅素、dbil＝直接膽紅素、tp＝總蛋白、alb＝白蛋白、afp＝甲型胎兒蛋白 AFP、hbsag＝B型肝炎表面抗原、hbeag＝B型肝炎e抗原、antihcv＝C型肝炎抗體、hbsab＝B型肝炎表面抗體、antihbc＝B型肝炎核心抗體、antihav＝A型肝炎抗體 IgG、cr＝肌酸酐、egfr＝腎絲球過濾率 eGFR、bun＝尿素氮 BUN、ua＝尿酸、uacr＝尿液微量白蛋白 UACR、na＝鈉 Na、k＝鉀 K、cl＝氯 Cl、ca＝鈣 Ca、p＝磷 P、mg＝鎂 Mg、upro＝尿蛋白、uglu＝尿糖、uob＝尿潛血、uket＝尿酮體、ubil＝尿膽紅素、uro＝尿膽素原、unit＝亞硝酸鹽、uleu＝白血球酯酶、usg＝尿比重、uph＝尿液酸鹼值 pH、urbc＝尿沉渣紅血球、uwbc＝尿沉渣白血球、hb＝血紅素、rbc＝紅血球、hct＝血球容積比 Hct、mcv＝平均紅血球容積 MCV、mch＝平均紅血球血紅素 MCH、mchc＝平均紅血球血紅素濃度 MCHC、rdw＝紅血球分布寬度 RDW、wbc＝白血球、neut＝嗜中性球、lymph＝淋巴球、mono＝單核球、eos＝嗜酸性球、baso＝嗜鹼性球、plt＝血小板、esr＝紅血球沉降速率 ESR、ferritin＝鐵蛋白、fe＝血清鐵、b12＝維生素 B12、folate＝葉酸、vitd＝維生素 D (25-OH)、tsh＝甲狀腺刺激素 TSH、ft4＝游離甲狀腺素 Free T4、t4＝甲狀腺素 T4、t3＝三碘甲狀腺素 T3、ft3＝游離 T3、antitpo＝甲狀腺過氧化酶抗體 Anti-TPO、hscrp＝高敏感度 C 反應蛋白 hs-CRP、crp＝C 反應蛋白 CRP、hcy＝同半胱胺酸、ck＝肌酸激酶 CK、ldh＝乳酸脫氫酶 LDH、ntprobnp＝NT-proBNP、amy＝澱粉酶 Amylase、lip＝脂肪酶 Lipase、cea＝癌胚抗原 CEA、ca199＝CA19-9、ca724＝CA72-4、cyfra＝CYFRA 21-1、nse＝神經元特異性烯醇化酶 NSE、scc＝鱗狀上皮細胞癌抗原 SCC、ebv＝EB 病毒抗體（鼻咽癌篩檢）、psa＝攝護腺特異抗原 PSA、fpsa＝游離 PSA、ca125＝CA-125、ca153＝CA15-3、hp＝幽門桿菌、rf＝類風濕因子 RF、ana＝抗核抗體 ANA、fobt＝糞便潛血、iop＝眼壓（取較高的一眼）、dxa＝骨密度 T 值、testo＝睪固酮、ht＝身高、wt＝體重、bmi＝BMI、bia_fat＝體脂肪率、bia_fm＝體脂肪量、bia_smm＝骨骼肌量、bia_bmr＝基礎代謝率、bia_whr＝腰臀圍比、phase＝相位角、vfa＝內臟脂肪面積、asmi＝四肢骨骼肌質量指數 ASMI、grip_r＝握力（右手）、grip_l＝握力（左手）
+waist＝腰圍、pulse＝脈搏、sbp＝收縮壓、dbp＝舒張壓、glu＝空腹血糖、pcg＝飯後兩小時血糖、hba1c＝糖化血色素、ins＝空腹胰島素、tc＝總膽固醇、tg＝三酸甘油酯、hdl＝高密度膽固醇 HDL、ldl＝低密度膽固醇 LDL、sdldl＝小而密低密度膽固醇 sdLDL、cvrisk＝心血管疾病風險（報告估算）、lpa＝脂蛋白(a) Lp(a)、ast＝GOT (AST)、alt＝GPT (ALT)、ggt＝γ-GT、alp＝鹼性磷酸酶 ALP、tbil＝總膽紅素、dbil＝直接膽紅素、tp＝總蛋白、alb＝白蛋白、glo＝球蛋白、ag＝白蛋白／球蛋白比 A/G、afp＝甲型胎兒蛋白 AFP、hbsag＝B型肝炎表面抗原、hbeag＝B型肝炎e抗原、antihcv＝C型肝炎抗體、hbsab＝B型肝炎表面抗體、antihbc＝B型肝炎核心抗體、antihav＝A型肝炎抗體 IgG、cr＝肌酸酐、egfr＝腎絲球過濾率 eGFR、bun＝尿素氮 BUN、ua＝尿酸、uacr＝尿液微量白蛋白 UACR、na＝鈉 Na、k＝鉀 K、cl＝氯 Cl、ca＝鈣 Ca、p＝磷 P、mg＝鎂 Mg、upro＝尿蛋白、uglu＝尿糖、uob＝尿潛血、uket＝尿酮體、ubil＝尿膽紅素、uro＝尿膽素原、unit＝亞硝酸鹽、uleu＝白血球酯酶、usg＝尿比重、uph＝尿液酸鹼值 pH、urbc＝尿沉渣紅血球、uwbc＝尿沉渣白血球、uepi＝尿沉渣上皮細胞、ucry＝尿結晶、ubact＝尿液細菌、hb＝血紅素、rbc＝紅血球、hct＝血球容積比 Hct、mcv＝平均紅血球容積 MCV、mch＝平均紅血球血紅素 MCH、mchc＝平均紅血球血紅素濃度 MCHC、rdw＝紅血球分布寬度 RDW、wbc＝白血球、neut＝嗜中性球、lymph＝淋巴球、mono＝單核球、eos＝嗜酸性球、baso＝嗜鹼性球、plt＝血小板、mpv＝血小板平均體積 MPV、pdw＝血小板分布寬度 PDW、esr＝紅血球沉降速率 ESR、ferritin＝鐵蛋白、fe＝血清鐵、b12＝維生素 B12、folate＝葉酸、vitd＝維生素 D (25-OH)、tsh＝甲狀腺刺激素 TSH、ft4＝游離甲狀腺素 Free T4、t4＝甲狀腺素 T4、t3＝三碘甲狀腺素 T3、ft3＝游離 T3、antitpo＝甲狀腺過氧化酶抗體 Anti-TPO、hscrp＝高敏感度 C 反應蛋白 hs-CRP、crp＝C 反應蛋白 CRP、hcy＝同半胱胺酸、ck＝肌酸激酶 CK、ldh＝乳酸脫氫酶 LDH、ntprobnp＝NT-proBNP、amy＝澱粉酶 Amylase、lip＝脂肪酶 Lipase、cea＝癌胚抗原 CEA、ca199＝CA19-9、ca724＝CA72-4、cyfra＝CYFRA 21-1、nse＝神經元特異性烯醇化酶 NSE、scc＝鱗狀上皮細胞癌抗原 SCC、ebv＝EB 病毒抗體（鼻咽癌篩檢）、psa＝攝護腺特異抗原 PSA、fpsa＝游離 PSA、ca125＝CA-125、ca153＝CA15-3、hp＝幽門桿菌、rf＝類風濕因子 RF、ana＝抗核抗體 ANA、fobt＝糞便潛血、iop＝眼壓（取較高的一眼）、va_r＝矯正視力（右眼）、va_l＝矯正視力（左眼）、colorv＝辨色力、dxa＝骨密度 T 值、testo＝睪固酮、cac＝冠狀動脈鈣化分數（CAC）、ht＝身高、wt＝體重、bmi＝BMI、bia_fat＝體脂肪率、bia_fm＝體脂肪量、bia_smm＝骨骼肌量、bia_bmr＝基礎代謝率、bia_whr＝腰臀圍比、phase＝相位角、vfa＝內臟脂肪面積、asmi＝四肢骨骼肌質量指數 ASMI、grip_r＝握力（右手）、grip_l＝握力（左手）、ecw＝水腫指數（細胞外水分比）、sfa＝皮下脂肪面積、bia_score＝InBody 健康分數、ffm＝去脂體重、lbm＝瘦肉質量、tbw＝體水分、smi＝骨骼肌質量指數、ffmi＝去脂體重指數 FFMI、fmi＝體脂肪指數 FMI
 
 【影像與檢查 key（value 只能填括號內選項）】
+hearing＝聽力（取較差的一耳）（正常／單側異常／雙側異常）
 us_liver＝腹部超音波：肝臟（正常／輕度脂肪肝／中度脂肪肝／重度脂肪肝／肝囊腫／血管瘤（良性）／慢性肝病／肝硬化／肝腫瘤或結節（待查））
 us_gb＝腹部超音波：膽囊（正常／膽結石（無症狀）／膽囊瘜肉 <1 公分／膽囊瘜肉 ≥1 公分／膽囊壁增厚／疑似腫瘤）
 us_kidney＝腹部超音波：腎臟（正常／腎囊腫（良性）／腎結石／腎水腫／腎臟腫瘤（待查））
 cxr＝胸部 X 光（正常／輕微變化（如主動脈鈣化、陳舊病灶）／肺結節或陰影（待查）／疑似腫瘤）
+pft＝肺功能（正常／輕度限制或阻塞／中重度限制或阻塞）
+prostus＝攝護腺超音波（正常／攝護腺肥大／鈣化或小結節／疑似腫瘤）
 ldct＝低劑量胸部 CT（Lung-RADS）（Lung-RADS 1（陰性）／Lung-RADS 2（良性）／Lung-RADS 3（可能良性）／Lung-RADS 4A（可疑）／Lung-RADS 4B／4X（高度可疑））
 ekg＝心電圖（正常／非特異性變化／心律不整／疑似心肌缺血／傳導阻滯）
 gastro＝胃鏡（正常／胃炎／逆流性食道炎／胃或十二指腸潰瘍／萎縮性胃炎／腸化生／疑似腫瘤）
@@ -94,7 +97,35 @@ fundus＝眼底攝影（正常／輕微異常／視網膜病變／疑似青光�
 【關鍵數值（有驗、正常）】血壓、血糖、HbA1c、血脂、肝功能、血小板、血紅素、腎功能、尿酸、TSH、腰圍中有驗的
 【這份報告沒有驗】上面關鍵項目中沒驗的
 【App 自動計算】FIB-4 肝纖維化指數、代謝症候群 5 項
+【歷年比較（日期 → 日期，不同醫院時註明）】變差／變差趨勢／持續異常／變好／標準不同（數值幾乎沒變、只是參考值不同）的項目，以及體重變化中脂肪與去脂體重各占多少
+【手錶 日期（近 7 天平均、裝置）】靜止心率、HRV、血氧、睡眠、步數、運動時間、VO₂max（附同齡分級）、呼吸速率、手錶血壓、心律不整提醒與異常說明
 【體脂計 日期】主要數值與異常
 【App 依規則列出的優先檢查】
+【檢查紀錄（上次做的年份）】【App 排的未來 3 年檢查】大腸鏡、胃鏡、低劑量肺部 CT 等依上次年份與間隔輪替
 【我的問題】整體解讀／異常逐項解釋／看診準備／飲食怎麼改／運動怎麼練／單一項目，加上自己的補充
 ```
+
+## 四、手錶／健康 App 截圖
+
+```text
+你是「健康數據擷取器」。我會附上智慧手錶或健康 App（Apple 健康、Garmin Connect、華為運動健康、Samsung Health、小米運動健康、Fitbit 等）的截圖（可能多張）。你的任務只有「讀取畫面上的數字」，不要分析、不要給建議。
+
+【規則】
+1. 只輸出一個 JSON 物件，前後不要有任何文字，也不要用 ``` 包起來。
+2. 優先填「近 7 天平均」或「週平均」；畫面只有單日數字時才填單日。找不到的欄位一律填 null，禁止推算或猜測。
+3. 數值只填數字，不含單位。睡眠換算成小時（7 小時 30 分 → 7.5）；HRV 填毫秒；血氧填百分比數字（例如 96）。
+4. 畫面上的「目標」「範圍」「上次」不是數值本身，不要填入。
+5. 有「心律不整通知」「心房顫動」「AFib」「不規則心律」的紀錄或提醒，afib 填 true；沒看到填 null。
+6. date：截圖上的日期（7 天區間就填最後一天），格式 "YYYY-MM-DD"（西元年；民國年請加 1911），沒有填 null；device：手錶或 App 名稱。
+7. 不要輸出姓名、電話、帳號等個人資料。
+8. 輸出前逐欄自我核對：每個數字都必須能在截圖中找到原文，小數點位置正確。
+
+【欄位對照】
+rhr＝靜止心率（bpm）、hrv＝心率變異 HRV（ms）、spo2＝血氧（%）、sleep＝每晚睡眠時數（小時）、steps＝每日步數、exmin＝每日運動分鐘（Apple「運動」圓圈、Garmin「熱血時間」；畫面是一週總分鐘請 ÷7）、vo2＝最大攝氧量 VO2max（ml/kg/min，Apple 健康叫「有氧體能」）、resp＝睡眠時呼吸速率（次／分）、kcal＝每日活動消耗（Apple「動態能量」，kcal）、sbp／dbp＝手錶量的收縮壓／舒張壓（mmHg）
+
+【輸出格式】
+{"type":"nutricore.watch","v":1,"date":null,"device":null,"rhr":null,"hrv":null,"spo2":null,"sleep":null,"steps":null,"exmin":null,"vo2":null,"resp":null,"kcal":null,"sbp":null,"dbp":null,"afib":null}
+```
+
+- **要截哪一頁**：iPhone「健康」App →「瀏覽」→ 心臟（靜止心率、心率變異、有氧體能）、呼吸（血氧、呼吸速率）、睡眠、活動（步數、運動時間、動態能量），切到「週」看平均；Garmin、華為、小米、Samsung 看 App 裡的 7 天平均。
+- **手錶數據只提醒、不列入體檢分數**：光學感測受配戴鬆緊、手溫影響；血氧、HRV、血壓、VO₂max 看自己的趨勢最有用。
