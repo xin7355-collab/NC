@@ -584,6 +584,24 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6o. 手錶活動消耗校正每日消耗（TDEE）；運動加吃扣掉手錶平均已含的運動 ===============
+  {
+    const td = new Date(), Y = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    page = await newPage({ members: [{ id: 'q', name: '測', sex: 'm', birth: '1984-03-15', h: 172, w: 70, act: '1.375', goal: 'keep' }], active: 'q', watch: { q: [{ id: 'w1', t: Y(1), kcal: 500, exmin: 30, rhr: 62 }] } });
+    const r = await page.evaluate(([y1, y3, y20]) => { const m = me(), set = rs => { WATCH[m.id] = rs; S.set('watch', WATCH) }, T = () => Math.round(calc(m).tdee);
+      const c = calc(m), a = { bmr: c.bmr, act: Math.round(c.tdeeAct), w500: T(), tag: '' }; renderAll();
+      a.tag = $('#coreStats').textContent.includes('手錶校正'); a.card = /每日消耗已用手錶校正/.test($('#energyCard').textContent) && /只採 75%/.test($('#energyCard').textContent) && /BMR × 1\.1 ＋ 手錶活動消耗/.test($('#energyCard').textContent);
+      const d = ymd(new Date()); EXLOG[m.id] = [{ id: 'e1', d, k: 'swim', min: 60, int: 'mod' }]; S.set('exlog', EXLOG); const b1 = exBonus(m, d); a.b1 = `${b1.base}|${b1.add}|${b1.src}|${exBonusTxt(b1, calc(m)).includes('手錶平均已算進')}`;
+      set([{ id: 'w1', t: y1, kcal: 500 }]); EXLOG[m.id].push({ id: 'e2', d: y3, k: 'swim', min: 60, int: 'mod' }); S.set('exlog', EXLOG); const b2 = exBonus(m, d); a.b2 = `${b2.base}|${b2.add}`;
+      set([{ id: 'w1', t: y1, kcal: 2100 }]); a.total = T(); set([{ id: 'w1', t: y1, kcal: 20 }]); a.low = T();
+      set([{ id: 'w1', t: y20, kcal: 500 }]); a.stale = T(); renderAll(); a.staleTxt = /超過 14 天，沒拿來算/.test($('#energyCard').textContent) && !$('#coreStats').textContent.includes('手錶校正');
+      set([{ id: 'w1', t: y1, rhr: 60 }, { id: 'w0', t: y3, kcal: 500 }]); a.older = T(); set([]); a.none = T(); return a }, [Y(1), Y(3), Y(20)]);
+    check('手錶活動消耗 500（近 7 天平均）→ TDEE ＝ BMR × 1.1 ＋ 500 × 75%（取代活動量估算），總覽標「手錶校正」、熱量卡說明來源與打折', r.w500 === Math.round(r.bmr * 1.1 + 375) && r.w500 !== r.act && r.tag && r.card, JSON.stringify(r));
+    check('填總卡路里（≥ BMR × 0.9）會先扣 BMR；活動太少下限 BMR × 1.2；超過 14 天沒更新改回活動量估算並提示；最新一筆沒填熱量就用較舊那筆', r.total === Math.round(r.bmr * 1.1 + (2100 - r.bmr) * .75) && r.low === Math.round(r.bmr * 1.2) && r.stale === r.act && r.staleTxt && r.older === r.w500 && r.none === r.act, JSON.stringify(r));
+    check('有手錶時運動加吃：扣掉手錶每日運動 30 分（121 kcal）→ 游泳 60 分多吃 190；沒填運動分鐘就扣那 7 天運動紀錄平均（53）→ 240', r.b1 === '121|190|watch|true' && r.b2 === '53|240', `${r.b1}｜${r.b2}`);
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);

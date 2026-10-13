@@ -1507,6 +1507,12 @@ function suggestGoal(m){
   return{goal:'keep',why:[`BMI ${r1(bmi)}${bf!=null?`、體脂 ${r1(bf)}%`:''} 都在標準內：維持體重、練肌力`]};
 }
 const GOALT={auto:'自動',cut:'減脂',keep:'維持',bulk:'增肌'};
+// 手錶活動消耗校正 TDEE（取代「活動量」估算）：只用近 14 天內的手錶 7 天平均；
+// 手錶熱量普遍高估 → 只採 75%；TDEE ≈ BMR × 1.1（含消化食物）＋ 活動 × 0.75，夾在 BMR × 1.2–2.0；
+// 填的數字 ≥ BMR × 0.9 視為「總消耗」（Garmin、Fitbit 的總卡路里含基礎代謝）→ 先扣掉 BMR
+function watchTdee(m,bmr){const r=watchOf(m).find(x=>num(x.kcal)!=null);if(!r)return null;
+  const k=num(r.kcal),total=k>=bmr*.9,act=Math.max(0,total?k-bmr:k);
+  return{t:r.t,kcal:k,total,act:Math.round(act),exmin:num(r.exmin),tdee:Math.min(bmr*2,Math.max(bmr*1.2,bmr*1.1+act*.75)),fresh:String(r.t)>=addDays(ymd(new Date()),-14)}}
 function calc(m){
   const a=ageOf(m),kid=a<18,male=m.sex!=='f',h=+m.h||170,hm=h/100,sc=scalesOf(m)[0],w=sc?.weight||+m.w||60,bmi=w/(hm*hm);
   const cuts=kid?childRow(a,m.sex):[18.5,24,27];
@@ -1514,7 +1520,8 @@ function calc(m){
                :(bmi<18.5?['過輕','var(--amber)']:bmi<24?['正常','var(--lime)']:bmi<27?['過重','var(--amber)']:bmi<35?['肥胖','var(--red)']:['重度肥胖','var(--red)']);
   // 成人 Mifflin-St Jeor；未滿 18 歲改用 WHO Schofield（成人公式不適用兒童）
   const bmr=kid?(male?(a<3?60.9*w-54:a<10?22.7*w+495:17.5*w+651):(a<3?61*w-51:a<10?22.5*w+499:12.2*w+746)):10*w+6.25*h-5*a+(male?5:-161);
-  const sg=suggestGoal(m),gsel=GOALT[m.goal]?m.goal:'auto',tdee=bmr*(+m.act||1.375),goal=kid?'keep':gsel==='auto'?sg.goal:gsel;
+  const tdeeAct=bmr*(+m.act||1.375),wt=watchTdee(m,bmr),tdee=wt?.fresh?wt.tdee:tdeeAct;
+  const sg=suggestGoal(m),gsel=GOALT[m.goal]?m.goal:'auto',goal=kid?'keep':gsel==='auto'?sg.goal:gsel;
   let target=goal==='cut'?tdee*.8:goal==='bulk'?tdee*1.1:tdee;target=Math.max(target,bmr);
   const mode=dietMode(m);
   let pk=kid?1.1:{cut:2,keep:1.6,bulk:1.8}[goal];if(mode.kidney)pk=.8;   // 腎功能異常時禁止高蛋白
@@ -1526,7 +1533,7 @@ function calc(m){
   const wa=+m.waist,ne=+m.neck,hi=+m.hip;
   if(bf==null&&wa&&ne&&!kid){if(male&&wa>ne)bf=495/(1.0324-.19077*Math.log10(wa-ne)+.15456*Math.log10(h))-450;
     if(!male&&hi&&wa+hi>ne)bf=495/(1.29579-.35004*Math.log10(wa+hi-ne)+.221*Math.log10(h))-450;if(bf!=null)bfSrc='圍度估算'}
-  return{a,kid,h,w,bmi,cuts,cat,bmr,tdee,target,goal,gsel,sg,prot,fat,carb,bf,bfSrc,wMin:cuts[0]*hm*hm,wMax:cuts[1]*hm*hm,water:w*35,whtr:wa?wa/h:null,mode,sc};
+  return{a,kid,h,w,bmi,cuts,cat,bmr,tdee,tdeeAct,wt,target,goal,gsel,sg,prot,fat,carb,bf,bfSrc,wMin:cuts[0]*hm*hm,wMax:cuts[1]*hm*hm,water:w*35,whtr:wa?wa/h:null,mode,sc};
 }
 
 /* ================= 視覺元件 ================= */
@@ -1771,7 +1778,7 @@ function renderDash(){
     stat('BMI 分級',c.cat[0],'',tagH(c.kid?'國健署兒童標準':'國健署成人標準',c.cat[1]))+
     stat('健康體重',`${c.wMin.toFixed(0)}–${c.wMax.toFixed(0)}`,'kg',c.sc?tagH('體脂機 '+fmt(c.w)+' kg','#22e4ff'):'')+
     stat('基礎代謝 BMR',Math.round(c.bmr),'kcal',c.sc?.bmr?tagH('體脂機實測 '+c.sc.bmr,'#22e4ff'):tagH(c.kid?'Schofield 兒童公式':'Mifflin 公式','#8a97b4'))+
-    stat('每日消耗 TDEE',Math.round(c.tdee),'kcal');
+    stat('每日消耗 TDEE',Math.round(c.tdee),'kcal',c.wt?.fresh?tagH('手錶校正','#22e4ff'):'');
   $('#ring').innerHTML=ring(c);
   const mrow=(n,g,col)=>`<div class="row"><span>${n}</span><b>${Math.round(g)} g</b></div><div class="bar"><i style="width:100%;background:${col}"></i></div>`;
   $('#macroList').innerHTML=mrow('蛋白質',c.prot,'var(--cyan)')+mrow('碳水',c.carb,'var(--lime)')+mrow('脂肪',c.fat,'var(--pink)');
@@ -1805,15 +1812,17 @@ function renderEnergy(m,c){
   const eat=c.goal==='cut'?[`每天吃約 ${tg} kcal（比消耗少 ${-d}）`,`約每週減 ${wk.toFixed(2)} kg；第一階段 3 個月先減 3–5%（到 ${(c.w*.95).toFixed(1)}–${(c.w*.97).toFixed(1)} kg）${weeks?`；約 ${weeks} 週（${Math.max(1,Math.round(weeks/4.3))} 個月）到健康體重上限 ${Math.round(c.wMax)} kg`:''}。減太快會掉肌肉，這個速度剛好`]
     :c.goal==='bulk'?[`每天吃約 ${tg} kcal（比消耗多 ${d}）`,'搭配每週 3 次重訓，每月增重 0.5–1 kg 為宜；增太快多半是脂肪']
     :[`每天吃約 ${tg} kcal 維持體重`,'吃進的約等於消耗的；體重 2 週內上下 1 kg 都算正常波動'];
-  const row=(ic,t,sub)=>`<div class="do"><span class="ic">${ic}</span><div><b>${t}</b><div class="s">${sub}</div></div></div>`;
+  const row=(ic,t,sub)=>`<div class="do"><span class="ic">${ic}</span><div><b>${t}</b><div class="s">${sub}</div></div></div>`,wt=c.wt,ta=Math.round(c.tdeeAct);
+  const wtBox=!wt?'':wt.fresh?`<div class="hl" style="margin:8px 0 6px">⌚ <b>每日消耗已用手錶校正</b><div class="sub" style="margin-top:4px">手錶 ${esc(wt.t)} 近 7 天平均${wt.total?`總消耗 ${wt.kcal} kcal（含基礎代謝，扣掉 ${bmr} 後活動約 ${wt.act}）`:`活動消耗 ${wt.kcal} kcal`}；手錶多半高估，只採 75%。用「活動量」設定估算是 ${ta} kcal，以手錶為準。手錶數據超過 14 天沒更新會改回設定估算</div></div>`
+    :`<div class="note" style="margin:8px 0 6px">⌚ 手錶活動消耗是 ${esc(wt.t)} 的、超過 14 天，沒拿來算；在「身體 › 手錶」更新近 7 天數據，每日消耗就會改用手錶校正</div>`;
   $('#energyCard').innerHTML=`<h2>熱量怎麼用</h2>${hBox}${sgBox}
     <div class="ebar" role="img" aria-label="基礎代謝 ${bmr}、活動 ${tdee-bmr}、目標 ${tg} kcal"><i class="grow" style="width:${pc(bmr)}%;background:linear-gradient(90deg,#14a3c2,var(--cyan))">基礎代謝 ${bmr}</i><i class="grow" style="width:${pc(tdee-bmr)}%;background:linear-gradient(90deg,#8fd12f,var(--lime));animation-delay:.25s">活動 ${tdee-bmr}</i>
       <span class="mk" style="left:${tp}%"><b style="${tp>85?'transform:translateX(-85%)':''}">🎯 目標 ${tg}</b></span></div>
-    <div class="sub" style="margin:-20px 0 6px">每日消耗 TDEE <b style="color:var(--text)">${tdee}</b> kcal ＝ 基礎代謝 ${bmr} ＋ 活動 ${tdee-bmr}</div>
+    <div class="sub" style="margin:-20px 0 6px">每日消耗 TDEE <b style="color:var(--text)">${tdee}</b> kcal ＝ 基礎代謝 ${bmr} ＋ 活動 ${tdee-bmr}</div>${wtBox}
     <div class="stg">${row('🍽',eat[0],eat[1])}
     ${row('🛑',`底線：每天別低於 BMR ${bmr} kcal`,'BMR 是躺著不動也要燒掉的熱量（心跳、呼吸、體溫）。長期吃得比它少，會先掉肌肉、代謝變慢，停下來更容易復胖')}
     ${(()=>{const b=exBonus(m,ymd(new Date()));return b.min?row('🏃',b.add?`今天運動後可多吃約 ${b.add} kcal（今天目標 ${tg+b.add}）`:'今天的運動已算在每日消耗裡',exBonusTxt(b,c)):''})()}
-    ${row('🚶','想多吃一點？提高 TDEE',`TDEE ＝ BMR × ${esc(m.act||'1.375')}（${esc(act)}）。每天多快走 30 分鐘 ≈ +${w30} kcal，一個月 ≈ ${(w30*30/7700).toFixed(1)} kg 脂肪；搭電梯改走樓梯、站著講電話都算 <button class="btn sm ghost" data-go="fit" style="margin-top:6px">看我的運動課表 ›</button>`)}
+    ${row('🚶','想多吃一點？提高 TDEE',`${wt?.fresh?`TDEE ＝ BMR × 1.1 ＋ 手錶活動消耗 × 75%`:`TDEE ＝ BMR × ${esc(m.act||'1.375')}（${esc(act)}）`}。每天多快走 30 分鐘 ≈ +${w30} kcal，一個月 ≈ ${(w30*30/7700).toFixed(1)} kg 脂肪；搭電梯改走樓梯、站著講電話都算 <button class="btn sm ghost" data-go="fit" style="margin-top:6px">看我的運動課表 ›</button>`)}
     ${row('💪','提高 BMR 只有一招：增加肌肉',`每週 2–3 次肌力訓練＋每天蛋白質 ${Math.round(c.prot)} g（每餐一個手掌大的魚、肉、蛋或豆腐）。肌肉多了，血糖更穩、比較不會復胖`)}
     ${row('⚖️','用體重校正數字','公式誤差約 ±10%。照這個熱量吃 2–3 週：體重沒動就再少 100–200 kcal；每週掉超過 1 kg 就加回 100–200 kcal')}</div>
     <details class="box"><summary>BMR、TDEE 是什麼？</summary><div class="note" style="margin:0">・<b>BMR 基礎代謝</b>：整天躺著不動，維持心跳、呼吸、體溫要的熱量，約佔一天消耗的 60–70%。<br>・<b>TDEE 每日總消耗</b>：BMR ＋ 走路、工作、運動、消化食物。吃剛好 TDEE 體重不變；少吃 500 kcal 約每週減 0.5 kg。<br>・兩個都是公式估算（${c.sc?.bmr?'體脂機有實測 BMR '+fmt(c.sc.bmr)+'，可對照':'Mifflin-St Jeor 公式'}），真正的答案看體重怎麼變。</div></details>`;
@@ -1886,14 +1895,17 @@ function openExLog(pre){const m=me(),o={d:ymd(new Date()),k:'walk',min:30,int:'m
     const r={id:uid(),d,k:st.k,min:Math.round(mn),int:st.int,note:$('#xl-note').value.trim().slice(0,30)};r.kcal=exKcal(r,calc(m).w);
     (EXLOG[m.id]=EXLOG[m.id]||[]).push(r);if(!S.set('exlog',EXLOG))return;closeSheet();renderAll();toast(`已記錄：${EX[r.k]?.n||r.note||'其他運動'} ${r.min} 分鐘`)}}
 // 運動加進飲食熱量：TDEE 已經用「活動量」算進一部分運動（輕度≈每天 15 分、中度≈30 分、高度≈50 分、極高≈70 分快走），只補回超過的部分；
+// TDEE 用手錶校正時，手錶的 7 天平均已含平常的運動 → 已算進的改成：那 7 天運動紀錄的每日平均淨消耗、手錶每日運動分鐘（×3.3 MET）取大者，兩個都沒有才用活動量設定；
 // 只算淨消耗（扣掉本來就會燒的基礎代謝 1 MET）；運動估算常偏高 → 減脂補一半、維持補 75%、增肌全補
 const ACT_MIN={'1.2':0,'1.375':15,'1.55':30,'1.725':50,'1.9':70};
 function exBonus(m,d){const c=calc(m),L=exlogOf(m).filter(r=>r.d===d);if(!L.length)return{min:0,gross:0,net:0,base:0,extra:0,add:0,eat:0,L};
-  const net=Math.round(L.reduce((t,r)=>{const e=EX[r.k],f=(INT.find(x=>x[0]===r.int)||INT[1])[2];return t+metK(Math.max(0,(e?e.met:4)*f-1),c.w,r.min)},0));
-  const base=Math.round(metK(3.3,c.w,ACT_MIN[String(m.act)]??15)),extra=Math.max(0,net-base),eat=c.kid?1:{cut:.5,keep:.75,bulk:1}[c.goal]??.75;
-  return{min:L.reduce((t,r)=>t+r.min,0),gross:L.reduce((t,r)=>t+(r.kcal||0),0),net,base,extra,eat,add:Math.min(800,Math.round(extra*eat/10)*10),L}}
-const exBonusTxt=(b,c)=>b.add?`今天記錄運動 ${b.min} 分鐘，淨消耗約 ${b.net} kcal；扣掉活動量已算進的 ${b.base} kcal，今天可多吃約 <b>${b.add} kcal</b>${c.goal==='cut'?'（減脂只補回一半，熱量缺口才會在）':''}，多補的以全穀、地瓜等碳水為主（運動後補充最有效）`
-  :b.min?`今天記錄運動 ${b.min} 分鐘（淨消耗約 ${b.net} kcal），還在你設定的活動量內、已經算在每日消耗裡，不用多吃`:'';
+  const net1=r=>{const e=EX[r.k],f=(INT.find(x=>x[0]===r.int)||INT[1])[2];return metK(Math.max(0,(e?e.met:4)*f-1),c.w,r.min)},wt=c.wt?.fresh?c.wt:null;
+  let base=metK(3.3,c.w,ACT_MIN[String(m.act)]??15);
+  if(wt){const lo=addDays(wt.t,-6),wl=exlogOf(m).filter(r=>r.d>=lo&&r.d<=wt.t),avg=wl.reduce((t,r)=>t+net1(r),0)/7,em=wt.exmin!=null?metK(3.3,c.w,wt.exmin):null;if(wl.length||em!=null)base=Math.max(avg,em||0)}
+  base=Math.round(base);const net=Math.round(L.reduce((t,r)=>t+net1(r),0)),extra=Math.max(0,net-base),eat=c.kid?1:{cut:.5,keep:.75,bulk:1}[c.goal]??.75;
+  return{min:L.reduce((t,r)=>t+r.min,0),gross:L.reduce((t,r)=>t+(r.kcal||0),0),net,base,extra,eat,src:wt?'watch':'act',add:Math.min(800,Math.round(extra*eat/10)*10),L}}
+const exBonusTxt=(b,c)=>b.add?`今天記錄運動 ${b.min} 分鐘，淨消耗約 ${b.net} kcal；扣掉${b.src==='watch'?'手錶平均已算進':'活動量已算進'}的 ${b.base} kcal，今天可多吃約 <b>${b.add} kcal</b>${c.goal==='cut'?'（減脂只補回一半，熱量缺口才會在）':''}，多補的以全穀、地瓜等碳水為主（運動後補充最有效）`
+  :b.min?`今天記錄運動 ${b.min} 分鐘（淨消耗約 ${b.net} kcal），${b.src==='watch'?'跟手錶平常的運動量差不多':'還在你設定的活動量內'}、已經算在每日消耗裡，不用多吃`:'';
 function delExLog(id){const m=me();EXLOG[m.id]=(EXLOG[m.id]||[]).filter(r=>r.id!==id);S.set('exlog',EXLOG);renderAll();toast('已刪除這筆紀錄')}
 const cleanExLog=r=>{const o={id:r.id,d:r.d,k:EX[r.k]||r.k==='other'?r.k:'other',min:Math.min(600,Math.max(1,Math.round(num(r.min)||0))),int:INT.some(x=>x[0]===r.int)?r.int:'mod'};
   if(typeof r.note==='string'&&r.note.trim())o.note=r.note.trim().slice(0,30);const k=num(r.kcal);if(k!=null&&k>=0&&k<5000)o.kcal=Math.round(k);return o};
@@ -2030,7 +2042,7 @@ function openMemberEdit(id,focus){
       <div><label>臀圍 cm（女性選填）</label><input id="m-hip" inputmode="decimal" value="${esc(m.hip)}"></div>
     </div>
     <div class="sub" id="m-stage" style="margin-top:10px;color:var(--cyan)"></div>
-    <label>活動量</label><select id="m-act">${ACTS.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select>
+    <label>活動量</label><select id="m-act">${ACTS.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select>${ex&&calc(m).wt?.fresh?'<div class="note" style="margin-top:6px">⌚ 已有近 14 天的手錶活動消耗，每日消耗以手錶為準；這個設定只在手錶數據過期時使用</div>':''}
     <label>目標</label><div class="seg" id="m-goal"><button data-v="auto">自動</button><button data-v="cut">減脂</button><button data-v="keep">維持</button><button data-v="bulk">增肌</button></div>
     <div class="note" style="margin-top:6px">自動＝營養師依 BMI、體脂、腰圍、肌肉量判斷${ex?`（目前建議：${GOALT[suggestGoal(m).goal]}）`:''}</div>
     <div class="note" id="m-kidnote"></div>
@@ -2287,7 +2299,7 @@ function promptWatch(){return `你是「健康數據擷取器」。我會附上�
 12. 輸出前逐欄自我核對：每個數字（第 6 條的加總、÷7 除外）都必須能在截圖中找到原文，小數點位置正確。
 
 【欄位對照】
-rhr＝靜止心率（bpm；小米叫「安靜心率」）、hrv＝心率變異 HRV（ms）、stress＝平均壓力（0–100；小米、華為、Garmin、Samsung 的「壓力」）、spo2＝血氧（%）、sleep＝每晚睡眠時數（小時）、steps＝每日步數、exmin＝每日運動分鐘（Apple「運動」圓圈、Garmin「熱血時間」；畫面是一週總分鐘請 ÷7）、vo2＝最大攝氧量 VO2max（ml/kg/min，Apple 健康叫「有氧體能」）、resp＝睡眠時呼吸速率（次／分）、kcal＝每日活動消耗（Apple「動態能量」，kcal）、sbp／dbp＝手錶量的收縮壓／舒張壓（mmHg）
+rhr＝靜止心率（bpm；小米叫「安靜心率」）、hrv＝心率變異 HRV（ms）、stress＝平均壓力（0–100；小米、華為、Garmin、Samsung 的「壓力」）、spo2＝血氧（%）、sleep＝每晚睡眠時數（小時）、steps＝每日步數、exmin＝每日運動分鐘（Apple「運動」圓圈、Garmin「熱血時間」；畫面是一週總分鐘請 ÷7）、vo2＝最大攝氧量 VO2max（ml/kg/min，Apple 健康叫「有氧體能」）、resp＝睡眠時呼吸速率（次／分）、kcal＝每日活動消耗（Apple「動態能量」、Garmin「活動卡路里」、小米「活動消耗」，kcal；只有「總卡路里」就填總卡路里，App 會自動扣掉基礎代謝；會用來校正每日該吃多少熱量）、sbp／dbp＝手錶量的收縮壓／舒張壓（mmHg）
 
 【輸出格式】
 {"type":"nutricore.watch","v":1,"date":null,"device":null,${WF.map(f=>`"${f.k}":null`).join(',')},"afib":null}`}

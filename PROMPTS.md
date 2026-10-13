@@ -125,7 +125,7 @@ fundus＝眼底攝影（正常／輕微異常／視網膜病變／疑似青光�
 12. 輸出前逐欄自我核對：每個數字（第 6 條的加總、÷7 除外）都必須能在截圖中找到原文，小數點位置正確。
 
 【欄位對照】
-rhr＝靜止心率（bpm；小米叫「安靜心率」）、hrv＝心率變異 HRV（ms）、stress＝平均壓力（0–100；小米、華為、Garmin、Samsung 的「壓力」）、spo2＝血氧（%）、sleep＝每晚睡眠時數（小時）、steps＝每日步數、exmin＝每日運動分鐘（Apple「運動」圓圈、Garmin「熱血時間」；畫面是一週總分鐘請 ÷7）、vo2＝最大攝氧量 VO2max（ml/kg/min，Apple 健康叫「有氧體能」）、resp＝睡眠時呼吸速率（次／分）、kcal＝每日活動消耗（Apple「動態能量」，kcal）、sbp／dbp＝手錶量的收縮壓／舒張壓（mmHg）
+rhr＝靜止心率（bpm；小米叫「安靜心率」）、hrv＝心率變異 HRV（ms）、stress＝平均壓力（0–100；小米、華為、Garmin、Samsung 的「壓力」）、spo2＝血氧（%）、sleep＝每晚睡眠時數（小時）、steps＝每日步數、exmin＝每日運動分鐘（Apple「運動」圓圈、Garmin「熱血時間」；畫面是一週總分鐘請 ÷7）、vo2＝最大攝氧量 VO2max（ml/kg/min，Apple 健康叫「有氧體能」）、resp＝睡眠時呼吸速率（次／分）、kcal＝每日活動消耗（Apple「動態能量」、Garmin「活動卡路里」、小米「活動消耗」，kcal；只有「總卡路里」就填總卡路里，App 會自動扣掉基礎代謝；會用來校正每日該吃多少熱量）、sbp／dbp＝手錶量的收縮壓／舒張壓（mmHg）
 
 【輸出格式】
 {"type":"nutricore.watch","v":1,"date":null,"device":null,"rhr":null,"hrv":null,"stress":null,"spo2":null,"sleep":null,"steps":null,"exmin":null,"vo2":null,"resp":null,"kcal":null,"sbp":null,"dbp":null,"afib":null}
