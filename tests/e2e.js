@@ -541,6 +541,35 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6m. 手動記錄運動、症狀自我評估 ===============
+  {
+    page = await newPage({ members: [{ id: 'e', name: '測', sex: 'm', birth: '1984-03-15', h: 172, w: 70, act: '1.375', goal: 'cut' }], active: 'e',
+      labs: { e: [{ id: 'c', t: '2025-09-01', hospital: '臺安', items: { ldct: { v: 'Lung-RADS 1（陰性）', ref: '原文：No lung nodule. Mild bilateral apical pleural thickness. Coronary artery calcification.' } }, extra: [] }] } });
+    await page.click('#nav button[data-v="fit"]'); await page.waitForTimeout(300); await page.click('#fitBody [data-exlog]'); await page.waitForTimeout(300);
+    await page.click('#xl-k [data-k="swim"]'); await page.fill('#xl-min', '45'); await page.click('#xl-save'); await page.waitForTimeout(300);
+    await page.click('#fitBody [data-exlog]'); await page.waitForTimeout(300); await page.click('#xl-k [data-k="walk"]'); await page.click('#xl-int [data-v="easy"]'); await page.click('[data-xm="30"]'); await page.click('#xl-save'); await page.waitForTimeout(300);
+    const ex = await page.evaluate(() => { const L = exlogOf(me()), W = exWeek(me(), mondayOf(ymd(new Date()))); return { n: L.length, kcal: L.find(r => r.k === 'swim')?.kcal, aer: W.aer, all: W.all, card: /本週實際完成/.test($('#fitBody').textContent) && /游泳 45 分鐘/.test($('#fitBody').textContent), ai: aiPrompt(me(), { topic: 'all' }) } });
+    check('手動記錄運動：游泳 45 分（中等）算進每週有氧、散步 30 分（輕鬆）只記錄不算；估算熱量；AI 醫生附上近 7 天紀錄', ex.n === 2 && ex.kcal > 200 && ex.aer === 45 && ex.all === 75 && ex.card && /【近 7 天運動紀錄】/.test(ex.ai), JSON.stringify({ ...ex, ai: '' }));
+    const id = await page.evaluate(() => exlogOf(me()).find(r => r.k === 'walk').id); await page.click(`#fitBody [data-exrm="${id}"]`); await page.waitForTimeout(300);
+    await page.evaluate(() => { openTimer(0); $('#tmLog').hidden = false }); await page.click('#tmLog'); await page.waitForTimeout(300);
+    const ex2 = await page.evaluate(() => ({ n: exlogOf(me()).length, cb: JSON.stringify(cleanBackup({ members: [{ id: 'e', name: 'x', sex: 'm', birth: '1984-01-01' }], exlog: { e: [{ id: 'a', d: '2026-10-12', k: 'evil', min: 9999, int: 'x', note: '<b>hi</b>', kcal: 'x' }, { id: 'b', d: 'bad', k: 'walk', min: 30 }] } }).exlog) }));
+    check('刪除一筆、計時完成一鍵記錄；備份檔的運動紀錄會清洗', ex2.n >= 2 && ex2.cb === '{"e":[{"id":"a","d":"2026-10-12","k":"other","min":600,"int":"mod","note":"<b>hi</b>"}]}', JSON.stringify(ex2));
+    await page.evaluate(() => closeSheet()); await page.click('#nav button[data-v="body"]'); await page.waitForTimeout(200); await page.click('#v-body [data-sym]'); await page.waitForTimeout(300);
+    await page.click('[data-sk="chest"]'); await page.waitForTimeout(150);
+    const s1 = await page.evaluate(() => $('#sym-out').textContent);
+    await page.click('#sym-out [data-rf="chest:0"]'); await page.waitForTimeout(150);
+    const s2 = await page.evaluate(() => ({ t: $('#sym-out').textContent, now: !!$('#sym-out .banner') }));
+    check('症狀：胸悶 → 心臟內科、心電圖，並對照報告提到冠狀動脈鈣化；勾危險徵兆（悶痛超過 15 分鐘）→ 立即就醫', /心臟內科/.test(s1) && /心電圖/.test(s1) && /冠狀動脈鈣化/.test(s1) && /安排門診/.test(s1) && s2.now && /立即就醫/.test(s2.t), s1.slice(0, 80));
+    await page.click('[data-sk="chest"]'); await page.click('[data-sk="head"]'); await page.click('#sym-dur [data-v="long"]'); await page.waitForTimeout(150);
+    const s3 = await page.evaluate(() => $('#sym-out').textContent);
+    await page.click('#sym-ai'); await page.waitForTimeout(300);
+    const s4 = await page.evaluate(() => ({ q: $('#ai-q').value, pv: aiPrompt(me(), aiO) }));
+    check('頭痛超過 2 週 → 從「觀察」升為「門診」；帶症狀問 AI 醫生會預先填好問題', /安排門診/.test(s3) && /頭痛（超過 2 週）/.test(s4.q) && /頭痛/.test(s4.pv), s4.q.slice(0, 40));
+    const ev = await page.evaluate(() => labEval(labsOf(me())[0], me()).map(i => i.k).join());
+    check('英文 LDCT 報告（pleural thickness、coronary artery calcification）也判讀得到', /img_pleura/.test(ev) && /img_cac/.test(ev), ev);
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);

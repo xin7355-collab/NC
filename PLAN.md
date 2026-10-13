@@ -20,6 +20,8 @@ iPhone 瀏覽器（加入主畫面）
       ├─ 歷年比較：3 年內最多 3 份報告，每份用自己的參考值判定 → 變差／變差趨勢／持續異常／變好／進步／標準不同；不同醫院提示；體重增減裡脂肪占多少；標「長期／不可逆」「可逆」「可控制」
       ├─ 今年健檢建議：最新報告異常＋逐年趨勢＋國健署公費資格＋家族史 → 優先順序清單（可複製給醫師）
       ├─ 檢查輪替：依每項檢查上次做的年份（報告自動抓＋自填大腸鏡／胃鏡／肺部 CT 年份）與建議間隔，排未來 3 年；自費大項一年一項、其他往後輪
+      ├─ 運動紀錄：手動記錄（日期、項目、分鐘、強度，依 MET×體重估熱量）或計時完成一鍵記錄；中等以上有氧才算進每週目標
+      ├─ 症狀自我評估：勾症狀＋持續多久 → 危險徵兆（立即 119／儘快／門診／觀察）、建議科別、可討論的檢查，並對照自己的報告、手錶、生活習慣；可帶症狀問 AI 醫生；症狀不儲存
       ├─ 手錶：近 7 天平均（靜止心率、HRV、血氧、睡眠、步數、運動時間、VO₂max、呼吸速率、活動消耗、手錶血壓、心律不整提醒）、AI 截圖匯入；只提醒不計分
       ├─ 身體地圖：SVG 全息人體（男／女體型、器官、骨架、動脈），異常器官發紅光＋熱區，點部位或標註看細節
       ├─ 營養師：依 BMI／體脂／腰圍建議目標（自動），依體檢給飲食重點與每日目標，菜單直接挑菜、調份量
@@ -31,7 +33,7 @@ iPhone 瀏覽器（加入主畫面）
       ├─ AI 醫生：附台灣判讀標準、已驗正常的關鍵數值（避免 AI 叫你重驗）、報告沒驗的項目、FIB-4／代謝症候群、醫院量的身高；影像用報告原文；異常數值（含前一次）、歷年比較、手錶、檢查紀錄與未來 3 年輪替、家族史、生活習慣、身體限制、優先檢查＋問題範本（整體／逐項／看診準備／飲食／運動／單項）→ 複製並開 AI（短問題用 ?q= 帶入）；不含姓名、生日、醫院名稱
       ├─ 設定：右上角 ⚙️，分頁（基本資料／家族史／運動／不吃的／疫苗／App 設定）
       ├─ 一週採買清單：依每位家人的菜單與份量加總食材（生重、主食減量也算進去），進位成好買的量，分區列出、可打勾／移除／複製
-      ├─ 儲存：localStorage（nc_members / nc_scale / nc_labs / nc_watch / nc_img 索引）＋ IndexedDB（菜色圖片）＋ JSON 備份
+      ├─ 儲存：localStorage（nc_members / nc_scale / nc_labs / nc_watch / nc_exlog / nc_img 索引）＋ IndexedDB（菜色圖片）＋ JSON 備份
       ├─ 圖片工坊 → AI Horde 社群算力（免金鑰，單一佇列、每次請求 30 秒逾時、429 照 Retry-After 或 15/30/60 秒退避、整體 15 分鐘上限）
       │            或 GAS → Cloudflare Workers AI（FLUX，免費額度；成功才扣每日額度；設定錯誤不重試，直接說要去哪裡改）
       └─ 版本自動更新：APP_VER 由部署流程寫入 commit 編號；回到前景時抓線上 index.html 比對，不同就重新載入（開著視窗、輸入中、生圖中改顯示按鈕）
@@ -144,6 +146,7 @@ member = {id, name, sex:'m'|'f', birth:'YYYY-MM-DD', h, w, waist, neck, hip, act
 shop   = {本週週一日期: {done:[食材鍵], rm:[食材鍵]}}   // nc_shop；只留最近 3 週
 scale  = {id, t:'YYYY-MM-DDTHH:mm', weight, bmi, fat, ..., status:{fat:'偏高'}, derived:['weight']}
 lab    = {id, t:'YYYY-MM-DD', hospital, items:{glu:{v, lo, hi, ref, flag, conv}, us_liver:{v:'輕度脂肪肝', ref:'原文：…'}}, extra:[{name, value, unit, ref, lo, hi, flag}]}
+exlog  = {id, d:'YYYY-MM-DD', k:EX 鍵|'other', min, int:'easy'|'mod'|'hard', note, kcal}   // nc_exlog
 watch  = {id, t:'YYYY-MM-DD', device, rhr, hrv, spo2, sleep, steps, exmin, vo2, resp, kcal, sbp, dbp, afib:true}   // nc_watch；近 7 天平均，備份還原時只留已知欄位與合理範圍
 img    = {菜色id: 'idb'}   // 圖片本體在 IndexedDB「nutricore / img」，壓成 384px JPEG
 ```
