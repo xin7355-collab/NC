@@ -338,6 +338,12 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   check('身體頁顯示「App 自動計算」卡與近 7 天平均體重', /FIB-4/.test(bodyTxt.d) && /代謝症候群/.test(bodyTxt.d) && /近 7 天平均體重\s*74\.3 kg/.test(bodyTxt.w) && /前 7 天 75/.test(bodyTxt.w), bodyTxt.w.slice(0, 50));
   await page.close();
 
+  // 不預設立場：沒填運動狀況的成員，不能出現任何身體限制；費用標籤寫「健保給付」
+  page = await newPage({ members: [{ id: 'n', name: '新成員', sex: 'm', birth: '1984-01-01', h: 172, w: 70, act: '1.375', goal: 'auto' }], active: 'n' });
+  const np0 = await page.evaluate(() => { const P = fitPlan(me()); return { F: [...P.F].filter(k => LIM.some(z => z[0] === k)).join(), W: P.W.map(x => x.t).join('｜'), ai: aiPrompt(me(), { topic: 'all', fh: true, scale: true, normals: false, q: '' }), pl: planHTML(me()) } });
+  check('沒填運動狀況 → 不預設任何身體限制（不會說膝蓋不好）；健檢費用標「健保給付」', !np0.F && !/膝蓋|下背|肩膀|腳踝/.test(np0.W) && !/身體限制/.test(np0.ai) && /健保給付|公費免費/.test(np0.pl) && !/>💰 健保</.test(np0.pl), np0.W.slice(0, 60));
+  await page.close();
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);

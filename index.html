@@ -1043,6 +1043,8 @@ const fhText=m=>{const f=fhOf(m),n=(a,ks)=>ks.map(k=>(a.find(x=>x[0]===k)||[,k])
    大腸癌 45–74（一等親大腸癌 40–44）每 2 年；胃癌幽門桿菌 45–74 終身一次（2026 起）；乳癌 40–74 每 2 年；子宮頸抹片 25–29 每 3 年、30+ 每年；
    HPV 35／45／65 歲；口腔癌 30+ 吸菸或嚼檳榔（原住民 18+ 嚼檳榔）每 2 年；肺癌 LDCT 一等親肺癌（男 45、女 40 起）或 50–74 歲 ≥20 包年且戒菸未滿 15 年，每 2 年 */
 const PRT=['','優先','今年','可考慮'];
+// 費用標籤寫清楚：「健保」是健保給付（誰付錢），不是健保 App
+const chT=c=>String(c||'').replace(/健保/g,'健保給付').replace(/公費/g,'公費免費');
 const SECS=['追蹤報告異常','數值趨勢','公費篩檢（國健署）','家族史與生活習慣','定期檢查（成人）','疫苗建議','報告沒驗、建議補上'];
 const dayDiff=(a,b)=>Math.abs(new Date(a+'T00:00')-new Date(b+'T00:00'))/864e5;
 function yearPlan(m){
@@ -1196,11 +1198,11 @@ function planHTML(m){const pl=yearPlan(m),sx=sexT(m.sex);
   if(!pl.items.length)return head+'<div class="empty">目前沒有特別建議，維持每年健康檢查</div>';
   let html='',sec='';
   for(const o of pl.items){if(o.sec!==sec){sec=o.sec;html+=`<div class="h4">${esc(sec)}</div>`}
-    html+=`<div class="plan"><span class="pr pr${o.pr}">${PRT[o.pr]}</span><div class="m"><b>${esc(o.t)}</b><div class="s">${esc(o.why)}</div><div class="pt">${o.ch&&o.ch!=='—'?`<i>${esc(o.ch)}</i>`:''}<i>${esc(o.when)}</i></div></div></div>`}
+    html+=`<div class="plan"><span class="pr pr${o.pr}">${PRT[o.pr]}</span><div class="m"><b>${esc(o.t)}</b><div class="s">${esc(o.why)}</div><div class="pt">${o.ch&&o.ch!=='—'?`<i>💰 ${esc(chT(o.ch))}</i>`:''}<i>${esc(o.when)}</i></div></div></div>`}
   return head+html+`<button class="btn ghost" data-copyplan="1">📋 複製清單（給醫師或健檢中心）</button><p class="note">依國健署 2025–2026 公費篩檢資格與常見臨床指引整理，實際檢查項目請與醫師討論。</p>`}
 function planText(m){const pl=yearPlan(m);
   return [`NutriCore 今年健檢建議：${m.name}（${sexT(m.sex)}・${pl.a} 歲）${ymd(new Date())}`,pl.L?`依據：${pl.L.t} 報告${pl.P?`，與 ${pl.P.t} 比較`:''}`:'尚無體檢報告',
-    fhText(m)?'家族史：'+fhText(m):'',...SECS.flatMap(s=>{const it=pl.items.filter(o=>o.sec===s);return it.length?['',`【${s}】`,...it.map((o,i)=>`${i+1}. [${PRT[o.pr]}] ${o.t}：${o.why}（${[o.ch!=='—'?o.ch:'',o.when].filter(Boolean).join('・')}）`)]:[]}),
+    fhText(m)?'家族史：'+fhText(m):'',...SECS.flatMap(s=>{const it=pl.items.filter(o=>o.sec===s);return it.length?['',`【${s}】`,...it.map((o,i)=>`${i+1}. [${PRT[o.pr]}] ${o.t}：${o.why}（${[o.ch!=='—'?chT(o.ch):'',o.when].filter(Boolean).join('・')}）`)]:[]}),
     '','※ 依國健署公費篩檢資格與常見臨床指引整理，實際檢查請與醫師討論'].filter((x,i,a)=>x!==''||a[i-1]!=='').join('\n')}
 
 /* ================= 計算引擎 ================= */
