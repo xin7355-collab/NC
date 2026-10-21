@@ -11,14 +11,14 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <title>NutriCore</title>
 <style>
-:root{
+:root{--fz:1;
   --bg:#060912;--glass:rgba(255,255,255,.05);--line:rgba(255,255,255,.09);
   --text:#e8f0ff;--mute:#8a97b4;--cyan:#22e4ff;--lime:#b6ff3c;--pink:#ff4fa3;--amber:#ffb547;--red:#ff5d6c;
   --r:20px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
-html,body{background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;font-size:15px}
+html,body{background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;font-size:calc(15px*var(--fz))}
 body{min-height:100vh;padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 96px);
   background:radial-gradient(600px 400px at 90% -10%,rgba(34,228,255,.18),transparent 60%),
   radial-gradient(500px 400px at -10% 30%,rgba(182,255,60,.10),transparent 60%),var(--bg);overflow-x:hidden}
@@ -26,79 +26,79 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.25;
   background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
   background-size:32px 32px;mask-image:linear-gradient(to bottom,#000,transparent 70%);-webkit-mask-image:linear-gradient(to bottom,#000,transparent 70%)}
 header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;position:relative;gap:10px}
-.logo{font-weight:800;font-size:22px;letter-spacing:.5px}
+.logo{font-weight:800;font-size:calc(22px*var(--fz));letter-spacing:.5px}
 .logo b{background:linear-gradient(90deg,var(--cyan),var(--lime));-webkit-background-clip:text;background-clip:text;color:transparent}
 .gear{flex:0 0 38px;height:38px;border-radius:50%;background:var(--glass);border:1px solid var(--line);color:var(--text);display:grid;place-items:center}.gear svg{width:20px;height:20px}
 .tabs{display:flex;gap:6px;overflow-x:auto;position:sticky;top:-8px;z-index:3;background:#0e1830;padding:10px 0 8px;margin:6px 0 4px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
-.tabs button{flex:0 0 auto;padding:8px 13px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--mute);font-size:13px}
+.tabs button{flex:0 0 auto;padding:8px 13px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--mute);font-size:calc(13px*var(--fz))}
 .tabs button.on{background:linear-gradient(90deg,rgba(34,228,255,.25),rgba(182,255,60,.18));color:var(--text);border-color:rgba(34,228,255,.5);font-weight:700}
-.mchip{display:flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:4px 12px 4px 4px;font-size:13px;max-width:62%;white-space:nowrap;overflow:hidden}
+.mchip{display:flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:4px 12px 4px 4px;font-size:calc(13px*var(--fz));max-width:62%;white-space:nowrap;overflow:hidden}
 .mchip .sub{margin-left:2px}
-.av{flex:0 0 28px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;color:#04121a}
-.sub{font-size:11px;color:var(--mute)}
+.av{flex:0 0 28px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:calc(13px*var(--fz));color:#04121a}
+.sub{font-size:calc(11px*var(--fz));color:var(--mute)}
 .card{position:relative;background:var(--glass);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px;
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-.card h2{font-size:13px;color:var(--mute);font-weight:600;letter-spacing:1px;margin-bottom:12px}
-.h4{font-size:13px;color:var(--mute);font-weight:600;letter-spacing:1px;margin:18px 0 6px}
+.card h2{font-size:calc(13px*var(--fz));color:var(--mute);font-weight:600;letter-spacing:1px;margin-bottom:12px}
+.h4{font-size:calc(13px*var(--fz));color:var(--mute);font-weight:600;letter-spacing:1px;margin:18px 0 6px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .grid2>div{min-width:0}
 .stat{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:14px;padding:12px;min-width:0}
-.stat .k{font-size:11px;color:var(--mute)}
-.stat .v{font-size:22px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.stat .u{font-size:11px;color:var(--mute);font-weight:500;margin-left:2px}
-.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;margin-top:6px;font-weight:600}
+.stat .k{font-size:calc(11px*var(--fz));color:var(--mute)}
+.stat .v{font-size:calc(22px*var(--fz));font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat .u{font-size:calc(11px*var(--fz));color:var(--mute);font-weight:500;margin-left:2px}
+.tag{display:inline-block;font-size:calc(11px*var(--fz));padding:2px 8px;border-radius:99px;margin-top:6px;font-weight:600}
 .view{display:none;animation:in .35s ease}
 .view.on{display:block}
 @keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 nav{position:fixed;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 10px);display:flex;justify-content:space-around;
   background:rgba(12,18,34,.85);border:1px solid var(--line);border-radius:22px;padding:6px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:10}
-nav button{flex:1;background:none;border:0;color:var(--mute);font-size:10px;padding:6px 0;border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button{flex:1;background:none;border:0;color:var(--mute);font-size:calc(10px*var(--fz));padding:6px 0;border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:3px}
 nav button svg{width:22px;height:22px}
 nav button.on{color:var(--cyan);background:rgba(34,228,255,.08)}
-label{display:block;font-size:12px;color:var(--mute);margin:10px 0 6px}
-input,select{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px;font-size:16px;outline:none;-webkit-appearance:none;appearance:none}
+label{display:block;font-size:calc(12px*var(--fz));color:var(--mute);margin:10px 0 6px}
+input,select{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px;font-size:calc(16px*var(--fz));outline:none;-webkit-appearance:none;appearance:none}
 input[type=date],input[type=datetime-local]{min-height:46px}
 select{background-image:linear-gradient(45deg,transparent 50%,var(--mute) 50%),linear-gradient(135deg,var(--mute) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:28px}
 input:focus,select:focus,textarea:focus{border-color:var(--cyan)}
 input.bad,select.bad{border-color:var(--red)!important;background-color:rgba(255,93,108,.08)}
 textarea{width:100%;min-height:110px;background:rgba(0,0,0,.35);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:10px;font:16px/1.45 ui-monospace,Menlo,monospace;outline:none;resize:vertical}
 .seg{display:flex;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:3px}
-.seg button{flex:1;background:none;border:0;color:var(--mute);padding:9px 0;border-radius:9px;font-size:14px}
+.seg button{flex:1;background:none;border:0;color:var(--mute);padding:9px 0;border-radius:9px;font-size:calc(14px*var(--fz))}
 .seg button.on{background:linear-gradient(90deg,rgba(34,228,255,.25),rgba(182,255,60,.18));color:var(--text);font-weight:700}
 .seg button:disabled{opacity:.4}
-.btn{width:100%;border:0;border-radius:14px;padding:14px;font-size:15px;font-weight:700;color:#04121a;
+.btn{width:100%;border:0;border-radius:14px;padding:14px;font-size:calc(15px*var(--fz));font-weight:700;color:#04121a;
   background:linear-gradient(90deg,var(--cyan),var(--lime));margin-top:14px}
 .btn.ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--line)}
 .btn.danger{background:rgba(255,45,85,.12);color:#ff6b81;border:1px solid rgba(255,45,85,.35)}
-.btn.sm{width:auto;padding:9px 12px;font-size:13px;margin:0}
+.btn.sm{width:auto;padding:9px 12px;font-size:calc(13px*var(--fz));margin:0}
 .row2{display:flex;gap:8px;margin-top:14px}
 .row2 .btn{margin:0}
 .days{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none}
 .days::-webkit-scrollbar{display:none}
-.day{flex:0 0 56px;text-align:center;padding:10px 0;border-radius:14px;border:1px solid var(--line);background:var(--glass);color:var(--mute);font-size:12px}
-.day b{display:block;font-size:18px;color:var(--text)}
+.day{flex:0 0 56px;text-align:center;padding:10px 0;border-radius:14px;border:1px solid var(--line);background:var(--glass);color:var(--mute);font-size:calc(12px*var(--fz))}
+.day b{display:block;font-size:calc(18px*var(--fz));color:var(--text)}
 .day.on{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan),0 0 18px rgba(34,228,255,.35);color:var(--cyan)}
 .meal{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
 .meal:first-of-type{border-top:0}
-.thumb{flex:0 0 72px;height:72px;border-radius:14px;background:linear-gradient(135deg,#13203a,#0b1324);display:grid;place-items:center;font-size:30px;overflow:hidden}
+.thumb{flex:0 0 72px;height:72px;border-radius:14px;background:linear-gradient(135deg,#13203a,#0b1324);display:grid;place-items:center;font-size:calc(30px*var(--fz));overflow:hidden}
 .thumb img{width:100%;height:100%;object-fit:cover}
 .meal .t{font-weight:700}
-.meal .s{font-size:12px;color:var(--mute);margin-top:3px}
-.slot{font-size:11px;color:var(--cyan);font-weight:700;letter-spacing:1px}
+.meal .s{font-size:calc(12px*var(--fz));color:var(--mute);margin-top:3px}
+.slot{font-size:calc(11px*var(--fz));color:var(--cyan);font-weight:700;letter-spacing:1px}
 .bar{height:8px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden;margin-top:6px}
 .bar i{display:block;height:100%;border-radius:99px;transition:width .6s}
-.row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-top:10px;gap:8px}
-.prompt{font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.5;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:10px;color:#bfe9ff;word-break:break-word;white-space:pre-wrap;max-height:260px;overflow:auto;margin-bottom:8px;-webkit-user-select:text;user-select:text}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:calc(13px*var(--fz));margin-top:10px;gap:8px}
+.prompt{font-family:ui-monospace,Menlo,monospace;font-size:calc(12px*var(--fz));line-height:1.5;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:10px;color:#bfe9ff;word-break:break-word;white-space:pre-wrap;max-height:260px;overflow:auto;margin-bottom:8px;-webkit-user-select:text;user-select:text}
 .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.gallery .g{aspect-ratio:1;border-radius:12px;overflow:hidden;background:#0b1324;border:1px solid var(--line);position:relative;display:grid;place-items:center;font-size:26px}
+.gallery .g{aspect-ratio:1;border-radius:12px;overflow:hidden;background:#0b1324;border:1px solid var(--line);position:relative;display:grid;place-items:center;font-size:calc(26px*var(--fz))}
 .gallery .g img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
-.gallery .g span{position:absolute;bottom:0;left:0;right:0;font-size:10px;padding:3px 4px;background:rgba(0,0,0,.6);text-align:center}
-.note{font-size:11px;color:var(--mute);line-height:1.7;margin-top:10px}
+.gallery .g span{position:absolute;bottom:0;left:0;right:0;font-size:calc(10px*var(--fz));padding:3px 4px;background:rgba(0,0,0,.6);text-align:center}
+.note{font-size:calc(11px*var(--fz));color:var(--mute);line-height:1.7;margin-top:10px}
 .toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 14px);transform:translateX(-50%) translateY(-120px);background:#0f1a30;border:1px solid var(--cyan);
-  padding:10px 16px;border-radius:12px;font-size:13px;transition:.3s;z-index:50;max-width:88vw;text-align:center}
+  padding:10px 16px;border-radius:12px;font-size:calc(13px*var(--fz));transition:.3s;z-index:50;max-width:88vw;text-align:center}
 .toast.on{transform:translateX(-50%) translateY(0)}
 #updBar{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 14px);transform:translateX(-50%);z-index:45;background:var(--cyan);color:#04121f;border:0;
-  border-radius:999px;padding:10px 18px;font-family:inherit;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap}
+  border-radius:999px;padding:10px 18px;font-family:inherit;font-size:calc(14px*var(--fz));font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap}
 .scan{position:absolute;inset:0;border-radius:var(--r);pointer-events:none;overflow:hidden}
 .scan::after{content:"";position:absolute;left:0;right:0;height:40%;top:-40%;background:linear-gradient(to bottom,transparent,rgba(34,228,255,.08),transparent);animation:scan 4s linear infinite}
 @keyframes scan{to{top:100%}}
@@ -106,52 +106,52 @@ textarea{width:100%;min-height:110px;background:rgba(0,0,0,.35);border:1px solid
 @keyframes sp{to{transform:rotate(360deg)}}
 /* v2 */
 details.box{border:1px solid var(--line);border-radius:14px;padding:0 12px;margin:10px 0;background:rgba(255,255,255,.025)}
-details.box>summary{list-style:none;padding:13px 0;font-weight:700;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:14px}
+details.box>summary{list-style:none;padding:13px 0;font-weight:700;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:calc(14px*var(--fz))}
 details.box>summary::-webkit-details-marker{display:none}
 details.box>summary::after{content:'＋';color:var(--mute);font-weight:400}
 details.box[open]>summary::after{content:'－'}
 details.box[open]{padding-bottom:12px}
 details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135deg,rgba(34,228,255,.09),rgba(182,255,60,.04))}
-.steps{padding-left:18px;font-size:12px;color:var(--mute);line-height:1.8;margin-bottom:10px}
+.steps{padding-left:18px;font-size:calc(12px*var(--fz));color:var(--mute);line-height:1.8;margin-bottom:10px}
 .lrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
-.lrow label{flex:1;margin:0;color:var(--text);font-size:13px;min-width:0}
-.lrow label small{display:block;color:var(--mute);font-size:10px;margin-top:2px;line-height:1.4}
+.lrow label{flex:1;margin:0;color:var(--text);font-size:calc(13px*var(--fz));min-width:0}
+.lrow label small{display:block;color:var(--mute);font-size:calc(10px*var(--fz));margin-top:2px;line-height:1.4}
 .lrow input,.lrow select{flex:0 0 104px;width:104px;padding:9px 10px}
 .dev.ok{background:rgba(182,255,60,.12);color:var(--lime)}
-.dev{font-style:normal;font-size:10px;padding:1px 6px;border-radius:99px;margin-left:4px;background:rgba(255,181,71,.15);color:var(--amber);white-space:nowrap}
-.lv{display:inline-block;flex:0 0 auto;min-width:42px;text-align:center;font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;white-space:nowrap}
+.dev{font-style:normal;font-size:calc(10px*var(--fz));padding:1px 6px;border-radius:99px;margin-left:4px;background:rgba(255,181,71,.15);color:var(--amber);white-space:nowrap}
+.lv{display:inline-block;flex:0 0 auto;min-width:42px;text-align:center;font-size:calc(11px*var(--fz));font-weight:700;padding:3px 8px;border-radius:99px;white-space:nowrap}
 .lv0{background:rgba(182,255,60,.12);color:var(--lime)}
 .lv1{background:rgba(255,122,69,.16);color:#ff8a5c}
 .lv2{background:rgba(255,45,85,.2);color:#ff5c7a}
 .lv3{background:#ff1f4b;color:#fff;box-shadow:0 0 12px rgba(255,31,75,.6)}
 .issue{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
 .issue:first-child{border-top:0}
-.issue .t{font-weight:700;font-size:14px}
-.issue .s{font-size:12px;color:var(--mute);margin-top:2px;line-height:1.55}
+.issue .t{font-weight:700;font-size:calc(14px*var(--fz))}
+.issue .s{font-size:calc(12px*var(--fz));color:var(--mute);margin-top:2px;line-height:1.55}
 .issue .v{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
-.cmp-cols{display:grid;gap:6px;text-align:center;position:sticky;top:-8px;z-index:2;background:#0d1628;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px}
-.cmp-cols small{display:block;color:var(--mute);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmp-cols{display:grid;gap:6px;text-align:center;position:sticky;top:-8px;z-index:2;background:#0d1628;padding:8px 0;border-bottom:1px solid var(--line);font-size:calc(12px*var(--fz))}
+.cmp-cols small{display:block;color:var(--mute);font-size:calc(10px*var(--fz));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cmp-r{padding:9px 0;border-top:1px solid var(--line)}
-.cmp-t{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;font-weight:700}
+.cmp-t{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:calc(13px*var(--fz));font-weight:700}
 .cmp-t small{color:var(--mute);font-weight:400}
-.vd{flex:0 0 auto;font-size:11px;padding:1px 8px;border:1px solid;border-radius:99px;white-space:nowrap}
-.cmp-v{display:grid;gap:6px;text-align:center;margin-top:6px;font-variant-numeric:tabular-nums;font-size:14px;font-weight:700}
+.vd{flex:0 0 auto;font-size:calc(11px*var(--fz));padding:1px 8px;border:1px solid;border-radius:99px;white-space:nowrap}
+.cmp-v{display:grid;gap:6px;text-align:center;margin-top:6px;font-variant-numeric:tabular-nums;font-size:calc(14px*var(--fz));font-weight:700}
 .cmp-v span{background:rgba(255,255,255,.04);border-radius:8px;padding:4px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .cmp-v .c0{color:var(--lime)}.cmp-v .c1{color:#ff8a5c}.cmp-v .c2,.cmp-v .c3{color:#ff5c7a}
 .cmp-v i{color:var(--mute);font-style:normal;font-weight:400}
-.cmp-n{font-size:11px;color:var(--mute);margin-top:5px;line-height:1.5}
-.rv{display:inline-block;font-size:10px;font-weight:600;padding:0 6px;border:1px solid currentColor;border-radius:99px;margin-left:6px;vertical-align:1px;white-space:nowrap}
-.banner{border-radius:14px;padding:12px;font-size:13px;line-height:1.6;margin:12px 0;background:rgba(255,31,75,.14);border:1px solid rgba(255,31,75,.5)}
+.cmp-n{font-size:calc(11px*var(--fz));color:var(--mute);margin-top:5px;line-height:1.5}
+.rv{display:inline-block;font-size:calc(10px*var(--fz));font-weight:600;padding:0 6px;border:1px solid currentColor;border-radius:99px;margin-left:6px;vertical-align:1px;white-space:nowrap}
+.banner{border-radius:14px;padding:12px;font-size:calc(13px*var(--fz));line-height:1.6;margin:12px 0;background:rgba(255,31,75,.14);border:1px solid rgba(255,31,75,.5)}
 .dept{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid var(--line);margin-top:8px}
-.dept b{font-size:15px}
-.rec{display:flex;align-items:center;gap:10px;padding:12px 0;border:0;border-top:1px solid var(--line);width:100%;background:none;color:var(--text);text-align:left;font-size:14px}
+.dept b{font-size:calc(15px*var(--fz))}
+.rec{display:flex;align-items:center;gap:10px;padding:12px 0;border:0;border-top:1px solid var(--line);width:100%;background:none;color:var(--text);text-align:left;font-size:calc(14px*var(--fz))}
 .rec:first-child{border-top:0}
 .rec .m{flex:1;min-width:0}
-.rec .m small{display:block;color:var(--mute);font-size:11px;margin-top:3px}
-.chev{color:var(--mute);font-size:18px}
-.mrow{flex:1;display:flex;align-items:center;gap:10px;background:none;border:0;color:var(--text);text-align:left;font-size:15px;min-width:0}
-.mrow .on{color:var(--cyan);font-size:11px}
-.x{flex:0 0 32px;background:rgba(255,255,255,.08);border:0;color:var(--text);width:32px;height:32px;border-radius:50%;font-size:14px}
+.rec .m small{display:block;color:var(--mute);font-size:calc(11px*var(--fz));margin-top:3px}
+.chev{color:var(--mute);font-size:calc(18px*var(--fz))}
+.mrow{flex:1;display:flex;align-items:center;gap:10px;background:none;border:0;color:var(--text);text-align:left;font-size:calc(15px*var(--fz));min-width:0}
+.mrow .on{color:var(--cyan);font-size:calc(11px*var(--fz))}
+.x{flex:0 0 32px;background:rgba(255,255,255,.08);border:0;color:var(--text);width:32px;height:32px;border-radius:50%;font-size:calc(14px*var(--fz))}
 .sheet{position:fixed;inset:0;z-index:30;pointer-events:none}
 .sheet.on{pointer-events:auto}
 .sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.62);opacity:0;transition:opacity .25s}
@@ -162,9 +162,9 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 .sheet.on .sheet-panel{transform:none;visibility:visible;transition:transform .32s cubic-bezier(.2,.8,.2,1),visibility 0s}
 .sheet:not(.on) .sheet-panel{visibility:hidden;transition:transform .32s cubic-bezier(.2,.8,.2,1),visibility 0s .32s}
 .grab{width:40px;height:5px;border-radius:99px;background:rgba(255,255,255,.2);margin:4px auto 12px}
-.sheet h3{font-size:18px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sheet h3{font-size:calc(18px*var(--fz));margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .hud svg{display:block;width:100%;height:auto}
-.legend{display:flex;gap:12px;justify-content:center;font-size:11px;color:var(--mute);margin-top:4px;flex-wrap:wrap}
+.legend{display:flex;gap:12px;justify-content:center;font-size:calc(11px*var(--fz));color:var(--mute);margin-top:4px;flex-wrap:wrap}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
 .pulse{animation:pulse 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.22)}}
@@ -179,32 +179,32 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 .grow{transform-origin:left center;animation:grow .9s cubic-bezier(.2,.8,.2,1) both}
 @keyframes grow{from{transform:scaleX(0)}}
 .ebar{position:relative;height:30px;border-radius:10px;overflow:visible;display:flex;background:rgba(255,255,255,.05);margin:22px 0 30px}
-.ebar>i{display:flex;height:100%;align-items:center;justify-content:center;font-style:normal;font-size:11px;font-weight:800;color:#04121a;white-space:nowrap;overflow:hidden}
+.ebar>i{display:flex;height:100%;align-items:center;justify-content:center;font-style:normal;font-size:calc(11px*var(--fz));font-weight:800;color:#04121a;white-space:nowrap;overflow:hidden}
 .ebar>i:first-child{border-radius:10px 0 0 10px}.ebar>i:nth-child(2){border-radius:0 10px 10px 0}
 .ebar .mk{position:absolute;top:-8px;bottom:-8px;width:2px;background:#fff;box-shadow:0 0 8px #fff}
-.ebar .mk b{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:11px;white-space:nowrap;color:#fff}
-.ebar .lb{position:absolute;bottom:-20px;font-size:10px;color:var(--mute);white-space:nowrap;transform:translateX(-50%)}
-.do{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line);font-size:13px;line-height:1.6}
+.ebar .mk b{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:calc(11px*var(--fz));white-space:nowrap;color:#fff}
+.ebar .lb{position:absolute;bottom:-20px;font-size:calc(10px*var(--fz));color:var(--mute);white-space:nowrap;transform:translateX(-50%)}
+.do{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line);font-size:calc(13px*var(--fz));line-height:1.6}
 .do:first-of-type{border-top:0}
-.do .ic{flex:0 0 30px;height:30px;border-radius:10px;display:grid;place-items:center;background:rgba(34,228,255,.1);font-size:16px}
-.do b{color:var(--text)}.do .s{color:var(--mute);font-size:12px}
-.hl{background:linear-gradient(135deg,rgba(34,228,255,.12),rgba(182,255,60,.06));border:1px solid rgba(34,228,255,.35);border-radius:14px;padding:12px;font-size:13px;line-height:1.6}
+.do .ic{flex:0 0 30px;height:30px;border-radius:10px;display:grid;place-items:center;background:rgba(34,228,255,.1);font-size:calc(16px*var(--fz))}
+.do b{color:var(--text)}.do .s{color:var(--mute);font-size:calc(12px*var(--fz))}
+.hl{background:linear-gradient(135deg,rgba(34,228,255,.12),rgba(182,255,60,.06));border:1px solid rgba(34,228,255,.35);border-radius:14px;padding:12px;font-size:calc(13px*var(--fz));line-height:1.6}
 .hl .btn{margin-top:10px}
 .tgt{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0}
 .tgt div{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center;min-width:0}
-.tgt b{display:block;font-size:15px;font-variant-numeric:tabular-nums}.tgt span{font-size:10px;color:var(--mute)}
-.adj{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}.adj i{font-style:normal;font-size:10.5px;padding:2px 7px;border-radius:99px;background:rgba(182,255,60,.1);color:var(--lime);border:1px solid rgba(182,255,60,.25)}
+.tgt b{display:block;font-size:calc(15px*var(--fz));font-variant-numeric:tabular-nums}.tgt span{font-size:calc(10px*var(--fz));color:var(--mute)}
+.adj{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}.adj i{font-style:normal;font-size:calc(10.5px*var(--fz));padding:2px 7px;border-radius:99px;background:rgba(182,255,60,.1);color:var(--lime);border:1px solid rgba(182,255,60,.25)}
 .wk{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-.wk button{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:12px;padding:8px 0 6px;color:var(--mute);font-size:10px;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
-.wk button .e{font-size:19px;line-height:1.1}.wk button b{color:var(--text);font-size:10.5px;font-weight:600}
+.wk button{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:12px;padding:8px 0 6px;color:var(--mute);font-size:calc(10px*var(--fz));display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.wk button .e{font-size:calc(19px*var(--fz));line-height:1.1}.wk button b{color:var(--text);font-size:calc(10.5px*var(--fz));font-weight:600}
 .wk button.td{border-color:var(--cyan);box-shadow:0 0 14px rgba(34,228,255,.3)}.wk button.on{background:rgba(34,228,255,.14);color:var(--cyan)}
 .wk button.rest{opacity:.55}
 .zone{display:flex;height:14px;border-radius:99px;overflow:hidden;margin:10px 0 4px}
 .zone i{flex:1}
 .blk{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line);align-items:flex-start}
 .blk:first-child{border-top:0}
-.blk .ic{flex:0 0 40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:linear-gradient(135deg,rgba(34,228,255,.16),rgba(182,255,60,.08))}
-.blk .m{flex:1;min-width:0}.blk .s{font-size:12px;color:var(--mute);line-height:1.55;margin-top:2px}
+.blk .ic{flex:0 0 40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:calc(22px*var(--fz));background:linear-gradient(135deg,rgba(34,228,255,.16),rgba(182,255,60,.08))}
+.blk .m{flex:1;min-width:0}.blk .s{font-size:calc(12px*var(--fz));color:var(--mute);line-height:1.55;margin-top:2px}
 .no{opacity:.75}.no .ic{background:rgba(255,93,108,.12);filter:grayscale(.4)}
 .tm{display:grid;place-items:center;margin:6px 0}
 .tm svg{width:210px;height:210px}
@@ -214,39 +214,47 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 @keyframes plin{from{transform:scale(.35) rotate(-25deg);opacity:0}}
 .meal[data-meal],.sheet-bg{cursor:pointer}
 .shop{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line)}.h4+.shop{border-top:0}
-.sk{flex:1;display:flex;gap:10px;align-items:center;background:none;border:0;color:var(--text);text-align:left;padding:10px 0;font-size:14px;min-width:0}
+.sk{flex:1;display:flex;gap:10px;align-items:center;background:none;border:0;color:var(--text);text-align:left;padding:10px 0;font-size:calc(14px*var(--fz));min-width:0}
 .sk .bx{flex:0 0 24px;height:24px;border-radius:8px;border:1.5px solid rgba(255,255,255,.25);display:grid;place-items:center;color:#04121a;font-weight:800;transition:background .2s,border-color .2s}
 .shop.done .bx{background:var(--lime);border-color:var(--lime)}.shop.done b{text-decoration:line-through;color:var(--mute)}
 .sk .m{min-width:0;flex:1}.sk .q{color:var(--cyan);font-weight:700;font-variant-numeric:tabular-nums;margin-left:4px}
-.sk small{display:block;font-size:11px;color:var(--mute);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ask{flex:0 0 auto;align-self:center;margin-left:6px;padding:6px 10px;border-radius:99px;border:1px solid rgba(167,139,250,.45);background:rgba(167,139,250,.12);color:#c4b5fd;font-size:11px;font-weight:700;white-space:nowrap}
+.sk small{display:block;font-size:calc(11px*var(--fz));color:var(--mute);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ask{flex:0 0 auto;align-self:center;margin-left:6px;padding:6px 10px;border-radius:99px;border:1px solid rgba(167,139,250,.45);background:rgba(167,139,250,.12);color:#c4b5fd;font-size:calc(11px*var(--fz));font-weight:700;white-space:nowrap}
 .aib{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.aib .btn{display:block;margin:0;padding:14px 4px;text-align:center;text-decoration:none}
 .btn.ai{background:linear-gradient(90deg,#a78bfa,var(--cyan))}
 .stg>*{animation:in .45s ease both}.stg>*:nth-child(2){animation-delay:.06s}.stg>*:nth-child(3){animation-delay:.12s}.stg>*:nth-child(4){animation-delay:.18s}.stg>*:nth-child(5){animation-delay:.24s}.stg>*:nth-child(n+6){animation-delay:.3s}
 @media (prefers-reduced-motion:reduce){.pulse,.vflow,.scan::after,.view,.gmark,.garc,.grow,.beat,.stg>*,.pl{animation:none}}
 .callout{cursor:pointer}
 .tags{display:flex;gap:6px;flex-wrap:wrap}
-.tg{font-size:11px;padding:4px 10px;border-radius:99px;background:rgba(34,228,255,.1);color:var(--cyan);border:1px solid rgba(34,228,255,.25);white-space:nowrap}
+.tg{font-size:calc(11px*var(--fz));padding:4px 10px;border-radius:99px;background:rgba(34,228,255,.1);color:var(--cyan);border:1px solid rgba(34,228,255,.25);white-space:nowrap}
 .tg.warn{background:rgba(255,181,71,.1);color:var(--amber);border-color:rgba(255,181,71,.3)}
-.kv{display:grid;grid-template-columns:1fr auto;gap:9px 12px;font-size:13px;align-items:center}
+.kv{display:grid;grid-template-columns:1fr auto;gap:9px 12px;font-size:calc(13px*var(--fz));align-items:center}
 .kv>span:nth-child(odd){color:var(--mute)}
 .kv>span:nth-child(even){text-align:right}
 .spark{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
 .spark .stat{padding:10px}
-.spark .stat .v{font-size:17px}
-.empty{text-align:center;color:var(--mute);font-size:13px;padding:18px 0;line-height:1.7}
+.spark .stat .v{font-size:calc(17px*var(--fz))}
+.empty{text-align:center;color:var(--mute);font-size:calc(13px*var(--fz));padding:18px 0;line-height:1.7}
 .organ-pop{margin-top:10px;padding:12px;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid rgba(255,77,109,.35)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{padding:8px 12px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--mute);font-size:13px}
+.chip{padding:8px 12px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--mute);font-size:calc(13px*var(--fz))}
 .chip.on{background:rgba(34,228,255,.15);color:var(--cyan);border-color:rgba(34,228,255,.5);font-weight:700}
 .plan{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
 .h4+.plan{border-top:0}
-.plan .m{flex:1;min-width:0}.plan b{font-size:14px}
-.plan .s{font-size:12px;color:var(--mute);margin-top:3px;line-height:1.55}
-.pr{flex:0 0 auto;font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;white-space:nowrap}
+.plan .m{flex:1;min-width:0}.plan b{font-size:calc(14px*var(--fz))}
+.plan .s{font-size:calc(12px*var(--fz));color:var(--mute);margin-top:3px;line-height:1.55}
+.pr{flex:0 0 auto;font-size:calc(11px*var(--fz));font-weight:700;padding:3px 8px;border-radius:99px;white-space:nowrap}
 .pr1{background:rgba(255,45,85,.18);color:#ff6b81}.pr2{background:rgba(255,181,71,.15);color:var(--amber)}.pr3{background:rgba(34,228,255,.1);color:var(--cyan)}
-.pt{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.pt i{font-style:normal;font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(255,255,255,.06);color:var(--text)}
+.pt{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.pt i{font-style:normal;font-size:calc(11px*var(--fz));padding:2px 8px;border-radius:99px;background:rgba(255,255,255,.06);color:var(--text)}
 .lrow.wide{flex-wrap:wrap}.lrow.wide label{flex:1 1 100%}.lrow.wide select{flex:1 1 100%;width:100%}
+.sq{padding:12px 0;border-top:1px solid var(--line)}.sq .t{font-size:calc(14px*var(--fz));font-weight:700;line-height:1.55;margin-bottom:8px}
+.bl{position:relative;padding:7px 0 7px 18px;border-top:1px solid var(--line);font-size:calc(13px*var(--fz));line-height:1.65}.bl::before{content:'•';position:absolute;left:4px;color:var(--cyan)}
+.sgrp{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:16px;padding:6px 14px 12px;margin:14px 0}.sgh{font-size:calc(12px*var(--fz));color:var(--mute);font-weight:600;letter-spacing:1px;padding:8px 0 4px}
+.srow{display:flex;align-items:center;gap:12px;width:100%;padding:12px 0;border:0;border-top:1px solid var(--line);background:none;color:var(--text);text-align:left}.sgh+.srow{border-top:0}
+.srow .ic{flex:0 0 32px;height:32px;border-radius:10px;display:grid;place-items:center;background:rgba(34,228,255,.1);font-size:calc(17px*var(--fz))}.srow .m{flex:1;min-width:0}.srow b{font-size:calc(15px*var(--fz))}.srow small{display:block;color:var(--mute);font-size:calc(12px*var(--fz));margin-top:2px}
+#tour{position:fixed;inset:0;z-index:60}.tour-hole{position:fixed;border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.72);border:2px solid var(--cyan);pointer-events:none;transition:all .25s}
+.tour-card{position:fixed;left:16px;right:16px;background:#0f1a30;border:1px solid var(--cyan);border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.5)}.tour-card b{font-size:calc(17px*var(--fz))}.tour-card .sub{font-size:calc(14px*var(--fz));line-height:1.6;margin-top:6px;color:var(--text)}
+.tour-nav{display:flex;gap:8px;align-items:center;margin-top:12px}.tour-nav .sub{flex:1;margin:0!important;color:var(--mute)!important}
 .lrow.wide textarea.refin{flex:1 1 100%;width:100%;min-height:70px;padding:8px 10px;font-family:inherit}
 </style>
 </head>
@@ -258,7 +266,7 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 </header>
 
 <!-- 總覽 -->
-<section class="view on" id="v-dash">
+<section class="view on" id="v-dash"><div id="critBox"></div>
   <div class="card"><div class="scan"></div>
     <h2>身體掃描</h2>
     <div id="gauge"></div>
@@ -282,7 +290,7 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 </section>
 
 <!-- 身體 -->
-<section class="view" id="v-body">
+<section class="view" id="v-body"><div id="critBody"></div>
   <div class="card" style="padding:12px 10px">
     <div class="row" style="margin:0 6px 4px;align-items:flex-start">
       <div style="min-width:0"><b id="bodyWho"></b><div class="sub" id="bodySrc"></div></div>
@@ -302,6 +310,7 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
   <div class="card" id="derivedCard" hidden><h2>App 自動計算（不用問 AI）</h2><div id="derivedList"></div></div>
   <div class="card" id="cmpCard" hidden><h2>歷年比較（3 年內）</h2><div id="cmpBody"></div></div>
   <div class="card"><h2>建議掛號科別</h2><div id="deptList"></div>
+    <button class="btn ghost" data-summary style="margin-top:10px">📄 做成看診摘要圖（給醫師看、傳給家人）</button>
     <p class="note">依數值規則自動建議，不是醫療診斷。身體不適請直接就醫，不必等報告。</p></div>
   <div class="card" id="planCard"><h2>今年健檢建議</h2><div id="planBody"></div></div>
   <div class="card" id="rotCard" hidden><h2>檢查輪替（未來 3 年）</h2><div id="rotBody"></div></div>
@@ -360,25 +369,10 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
   </div>
 </section>
 
-<!-- 我的 -->
-<section class="view" id="v-me">
-  <div class="card">
-    <h2>家庭成員</h2>
-    <div id="memList"></div>
-    <button class="btn ghost" data-addmem>＋ 新增成員</button>
-  </div>
-  <div class="card">
-    <h2>資料備份</h2>
-    <p class="note" style="margin-top:0">所有健康資料只存在這支手機的瀏覽器裡，不會上傳。iPhone 的 Safari 若 7 天沒開這個網站，可能自動清除資料，請<b>加入主畫面</b>（分享 → 加入主畫面）並定期匯出備份。</p>
-    <div class="row2"><button class="btn" id="exportBtn">匯出備份</button><button class="btn ghost" id="importBtn">匯入備份</button></div>
-    <input type="file" id="importFile" accept="application/json,.json" hidden>
-  </div>
-  <div class="card">
-    <h2>圖片後端（選用）</h2>
-    <label>GAS Web App 網址（留空＝使用 AI Horde 免費社群算力，免金鑰但要排隊）</label>
-    <input id="f-gas" placeholder="https://script.google.com/macros/s/.../exec" inputmode="url">
-    <p class="note">想要 10 秒出圖：用 repo 裡的 <b>gas/Code.gs</b> 架 GAS，接 Cloudflare Workers AI 免費額度。金鑰只放在 GAS 的指令碼屬性，絕不放這裡；健康資料不會傳到這個後端。</p>
-  </div>
+<!-- 自我檢測（原「我的」搬到右上角 ⚙️ 設定） -->
+<section class="view" id="v-self">
+  <div class="card"><h2>自我檢測</h2><div class="sub" style="font-size:calc(13px*var(--fz));line-height:1.7">在家就能做的檢查：做完告訴你要注意什麼、掛哪一科、可以請醫師安排哪些檢查，也能一鍵整理給 AI 再確認。</div></div>
+  <div id="selfBody"></div>
 </section>
 
 <nav id="nav">
@@ -386,11 +380,12 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
   <button data-v="body"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4.5" r="2.5"/><path d="M12 8v7M7 9.5l5-1.5 5 1.5M12 15l-3 6M12 15l3 6"/></svg>身體</button>
   <button data-v="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18a9 8 0 0 1-18 0Z"/><path d="M9 3.5l2.5 6M15.5 3l-1.5 6.5"/></svg>飲食</button>
   <button data-v="fit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 7v10M3.5 9.5v5M17.5 7v10M20.5 9.5v5M6.5 12h11"/></svg>運動</button>
-  <button data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.3-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.6c2.4.2 4 1.8 4.5 4.4"/></svg>我的</button>
+  <button data-v="self"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M8.5 12l2.2 2.2 4.8-4.7M8.5 17.5h7"/></svg>自我檢測</button>
 </nav>
 
 <div class="sheet" id="sheet"><div class="sheet-bg" data-close></div><div class="sheet-panel"><div class="grab"></div><div id="sheetBody"></div></div></div>
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
 <button id="updBar" hidden onclick="location.reload()">有新版本，點這裡更新</button>
 
 <script>
@@ -827,6 +822,14 @@ const CONV={glu:['mmol',18.016],pcg:['mmol',18.016],tc:['mmol',38.67],hdl:['mmol
 const GUESS={glu:v=>v<35,pcg:v=>v<40,tc:v=>v<20,hdl:v=>v<5,ldl:v=>v<15,tg:v=>v<15,cr:v=>v>20,ua:v=>v>25,hb:v=>v>30,alb:v=>v>10,tp:v=>v>20,ca:v=>v<4,vitd:v=>v>150};
 // 白血球、血小板常以 /µL 回報（6500、250000），App 以 10³/µL 判讀，超過門檻視為 /µL 自動 ÷1000
 const PERUL={wbc:300,plt:2000};
+// 危急值（常見醫院危急值通報範圍，含等號）：[≤ 下限, ≥ 上限]；達到就不是「1–2 週內」，是今天就要處理
+const CRIT={k:[2.5,6],na:[120,160],glu:[40,400],ca:[6,13],hb:[7,20],plt:[20,1000],wbc:[2,30],sbp:[null,180],dbp:[null,120]};
+const CRITM={k:'鉀太高或太低都可能引起致命的心律不整；有心悸、胸悶、全身無力或麻木立刻打 119。抽血溶血會讓鉀假性偏高，但一定要當天複驗確認',
+  na:'鈉太低或太高可能造成意識混亂、抽搐；有頭痛、嘔吐、意識改變立刻掛急診',glu:'血糖太低可能昏迷；太高可能是高血糖危象（很口渴、多尿、噁心、意識不清）',
+  ca:'血鈣太高或太低會影響心律與神經肌肉（抽筋、手腳麻、意識改變）',hb:'重度貧血或血色素過高：有喘、胸痛、頭暈快昏倒、黑便或血便，立刻掛急診',
+  plt:'血小板太低容易出血（牙齦出血、黑便、皮膚大片瘀青）；太高容易血栓',wbc:'白血球太低容易嚴重感染，一發燒就要立刻就醫；太高要排除嚴重感染或血液疾病',
+  sbp:'已達高血壓危象標準（≥180/120）：休息 5 分鐘再量，仍這麼高就今天就醫；合併胸痛、劇烈頭痛、視力模糊、單側無力或說話不清，立刻打 119',dbp:''};
+CRITM.dbp=CRITM.sbp;const URG_CRIT='今天就醫：危急值，今天聯絡健檢中心或掛急診';
 
 const ORG={
  brain:{n:'腦部',tip:'控制好血壓、血糖、血脂是護腦根本'},
@@ -909,7 +912,7 @@ function qLv(s,Q,ti){s=String(s??'').trim().toLowerCase().replace(/\s/g,'');if(!
 function labEval(rec,m){
   const sex=m.sex,out=[];
   for(const[k,it]of Object.entries(rec.items||{})){
-    const x=LABK[k];if(!x||x.t==='qi')continue;let lv=0,dir='hi',om=null,bl=null;
+    const x=LABK[k];if(!x||x.t==='qi')continue;let lv=0,dir='hi',om=null,bl=null,crit=false;
     if(x.t==='opt'){const o=optFind(x,it.v);if(o){lv=o[1];om=o[2]||null}
       if(lv&&x.okRx&&x.okRx.test(it.ref||'')&&!x.badRx.test(it.ref||''))lv=0}   // 報告原文說肺部正常（例如只有脊椎側彎）就不算肺部異常
     else if(x.t==='q'){lv=qLv(it.v,x.Q,x.ti);
@@ -918,8 +921,9 @@ function labEval(rec,m){
     else{let v=num(it.v);if(v==null)continue;if(PERUL[k]&&v>=PERUL[k])v=v/1000;const H=thr(x,'H',sex),L=thr(x,'L',sex);
       if(H){const h1=it.hi!=null?it.hi:H[0],h2=Math.max(H[1],h1),h3=Math.max(H[2],h2);lv=v>=h3?3:v>=h2?2:v>h1?1:0;if(lv===1&&h1>0&&(v-h1)/h1<.05)bl=Math.round((v-h1)/h1*1000)/10}
       if(!lv&&L){const l1=it.lo!=null?it.lo:L[0],l2=Math.min(L[1],l1),l3=Math.min(L[2],l2);lv=v<l3?3:v<l2?2:v<l1?1:0;if(lv)dir='lo';if(lv===1&&l1>0&&(l1-v)/l1<.05)bl=Math.round((l1-v)/l1*1000)/10}
-      if(!lv){const fd=flagDir(it.flag);if(fd){lv=1;dir=fd}}}
-    if(lv)out.push({src:'體檢',k,name:x.n,short:LSHORT[k]||x.n,val:it.v,unit:x.u||'',lv,dir,bl,msg:(bl!=null?`僅略${dir==='lo'?'低':'高'}於參考值 ${bl}%，單次輕微超出意義有限；`:'')+(om||(dir==='lo'?x.lo:x.hi)||(x.t==='opt'?'檢查結果需追蹤':dir==='lo'?'低於參考值':'高於參考值')),organ:x.o,dept:x.d,ref:it.ref||(it.lo!=null&&it.hi!=null?`${it.lo}–${it.hi}`:it.hi!=null?`≤${it.hi}`:it.lo!=null?`≥${it.lo}`:refText(x,sex))});   // 報告有自己的上下限就顯示報告的
+      if(!lv){const fd=flagDir(it.flag);if(fd){lv=1;dir=fd}}
+      const C=CRIT[k];if(C&&((C[0]!=null&&v<=C[0])||(C[1]!=null&&v>=C[1]))){lv=3;crit=true;dir=C[0]!=null&&v<=C[0]?'lo':'hi';bl=null}}
+    if(lv)out.push({src:'體檢',k,name:x.n,short:LSHORT[k]||x.n,val:it.v,unit:x.u||'',lv,dir,bl,crit,msg:crit?`危急值：今天就要處理。${CRITM[k]}`:(bl!=null?`僅略${dir==='lo'?'低':'高'}於參考值 ${bl}%，單次輕微超出意義有限；`:'')+(om||(dir==='lo'?x.lo:x.hi)||(x.t==='opt'?'檢查結果需追蹤':dir==='lo'?'低於參考值':'高於參考值')),organ:x.o,dept:x.d,ref:it.ref||(it.lo!=null&&it.hi!=null?`${it.lo}–${it.hi}`:it.hi!=null?`≤${it.hi}`:it.lo!=null?`≥${it.lo}`:refText(x,sex))});   // 報告有自己的上下限就顯示報告的
   }
   // 衍生判讀：PSA 4–10 看游離比例；空腹血糖＋胰島素算 HOMA-IR
   const iv=k=>num(rec.items?.[k]?.v),ps=iv('psa'),fp=iv('fpsa'),g0=iv('glu'),in0=iv('ins');
@@ -1018,6 +1022,15 @@ function revOf(k,v,ref){const s=String(v??'')+String(ref??''),n=num(v);
   if(PERM[k])return['perm',PERM[k]];if(REVT[k])return['rev',REVT[k]];return null}
 const REVTAG={perm:['長期／不可逆','#ff8fc8'],rev:['可逆','var(--lime)'],ctl:['可控制','var(--amber)']};
 const revTag=r=>r?`<span class="rv" style="color:${REVTAG[r[0]][1]}">${REVTAG[r[0]][0]}</span>`:'';
+// 跟上一份報告比：新出現／上次也有／比上次嚴重／比上次改善（上一份沒驗這項就不標，不猜）
+function annotPrev(m,list,rec){const L=labsOf(m),ix=rec?L.findIndex(r=>r.id===rec.id):0,l=L[ix],p=ix>=0?L[ix+1]:null;if(!l||!p)return list;
+  const pm={};labEval(p,m).forEach(i=>{pm[i.k]=i.lv});const xn=new Set((p.extra||[]).map(e=>'x_'+e.name)),yr=String(p.t).slice(0,4)===String(l.t).slice(0,4)?'':String(p.t).slice(0,4);
+  for(const i of list){if(i.src!=='體檢')continue;const pl=pm[i.k];
+    if(pl!=null)i.prev={yr,lv:pl,now:i.lv};else if(p.items?.[i.k]!=null||xn.has(i.k))i.prev={yr,lv:0,now:i.lv}}
+  return list}
+const prevTxt=p=>!p?'':p.lv===0?'新出現':p.now>p.lv?`比${p.yr?` ${p.yr} 年`:'上次'}嚴重`:p.now<p.lv?`比${p.yr?` ${p.yr} 年`:'上次'}改善`:`${p.yr?p.yr+' 年':'上次'}也有`;
+const prevTag=p=>!p?'':p.lv===0?'<span class="rv" style="color:#ff8a5c">🆕 新出現</span>':`<span class="rv" style="color:var(--mute)">${prevTxt(p)}</span>`;
+const NORMAL_NOTE='數值在參考範圍內，不等於沒有疾病：健檢只驗了部分項目，也只代表抽血那一天。有不舒服請直接就醫，並照建議定期檢查。';
 // 哪個方向是「變差」：+1 越高越差、-1 越低越差、0 不判斷
 const BADQ={fmi:1,sfa:1,bia_fat:1,bia_fm:1,bia_whr:1,smi:-1,ffm:-1,lbm:-1,ffmi:-1,bia_smm:-1,bia_score:-1,phase:-1};
 function badDir(k,m,v){if(BADQ[k]!=null)return BADQ[k];if(k==='wt'||k==='bmi'){const b=calc(m).bmi;return b>=24?1:b<18.5?-1:0}
@@ -1083,8 +1096,12 @@ function scoreOf(iss){const g={};iss.forEach(i=>{const k=i.organ||('x_'+i.k);(g[
   const sc=Math.max(0,Math.round(100-d)),mx=iss.reduce((a,i)=>Math.max(a,i.lv),0);return Math.min(sc,[100,89,74,59][mx])}
 const grade=s=>s>=90?['優良','var(--lime)']:s>=75?['良好','var(--cyan)']:s>=60?['需注意','var(--amber)']:['建議就醫評估','var(--red)'];
 const URG=['','生活調整，3–6 個月後複檢','建議 1 個月內門診追蹤','建議 1–2 週內儘速就診'];
-function deptPlan(iss){const mp={};for(const i of iss){if(!i.dept)continue;const d=mp[i.dept]||(mp[i.dept]={lv:0,items:[]});d.lv=Math.max(d.lv,i.lv);if(!d.items.includes(i.name))d.items.push(i.name)}
-  return Object.entries(mp).sort((a,b)=>b[1].lv-a[1].lv).map(([d,o])=>({d,...o,when:URG[o.lv]}))}
+function deptPlan(iss){const mp={};for(const i of iss){if(!i.dept)continue;const d=mp[i.dept]||(mp[i.dept]={lv:0,crit:false,items:[]});d.lv=Math.max(d.lv,i.lv);d.crit=d.crit||!!i.crit;if(!d.items.includes(i.name))d.items.push(i.name)}
+  return Object.entries(mp).sort((a,b)=>(b[1].crit-a[1].crit)||b[1].lv-a[1].lv).map(([d,o])=>({d,...o,when:o.crit?URG_CRIT:URG[o.lv]}))}
+// 危急值橫幅：總覽、身體頁、報告詳情最上面
+function critHTML(list,t){const c=list.filter(i=>i.crit);if(!c.length)return '';
+  return `<div class="banner" role="alert" style="margin:0 0 14px"><b style="font-size:calc(15px*var(--fz))">🚨 危急值：今天就要處理</b><div style="margin-top:6px">${c.map(i=>`<b>${esc(i.name)} ${esc(fmt(i.val))} ${esc(i.unit)}</b>：${esc(CRITM[i.k]||'')}`).join('<br>')}</div>
+    <div style="margin-top:8px">${t?`報告日期 ${esc(t)}。`:''}醫院對危急值通常會主動打電話；如果還沒接到，<b>今天</b>就打給健檢中心或到急診複驗，不要等門診。現在有胸痛、呼吸困難、意識改變、單側無力，直接打 119。</div></div>`}
 /* ===== 手錶（近 7 天平均）：光學感測只能參考，看自己的趨勢；異常只提醒、不列入體檢分數 ===== */
 const WF=[{k:'rhr',n:'靜止心率',u:'bpm',min:25,max:200},{k:'hrv',n:'心率變異 HRV',u:'ms',min:3,max:300},{k:'stress',n:'平均壓力',u:'/100',min:0,max:100},{k:'spo2',n:'血氧',u:'%',min:70,max:100},{k:'sleep',n:'睡眠',u:'小時',min:0,max:16},
   {k:'steps',n:'步數',u:'步／天',min:0,max:80000},{k:'exmin',n:'運動時間',u:'分鐘／天',min:0,max:600},{k:'vo2',n:'最大攝氧量 VO₂max',u:'ml/kg/min',min:10,max:90},{k:'resp',n:'睡眠呼吸速率',u:'次／分',min:5,max:40},
@@ -1766,13 +1783,14 @@ function bodySVG(m,issues,p){
   </g>${call}
   </svg>`;
 }
-function issueHTML(list,showRef,ask){return list.map(i=>{const long=typeof i.val==='string'&&i.val.length>6,rv=revOf(i.k,i.val,i.ref);return `<div class="issue"><span class="lv lv${i.lv}">${LVT[i.lv]}</span><div style="flex:1;min-width:0"><div class="t">${esc(i.name)}${revTag(rv)}</div><div class="s">${long?`<b style="color:var(--text)">${esc(i.val)}</b><br>`:''}${esc(i.src)}・${esc(i.msg)}${showRef&&i.ref?`<br>${/^原文/.test(i.ref)?'報告':'參考值 '}${esc(i.ref)}`:''}${i.dev&&i.msg.indexOf('設備')<0?`<br>設備判定：${esc(i.dev)}`:''}${rv&&rv[0]!=='rev'?`<br><span style="color:${REVTAG[rv[0]][1]}">${esc(rv[1])}</span>`:''}</div></div>${long?'':`<div class="v">${fmt(i.val)}<div class="sub">${esc(i.unit||'')}</div></div>`}${ask?`<button class="ask" data-ask="${esc(i.k)}" aria-label="問 AI：${esc(i.name)}">問 AI</button>`:''}</div>`}).join('')}
-function deptHTML(dp){return dp.length?dp.map(d=>`<div class="dept"><span class="lv lv${d.lv}">${LVT[d.lv]}</span><div style="flex:1;min-width:0"><b>${esc(d.d)}</b><div class="sub" style="margin-top:2px">${d.when}</div><div class="sub" style="margin-top:2px">${esc(d.items.join('、'))}</div></div></div>`).join(''):'<div class="empty">目前不需要特別就診，維持每年健康檢查即可</div>'}
+function issueHTML(list,showRef,ask){return list.map(i=>{const long=typeof i.val==='string'&&i.val.length>6,rv=revOf(i.k,i.val,i.ref);return `<div class="issue"><span class="lv lv${i.lv}">${i.crit?'危急':LVT[i.lv]}</span><div style="flex:1;min-width:0"><div class="t">${esc(i.name)}${revTag(rv)}${prevTag(i.prev)}</div><div class="s">${long?`<b style="color:var(--text)">${esc(i.val)}</b><br>`:''}${esc(i.src)}・${esc(i.msg)}${showRef&&i.ref?`<br>${/^原文/.test(i.ref)?'報告':'參考值 '}${esc(i.ref)}`:''}${i.dev&&i.msg.indexOf('設備')<0?`<br>設備判定：${esc(i.dev)}`:''}${rv&&rv[0]!=='rev'?`<br><span style="color:${REVTAG[rv[0]][1]}">${esc(rv[1])}</span>`:''}</div></div>${long?'':`<div class="v">${fmt(i.val)}<div class="sub">${esc(i.unit||'')}</div></div>`}${ask?`<button class="ask" data-ask="${esc(i.k)}" aria-label="問 AI：${esc(i.name)}">問 AI</button>`:''}</div>`}).join('')}
+function deptHTML(dp){return dp.length?dp.map(d=>`<div class="dept"><span class="lv lv${d.lv}">${d.crit?'危急':LVT[d.lv]}</span><div style="flex:1;min-width:0"><b>${esc(d.d)}</b><div class="sub" style="margin-top:2px">${d.when}</div><div class="sub" style="margin-top:2px">${esc(d.items.join('、'))}</div></div></div>`).join(''):'<div class="empty">目前不需要特別就診，維持每年健康檢查即可</div>'}
 
 /* ================= 渲染：總覽 ================= */
 function renderHeader(){const m=me();$('#memChip').innerHTML=`<span class="av" style="background:${avColor(m.id)}">${esc(m.name.slice(0,1)||'?')}</span><span>${esc(short(m.name,6))}</span><span class="sub">${sexT(m.sex)}・${Math.floor(ageOf(m))}歲 ▾</span>`}
 function renderDash(){
-  const m=me(),c=calc(m);
+  const m=me(),c=calc(m),l0=labsOf(m)[0];
+  $('#critBox').innerHTML=l0?critHTML(labEval(l0,m),l0.t):'';
   $('#gauge').innerHTML=gauge(c.bmi,c.cuts,c.cat);countUp($('#gaugeNum'),c.bmi,1);renderEnergy(m,c);
   $('#coreStats').innerHTML=
     stat('BMI 分級',c.cat[0],'',tagH(c.kid?'國健署兒童標準':'國健署成人標準',c.cat[1]))+
@@ -1856,7 +1874,7 @@ function renderFit(){
       <div style="position:relative"><div class="zone"><i style="background:#2b3a55"></i><i style="background:#22e4ff"></i><i style="background:#b6ff3c"></i><i style="background:#ffb547"></i><i style="background:#ff5d6c"></i></div>
         <span class="grow" style="position:absolute;top:-4px;bottom:-4px;left:${Math.max(0,(P.zone[0]/P.hrMax-.5)*200).toFixed(1)}%;width:${((P.zone[1]-P.zone[0])/P.hrMax*200).toFixed(1)}%;border:2px solid #fff;border-radius:99px;box-shadow:0 0 10px rgba(255,255,255,.5)"></span></div>
       <div class="row" style="margin-top:0"><span class="sub">${Math.round(P.hrMax*.5)}</span><span class="sub">你的目標區間（白框）</span><span class="sub">最大 ${P.hrMax}</span></div>
-      <div style="font-size:26px;font-weight:800;margin-top:8px">${P.zone[0]}–${P.zone[1]} <span class="u" style="font-size:13px;color:var(--mute)">下／分鐘</span></div>
+      <div style="font-size:calc(26px*var(--fz));font-weight:800;margin-top:8px">${P.zone[0]}–${P.zone[1]} <span class="u" style="font-size:calc(13px*var(--fz));color:var(--mute)">下／分鐘</span></div>
       <div class="note" style="margin-top:4px">${P.hrRest?`依你的靜止心率 ${fmt(P.hrRest)}（${P.hrSrc}，Karvonen 公式）計算。`:'用年齡估算；在「身體 → ＋ 手錶」填靜止心率會更準。'}沒有手錶就用「說話測試」：微喘、能講完整句子但唱不了歌，就是對的強度。有吃血壓藥（β 阻斷劑）的人心率會偏低，以說話測試為準。</div></div>
     <div class="card"><h2>${EX[P.str].e} 肌力動作（每次 ${P.sets} 組）</h2>${P.mv.map(x=>`<div class="do"><span class="ic">✓</span><div><b>${esc(x.n)}</b> <span class="sub">${x.r} ${x.u||'下'} × ${P.sets} 組</span><div class="s">${esc(x.d)}</div></div></div>`).join('')}
       <p class="note">組間休息 60 秒。動作做對比做多重要；任何動作造成關節痛就跳過。</p></div></div>`;
@@ -1871,7 +1889,7 @@ function exlogCard(m,P){const mon=mondayOf(ymd(new Date())),W=exWeek(m,mon),pw=e
   return `<div class="card"><div class="row" style="margin:0 0 8px"><h2 style="margin:0">本週實際完成</h2><span class="tg">上週有氧 ${pw.aer} 分</span></div>
     <div class="grid2">${stat('中等以上有氧',W.aer,` / ${P.aerT} 分`,tagH(W.aer>=P.aerT?'達標':W.aer>=150?'已達 WHO 150':'還差 '+(P.aerT-W.aer)+' 分',W.aer>=P.aerT?'#b6ff3c':'#ffb547'))}${stat('肌力訓練',W.str,` / ${P.strT} 天`,tagH(`消耗約 ${W.kcal} kcal`,'#8a97b4'))}</div>
     <div class="bar" style="margin-top:10px"><i style="width:${pct}%;background:linear-gradient(90deg,#22e4ff,#b6ff3c)"></i></div>
-    ${W.L.length?W.L.map(r=>`<div class="rec"><span style="font-size:22px">${EX[r.k]?.e||'🏅'}</span><div class="m"><b>${esc(EX[r.k]?.n||r.note||'其他運動')} ${r.min} 分鐘</b><small>${mdT(r.d)}・${(INT.find(x=>x[0]===r.int)||INT[1])[1]}・約 ${r.kcal||0} kcal${r.note&&EX[r.k]?'・'+esc(r.note):''}</small></div><button class="x" data-exrm="${esc(r.id)}" aria-label="刪除這筆">✕</button></div>`).join('')
+    ${W.L.length?W.L.map(r=>`<div class="rec"><span style="font-size:calc(22px*var(--fz))">${EX[r.k]?.e||'🏅'}</span><div class="m"><b>${esc(EX[r.k]?.n||r.note||'其他運動')} ${r.min} 分鐘</b><small>${mdT(r.d)}・${(INT.find(x=>x[0]===r.int)||INT[1])[1]}・約 ${r.kcal||0} kcal${r.note&&EX[r.k]?'・'+esc(r.note):''}</small></div><button class="x" data-exrm="${esc(r.id)}" aria-label="刪除這筆">✕</button></div>`).join('')
       :'<div class="empty" style="padding:10px 0">這週還沒有紀錄</div>'}
     ${(()=>{const b=exBonus(m,ymd(new Date()));return b.min?`<div class="hl" style="margin-top:10px">🍽 ${exBonusTxt(b,P.c)} <button class="btn sm ghost" data-go="menu" style="margin-top:6px">看今天菜單 ›</button></div>`:''})()}
     <button class="btn ghost" data-exlog="1" style="margin-top:8px">＋ 手動記錄運動</button>
@@ -1961,7 +1979,8 @@ async function shareICS(){const m=me(),P=fitPlan(m),ics=fitICS(m,P),name=`nutric
 /* ================= 渲染：身體 ================= */
 let recTab='scale';
 function renderBody(){
-  const m=me(),{scale,lab,watch,s,l,w}=issuesOf(m),all=[...lab,...scale,...watch].sort((a,b)=>b.lv-a.lv),a=ageOf(m);
+  const m=me(),{scale,lab,watch,s,l,w}=issuesOf(m),all=annotPrev(m,[...lab,...scale,...watch].sort((a,b)=>(b.crit?1:0)-(a.crit?1:0)||b.lv-a.lv)),a=ageOf(m);
+  $('#critBody').innerHTML=critHTML(all,l?.t);
   $('#bodyWho').textContent=`${m.name}・${sexT(m.sex)}・${Math.floor(a)} 歲・${stageOf(a)}`;
   $('#bodySrc').innerHTML=[s&&'體脂 '+fmtDT(s.t),l&&'體檢 '+esc(l.t),w&&'手錶 '+esc(w.t)].filter(Boolean).map(x=>`<span style="white-space:nowrap;margin-right:10px">${x}</span>`).join('')||'尚無資料，先新增體脂或體檢紀錄';
   const chips=[];
@@ -1970,9 +1989,10 @@ function renderBody(){
   $('#bodyScore').innerHTML=chips.join('');
   $('#hud').innerHTML=bodySVG(m,all,'b');$('#organPanel').innerHTML='';
   $('#issueList').innerHTML=all.length?issueHTML(all.slice(0,12),true,true)+(all.length>12?`<div class="note">另有 ${all.length-12} 項，請點紀錄看完整分析</div>`:''):`<div class="empty">${s||l||w?'目前沒有異常指標 👍':'尚無資料'}</div>`;
+  if(l)$('#issueList').insertAdjacentHTML('beforeend',`<p class="note">${NORMAL_NOTE}</p>`);
   $('#deptList').innerHTML=deptHTML(deptPlan(all));
   const dv=derivedOf(m);$('#derivedCard').hidden=!dv.length;
-  $('#derivedList').innerHTML=dv.map(d=>`<div class="issue"><span class="lv lv${d.lv}">${d.lv?LVT[d.lv]:'正常'}</span><div style="flex:1;min-width:0"><div class="t">${esc(d.name)}</div><div class="s">${esc(d.txt)}<br><span style="font-size:11px">${esc(d.src)}</span></div></div><div class="v">${esc(d.val)}</div></div>`).join('');
+  $('#derivedList').innerHTML=dv.map(d=>`<div class="issue"><span class="lv lv${d.lv}">${d.lv?LVT[d.lv]:'正常'}</span><div style="flex:1;min-width:0"><div class="t">${esc(d.name)}</div><div class="s">${esc(d.txt)}<br><span style="font-size:calc(11px*var(--fz))">${esc(d.src)}</span></div></div><div class="v">${esc(d.val)}</div></div>`).join('');
   $('#planBody').innerHTML=planHTML(m);
   const cd=cmpData(m);$('#cmpCard').hidden=!cd;if(cd)$('#cmpBody').innerHTML=cmpBrief(cd);
   const rh=rotHTML(m);$('#rotCard').hidden=!rh;$('#rotBody').innerHTML=rh;
@@ -2007,15 +2027,14 @@ function renderRecs(){
   }
 }
 function showOrgan(o){
-  const m=me(),{scale,lab,watch}=issuesOf(m),list=[...lab,...scale,...watch].filter(i=>i.organ===o).sort((a,b)=>b.lv-a.lv);
+  const m=me(),{scale,lab,watch}=issuesOf(m),list=annotPrev(m,[...lab,...scale,...watch].filter(i=>i.organ===o).sort((a,b)=>b.lv-a.lv));
   $$('#hud [data-org]').forEach(e=>e.classList.toggle('sel',e.dataset.org===o));
   $('#organPanel').innerHTML=`<div class="organ-pop"><div class="row" style="margin:0 0 6px"><b>${esc(orgName(o,m))}</b><button class="x" data-closeorgan>✕</button></div>${list.length?issueHTML(list,true,true):'<div class="empty" style="padding:8px 0">這個部位目前沒有異常指標</div>'}${ORG[o].tip?`<p class="note">💡 ${esc(ORG[o].tip)}</p>`:''}</div>`;
   $('#organPanel').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-/* ================= 渲染：我的 ================= */
+/* ================= 家庭成員列表（設定、切換成員共用） ================= */
 function memRows(){return MEM.map(m=>`<div class="rec"><button class="mrow" data-pick="${esc(m.id)}"><span class="av" style="background:${avColor(m.id)}">${esc(m.name.slice(0,1)||'?')}</span><span style="min-width:0"><b>${esc(m.name)}</b> ${m.id===ACT?'<span class="on">● 使用中</span>':''}<div class="sub">${sexT(m.sex)}・${Math.floor(ageOf(m))} 歲・${stageOf(ageOf(m))}・體脂 ${(SCALE[m.id]||[]).length} 筆・體檢 ${(LABS[m.id]||[]).length} 份</div></span></button><button class="x" data-editmem="${esc(m.id)}" aria-label="編輯">✎</button></div>`).join('')}
-function renderMe(){$('#memList').innerHTML=memRows();$('#f-gas').value=GAS}
 
 /* ================= 底部面板 ================= */
 let onSheetClose=null;const sheetCleanup=()=>{if(onSheetClose){const f=onSheetClose;onSheetClose=null;try{f()}catch(e){}}};
@@ -2025,11 +2044,11 @@ const sheetHead=(t,sub)=>`<h3>${t}<button class="x" data-close aria-label="關�
 function openMemberPicker(){openSheet(sheetHead('切換成員','點名字切換，✎ 編輯資料')+`<div style="margin-top:10px">${memRows()}</div><button class="btn ghost" data-addmem>＋ 新增成員</button>`)}
 
 const ACTS=[['1.2','久坐（幾乎不運動）'],['1.375','輕度（每週 1–3 天）'],['1.55','中度（每週 3–5 天）'],['1.725','高度（每週 6–7 天）'],['1.9','極高（勞力工作＋訓練）']];
-function openMemberEdit(id,focus){
+function openMemberEdit(id,focus,back){
   const ex=id?MEM.find(x=>x.id===id):null;
   const m=ex?{...ex}:{id:uid(),name:'',sex:'m',birth:'',h:'',w:'',waist:'',neck:'',hip:'',act:'1.375',goal:'auto'};if(!GOALT[m.goal])m.goal='auto';
-  const TABS=[['basic','基本資料'],['fh','家族史'],['fit','運動'],['diet','不吃的'],['vax','疫苗'],...(ex?[['app','App 設定']]:[])];
-  openSheet(sheetHead(ex?'設定・'+esc(m.name):'新增成員','')+`<div class="tabs" id="m-tabs" role="tablist">${TABS.map(([k,t])=>`<button data-t="${k}" role="tab">${t}</button>`).join('')}</div>
+  const TABS=[['basic','基本資料'],['fh','家族史'],['fit','運動'],['diet','不吃的'],['vax','疫苗']];
+  openSheet((back?'<button class="btn sm ghost" data-settings style="margin-bottom:8px">‹ 設定</button>':'')+sheetHead(ex?esc(m.name)+' 的資料':'新增成員','')+`<div class="tabs" id="m-tabs" role="tablist">${TABS.map(([k,t])=>`<button data-t="${k}" role="tab">${t}</button>`).join('')}</div>
     <div class="tabp" data-t="basic"><p class="note" style="margin-top:0">性別＋出生日期會自動判斷兒童／青少年／成人／長者</p>
     <label>名稱</label><input id="m-name" value="${esc(m.name)}" placeholder="例如：爸爸、小明" maxlength="12">
     <label>性別</label><div class="seg" id="m-sex"><button data-v="m">男</button><button data-v="f">女</button></div>
@@ -2075,15 +2094,11 @@ function openMemberEdit(id,focus){
       <div class="tabp" id="m-vaxbox" data-t="vax"><p class="note" style="margin-top:0">打過的疫苗就不會再出現在建議裡</p>
       <label>已經打過的（點選）</label>${chips('m-vax',VAX,VAX.filter(([k])=>vaxDone(m,k)).map(([k])=>k))}
       <p class="note">流感、新冠是「這一季」（每年 10 月開打）；破傷風算 10 年內。</p></div>
-      ${ex?`<div class="tabp" data-t="app"><div class="h4" style="margin-top:4px">家庭成員</div>${memRows()}<button class="btn ghost" data-addmem>＋ 新增成員</button>
-        <div class="h4">資料備份</div><p class="note" style="margin-top:0">健康資料只存在這支手機，請定期匯出備份（換手機、Safari 清資料時用得到）。</p>
-        <div class="row2"><button class="btn" data-export>匯出備份</button><button class="btn ghost" data-import>匯入備份</button></div>
-        <div class="h4">菜色圖片</div><button class="btn ghost" data-autoimg>${AUTO?'⏸ 停止自動補圖':'🖼 自動補齊全部菜色圖片'}</button>
-        <div class="h4">圖片後端（選用）</div><input id="s-gas" value="${esc(GAS)}" placeholder="https://script.google.com/macros/s/.../exec" inputmode="url"><p class="note">留空＝AI Horde 免費社群算力。金鑰只放在 GAS，絕不放這裡。</p></div>`:''}`})()}
+`})()}
     <div class="row2" id="m-actions">${ex&&MEM.length>1?'<button class="btn danger" id="m-del" style="flex:0 0 30%">刪除</button>':''}<button class="btn" id="m-save">儲存</button></div>`);
   const seen=new Set(),tab=t=>{seen.add(t);$$('#m-tabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===t);b.setAttribute('aria-selected',b.dataset.t===t)});
-    $$('#sheetBody .tabp').forEach(p=>p.hidden=p.dataset.t!==t);$('#m-actions').hidden=t==='app';$('.sheet-panel').scrollTop=0;$('#m-tabs [data-t="'+t+'"]')?.scrollIntoView({inline:'center',block:'nearest'})};
-  $$('#m-tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));if($('#s-gas'))$('#s-gas').onchange=e=>setGas(e.target.value.trim(),e.target);
+    $$('#sheetBody .tabp').forEach(p=>p.hidden=p.dataset.t!==t);$('.sheet-panel').scrollTop=0;$('#m-tabs [data-t="'+t+'"]')?.scrollIntoView({inline:'center',block:'nearest'})};
+  $$('#m-tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
   let sex=m.sex,goal=m.goal;
   const upd=()=>{const b=$('#m-birth').value,a=ageOf({birth:b}),kid=!!b&&a<18;
     $('#m-stage').textContent=b?`${Math.floor(a)} 歲・${stageOf(a)}${kid?'・使用國健署兒童青少年 BMI 標準與 Schofield 代謝公式':''}`:'';
@@ -2112,11 +2127,12 @@ function openMemberEdit(id,focus){
     m.diet={no:pick('#m-no'),ban:pick('#m-ban')};
     const vx={},on=pick('#m-vax'),y=new Date().getFullYear();for(const k of on)vx[k]=vaxDone(m,k)?+obj(m.vax)[k]:(k==='flu'||k==='covid'?season():y);m.vax=vx;
     const i=MEM.findIndex(x=>x.id===m.id);if(i>=0)MEM[i]=m;else MEM.push(m);
-    ACT=m.id;S.set('members',MEM);S.set('active',ACT);closeSheet();renderAll();toast('已儲存：'+name)};
+    ACT=m.id;S.set('members',MEM);S.set('active',ACT);renderAll();if(back)openSettings();else closeSheet();toast('已儲存：'+name);
+    if(FRESH){FRESH=false;if(!S.get('tour',0))setTimeout(startTour,600)}};
   if($('#m-del'))$('#m-del').onclick=()=>{
     if(!confirm(`確定刪除「${m.name}」以及這位成員的所有體脂、體檢紀錄？此動作無法復原。`))return;
-    MEM=MEM.filter(x=>x.id!==m.id);delete SCALE[m.id];delete LABS[m.id];delete WATCH[m.id];delete EXLOG[m.id];if(ACT===m.id)ACT=MEM[0].id;
-    S.set('members',MEM);S.set('scale',SCALE);S.set('labs',LABS);S.set('watch',WATCH);S.set('exlog',EXLOG);S.set('active',ACT);closeSheet();renderAll();toast('已刪除')};
+    MEM=MEM.filter(x=>x.id!==m.id);delete SCALE[m.id];delete LABS[m.id];delete WATCH[m.id];delete EXLOG[m.id];delete SELFR[m.id];if(ACT===m.id)ACT=MEM[0].id;
+    S.set('members',MEM);S.set('scale',SCALE);S.set('labs',LABS);S.set('watch',WATCH);S.set('exlog',EXLOG);S.set('self',SELFR);S.set('active',ACT);if(back)openSettings();else closeSheet();renderAll();toast('已刪除')};
 }
 
 /* ================= AI 醫生：把數值整理成問題，使用者自己帶到 AI 問 =================
@@ -2135,7 +2151,7 @@ const AI_CORE=['sbp','dbp','glu','hba1c','tc','ldl','hdl','tg','ast','alt','ggt'
 const AI_STD='【台灣判讀標準】BMI：18.5–24 正常、24–27 過重、≥27 肥胖（國健署）；腰圍 男 ≥90、女 ≥80 cm 為腹部肥胖；代謝症候群＝腰圍、血壓 ≥130/85、空腹血糖 ≥100、三酸甘油酯 ≥150、HDL 男 <40 女 <50 五項中 ≥3 項；血壓 ≥130/80 為高血壓（2022 台灣指引）。';
 function aiPrompt(m,o){
   const c=calc(m),{scale,lab,watch,s,l}=issuesOf(m),fh=fhOf(m),lf=lifeOf(m),fp=fitOf(m),dt=dietOf(m),out=[],P=labsOf(m).find(r=>l&&r!==l&&dayDiff(r.t,l.t)>=180);
-  const iss=i=>/^原文：/.test(i.ref||'')?`${i.name}：報告${i.ref}（App 歸類「${tv(i.val)}」）→ ${LVT[i.lv]}（${i.msg}）`:`${i.name}：${tv(i.val)}${i.unit?' '+i.unit:''}${i.ref?`（參考 ${i.ref}）`:''} → ${LVT[i.lv]}（${i.msg}）`;
+  const iss=i=>/^原文：/.test(i.ref||'')?`${i.name}：報告${i.ref}（App 歸類「${tv(i.val)}」）→ ${i.crit?'危急值（今天就要處理）':LVT[i.lv]}（${i.msg}）`:`${i.name}：${tv(i.val)}${i.unit?' '+i.unit:''}${i.ref?`（參考 ${i.ref}）`:''} → ${i.crit?'危急值（今天就要處理）':LVT[i.lv]}（${i.msg}）`;
   out.push('你是一位謹慎、會用白話解釋的家庭醫學科醫師。請用繁體中文（台灣用語）回答。',
     '規則：①只根據下面的資料，不要假設沒提供的數值 ②「關鍵數值」裡列出的都已經驗過，不要再叫我重驗；只能建議補「這份報告沒有驗」的項目 ③判讀用下面的台灣標準 ④有需要儘快就醫的警訊放最前面（沒有就說沒有）⑤分清楚「要看醫生」和「生活調整即可」⑥不要開藥或給劑量 ⑦最後給我 3 個下次看診可以問醫生的問題。',AI_STD,'',
     `【基本資料】${sexT(m.sex)}性、${Math.floor(c.a)} 歲、身高 ${c.h} cm、體重 ${tv(c.w)} kg（BMI ${r1(c.bmi)}）${m.waist?`、腰圍 ${m.waist} cm`:''}${l?.items?.ht||l?.items?.bmi?`；醫院量：${[l.items.ht&&`身高 ${l.items.ht.v} cm`,l.items.wt&&`體重 ${l.items.wt.v} kg`,l.items.bmi&&`BMI ${l.items.bmi.v}`].filter(Boolean).join('、')}`:''}`,
@@ -2159,6 +2175,7 @@ function aiPrompt(m,o){
     watchEval(w,m).forEach(i=>out.push(`- ${iss(i)}`))}
   if(o.scale&&s){out.push('',`【體脂計 ${String(s.t).slice(0,10)}】${['weight','fat','visceral','muscle','skeletal','bmr'].filter(k=>s[k]!=null).map(k=>`${SFN[k].n} ${tv(s[k])}${SFN[k].u?' '+SFN[k].u:''}`).join('、')}`);
     scale.forEach(i=>out.push(`- ${iss(i)}`))}
+  if(o.self){const rs=selfLatest(m,365);if(rs.length){out.push('','【自我檢測（1 年內最新一次）】');rs.forEach(r=>{const R=selfRate(r.k,r.a,m);out.push(`- ${SELF[r.k].n}（${r.t}）：${R.sc?R.sc+'，':''}${SLV[R.lv][0]}——${R.head}`)})}}
   const pr=yearPlan(m).items.filter(x=>x.pr===1);if(pr.length)out.push('',`【App 依規則列出的優先檢查】${pr.map(x=>x.t).join('、')}`);
   {const ro=rotation(m);if(ro.done.length)out.push(`【檢查紀錄（上次做的年份）】${ro.done.map(d=>`${d.t} ${d.y}`).join('、')}`);
     const yy=ro.years.filter(y=>y.items.length);if(yy.length)out.push(`【App 排的未來 3 年檢查】${yy.map(y=>`${y.y}：${y.items.map(o=>o.t+(o.need?'':'（可考慮）')).join('、')}`).join('；')}`)}
@@ -2229,8 +2246,8 @@ function symResult(m){const list=SYM.filter(x=>symSel.has(x.k));if(!list.length)
   return `<div class="${top==='now'?'banner':'hl'}" style="margin:12px 0;${top==='now'?'':`border-color:${URGT[top][1]}`}"><b style="color:${top==='now'?'#fff':URGT[top][1]}">${URGT[top][0]}</b><div class="sub" style="margin-top:4px;${top==='now'?'color:#fff':''}">建議科別：${esc(depts.join('、'))}</div></div>
     ${rows.map(({x,u,hit,ctx})=>`<div class="card" style="margin:10px 0;padding:14px"><div class="row" style="margin:0 0 6px"><b>${esc(x.n)}</b><span class="vd" style="color:${URGT[u][1]};border-color:${URGT[u][1]}">${{now:'立即',soon:'儘快',clinic:'門診',obs:'觀察'}[u]}</span></div>
       ${(x.rf||[]).length?`<div class="sub">有下面任何一項嗎？</div><div class="chips" style="margin:6px 0">${x.rf.map((r,i)=>`<button type="button" class="chip${symRf.has(x.k+':'+i)?' on':''}" data-rf="${x.k}:${i}">${r[1]==='now'?'🚨 ':'⚠️ '}${esc(r[0])}</button>`).join('')}</div>`:''}
-      <div class="s" style="font-size:13px;line-height:1.7"><b>看哪一科：</b>${esc(x.d)}<br><b>可以和醫師討論的檢查：</b>${esc(x.t.join('、'))}${x.tip?`<br><span class="sub">💡 ${esc(x.tip)}</span>`:''}</div>
-      ${ctx.length?`<div class="hl" style="margin-top:8px;font-size:12px">📋 對照你的資料：${esc(ctx.join('；'))}</div>`:''}</div>`).join('')}`}
+      <div class="s" style="font-size:calc(13px*var(--fz));line-height:1.7"><b>看哪一科：</b>${esc(x.d)}<br><b>可以和醫師討論的檢查：</b>${esc(x.t.join('、'))}${x.tip?`<br><span class="sub">💡 ${esc(x.tip)}</span>`:''}</div>
+      ${ctx.length?`<div class="hl" style="margin-top:8px;font-size:calc(12px*var(--fz))">📋 對照你的資料：${esc(ctx.join('；'))}</div>`:''}</div>`).join('')}`}
 function openSym(){const m=me(),areas=[...new Set(SYM.map(x=>x.a))],own=x=>!x.sex||x.sex===m.sex;
   openSheet(sheetHead('🤒 我有症狀','勾選症狀 → 要注意什麼、掛哪一科、做哪些檢查')+`
     <div class="banner" style="margin:10px 0">胸痛冒冷汗、單側無力、嘴歪講話不清、呼吸困難、意識改變：<b>不要看 App，直接打 119</b></div>
@@ -2246,13 +2263,13 @@ function openSym(){const m=me(),areas=[...new Set(SYM.map(x=>x.a))],own=x=>!x.se
     const rf=L.flatMap(x=>(x.rf||[]).filter((r,i)=>symRf.has(x.k+':'+i)).map(r=>r[0]));
     openAI(null,`我最近有這些症狀：${L.map(x=>x.n).join('、')}（${{new:'1–3 天',days:'4–14 天',long:'超過 2 週'}[symDur]}）${rf.length?`；另外有：${rf.join('、')}`:''}。請依我的數值判斷可能原因、要掛哪一科、需要哪些檢查、有沒有需要立刻就醫的警訊。`)};
   paint()}
-let aiO={topic:'all',fh:true,scale:true,watch:true,normals:false,q:'',item:null};
+let aiO={topic:'all',fh:true,scale:true,watch:true,self:true,normals:false,q:'',item:null};
 function openAI(item,q){const m=me();aiO={...aiO,item:item||null,topic:item?'item':aiO.topic==='item'?'all':aiO.topic,q:String(q||'').slice(0,500)};
   const it=item&&[...issuesOf(m).lab,...issuesOf(m).scale,...issuesOf(m).watch].find(i=>i.k===item),topics=[...(it?[['item','這一項：'+(it.short||it.name)]]:[]),...AI_TOPICS];
   openSheet(sheetHead('🩺 AI 醫生','把你的數值整理成問題，帶到你常用的 AI 問')+`
     <label>想問什麼</label><div class="chips" id="ai-topic">${topics.map(([k,n])=>`<button class="chip${aiO.topic===k?' on':''}" data-k="${k}">${esc(n)}</button>`).join('')}</div>
     <label>補充問題（選填）</label><textarea id="ai-q" maxlength="500" style="min-height:70px;font-family:inherit" placeholder="例如：最近常覺得累，跟報告有關嗎？">${esc(aiO.q)}</textarea>
-    <label>要附上的資料</label><div class="chips" id="ai-opt"><button class="chip${aiO.fh?' on':''}" data-k="fh">家族史與生活習慣</button><button class="chip${aiO.scale?' on':''}" data-k="scale">體脂紀錄</button><button class="chip${aiO.watch?' on':''}" data-k="watch">手錶數據</button><button class="chip${aiO.normals?' on':''}" data-k="normals">正常的數值也附上</button></div>
+    <label>要附上的資料</label><div class="chips" id="ai-opt"><button class="chip${aiO.fh?' on':''}" data-k="fh">家族史與生活習慣</button><button class="chip${aiO.scale?' on':''}" data-k="scale">體脂紀錄</button><button class="chip${aiO.watch?' on':''}" data-k="watch">手錶數據</button><button class="chip${aiO.self?' on':''}" data-k="self">自我檢測結果</button><button class="chip${aiO.normals?' on':''}" data-k="normals">正常的數值也附上</button></div>
     <details class="box"><summary>預覽要問的內容 <span class="sub" id="ai-n"></span></summary><div class="prompt" id="ai-pv"></div></details>
     <div class="aib">${AIS.map(([k,n])=>`<a class="btn" data-aiopen="${k}" href="${AIS.find(x=>x[0]===k)[2]}" target="_blank" rel="noopener">${n}</a>`).join('')}</div>
     <button class="btn ghost" id="ai-copy">只複製（自己貼到任何 AI）</button>
@@ -2263,6 +2280,260 @@ function openAI(item,q){const m=me();aiO={...aiO,item:item||null,topic:item?'ite
   $('#ai-q').oninput=e=>{aiO.q=e.target.value.slice(0,500);upd()};
   $$('[data-aiopen]').forEach(a=>a.onclick=()=>{copyText(txt(),'已複製，到 AI 輸入框長按「貼上」送出')});   /* 先複製（同一次點擊內），連結照常開新分頁 */
   $('#ai-copy').onclick=()=>copyText(txt(),'已複製，可以貼到任何 AI');upd()}
+
+/* ================= 自我檢測：在家就能做的篩檢 → 結果、要做什麼、掛哪一科、可以請醫師安排的檢查，並能整理給 AI =================
+   正式量表：BE FAST（中風警訊口訣）、AD8（極早期失智篩檢）、STOP-Bang（睡眠呼吸中止）、PHQ-9／GAD-7（憂鬱／焦慮）、SARC-F＋椅子起立 5 次（AWGS 2019 肌少症）；
+   「心臟」「頭暈」不是正式量表，是依臨床警訊整理的分流問題。只存答案，結果每次重算（規則修正後舊紀錄跟著更新）；資料只存在手機 */
+const YN=[['沒有',0],['有',1]],FREQ=[['完全沒有',0],['有幾天',1],['一半以上的天數',2],['幾乎每天',3]],AD8O=[['是，有改變',1],['沒有改變',0],['不知道',0]],SARO=t=>[['沒有困難',0],['有點困難',1],[t||'很困難或做不到',2]];
+const SLV=[['低風險','var(--lime)','低風險'],['注意','var(--amber)','注意'],['建議門診評估','#ff8a5c','門診'],['儘快就醫','var(--red)','儘快'],['立即打 119 或掛急診','var(--red)','立即']];
+let SELFR=S.get('self',{});   // {成員 id: [{id,k,t:'YYYY-MM-DD',a:[每題答案：選項序號或數字，沒答 null]}]}
+const selfOf=(m,k)=>(SELFR[m.id]||[]).filter(r=>SELF[r.k]&&(!k||r.k===k)).sort((a,b)=>String(b.t).localeCompare(String(a.t))||String(b.id).localeCompare(String(a.id)));
+const selfLatest=(m,days)=>Object.keys(SELF).map(k=>selfOf(m,k)[0]).filter(r=>r&&(!days||dayDiff(r.t,ymd(new Date()))<=days));
+// 對照自己的資料用：最近一份報告（含手錶 60 天內）的異常、近 3 份報告的數值
+function selfF(m){const L=labsOf(m),w0=watchOf(m)[0],w=w0&&dayDiff(w0.t,ymd(new Date()))<=60?w0:null,iss=[...(L[0]?labEval(L[0],m):[]),...(w?watchEval(w,m):[])];
+  const iv=k=>{for(const r of L.slice(0,3)){const v=num(r.items?.[k]?.v);if(v!=null)return v}return null};
+  return{a:Math.floor(ageOf(m)),c:calc(m),iss,has:k=>iss.some(i=>i.k===k),iv,w,lf:lifeOf(m),fh:fhOf(m),male:m.sex!=='f'}}
+const ctxCV=(m,F)=>{const o=[],s=F.iv('sbp'),d=F.iv('dbp'),g=F.iv('glu'),a1=F.iv('hba1c'),ldl=F.iv('ldl');
+  if(s>=130||d>=80)o.push(`血壓 ${s??'—'}/${d??'—'}（≥130/80 屬高血壓）`);else if(F.has('w_bp'))o.push('手錶血壓偏高');
+  if(g>=100||a1>=5.7)o.push(`血糖偏高（${[g!=null&&`空腹 ${g}`,a1!=null&&`HbA1c ${a1}%`].filter(Boolean).join('、')}）`);
+  if(F.has('ldl')||F.has('tc'))o.push(`血脂偏高${ldl!=null?`（LDL ${ldl}）`:''}`);
+  if(F.lf.smoke==='current')o.push('目前吸菸');
+  if(F.w?.afib)o.push('手錶提示過心律不整（心房顫動會讓中風風險增加約 5 倍）');
+  if(F.has('img_cac')||F.has('cac'))o.push('影像報告有冠狀動脈鈣化');
+  if(F.fh.chr.includes('cvd'))o.push('一等親有早發心血管疾病');
+  if(F.c.bmi>=27)o.push(`BMI ${r1(F.c.bmi)}（肥胖）`);
+  return o};
+const ctxHeart=(m,F)=>[...ctxCV(m,F),F.w?.rhr>=90&&`手錶靜止心率 ${F.w.rhr}（偏快）`,F.has('w_vo2')&&'手錶 VO₂max 同齡偏低（心肺耐力差）',F.has('ekg')&&'體檢心電圖有異常紀錄'].filter(Boolean);
+const ctxDizzy=(m,F)=>{const o=[],hb=F.iv('hb'),g=F.iv('glu'),s=F.iv('sbp');
+  if(F.has('hb'))o.push(`血紅素 ${hb} 異常（貧血會頭暈）`);if(g!=null&&g<70)o.push(`空腹血糖 ${g}（偏低）`);
+  if(s!=null&&s<90)o.push(`血壓 ${s}（偏低）`);else if(s>=140)o.push(`血壓 ${s}（偏高）`);
+  if(F.w?.rhr!=null&&(F.w.rhr<45||F.w.rhr>100))o.push(`手錶靜止心率 ${F.w.rhr}`);if(F.w?.afib)o.push('手錶提示過心律不整');
+  if(F.has('hearing'))o.push('體檢聽力有異常紀錄');return o};
+const ctxMem=(m,F)=>{const o=[],g=F.iv('glu'),a1=F.iv('hba1c');
+  if(F.has('tsh'))o.push(`TSH ${F.iv('tsh')} 異常（甲狀腺低下會讓記憶變差）`);if(F.has('b12'))o.push('維生素 B12 異常');
+  if(g>=126||a1>=6.5)o.push('血糖偏高（糖尿病會增加失智風險）');if(F.has('hearing'))o.push('聽力有異常紀錄（聽力受損是可以改變的失智危險因子）');
+  if(F.w?.sleep!=null&&F.w.sleep<6)o.push(`手錶平均睡 ${F.w.sleep} 小時`);
+  const p=selfOf(m,'phq9')[0],st=selfOf(m,'sleep')[0];if(p&&selfRate('phq9',p.a,m,F).lv>=2)o.push('情緒檢測分數偏高（憂鬱常被誤以為失智）');if(st&&selfRate('sleep',st.a,m,F).lv>=2)o.push('睡眠呼吸中止高風險（睡不好會影響記憶）');return o};
+const ctxSleep=(m,F)=>{const o=[],s=F.iv('sbp'),d=F.iv('dbp');o.push(`BMI ${r1(F.c.bmi)}${F.c.bmi>=27&&F.c.bmi<=35?'（亞洲人 BMI 27 以上風險就明顯上升）':''}`);
+  if(+m.neck)o.push(`頸圍 ${m.neck} cm`);if(s>=130||d>=80)o.push(`血壓 ${s??'—'}/${d??'—'}`);
+  if(F.w?.spo2!=null&&F.w.spo2<95)o.push(`手錶血氧平均 ${F.w.spo2}%（偏低）`);if(F.w?.sleep!=null)o.push(`手錶平均睡 ${F.w.sleep} 小時`);if(F.w?.afib)o.push('手錶提示過心律不整');return o};
+const ctxMood=(m,F)=>{const o=[];if(F.has('tsh'))o.push(`TSH ${F.iv('tsh')} 異常（甲狀腺會影響情緒）`);if(F.has('hb'))o.push('血紅素異常（貧血會疲倦、沒精神）');
+  if(F.w?.sleep!=null&&F.w.sleep<6)o.push(`手錶平均睡 ${F.w.sleep} 小時`);if(F.w?.stress>=50)o.push(`手錶平均壓力 ${F.w.stress}`);return o};
+const ctxMuscle=(m,F)=>{const o=[],g=Math.max(F.iv('grip_r')||0,F.iv('grip_l')||0),cut=F.male?28:18,dxa=F.iv('dxa'),vd=F.iv('vitd'),s=scalesOf(m)[0];
+  if(g)o.push(`握力 ${g} kg${g<cut?`（低於 ${cut}，偏低）`:''}`);
+  if(s?.skeletal!=null)o.push(`骨骼肌 ${fmt(s.skeletal)} kg${/低|不足/.test(s.status?.skeletal||'')?'（體脂機判定偏低）':''}`);
+  if(dxa!=null&&dxa<=-1)o.push(`骨密度 T 值 ${dxa}${dxa<=-2.5?'（骨質疏鬆：跌倒容易骨折）':'（骨質缺乏）'}`);
+  if(vd!=null&&vd<20)o.push(`維生素 D ${vd}（偏低）`);if(F.w?.steps!=null&&F.w.steps<4000)o.push(`手錶每天 ${fmt(F.w.steps)} 步（久坐）`);return o};
+const EMERG=(head,txt,ex)=>({lv:4,head,txt,todo:['立刻打 119，不要自己開車或等家人載','記下症狀開始的時間（或最後一次確定正常的時間）','先坐下或躺下，避免跌倒'],dept:'急診（打 119）',exams:ex});
+const SELF={
+ stroke:{n:'中風警訊',ic:'🧠',g:'urg',sub:'懷疑中風時現在就測：平衡、眼睛、臉、手、說話',
+  intro:'中風是「突然」發生的。照著每一題做一次，任何一題「有」就立刻打 119，不用做完。',
+  src:'BE FAST 中風警訊口訣：Balance 平衡、Eyes 眼睛、Face 臉、Arm 手、Speech 說話、Time 記下時間',
+  qs:[{t:'平衡：突然走不穩、站不穩，或身體一直往一邊倒？',o:YN},{t:'眼睛：突然一眼或兩眼看不清楚、視野少一塊，或看東西變兩個？',o:YN},
+   {t:'臉：對著鏡子露出牙齒笑，一邊嘴角下垂或臉歪一邊？',o:YN},{t:'手腳：閉上眼睛、雙手手心朝上往前平舉 10 秒，有一隻手往下掉？或一側手腳突然無力、麻木？',o:YN},
+   {t:'說話：說一句「今天天氣很好」，口齒不清、說不出來，或聽不懂別人說話？',o:YN},{t:'突然劇烈頭痛（一生最痛），或突然意識模糊、叫不太醒？',o:YN}],
+  ctx:ctxCV,
+  rate(V,A,m,F){if(V.some(v=>v===1))return{...EMERG('有中風警訊：立刻打 119','血栓型中風在發作 4.5 小時內可以打血栓溶解劑，部分病人更晚還能取出血栓——越早到醫院，救回的腦細胞越多。',['腦部電腦斷層或磁振造影','心電圖（找心房顫動）','血糖']),
+     todo:['立刻打 119，不要自己開車或等家人載','記下症狀開始的時間（或最後一次確定正常的時間），告訴醫護人員','不要吃東西、喝水或吃藥（包括阿斯匹靈）：可能嗆到，出血型中風吃了會更嚴重','讓患者側躺、鬆開衣領，有假牙先取下','症狀幾分鐘就消失也一樣要去急診：可能是暫時性腦缺血（小中風），接下來 48 小時中風的機會最高']};
+   const rf=ctxCV(m,F),s=F.iv('sbp'),d=F.iv('dbp'),todo=[];
+   if(s>=130||d>=80||F.has('w_bp'))todo.push('高血壓是中風最大的危險因子：在家量血壓 722（連續 7 天、早晚各量 2 次），平均 ≥130/80 要看醫師');
+   if(F.w?.afib)todo.push('手錶提示過心律不整：帶紀錄看心臟內科做心電圖，確認是不是心房顫動');
+   if(F.lf.smoke==='current')todo.push('戒菸：戒菸門診有補助，可以找家醫科');
+   if(rf.length&&!todo.length)todo.push('血糖、血脂、體重照醫師建議控制');
+   todo.push('之後突然出現上面任何一項，不用再做測驗，直接打 119');
+   return{lv:rf.length>=2?1:0,head:'目前沒有中風的典型警訊',txt:rf.length?`你有 ${rf.length} 個可以控制的中風危險因子（見下方「對照你的資料」），控制好可以預防大部分的中風。`:'目前也沒有看到明顯的中風危險因子，保持血壓 <130/80、不吸菸、規律運動。',
+    todo,dept:rf.length>=2?'家醫科或神經內科（控制危險因子）':'',exams:rf.length>=2?['居家血壓 722','血脂、血糖、HbA1c','心電圖','頸動脈超音波（多個危險因子時可和醫師討論）']:[]}}},
+ heart:{n:'心臟警訊',ic:'❤️',g:'urg',sub:'胸痛、喘、水腫、心悸、脈搏與爬樓梯體能',
+  intro:'先看第一部分：任何一題「有」就立刻打 119。其他部分看最近 1 個月的狀況。',
+  src:'依心肌梗塞、心衰竭、心律不整的臨床警訊整理（不是正式量表）；爬 2 層樓約等於 4 METs 的體能',
+  qs:[{sec:'一、現在的急症警訊'},{t:'胸口悶、壓、緊或痛超過 5 分鐘，休息也沒有好；可能延伸到左肩、手臂、下巴或背？',o:YN},{t:'合併冒冷汗、噁心、喘不過氣，或快要昏倒？',o:YN},{t:'運動中或剛運動完昏倒，或心悸到快要昏倒？',o:YN},
+   {sec:'二、心臟功能（最近 1 個月）'},{t:'走平路或爬一層樓就喘，比以前明顯變差？',o:YN},{t:'躺平會喘，要墊高枕頭或坐起來才能睡；或半夜喘醒？',o:YN},{t:'兩腳腳踝水腫（按下去會凹陷），或幾天內體重莫名增加 2 公斤以上？',o:YN},{t:'運動或爬樓梯時胸口悶，休息幾分鐘就好？',o:YN},
+   {sec:'三、心跳',h:'靜坐 5 分鐘後，手指放在手腕大拇指那一側，數 30 秒再乘以 2'},{t:'常常心悸、心跳突然很快或亂跳？',o:YN},{t:'脈搏每分鐘幾下（選填）',n:{u:'下／分',min:20,max:250},opt:1},{t:'脈搏規則嗎？（選填）',o:[['規則',0],['忽快忽慢、沒有規律',1],['不會量／沒量',0]],opt:1},
+   {sec:'四、體能'},{t:'可以一口氣爬 2 層樓不用停下來休息嗎？',o:[['可以',0],['不行，要停下來休息',1],['不確定／沒試過',0]]}],
+  ctx:ctxHeart,
+  rate(V,A,m,F){const y=i=>V[i]===1;
+   if(y(1)||y(2)||y(3))return{...EMERG('可能是心肌梗塞或嚴重心律不整：立刻打 119','心肌梗塞越早打通血管，心臟受損越少。不要等「看看會不會好」。',['心電圖','心肌旋轉蛋白（Troponin）抽血','胸部 X 光']),
+     todo:['立刻打 119，不要自己開車','停止活動，坐下或半躺休息，鬆開衣服','醫師開過的舌下含片（耐絞寧）照醫囑使用；不要吃別人的藥','附近有 AED 先拿來備用：失去意識、沒有呼吸就開始 CPR']};
+   const f=[],ex=new Set(['心電圖']);let lv=0;const add=(l,t,...e)=>{lv=Math.max(lv,l);f.push(t);e.forEach(x=>ex.add(x))};
+   if(y(8))add(3,'運動或爬樓梯時胸悶、休息就好：典型的「心絞痛」，可能是冠狀動脈狹窄。請儘快（1–2 週內，越早越好）看心臟內科；變得更頻繁、更久，或休息也痛，立刻打 119','運動心電圖或冠狀動脈電腦斷層');
+   if(y(6))add(3,'躺平會喘、半夜喘醒：心衰竭的典型症狀，請儘快看心臟內科','心臟超音波','NT-proBNP 抽血','胸部 X 光');
+   if(y(5))add(2,'活動耐受力變差、容易喘：要排除心衰竭、冠心病、貧血或肺部問題','心臟超音波','血液常規（貧血）','NT-proBNP 抽血');
+   if(y(7))add(2,'腳踝水腫或體重突然增加：可能是心衰竭積水，也要排除腎臟、肝臟問題或藥物副作用','心臟超音波','腎功能、尿蛋白','NT-proBNP 抽血');
+   if(V[12]===1)add(2,'脈搏忽快忽慢、沒有規律：可能是心房顫動，會讓中風風險增加約 5 倍，請看心臟內科','24 小時心電圖（Holter）');
+   if(y(10))add(2,'常心悸：要找出是哪一種心律不整，也要排除甲狀腺亢進、貧血、咖啡因','24 小時心電圖（Holter）','甲狀腺 TSH','血液常規');
+   const hr=V[11];
+   if(hr!=null){if(hr>120)add(3,`靜坐脈搏每分鐘 ${hr} 下，太快：請儘快就醫；合併胸痛、喘或快昏倒就打 119`,'24 小時心電圖（Holter）');
+     else if(hr>100)add(1,`靜坐脈搏每分鐘 ${hr} 下，偏快：先排除發燒、脫水、咖啡因、焦慮；持續偏快要看醫師`);
+     else if(hr<50)add(y(5)||y(10)?2:1,`靜坐脈搏每分鐘 ${hr} 下，偏慢${y(5)||y(10)?'，又有喘或心悸：請看心臟內科':'：規律耐力運動的人常見；有頭暈、快昏倒、容易喘就要看心臟內科'}`)}
+   if(V[14]===1)add(1,'沒辦法一口氣爬 2 層樓：體能低於 4 METs；先從每天快走開始，爬樓梯時若胸悶或喘得特別厲害請看心臟內科');
+   const cx=ctxHeart(m,F);
+   if(!f.length)return{lv:cx.length>=3?1:0,head:'目前沒有心臟警訊',txt:cx.length?`你有 ${cx.length} 個心血管相關的風險（見下方「對照你的資料」），控制好它們最能保護心臟。`:'保持下去：規律運動、不吸菸、控制血壓、血脂、血糖。',
+     todo:['每週 150 分鐘中等強度運動（快走、騎車、游泳）','之後出現胸口悶痛超過 5 分鐘、冒冷汗，不用再測，直接打 119'],dept:cx.length>=3?'家醫科或心臟內科（評估心血管風險）':'',exams:cx.length>=3?['血脂、血糖、HbA1c','心電圖','冠狀動脈鈣化分數（電腦斷層，可和醫師討論）']:[]};
+   return{lv,head:lv>=3?'有要儘快看心臟內科的症狀':'建議到心臟內科檢查',txt:'沒有急症警訊，但不要拖。下面是這次發現的問題：',find:f,
+    todo:['看診時說清楚：症狀什麼時候出現、持續多久、做什麼會發生','手錶有心電圖或心率紀錄的話一起帶去','症狀突然變嚴重（胸痛超過 5 分鐘、冒冷汗、昏倒）立刻打 119'],dept:'心臟內科',exams:[...ex]}}},
+ dizzy:{n:'頭暈',ic:'💫',g:'sym',sub:'天旋地轉、快昏倒、走不穩，分辨原因與該掛的科',
+  intro:'「頭暈」其實分好幾種，原因和該看的科都不同。先排除危險，再選最像你的感覺。',
+  src:'依眩暈（內耳）、昏厥前兆（血壓、心臟）、平衡失調（神經）的臨床分類整理（不是正式量表）；姿勢性低血壓＝站起來 3 分鐘內收縮壓降 ≥20 或舒張壓降 ≥10 mmHg',
+  qs:[{sec:'先排除危險'},{t:'合併講話不清、嘴歪、一側手腳無力或麻木，或看東西變兩個？',o:YN},{t:'突然劇烈頭痛，或頭部撞到後才開始暈？',o:YN},{t:'完全站不起來、無法走路，或合併胸痛、心悸、昏倒？',o:YN},
+   {sec:'是哪一種暈？'},{t:'感覺最像哪一種？',o:[['天旋地轉：自己或周圍在轉',0],['頭重腳輕、眼前發黑，快要昏倒',0],['走路不穩、像踩在棉花上，坐著躺著就還好',0],['頭昏昏沉沉，說不上來',0]]},
+   {t:'什麼時候會暈？',o:[['翻身、躺下或抬頭時，每次不到 1 分鐘',0],['從躺著或坐著站起來時',0],['一發作就持續好幾小時到好幾天',0],['沒有特定時候',0]]},
+   {t:'有沒有合併耳鳴、耳朵悶塞，或聽力變差？',o:[['沒有',0],['有，但聽力沒有突然變差',1],['聽力在幾天內突然變差',2]]},
+   {t:'最近有開始或調整降血壓藥、糖尿病藥、安眠藥、鎮定劑嗎？',o:YN},{t:'多常發生？',o:[['第一次',0],['偶爾',0],['反覆發作，越來越頻繁',1]]},
+   {sec:'選做：姿勢性血壓（家裡有血壓計）',h:'躺 5 分鐘後量一次；站起來後第 1 和第 3 分鐘各量一次，填比較低的那次'},{t:'躺著：收縮壓（上面的數字）',n:{u:'mmHg',min:50,max:260},opt:1},{t:'躺著：舒張壓（下面的數字）',n:{u:'mmHg',min:30,max:160},opt:1},
+   {t:'站起來後：收縮壓',n:{u:'mmHg',min:40,max:260},opt:1},{t:'站起來後：舒張壓',n:{u:'mmHg',min:20,max:160},opt:1}],
+  ctx:ctxDizzy,
+  rate(V,A,m,F){if(V[1]===1||V[2]===1||V[3]===1)return EMERG('可能是中風或心臟問題：立刻打 119','頭暈合併神經症狀、劇烈頭痛、無法走路或胸痛昏倒，都要先排除中風、腦出血與心律不整。',['腦部電腦斷層或磁振造影','心電圖','血糖']);
+   const f=[],ex=new Set(),dp=new Set(),todo=[];let lv=0;const add=(l,t,d,...e)=>{lv=Math.max(lv,l);f.push(t);if(d)dp.add(d);e.forEach(x=>ex.add(x))};
+   const ty=A[5],wh=A[6],ear=A[7],ls=V[11],ld=V[12],ss=V[13],sd=V[14],dS=ls!=null&&ss!=null?ls-ss:null,dD=ld!=null&&sd!=null?ld-sd:null,oh=(dS!=null&&dS>=20)||(dD!=null&&dD>=10);
+   if(ear===2)add(3,'聽力在幾天內突然變差：可能是突發性耳聾，治療越早效果越好，請 1–3 天內看耳鼻喉科（不要等）','耳鼻喉科','純音聽力檢查');
+   if(ty===0){if(wh===0)add(2,'翻身、躺下或抬頭時天旋地轉、不到 1 分鐘：很像耳石脫落（良性陣發性姿勢性眩暈），是最常見的眩暈，耳石復位術通常 1–2 次就明顯改善','耳鼻喉科或神經內科','眼振檢查','耳石誘發測試（Dix-Hallpike）');
+     else if(wh===2)add(3,'天旋地轉持續好幾小時以上：可能是前庭神經炎，但也要排除小腦或腦幹中風（尤其 50 歲以上、有高血壓或糖尿病），請儘快就醫；越來越嚴重或走不穩就掛急診','神經內科或急診','神經學檢查','必要時腦部磁振造影');
+     if(ear===1)add(2,'天旋地轉又有耳鳴、耳悶：可能是梅尼爾氏症等內耳問題','耳鼻喉科','聽力檢查','前庭功能檢查');
+     if(wh!==0&&wh!==2&&!ear)add(2,'天旋地轉多半和內耳（前庭）有關','耳鼻喉科','眼振檢查','前庭功能檢查')}
+   if(ty===1){if(wh===1||oh)add(2,'站起來時頭暈、眼前發黑：典型的姿勢性低血壓（站起來時血壓掉太多），常見於脫水、降血壓藥、糖尿病神經病變','家醫科或心臟內科','姿勢性血壓測量','血液常規','心電圖');
+     else add(2,'頭重腳輕、快要昏倒：常見原因是脫水、低血糖、貧血、心律不整','家醫科或心臟內科','血液常規','血糖','心電圖','24 小時心電圖（Holter）')}
+   if(ty===2)add(2,'走路不穩、坐著就好：多和神經（周邊神經病變、小腦、帕金森氏症）、視力、藥物或腿部肌力有關，也要小心跌倒','神經內科','神經學檢查','維生素 B12、血糖','必要時腦部磁振造影');
+   if(ty===3)add(1,'頭昏昏沉沉：常見於睡眠不足、焦慮壓力、貧血、血糖不穩、頸部肌肉緊繃','家醫科','血液常規','血糖','甲狀腺 TSH');
+   if(dS!=null||dD!=null){const t=`站起來後收縮壓${dS!=null?(dS>=0?`降 ${dS}`:`升 ${-dS}`):'—'}、舒張壓${dD!=null?(dD>=0?`降 ${dD}`:`升 ${-dD}`):'—'} mmHg`;
+     if(oh)add(2,`量到姿勢性低血壓：${t}（收縮壓降 ≥20 或舒張壓降 ≥10 就算）`,'家醫科或心臟內科','姿勢性血壓測量');else f.push(`姿勢性血壓正常：${t}`)}
+   if(V[9]===1)lv=Math.min(3,lv+1);
+   if(V[8]===1)todo.push('帶藥袋給醫師看：降血壓藥、安眠藥、鎮定劑最常造成頭暈；不要自己停藥');
+   if(ty===1||oh)todo.push('起床或站起來前先坐 30 秒再慢慢站；每天喝足水（心臟或腎臟病人依醫師指示）');
+   if(ty===2)todo.push('也做「肌力與跌倒」檢測；浴室加止滑墊、走道加夜燈');
+   if(ty===3)todo.push('也做「憂鬱」「焦慮」檢測：情緒和睡眠問題很常以頭暈表現');
+   todo.push('發作時先坐下或扶著東西，避免跌倒；暈的時候不要開車、爬高');
+   return{lv,head:lv>=3?'建議儘快就醫':'建議門診檢查',txt:'下面是依你的回答整理的可能方向（不是診斷）：',find:f,todo,dept:[...dp].join('、')||'家醫科',exams:[...ex]}}},
+ memory:{n:'記憶力（極早期失智篩檢 AD8）',ic:'🧩',g:'scr',sub:'健忘還是失智？8 題，最好請家人一起回答',who:a=>a>=18,
+  intro:'和「幾年前」的自己比，下面這些有沒有改變？只算「因為記憶或思考問題」造成的改變（不是因為手腳不方便）。最好請家人或常相處的人一起回答。',
+  src:'AD8 極早期失智症篩檢量表（© 2005 美國華盛頓大學，台灣失智症協會推廣中文版）：≥2 分建議進一步評估；篩檢不是診斷',
+  qs:[{t:'判斷力變差：例如容易被騙、做出不好的財務決定、買了不合適的禮物',o:AD8O},{t:'對活動和嗜好的興趣降低',o:AD8O},{t:'重複問相同的問題、講相同的故事或話',o:AD8O},
+   {t:'學習使用工具、電器有困難（例如遙控器、冷氣、洗衣機、微波爐、手機）',o:AD8O},{t:'忘記正確的月份或年份',o:AD8O},{t:'處理複雜的財務有困難（例如收支、繳費單、報稅）',o:AD8O},
+   {t:'記不住約會或約好的時間',o:AD8O},{t:'每天都有思考或記憶方面的問題',o:AD8O}],
+  ctx:ctxMem,
+  rate(V,A,m,F){const sc=V.reduce((t,v)=>t+(v||0),0);
+   if(sc>=2)return{lv:2,sc:`${sc}/8`,head:'建議到醫院做進一步的認知評估',txt:`AD8 ≥2 分代表可能有認知功能變化，要由醫師用正式測驗確認（篩檢不是診斷）。${F.a<50?'50 歲以下最常見的原因是壓力、睡眠不足、憂鬱或焦慮。':''}很多原因可以治療：甲狀腺低下、維生素 B12 不足、憂鬱、睡眠呼吸中止、聽力變差、藥物副作用都會讓記憶變差。`,
+     todo:['帶一位熟悉你日常狀況的家人一起看診','整理正在吃的藥（包括安眠藥、過敏藥、止痛藥）給醫師看','也做「憂鬱」和「睡眠呼吸中止」檢測：憂鬱和睡不好最常被誤以為失智'],dept:'神經內科或精神科（記憶門診）',
+     exams:['認知功能測驗（MMSE、MoCA 或 CDR）','抽血：甲狀腺 TSH、維生素 B12、葉酸、血糖、肝腎功能、電解質','聽力檢查','必要時腦部電腦斷層或磁振造影']};
+   if(sc===1)return{lv:1,sc:'1/8',head:'有 1 項改變，先觀察',txt:'還沒達到建議就醫的分數。半年後再測一次；如果家人也覺得變化越來越明顯，或開始影響生活，就提早看診。',todo:['規律運動、多和人互動、學新東西','控制血壓、血糖、血脂；聽力變差就配助聽器（聽力受損是可以改變的失智危險因子）'],dept:'',exams:[]};
+   return{lv:0,sc:'0/8',head:'沒有明顯的認知變化',txt:'正常的健忘是「忘了細節，經人提醒會想起來」；失智是「整件事都忘了、提醒也想不起來，而且影響工作或生活」。',todo:[F.a>=65?'65 歲以上建議每年測一次':'有疑慮時再測；65 歲以上建議每年測一次','規律運動、控制三高、不吸菸，聽力不好就配助聽器'],dept:'',exams:[]}}},
+ sleep:{n:'睡眠呼吸中止（STOP-Bang）',ic:'😴',g:'scr',sub:'打鼾、白天很睏、被說睡覺會停止呼吸',who:a=>a>=18,
+  intro:'8 題「有／沒有」。後 4 題 App 依你的資料先選好了，可以修改。',
+  src:'STOP-Bang 問卷（加拿大多倫多大學健康網絡）：0–2 分低、3–4 分中、5–8 分高風險；前 4 題有 ≥2 題「有」且為男性、BMI >35 或頸圍 >40 cm 也算高風險',
+  qs:[{t:'打鼾很大聲嗎？（比講話大聲，或隔著門都聽得到）',o:YN},{t:'白天常覺得很累、很想睡，甚至開車或坐著就睡著？',o:YN},{t:'有人看過你睡覺時呼吸停止、噎住或喘不過氣？',o:YN},
+   {t:'有高血壓，或正在吃降血壓藥？',o:YN},{t:'BMI 大於 35？',o:YN},{t:'年齡大於 50 歲？',o:YN},{t:'頸圍大於 40 公分？（喉結下方繞一圈）',o:YN},{t:'性別是男性？',o:YN}],
+  pre(m,F){const s=F.iv('sbp'),d=F.iv('dbp'),o={4:F.c.bmi>35?1:0,5:F.a>50?1:0,7:F.male?1:0};if(s!=null||d!=null)o[3]=s>=130||d>=80?1:0;if(+m.neck)o[6]=+m.neck>40?1:0;return o},
+  ctx:ctxSleep,
+  rate(V,A,m,F){const sc=V.reduce((t,v)=>t+(v||0),0),stop=V.slice(0,4).reduce((t,v)=>t+(v||0),0),hi=sc>=5||(stop>=2&&(V[7]===1||V[4]===1||V[6]===1));
+   const ex=['睡眠多項生理檢查（PSG），或居家睡眠呼吸檢測'];
+   if(hi)return{lv:2,sc:`${sc}/8`,head:'睡眠呼吸中止：高風險',txt:'睡覺時呼吸一直中斷，會讓血壓、血糖變差，增加心房顫動、心臟病、中風，以及開車打瞌睡出車禍的風險。治療（正壓呼吸器、口腔止鼾器、減重）後，白天精神和血壓通常都會改善。',
+     todo:['白天很想睡時先不要開車','睡前 3 小時不喝酒；吃安眠藥前先問醫師（會讓呼吸中止更嚴重）','側睡；體重減 10% 就能明顯減輕'],dept:'胸腔內科、耳鼻喉科或睡眠中心',exams:ex};
+   if(sc>=3)return{lv:1,sc:`${sc}/8`,head:'睡眠呼吸中止：中度風險',txt:'有幾個危險因子。若白天常很睏、早上起來頭痛、睡醒口乾，或家人說你打鼾會停，建議做睡眠檢查。',todo:['請家人觀察你睡覺時有沒有呼吸暫停','睡前不喝酒、側睡、控制體重'],dept:'胸腔內科或耳鼻喉科（有上面的症狀時）',exams:ex};
+   return{lv:0,sc:`${sc}/8`,head:'睡眠呼吸中止：低風險',txt:'目前危險因子少。之後出現大聲打鼾、被說睡覺時呼吸會停，再重測。',todo:[],dept:'',exams:[]}}},
+ phq9:{n:'憂鬱（PHQ-9）',ic:'🌧️',g:'scr',sub:'過去 2 週的心情、睡眠、體力、專注',who:a=>a>=18,
+  intro:'過去 2 週，下面這些問題困擾你的頻率有多高？',
+  src:'PHQ-9 病人健康問卷（公開使用）：5、10、15、20 分分別為輕度、中度、中重度、重度；第 9 題只要不是「完全沒有」都要立刻求助',
+  qs:[{t:'做事時提不起勁，或沒有樂趣',o:FREQ},{t:'感到心情低落、沮喪或絕望',o:FREQ},{t:'難以入睡、睡不安穩，或睡太多',o:FREQ},{t:'覺得疲倦或沒有活力',o:FREQ},{t:'食慾不振，或吃太多',o:FREQ},
+   {t:'覺得自己很糟、很失敗，或讓自己或家人失望',o:FREQ},{t:'很難專心，例如看報紙、看電視時',o:FREQ},{t:'動作或說話慢到別人看得出來；或相反，坐立不安、動來動去比平常多',o:FREQ},{t:'有「不如死掉」或用某種方式傷害自己的念頭',o:FREQ}],
+  ctx:ctxMood,
+  rate(V,A,m,F){const sc=V.reduce((t,v)=>t+(v||0),0),si=V[8]>0,band=sc>=20?'重度':sc>=15?'中重度':sc>=10?'中度':sc>=5?'輕度':'極輕微或沒有';let lv=sc>=15?3:sc>=10?2:sc>=5?1:0;if(si)lv=Math.max(lv,3);
+   return{lv,sc:`${sc}/27`,crisis:si?'你有「不如死掉」或傷害自己的念頭：請現在就打 <b>1925 安心專線</b>（24 小時、免費），或告訴身邊信任的人。已經有計畫或準備，立刻打 <b>119</b> 或到急診。':'',head:`憂鬱症狀：${band}`,
+    txt:sc>=10?'≥10 分建議就醫：憂鬱是可以治療的疾病，心理治療和藥物都有效，越早治療越容易恢復。也要排除甲狀腺、貧血、維生素 B12 不足等身體原因。':sc>=5?'輕度症狀：先調整作息與壓力，2 週後再測一次；分數上升或影響工作生活就看醫生。':'目前沒有明顯的憂鬱症狀。',
+    todo:sc>=5||si?['規律作息，每天曬太陽、走路 30 分鐘','和信任的人聊聊，不要一個人撐','少喝酒：酒精會讓憂鬱更嚴重','2 週後再測一次，看分數有沒有下降']:[],dept:lv>=2?'身心科（精神科）或家醫科':'',exams:lv>=2?['醫師會談評估','抽血：甲狀腺 TSH、血液常規、維生素 B12']:[]}}},
+ gad7:{n:'焦慮（GAD-7）',ic:'🌀',g:'scr',sub:'過去 2 週的緊張、擔心、坐立不安',who:a=>a>=18,
+  intro:'過去 2 週，下面這些問題困擾你的頻率有多高？',
+  src:'GAD-7 廣泛性焦慮量表（公開使用）：5、10、15 分分別為輕度、中度、重度',
+  qs:[{t:'感覺緊張、不安或煩躁',o:FREQ},{t:'沒辦法停止或控制擔心',o:FREQ},{t:'對各種事情過度擔心',o:FREQ},{t:'很難放鬆下來',o:FREQ},{t:'坐立不安，很難安靜坐著',o:FREQ},{t:'變得容易生氣或急躁',o:FREQ},{t:'覺得害怕，好像有可怕的事要發生',o:FREQ}],
+  ctx:ctxMood,
+  rate(V,A,m,F){const sc=V.reduce((t,v)=>t+(v||0),0),band=sc>=15?'重度':sc>=10?'中度':sc>=5?'輕度':'極輕微或沒有',lv=sc>=15?3:sc>=10?2:sc>=5?1:0;
+   return{lv,sc:`${sc}/21`,head:`焦慮症狀：${band}`,txt:sc>=10?'≥10 分建議就醫：焦慮可以用心理治療、放鬆訓練和藥物改善。心悸、手抖、體重下降要排除甲狀腺亢進；咖啡因、能量飲料也會讓焦慮更嚴重。':sc>=5?'輕度症狀：先減少咖啡因、規律運動、練習腹式呼吸，2 週後再測。':'目前沒有明顯的焦慮症狀。',
+    todo:sc>=5?['減少咖啡、茶、能量飲料，下午以後不喝','每天 10 分鐘腹式呼吸或正念練習','規律運動：有氧運動對焦慮很有效','2 週後再測一次']:[],dept:lv>=2?'身心科（精神科）或家醫科':'',exams:lv>=2?['醫師會談評估','甲狀腺 TSH','心電圖（心悸明顯時）']:[]}}},
+ muscle:{n:'肌力與跌倒（肌少症）',ic:'🦵',g:'scr',sub:'SARC-F 5 題＋椅子起立 5 次計時',who:a=>a>=18,
+  intro:'肌少症會讓人容易跌倒、骨折，40 歲以後肌肉每 10 年約少 8%。先回答 5 題，再選做椅子起立計時。',
+  src:'SARC-F 肌少症問卷：≥4 分疑似肌少症；椅子起立 5 次 ≥12 秒為身體功能低下（亞洲肌少症工作小組 AWGS 2019）；握力男 <28、女 <18 公斤偏低',
+  qs:[{sec:'SARC-F 問卷'},{t:'提起或搬動 4.5 公斤的東西（約一袋 5 公斤的米）有困難嗎？',o:SARO()},{t:'走過一個房間有困難嗎？',o:SARO('很困難、要人扶或用助行器')},{t:'從床上或椅子站起來有困難嗎？',o:SARO('很困難或需要別人幫忙')},
+   {t:'爬 10 階樓梯有困難嗎？',o:SARO()},{t:'過去一年跌倒幾次？',o:[['沒有',0],['1–3 次',1],['4 次以上',2]]},
+   {sec:'選做：椅子起立 5 次（旁邊要有人陪）',h:'椅子靠牆、雙手交叉放胸前，從坐姿站直再坐下，連續 5 次。按「開始」後馬上起身，第 5 次站直時按「停止」'},{t:'完成 5 次的時間',n:{u:'秒',min:3,max:120},timer:1,opt:1}],
+  ctx:ctxMuscle,
+  rate(V,A,m,F){const sc=[1,2,3,4,5].reduce((t,i)=>t+(V[i]||0),0),ch=V[7],fall=V[5]||0,f=[];let lv=0;
+   if(sc>=4){lv=2;f.push(`SARC-F ${sc}/10 分（≥4 分）：疑似肌少症`)}
+   if(ch!=null){if(ch>=12){lv=Math.max(lv,sc>=4?2:1);f.push(`椅子起立 5 次花了 ${ch} 秒（≥12 秒）：下肢肌力與身體功能偏弱`)}else f.push(`椅子起立 5 次 ${ch} 秒（<12 秒，正常）`)}
+   if(fall>=1){lv=Math.max(lv,fall>=2?2:1);f.push(fall>=2?'過去一年跌倒 4 次以上：跌倒高風險':'過去一年有跌倒：跌倒風險較高')}
+   return{lv,sc:`${sc}/10`,head:lv>=2?'疑似肌少症或跌倒高風險':lv?'肌力偏弱，現在開始練':'肌力與行動能力正常',txt:lv?'肌少症會讓人容易跌倒、骨折、住院，但規律肌力訓練加上足夠的蛋白質，幾個月就能進步。':'保持下去：每週 2–3 次肌力訓練最能預防老化掉肌肉。',find:f,
+    todo:['每週 2–3 次肌力訓練：深蹲、椅子起立坐下、彈力帶（運動頁有課表）',`每天蛋白質約每公斤體重 ${F.a>=65?'1.2':'1.0–1.2'} 克，平均分配在三餐`,...(fall?['家中防跌：浴室止滑墊、夜燈、移除地上雜物；起身先坐 30 秒']:[])],
+    dept:lv>=2?'家醫科、老年醫學科或復健科':'',exams:lv?['握力（男 <28、女 <18 公斤偏低）','步行速度（6 公尺）','肌肉量：雙能 X 光（DXA）或 InBody','骨密度、維生素 D（跌倒過的人）']:[]}}}};
+const SELFG=[['urg','🚨 急症警訊：懷疑時現在就測','正在發生、很嚴重時不用做完，直接打 119'],['sym','🔍 常見不舒服',''],['scr','📋 定期自我篩檢','量表分數只是篩檢，要由醫師確認']];
+function selfRate(k,A,m,F){const T=SELF[k],V=T.qs.map((q,i)=>q.sec||A[i]==null?null:q.o?(q.o[A[i]]?q.o[A[i]][1]:null):A[i]);return T.rate(V,A,m,F||selfF(m))}
+const selfAns=(q,v)=>q.o?q.o[v]?.[0]??'':`${v} ${q.n.u}`;
+function renderSelf(){const m=me(),a=ageOf(m),F=selfF(m),all=selfOf(m);
+  $('#selfBody').innerHTML=SELFG.map(([g,t,sub])=>{const L=Object.entries(SELF).filter(([,T])=>T.g===g&&(!T.who||T.who(a)));if(!L.length&&g!=='sym')return '';
+    return `<div class="card"><h2>${t}</h2>${sub?`<div class="sub" style="margin:-6px 0 8px">${sub}</div>`:''}${L.map(([k,T])=>{const r=all.find(x=>x.k===k),R=r&&selfRate(k,r.a,m,F);
+      return `<button class="rec" data-self="${k}"><div class="m"><b>${T.ic} ${esc(T.n)}</b><small>${r?`上次 ${esc(r.t)}：${esc(R.sc?R.sc+'・':'')}${esc(R.head)}`:esc(T.sub)}</small></div>${r?`<span class="lv" style="background:${SLV[R.lv][1]}22;color:${SLV[R.lv][1]}">${SLV[R.lv][2]}</span>`:''}<span class="chev">›</span></button>`}).join('')}
+      ${g==='sym'?'<button class="rec" data-sym><div class="m"><b>🤒 其他症狀</b><small>勾選症狀，看要注意什麼、掛哪一科、做哪些檢查</small></div><span class="chev">›</span></button>':''}</div>`}).join('')+
+    (a<18?'<p class="note">未滿 18 歲：記憶、睡眠、情緒、肌少症量表是為成人設計的，請由兒科醫師評估。</p>':'')+
+    (all.length?'<button class="btn ai" data-selfai style="margin-bottom:10px">🩺 把全部檢測結果整理給 AI</button>':'')+
+    '<p class="note">在家就能做的篩檢，不是診斷。結果只存在這支手機；整理給 AI 時不含姓名、生日。身體不適請直接就醫，胸痛、單側無力、說話不清請直接打 119。</p>'}
+let selfA=null,selfTmr=null;
+function openSelf(k){const m=me(),T=SELF[k];if(!T)return;const F=selfF(m);selfA=T.qs.map(()=>null);if(T.pre)for(const[i,v]of Object.entries(T.pre(m,F)))selfA[+i]=v;let n=0;
+  openSheet(sheetHead(`${T.ic} ${esc(T.n)}`,esc(T.sub))+(T.g==='urg'?'<div class="banner" style="margin:10px 0">症狀正在發生、很嚴重時不用做完：<b>直接打 119</b></div>':'')+
+    `<p class="note" style="margin-top:8px">${esc(T.intro)}</p><div id="sf-qs">${T.qs.map((q,i)=>q.sec?`<div class="h4">${esc(q.sec)}</div>${q.h?`<div class="sub" style="margin-bottom:4px">${esc(q.h)}</div>`:''}`
+      :`<div class="sq" id="sq${i}"><div class="t">${++n}. ${esc(q.t)}${T.pre&&selfA[i]!=null?' <span class="rv" style="color:var(--cyan)">依你的資料先選好</span>':''}</div>${q.o?`<div class="chips">${q.o.map(([l],j)=>`<button type="button" class="chip${selfA[i]===j?' on':''}" data-qi="${i}" data-oj="${j}">${esc(l)}</button>`).join('')}</div>`
+        :`<div style="display:flex;gap:8px;align-items:center"><input id="sf-n${i}" inputmode="decimal" placeholder="${q.n.min}–${q.n.max}" style="flex:1"><span class="sub">${esc(q.n.u)}</span>${q.timer?`<button type="button" class="btn sm" id="sf-t${i}" style="flex:0 0 auto;width:auto">▶ 開始</button>`:''}</div>`}</div>`).join('')}</div>
+    <button class="btn" id="sf-go" style="margin-top:14px">看結果</button><p class="note">${esc(T.src)}</p>`);
+  $$('#sf-qs [data-qi]').forEach(b=>b.onclick=()=>{const i=+b.dataset.qi;selfA[i]=+b.dataset.oj;$$(`#sf-qs [data-qi="${i}"]`).forEach(x=>x.classList.toggle('on',x===b))});
+  T.qs.forEach((q,i)=>{if(!q.timer)return;const btn=$('#sf-t'+i),inp=$('#sf-n'+i);let t0=0;
+    btn.onclick=()=>{if(selfTmr){clearInterval(selfTmr);selfTmr=null;inp.value=r1((performance.now()-t0)/1000);btn.textContent='▶ 重新開始';return}
+      t0=performance.now();inp.value='0';btn.textContent='■ 停止';selfTmr=setInterval(()=>{inp.value=r1((performance.now()-t0)/1000)},100)}});
+  onSheetClose=()=>{clearInterval(selfTmr);selfTmr=null};
+  $('#sf-go').onclick=()=>{clearInterval(selfTmr);selfTmr=null;let qn=0;
+    for(const[i,q]of T.qs.entries()){if(q.sec)continue;qn++;
+      if(q.n){const raw=$('#sf-n'+i).value.trim(),v=num(raw);if(raw&&(v==null||v<q.n.min||v>q.n.max)){$('#sq'+i).scrollIntoView({block:'center'});return toast(`第 ${qn} 題請填 ${q.n.min}–${q.n.max} ${q.n.u}，或留空`)}selfA[i]=raw?r1(v):null}
+      if(!q.opt&&selfA[i]==null){$('#sq'+i).scrollIntoView({block:'center'});return toast(`第 ${qn} 題還沒回答`)}}
+    const t=ymd(new Date()),arr=SELFR[m.id]||(SELFR[m.id]=[]),old=arr.findIndex(r=>r.k===k&&r.t===t),rec={id:old>=0?arr[old].id:uid(),k,t,a:selfA.slice()};
+    if(old>=0)arr[old]=rec;else arr.push(rec);
+    SELFR[m.id]=arr.filter(r=>r.k!==k).concat(arr.filter(r=>r.k===k).sort((x,y)=>String(y.t).localeCompare(String(x.t))).slice(0,20));
+    S.set('self',SELFR);renderSelf();openSelfResult(rec.id)}}
+function openSelfResult(id){const m=me(),r=(SELFR[m.id]||[]).find(x=>x.id===id);if(!r||!SELF[r.k])return;const T=SELF[r.k],F=selfF(m),R=selfRate(r.k,r.a,m,F),cx=T.ctx?T.ctx(m,F):[],c=SLV[R.lv][1];
+  const hist=selfOf(m,r.k).filter(x=>x.id!==r.id).slice(0,5),li=a=>a.map(x=>`<div class="bl">${esc(x)}</div>`).join('');
+  openSheet(sheetHead(`${T.ic} ${esc(T.n)}`,`結果・${esc(r.t)}`)+`
+    <div class="${R.lv>=4?'banner':'hl'}" style="margin:12px 0;${R.lv>=4?'':`border-color:${c}`}" role="${R.lv>=4?'alert':'status'}"><b style="color:${R.lv>=4?'#fff':c}">${SLV[R.lv][0]}</b>${R.sc?` <span class="tg" style="margin-left:6px">${esc(R.sc)}</span>`:''}
+      <div style="margin-top:6px;font-size:calc(16px*var(--fz));font-weight:800">${esc(R.head)}</div><div class="sub" style="margin-top:4px;line-height:1.7;${R.lv>=4?'color:#fff':''}">${esc(R.txt)}</div></div>
+    ${R.crisis?`<div class="banner" role="alert">${R.crisis}</div>`:''}
+    ${R.find?.length?`<div class="h4">發現</div>${li(R.find)}`:''}
+    ${R.todo?.length?`<div class="h4">要做什麼</div>${li(R.todo)}`:''}
+    ${R.dept?`<div class="h4">看哪一科</div><div style="font-size:calc(14px*var(--fz));font-weight:700">${esc(R.dept)}</div>`:''}
+    ${R.exams?.length?`<div class="h4">可以請醫師安排的檢查</div><div class="chips">${R.exams.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>`:''}
+    ${cx.length?`<div class="hl" style="margin-top:12px;font-size:calc(12px*var(--fz))">📋 對照你的資料：${esc(cx.join('；'))}</div>`:''}
+    ${hist.length?`<details class="box"><summary>之前的結果（${hist.length}）</summary>${hist.map(x=>{const H=selfRate(x.k,x.a,m,F);return `<div class="lrow"><label>${esc(x.t)}</label><span>${esc(H.sc?H.sc+'・':'')}<b style="color:${SLV[H.lv][1]}">${SLV[H.lv][2]}</b></span></div>`}).join('')}</details>`:''}
+    <div class="h4">請 AI 再幫你看</div>
+    <div class="aib">${AIS.map(([k,n])=>`<a class="btn" data-selfopen="${k}" href="${AIS.find(x=>x[0]===k)[2]}" target="_blank" rel="noopener">${n}</a>`).join('')}</div>
+    <button class="btn ghost" id="sf-copy">只複製（自己貼到任何 AI）</button>
+    <details class="box"><summary>預覽要問的內容</summary><div class="prompt" id="sf-pv"></div></details>
+    <div class="row2" style="margin-top:12px"><button class="btn ghost" data-selfdel="${esc(r.id)}" style="flex:0 0 32%">刪除</button><button class="btn" data-selfnew="${esc(r.k)}">重新測一次</button></div>
+    <p class="note">${esc(T.src)}<br>自我篩檢不是診斷；結果和身體感覺不一樣時，以感覺和醫師為準。</p>`);
+  const txt=selfPrompt(m,[r]);$('#sf-pv').textContent=txt;$$('[data-selfopen]').forEach(a=>{a.href=aiHref(a.dataset.selfopen,txt);a.onclick=()=>{copyText(txt,'已複製，到 AI 輸入框長按「貼上」送出')}});
+  $('#sf-copy').onclick=()=>copyText(txt,'已複製，可以貼到任何 AI')}
+function openSelfAll(){const m=me(),rs=selfLatest(m,365);if(!rs.length)return toast('還沒有 1 年內的檢測結果');const txt=selfPrompt(m,rs);
+  openSheet(sheetHead('🩺 全部檢測結果給 AI',`${rs.length} 項（每項取 1 年內最新一次）`)+`<div class="aib" style="margin-top:12px">${AIS.map(([k,n])=>`<a class="btn" data-selfopen="${k}" href="${esc(aiHref(k,txt))}" target="_blank" rel="noopener">${n}</a>`).join('')}</div>
+    <button class="btn ghost" id="sf-copy">只複製（自己貼到任何 AI）</button><details class="box" open><summary>要問的內容（${txt.length} 字）</summary><div class="prompt" id="sf-pv"></div></details>
+    <p class="note">🔒 不含姓名、生日、醫院名稱。按下去會先複製，打開 AI 後在輸入框長按「貼上」再送出。</p>`);
+  $('#sf-pv').textContent=txt;$$('[data-selfopen]').forEach(a=>a.onclick=()=>{copyText(txt,'已複製，到 AI 輸入框長按「貼上」送出')});$('#sf-copy').onclick=()=>copyText(txt,'已複製，可以貼到任何 AI')}
+// 給 AI 的提示詞：不含姓名、生日；附上每一題的回答與相關的身體資料
+function selfPrompt(m,recs){const F=selfF(m),out=[];
+  out.push('你是一位謹慎、會用白話解釋的家庭醫學科醫師。請用繁體中文（台灣用語）回答。',
+    '規則：①只根據下面的資料，不要假設沒提供的內容 ②有需要立刻就醫的警訊放最前面（沒有就說沒有）③這是在家做的自我檢測、不是診斷：請說明結果代表什麼、可能的原因（包含可以治療、可逆的原因）④告訴我該掛哪一科、可以請醫師安排哪些檢查 ⑤日常要注意什麼、多久後再測 ⑥不要開藥或給劑量 ⑦最後給我 3 個看診時可以問醫生的問題。','',
+    `【基本資料】${sexT(m.sex)}性、${F.a} 歲、BMI ${r1(F.c.bmi)}`);
+  for(const r of recs){const T=SELF[r.k],R=selfRate(r.k,r.a,m,F);out.push('',`【自我檢測：${T.n}（${r.t}）】${R.sc?`分數 ${R.sc}；`:''}App 判讀：${SLV[R.lv][0]}——${R.head}`,`（${T.src}）`);
+    T.qs.forEach((q,i)=>{if(!q.sec&&r.a[i]!=null)out.push(`- ${q.t}：${selfAns(q,r.a[i])}`)});
+    if(R.find?.length)out.push(`App 整理的發現：${R.find.join('；')}`);
+    const cx=T.ctx?T.ctx(m,F):[];if(cx.length)out.push(`相關的身體資料：${cx.join('；')}`)}
+  const ab=F.iss.filter(i=>i.lv>=2&&i.src==='體檢').map(i=>`${i.name} ${tv(i.val)}${i.unit?' '+i.unit:''}`);if(ab.length)out.push('',`【最近一次體檢的異常項目】${ab.slice(0,12).join('、')}`);
+  if(fhText(m))out.push(`【一等親家族史】${fhText(m)}`);
+  out.push('',`【我的問題】${recs.length>1?'請綜合這些自我檢測結果，告訴我最需要優先處理的是哪一項、彼此有沒有關聯，以及下一步。':'請幫我判斷這個結果要不要擔心、可能的原因，以及下一步該怎麼做。'}`);
+  return out.join('\n')}
+function delSelf(id){const m=me();SELFR[m.id]=(SELFR[m.id]||[]).filter(r=>r.id!==id);S.set('self',SELFR);closeSheet();renderSelf();toast('已刪除這筆檢測')}
+// 備份檔清洗：只留已知量表、題數對、答案在範圍內
+function cleanSelf(d,okId){const o={};for(const[mid,arr]of Object.entries(obj(d)))if(okId(mid)&&Array.isArray(arr))o[mid]=arr.filter(r=>r&&okId(r.id)&&SELF[r.k]&&/^\d{4}-\d{2}-\d{2}$/.test(String(r.t))&&Array.isArray(r.a)&&r.a.length===SELF[r.k].qs.length)
+  .map(r=>({id:r.id,k:r.k,t:r.t,a:SELF[r.k].qs.map((q,i)=>{const v=num(r.a[i]);if(q.sec||v==null)return null;return q.o?(Number.isInteger(v)&&v>=0&&v<q.o.length?v:null):(v>=q.n.min&&v<=q.n.max?v:null)})}));return o}
 
 /* ================= AI 提示詞 ================= */
 function promptScale(){return `你是「體脂計數據擷取器」。我會附上體脂計 App 的截圖（可能多張、可能是簡體中文介面）。你的任務只有「讀取畫面上的數字」，不要分析、不要給建議。
@@ -2598,16 +2869,16 @@ function saveLab(){
 function delLab(id){if(!confirm('確定刪除這份體檢報告？'))return;const m=me();LABS[m.id]=(LABS[m.id]||[]).filter(x=>x.id!==id);S.set('labs',LABS);closeSheet();renderAll();toast('已刪除')}
 function openLabDetail(id){
   const m=me(),rec=labsOf(m).find(r=>r.id===id);if(!rec)return;
-  const iss=labEval(rec,m).sort((a,b)=>b.lv-a.lv),sc=scoreOf(iss),[gt,gc]=grade(sc),dp=deptPlan(iss);
+  const iss=annotPrev(m,labEval(rec,m).sort((a,b)=>(b.crit?1:0)-(a.crit?1:0)||b.lv-a.lv),rec),sc=scoreOf(iss),[gt,gc]=grade(sc),dp=deptPlan(iss);
   const orgs=[...new Set(iss.map(i=>i.organ).filter(o=>o&&ORG[o].tip))];
   const normal=Object.entries(rec.items||{}).filter(([k])=>!iss.some(i=>i.k===k));
   openSheet(sheetHead('體檢分析',`${esc(m.name)}・${esc(rec.t)}${rec.hospital?'・'+esc(rec.hospital):''}`)+`
-    <div style="display:flex;gap:14px;align-items:center;margin:14px 0 4px">${scoreRing(sc,gc)}<div><div style="font-size:22px;font-weight:800;color:${gc}">${gt}</div><div class="sub" style="margin-top:4px">異常 ${iss.length} 項・正常 ${normal.length} 項</div><div class="sub">扣分：每個器官最嚴重一項全扣（注意 −3／異常 −8／嚴重 −15），同器官其他項扣 40%；有「注意」最高 89、「異常」最高 74、「嚴重」最高 59 分</div></div></div>
+    <div style="display:flex;gap:14px;align-items:center;margin:14px 0 4px">${scoreRing(sc,gc)}<div><div style="font-size:calc(22px*var(--fz));font-weight:800;color:${gc}">${gt}</div><div class="sub" style="margin-top:4px">異常 ${iss.length} 項・正常 ${normal.length} 項</div><div class="sub">扣分：每個器官最嚴重一項全扣（注意 −3／異常 −8／嚴重 −15），同器官其他項扣 40%；有「注意」最高 89、「異常」最高 74、「嚴重」最高 59 分</div></div></div>
     ${Object.entries(rec.items||{}).some(([k,it])=>LABK[k]?.t==='opt'&&/^原文：/.test(it?.ref||'')&&[60,63].includes(it.ref.length))?'<div class="hl" style="margin:10px 0;border-color:rgba(255,181,71,.5)">⚠️ 這份報告是舊版匯入，影像報告的原文可能被截斷，附帶發現（例如冠狀動脈鈣化）可能沒判讀到：按下方「編輯數值」，在那一項的「報告原文」貼上完整的醫師總評，或用 AI 只匯入那一頁（不會清掉其他數值）。</div>':''}
-    ${iss.some(i=>i.lv===3)?'<div class="banner">⚠️ 有「嚴重」等級的項目，建議 1–2 週內就醫。若有胸痛、呼吸困難、單側無力、意識改變等症狀，請立即掛急診。</div>':''}
+    ${iss.some(i=>i.crit)?critHTML(iss,rec.t):iss.some(i=>i.lv===3)?'<div class="banner">⚠️ 有「嚴重」等級的項目，建議 1–2 週內就醫。若有胸痛、呼吸困難、單側無力、意識改變等症狀，請立即掛急診。</div>':''}
     <div class="hud">${bodySVG(m,iss,'d')}</div>
-    <div class="h4">建議掛號</div>${deptHTML(dp)}
-    <div class="h4">異常項目</div>${iss.length?issueHTML(iss,true,true):'<div class="empty">全部項目都在參考範圍內 👍</div>'}
+    <div class="h4">建議掛號</div>${deptHTML(dp)}${rec.id===labsOf(m)[0]?.id?'<button class="btn ghost sm" data-summary style="margin-top:8px">📄 看診摘要圖</button>':''}
+    <div class="h4">異常項目</div>${iss.length?issueHTML(iss,true,true):'<div class="empty">全部項目都在參考範圍內 👍</div>'}<p class="note">${NORMAL_NOTE}</p>
     ${orgs.length?`<div class="h4">注意事項</div>${orgs.map(o=>`<div class="issue"><span class="lv lv1">${esc(orgName(o,m))}</span><div class="s" style="flex:1;margin:0">${esc(ORG[o].tip)}</div></div>`).join('')}`:''}
     ${normal.length?`<details class="box"><summary>正常與只記錄的項目（${normal.length}）</summary>${normal.map(([k,it])=>`<div class="lrow"><label>${esc(LABK[k]?.n||k)}</label><span>${fmt(it.v)} <span class="sub">${esc(LABK[k]?.u||'')}</span></span></div>`).join('')}</details>`:''}
     ${(()=>{const ex=rec.extra||[],bs=biaSeg(rec);if(!ex.length)return '';return `<div class="h4">其他項目（${ex.length}）</div>${bs?`<div class="hl" style="margin:6px 0">📊 InBody 分段：${esc(bs.txt)}</div>`:''}`+XG.map(([g,t])=>{const its=ex.filter(e=>xgOf(e.name)===g);if(!its.length)return '';
@@ -2625,7 +2896,7 @@ const cmpVal=v=>v==null?'<i>—</i>':esc(String(v).split(/[（(]/)[0].slice(0,9)
 function cmpBrief(c){const top=c.rows.filter(r=>['worse','trend','stay','std','better'].includes(r.vd)).sort((a,b)=>VDKEY.indexOf(a.vd)-VDKEY.indexOf(b.vd)).slice(0,5);
   return `<div class="sub" style="margin:-4px 0 6px">${c.rs.map(r=>esc(r.t.slice(0,7))).join(' → ')}${c.diffH?'・不同醫院':''}</div>
     ${c.body?`<div class="hl" style="margin:6px 0">⚖️ 體重 ${sgn(c.body.dw)} kg：脂肪 ${sgn(c.body.df)}、去脂體重 ${sgn(c.body.dl)} → <b style="color:${c.body.lvl?'var(--amber)':'var(--lime)'}">${esc(c.body.txt)}</b></div>`:''}
-    ${top.map(r=>`<div class="issue"><span class="vd" style="color:${VD[r.vd][1]};border-color:${VD[r.vd][1]}">${VD[r.vd][0]}</span><div style="flex:1;min-width:0"><div class="t" style="font-size:13px">${esc(r.name)}${revTag(r.rev)}</div><div class="s">${r.vals.filter(v=>v!=null).map(v=>esc(String(v).split(/[（(]/)[0])).join(' → ')}${r.u?' '+esc(r.u):''}</div></div></div>`).join('')||'<div class="empty" style="padding:8px 0">各項目大致持平 👍</div>'}
+    ${top.map(r=>`<div class="issue"><span class="vd" style="color:${VD[r.vd][1]};border-color:${VD[r.vd][1]}">${VD[r.vd][0]}</span><div style="flex:1;min-width:0"><div class="t" style="font-size:calc(13px*var(--fz))">${esc(r.name)}${revTag(r.rev)}</div><div class="s">${r.vals.filter(v=>v!=null).map(v=>esc(String(v).split(/[（(]/)[0])).join(' → ')}${r.u?' '+esc(r.u):''}</div></div></div>`).join('')||'<div class="empty" style="padding:8px 0">各項目大致持平 👍</div>'}
     <button class="btn ghost" data-cmp style="margin-top:8px">📊 看完整比較表</button>`}
 let cmpAll=false;
 function openCompare(){const m=me(),c=cmpData(m);if(!c)return toast('要有 2 份以上、3 年內的體檢報告才能比較');
@@ -2703,7 +2974,7 @@ function plateSVG(){const R=46,cx=58,cy=60,P=a=>[(cx+R*Math.cos(a*Math.PI/180)).
 function renderNutri(m){const n=nutriPlan(m),t=n.tgt,tile=(v,k)=>`<div><b>${v}</b><span>${k}</span></div>`;
   $('#nutriCard').innerHTML=`<h2>營養師建議・${esc(m.name)}</h2>
     <div style="display:flex;gap:12px;align-items:center"><div style="flex:0 0 118px">${plateSVG()}</div>
-      <div style="flex:1;min-width:0"><div class="sub">你的飲食策略</div><div style="font-size:19px;font-weight:800;line-height:1.35;margin:2px 0 4px">${esc(n.title)}</div>
+      <div style="flex:1;min-width:0"><div class="sub">你的飲食策略</div><div style="font-size:calc(19px*var(--fz));font-weight:800;line-height:1.35;margin:2px 0 4px">${esc(n.title)}</div>
       <div class="sub">${n.src?'依據 '+esc(n.src):'還沒有體檢／體脂紀錄，先依身高體重估算'}</div><div class="sub" style="margin-top:4px">左圖：每餐怎麼裝（211 餐盤）</div></div></div>
     <div class="tgt">${tile(t.kcal,'熱量 kcal')}${tile(t.p+'g','蛋白質')}${tile(t.cb+'g','碳水')}${tile(t.f+'g','脂肪')}${tile(t.fib+'g','纖維 ≥')}${tile(t.na,'鈉 mg ≤')}${tile(t.sug+'g','添加糖 ≤')}${tile(t.water.toFixed(1)+'L','喝水')}</div>
     ${n.F.map((f,i)=>`<details class="box"${i<1?' open':''}><summary><span>${f.ic} ${esc(f.t)}</span></summary>${f.why?`<div class="sub" style="color:var(--amber);margin:-4px 0 8px">📋 ${esc(f.why)}</div>`:''}<ul class="steps" style="color:var(--text)">${f.do.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><div class="chips">${f.eat.map(x=>`<span class="tg">✓ ${esc(x)}</span>`).join('')}${f.avoid.map(x=>`<span class="tg warn">✕ ${esc(x)}</span>`).join('')}</div></details>`).join('')}
@@ -2810,7 +3081,7 @@ const retryAfter=r=>{const v=r.headers.get('Retry-After');if(!v)return 0;const m
 function hordeMsg(st,j){const m=String(j.message||'').slice(0,80);
   if(st===429)return 'AI Horde 太忙（限流），請 5 分鐘後再試';
   if(st===404)return '排隊工作已過期（AI Horde 找不到），請重新生成';
-  if(st===401||st===403)return 'AI Horde 拒絕匿名請求'+(m?`（${m}）`:'')+'，可到「我的 → 圖片後端」改用 GAS';
+  if(st===401||st===403)return 'AI Horde 拒絕匿名請求'+(m?`（${m}）`:'')+'，可到「⚙️ 設定 → 菜色圖片」改用 GAS';
   if(st>=500)return `AI Horde 伺服器暫時故障（${st}），稍後再試`;
   return 'AI Horde 不接受這個請求'+(m?`：${m}`:`（${st}）`)}
 // 每次請求 30 秒逾時（不回應也不會卡住佇列）；讀取類斷線重試 2 次；429 照 Retry-After，沒有就 15、30、60 秒退避
@@ -2895,9 +3166,96 @@ function thumb(f){const s=imgSrc(f.id);return s?`<img src="${esc(s)}" alt="${esc
 function renderGallery(){$('#gallery').innerHTML=FOODS.filter(f=>f.m!=='v'||imgSrc(f.id)).map(f=>{const s=imgSrc(f.id);return `<div class="g">${s?`<img src="${esc(s)}" alt="" data-e="${f.e}" loading="lazy" onerror="this.replaceWith(this.dataset.e)">`:f.e}<span>${f.n}</span></div>`}).join('');
   const p=$('#genProv');if(p)p.textContent='目前使用：'+genProvider()}
 
+/* ================= 設定（原本「我的」頁搬進來）：iOS 設定式分組清單，點一列進到那一頁 ================= */
+const FZ=[['1','標準'],['1.12','大'],['1.25','特大']];let FZV=String(S.get('fz','1'));if(!FZ.some(x=>x[0]===FZV))FZV='1';
+const applyFz=()=>document.documentElement.style.setProperty('--fz',FZV);
+function openSettings(){const m=me(),c=calc(m),row=(attr,ic,t,sub)=>`<button class="srow" ${attr}><span class="ic">${ic}</span><span class="m"><b>${t}</b>${sub?`<small>${sub}</small>`:''}</span><span class="chev">›</span></button>`;
+  openSheet(sheetHead('⚙️ 設定','')+`
+    <div class="sgrp"><div class="sgh">${esc(m.name)} 的個人資料</div>
+      ${row('data-setsec="basic"','👤','基本資料',`${sexT(m.sex)}・${Math.floor(ageOf(m))} 歲・${esc(m.h)} cm・${fmt(c.w)} kg・目標 ${GOALT[c.goal]}`)}
+      ${row('data-setsec="fh"','🧬','家族史與生活習慣','吸菸、喝酒、做過的檢查（影響今年健檢建議）')}
+      ${row('data-setsec="fit"','🏃','運動偏好與身體限制','影響運動課表')}
+      ${row('data-setsec="diet"','🥗','不吃的食物','菜單、採買清單會避開')}
+      ${row('data-setsec="vax"','💉','疫苗紀錄','打過的不再出現在建議裡')}</div>
+    <div class="sgrp"><div class="sgh">家庭成員（點名字切換，✎ 編輯）</div>${memRows()}<button class="btn ghost" data-addmem style="margin-top:8px">＋ 新增成員</button></div>
+    <div class="sgrp"><div class="sgh">顯示</div><div class="sub" style="margin-bottom:8px">字體大小（長輩用建議「大」或「特大」）</div>
+      <div class="seg" id="set-fz">${FZ.map(([v,t])=>`<button type="button" data-fz="${v}" class="${FZV===v?'on':''}">${t}</button>`).join('')}</div>
+      ${row('data-tour','🧭','重看功能導覽','30 秒認識每一頁')}</div>
+    <div class="sgrp"><div class="sgh">資料備份</div><p class="note" style="margin-top:0">所有健康資料只存在這支手機的瀏覽器裡，不會上傳。iPhone 的 Safari 若 7 天沒開這個網站，可能自動清除資料：請<b>加入主畫面</b>（分享 → 加入主畫面），並定期匯出備份。</p>
+      <div class="row2"><button class="btn" data-export>匯出備份</button><button class="btn ghost" data-import>匯入備份</button></div></div>
+    <div class="sgrp"><div class="sgh">菜色圖片</div><button class="btn ghost" data-autoimg>${AUTO?'⏸ 停止自動補圖':'🖼 自動補齊全部菜色圖片'}</button>
+      <div class="sub" style="margin:12px 0 6px">圖片後端（選用）：GAS Web App 網址</div><input id="s-gas" value="${esc(GAS)}" placeholder="https://script.google.com/macros/s/.../exec" inputmode="url">
+      <p class="note">留空＝AI Horde 免費社群算力（免金鑰但要排隊）。想 10 秒出圖：用 repo 裡的 gas/Code.gs 架 GAS；金鑰只放在 GAS 的指令碼屬性，絕不放這裡，健康資料也不會傳到這個後端。</p></div>
+    <div class="sgrp"><div class="sgh">關於</div><div class="sub" style="line-height:1.7">NutriCore 版本 ${esc(APP_VER)}<br>健康資料只存在這支手機；判讀依公開指引整理，僅供參考，不能取代醫師診斷。</div></div>`);
+  $('#s-gas').onchange=e=>setGas(e.target.value.trim(),e.target)}
+
+/* ================= 功能導覽：聚光遮罩（box-shadow 挖洞）。捲動、轉向、iOS 鍵盤彈出會重新定位；Esc 或「略過」關閉；看完記住，不再自動出現 ================= */
+const TOUR=[['#nav button[data-v="dash"]','總覽','BMI、每日該吃多少熱量、最新紀錄；有危急值會在最上面用紅色提醒'],
+  ['#nav button[data-v="body"]','身體','體檢報告、體脂、手錶數據都在這裡：拍照給 AI 讀數字再匯入，App 自動判讀、比較歷年、建議掛哪一科，還能做成看診摘要圖'],
+  ['#nav button[data-v="menu"]','飲食','依你的身體狀況排的一週菜單和採買清單'],
+  ['#nav button[data-v="fit"]','運動','依身體限制排的課表；運動紀錄會算進當天可以多吃的熱量'],
+  ['#nav button[data-v="self"]','自我檢測','中風、心臟、頭暈、記憶力、睡眠、情緒、肌力：在家就能測，告訴你掛哪科、做哪些檢查，也能整理給 AI'],
+  ['#memChip','切換家人','一支手機可以管全家人的資料'],
+  ['#gearBtn','設定','原本的「我的」搬到這裡：個人資料、家庭成員、字體大小、資料備份']];
+let tourI=-1;
+function startTour(){closeSheet();tourI=0;let el=$('#tour');
+  if(!el){el=document.createElement('div');el.id='tour';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','tour-t');
+    el.innerHTML='<div class="tour-hole"></div><div class="tour-card"><b id="tour-t"></b><div class="sub" id="tour-d" aria-live="polite"></div><div class="tour-nav"><span class="sub" id="tour-n"></span><button type="button" class="btn sm ghost" id="tour-skip">略過</button><button type="button" class="btn sm ghost" id="tour-prev">上一步</button><button type="button" class="btn sm" id="tour-next">下一步</button></div></div>';
+    document.body.appendChild(el);
+    $('#tour-skip').onclick=endTour;$('#tour-prev').onclick=()=>{if(tourI>0){tourI--;tourPaint()}};$('#tour-next').onclick=()=>{if(tourI<TOUR.length-1){tourI++;tourPaint()}else endTour()}}
+  el.hidden=false;tourPaint();$('#tour-next').focus()}
+function tourPaint(){const el=$('#tour');if(!el||el.hidden||tourI<0)return;const[sel,t,d]=TOUR[tourI],tg=$(sel),h=el.querySelector('.tour-hole'),card=el.querySelector('.tour-card');
+  $('#tour-t').textContent=t;$('#tour-d').textContent=d;$('#tour-n').textContent=`${tourI+1} / ${TOUR.length}`;$('#tour-prev').hidden=tourI===0;$('#tour-next').textContent=tourI===TOUR.length-1?'開始使用':'下一步';
+  const r=tg&&tg.getBoundingClientRect(),vh=window.visualViewport?.height||innerHeight;
+  if(r&&r.width){const p=6;Object.assign(h.style,{display:'block',left:r.left-p+'px',top:r.top-p+'px',width:r.width+p*2+'px',height:r.height+p*2+'px'});el.style.background='transparent';
+    const low=r.top+r.height/2>vh/2;card.style.top=low?'calc(env(safe-area-inset-top) + 70px)':'auto';card.style.bottom=low?'auto':'calc(env(safe-area-inset-bottom) + 100px)'}
+  else{h.style.display='none';el.style.background='rgba(0,0,0,.72)';card.style.top='auto';card.style.bottom='calc(env(safe-area-inset-bottom) + 100px)'}}
+function endTour(){const el=$('#tour');if(el)el.hidden=true;tourI=-1;S.set('tour',1)}
+['resize','orientationchange'].forEach(ev=>addEventListener(ev,tourPaint));window.visualViewport?.addEventListener('resize',tourPaint);window.visualViewport?.addEventListener('scroll',tourPaint);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&tourI>=0)endTour()});
+
+/* ================= 看診摘要圖：一張 PNG 給醫師看或傳給家人；用 navigator.share 分享（只帶 files，不帶 title：iOS 帶 title 會丟掉檔案） ================= */
+function summaryBlocks(m){const c=calc(m),L=labsOf(m),l=L[0],B=[],a=Math.floor(ageOf(m)),H=(s)=>B.push({t:'h',s}),P=(s,c)=>B.push({t:'p',s,c}),I=(s,c)=>B.push({t:'li',s,c});
+  B.push({t:'h1',s:'看診摘要'});P(`${m.name}・${sexT(m.sex)}性・${a} 歲・身高 ${c.h} cm・體重 ${fmt(c.w)} kg（BMI ${r1(c.bmi)}）`);P(`整理日期 ${ymd(new Date())}・NutriCore`,'#64748b');
+  const lab=l?annotPrev(m,labEval(l,m).sort((x,y)=>(y.crit?1:0)-(x.crit?1:0)||y.lv-x.lv)):[],w=watchOf(m)[0],wi=w?watchEval(w,m).filter(i=>i.lv>=1):[];
+  const crit=lab.filter(i=>i.crit);if(crit.length){H('🚨 危急值（今天就要處理）');crit.forEach(i=>I(`${i.name} ${tv(i.val)} ${i.unit}（報告 ${l.t}）`,'#b91c1c'))}
+  if(l){const cd=cmpData(m),tr=k=>{const r=cd?.rows.find(x=>x.k===k);return r&&r.vals.filter(v=>v!=null).length>1?`；歷年 ${r.vals.map(v=>v==null?'—':String(v).split(/[（(]/)[0]).join(' → ')}`:''};
+    H(`體檢異常（${l.t}${l.hospital?'・'+l.hospital:''}，共 ${lab.length} 項）`);
+    if(!lab.length)P('全部在參考範圍內');
+    lab.slice(0,24).forEach(i=>I(`【${i.crit?'危急':LVT[i.lv]}】${i.name} ${tv(i.val)}${i.unit?' '+i.unit:''}${i.ref&&!/^原文/.test(i.ref)?`（參考 ${i.ref}）`:''}${i.prev?'・'+prevTxt(i.prev):''}${tr(i.k)}`,i.crit||i.lv>=3?'#b91c1c':i.lv===2?'#c2410c':'#0b1220'));
+    if(lab.length>24)P(`另有 ${lab.length-24} 項，請看 App`,'#64748b')}
+  else{H('體檢報告');P('還沒有匯入體檢報告')}
+  const dp=deptPlan([...lab,...wi]);if(dp.length){H('建議掛號');dp.forEach(d=>I(`${d.d}：${d.when}（${d.items.join('、')}）`,d.crit?'#b91c1c':undefined))}
+  if(wi.length){H(`手錶（${w.t}，近 7 天平均）`);wi.forEach(i=>I(`${i.name} ${tv(i.val)}${i.unit?' '+i.unit:''}：${i.msg}`))}
+  const sr=selfLatest(m,365).map(r=>({r,R:selfRate(r.k,r.a,m)})).filter(x=>x.R.lv>=1);if(sr.length){H('自我檢測（1 年內）');sr.forEach(({r,R})=>I(`${SELF[r.k].n}（${r.t}）：${R.sc?R.sc+'，':''}${R.head}`,R.lv>=3?'#b91c1c':undefined))}
+  const lf=lifeOf(m),bits=[fhText(m)&&`家族史：${fhText(m)}`,m.life&&`吸菸：${{never:'從不',former:'已戒',current:'目前有'}[lf.smoke]}`,m.life&&`喝酒：${{none:'不喝',some:'偶爾',often:'每週 3 次以上'}[lf.alc]}`].filter(Boolean);
+  if(bits.length){H('病史與生活習慣');bits.forEach(s=>I(s))}
+  H('想問醫師');I('這些異常哪一項最需要先處理？需要再做哪些檢查？');I('多久後要回診或複驗？');
+  B.push({t:'note',s:'依 App 規則整理的資料，不是診斷，以醫師判斷為準。'});return B}
+function drawSummary(m){const cv=document.createElement('canvas'),x=cv.getContext('2d');if(!x)return null;const W=1080,P=60,MAXH=9000,B=summaryBlocks(m);
+  const F=(sz,b)=>`${b?'700 ':''}${sz}px -apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif`,ST={h1:[54,1,'#0b1220'],h:[36,1,'#0e7490'],p:[30,0,'#334155'],li:[31,0,'#0b1220'],note:[26,0,'#64748b']};
+  // 換行：中文逐字斷，數字與英文（6.6、mmol/L、4.2 → 6.6）整段不拆開
+  const wrap=(s,sz,b,w)=>{x.font=F(sz,b);const out=[];let cur='';for(const tk of String(s).match(/[A-Za-z0-9.%\/+\-–]+|[\s\S]/gu)||[]){if(x.measureText(cur+tk).width>w&&cur.trim()){out.push(cur.trimEnd());cur=tk.trimStart()}else cur+=tk}if(cur)out.push(cur);return out};
+  const ops=[];let y=P;
+  for(const b of B){const[sz,bd,col]=ST[b.t],ind=b.t==='li'?40:0;if(b.t==='h')y+=30;if(b.t==='note')y+=24;
+    wrap(b.s,sz,bd,W-P*2-ind).forEach((ln,i)=>{if(y+sz*1.5>MAXH-P)return;ops.push([ln,P+ind,y+sz,sz,bd,b.c||col,b.t==='li'&&i===0]);y+=Math.round(sz*1.5)});
+    y+=b.t==='h'?6:b.t==='h1'?14:4;if(b.t==='h1'||b.t==='h'){ops.push(['__line',P,y,0,0,b.t==='h1'?'#0e7490':'#cbd5e1']);y+=14}}
+  cv.width=W;cv.height=Math.min(MAXH,y+P);x.fillStyle='#ffffff';x.fillRect(0,0,W,cv.height);x.textBaseline='alphabetic';
+  for(const[ln,px,py,sz,bd,col,dot]of ops){if(ln==='__line'){x.fillStyle=col;x.fillRect(px,py,W-P*2,3);continue}x.font=F(sz,bd);x.fillStyle=col;if(dot)x.fillText('•',px-30,py);x.fillText(ln,px,py)}
+  return cv}
+let sumURL=null;
+async function openSummary(){const m=me(),cv=drawSummary(m);if(!cv)return toast('這支手機的瀏覽器不支援產生圖片');
+  const blob=await new Promise(r=>cv.toBlob(r,'image/png'));if(!blob)return toast('圖片產生失敗：請關掉其他分頁後再試一次');
+  if(sumURL)URL.revokeObjectURL(sumURL);sumURL=URL.createObjectURL(blob);const name=`看診摘要-${ymd(new Date())}.png`,file=new File([blob],name,{type:'image/png'});
+  openSheet(sheetHead('📄 看診摘要圖','看醫生時給醫師看，或傳給家人')+`<img src="${sumURL}" alt="看診摘要" style="width:100%;border-radius:12px;margin:12px 0;background:#fff">
+    <button class="btn" id="sum-share">分享／儲存圖片</button><p class="note">iPhone：按上面按鈕選「儲存影像」或傳 LINE；也可以長按圖片儲存。圖片上有名字，傳給別人前請確認。</p>`);
+  onSheetClose=()=>{if(sumURL){URL.revokeObjectURL(sumURL);sumURL=null}};
+  $('#sum-share').onclick=async()=>{try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return}}catch(e){if(e.name==='AbortError')return}
+    const a=document.createElement('a');a.href=sumURL;a.download=name;document.body.appendChild(a);a.click();a.remove();toast('已下載看診摘要圖')}}
+
 /* ================= 備份 ================= */
 async function exportData(){
-  const data={app:'NutriCore',v:2,exported:new Date().toISOString(),members:MEM,active:ACT,scale:SCALE,labs:LABS,watch:WATCH,exlog:EXLOG,img:Object.fromEntries(Object.entries(IMG).filter(([,v])=>/^https:/.test(v))),gas:GAS};
+  const data={app:'NutriCore',v:2,exported:new Date().toISOString(),members:MEM,active:ACT,scale:SCALE,labs:LABS,watch:WATCH,exlog:EXLOG,self:SELFR,img:Object.fromEntries(Object.entries(IMG).filter(([,v])=>/^https:/.test(v))),gas:GAS};
   const name=`nutricore-backup-${ymd(new Date())}.json`,json=JSON.stringify(data);
   try{const file=new File([json],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return}   /* iOS：同時帶 title 會只送出文字、把檔案丟掉 */}catch(e){if(e.name==='AbortError')return}
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);toast('已下載備份檔');
@@ -2916,7 +3274,7 @@ function cleanBackup(d){
   const img={};for(const[k,v]of Object.entries(obj(d.img)))if(BY_ID[k]&&/^https:\/\//.test(String(v)))img[k]=String(v);
   const watch=recs(d.watch,/^\d{4}-\d{2}-\d{2}$/);for(const k in watch)watch[k]=watch[k].map(cleanWatch);
   const exlog={};for(const[k,arr]of Object.entries(obj(d.exlog)))if(okId(k)&&Array.isArray(arr))exlog[k]=arr.filter(x=>x&&okId(x.id)&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.d))).map(cleanExLog);   // 手錶只留已知欄位、合理範圍的數字
-  return{mem,scale:recs(d.scale,/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/),labs:recs(d.labs,/^\d{4}-\d{2}-\d{2}$/),watch,exlog,img,
+  return{mem,self:cleanSelf(d.self,okId),scale:recs(d.scale,/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/),labs:recs(d.labs,/^\d{4}-\d{2}-\d{2}$/),watch,exlog,img,
     gas:typeof d.gas==='string'&&(!d.gas||/^https:\/\/script\.google(usercontent)?\.com\//.test(d.gas))?d.gas:null};
 }
 const MAX_BACKUP=5*1048576;   // 正常備份只有幾十 KB；超過 5MB 一定不是備份檔，整個讀進記憶體會讓 iPhone 分頁當掉
@@ -2926,28 +3284,28 @@ function importData(file){
     if(d.app!=='NutriCore')throw new Error('不是 NutriCore 備份檔');
     const c=cleanBackup(d);if(!c.mem.length)throw new Error('備份檔裡沒有有效的成員資料');
     if(!confirm(`將以備份覆蓋目前資料（${c.mem.length} 位成員）。確定？`))return;
-    MEM=c.mem;SCALE=c.scale;LABS=c.labs;WATCH=c.watch;EXLOG=c.exlog;IMG={...IMG,...c.img};GAS=c.gas??GAS;ACT=MEM.some(m=>m.id===d.active)?d.active:MEM[0].id;
-    S.set('members',MEM);S.set('scale',SCALE);S.set('labs',LABS);S.set('watch',WATCH);S.set('exlog',EXLOG);S.set('img',IMG);S.set('gas',GAS);S.set('active',ACT);renderAll();toast('備份已還原')}
+    MEM=c.mem;SCALE=c.scale;LABS=c.labs;WATCH=c.watch;EXLOG=c.exlog;SELFR=c.self;IMG={...IMG,...c.img};GAS=c.gas??GAS;ACT=MEM.some(m=>m.id===d.active)?d.active:MEM[0].id;
+    S.set('members',MEM);S.set('scale',SCALE);S.set('labs',LABS);S.set('watch',WATCH);S.set('exlog',EXLOG);S.set('self',SELFR);S.set('img',IMG);S.set('gas',GAS);S.set('active',ACT);renderAll();toast('備份已還原')}
     catch(e){toast('匯入失敗：'+e.message)}};rd.readAsText(file);
 }
 
 /* ================= 導覽 / 事件 ================= */
 function go(v){const nv=v==='lab'?'menu':v;$$('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));$$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===nv));scrollTo({top:0,behavior:'smooth'})}
-function renderAll(){renderHeader();renderDash();renderBody();renderNutri(me());renderDays();renderMenu();renderFit();renderMe();renderGallery()}
+function renderAll(){renderHeader();renderDash();renderBody();renderNutri(me());renderDays();renderMenu();renderFit();renderSelf();renderGallery()}
 $$('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.v));
 $('#memChip').onclick=openMemberPicker;
 $$('#recSeg button').forEach(b=>b.onclick=()=>{recTab=b.dataset.v;$$('#recSeg button').forEach(x=>x.classList.toggle('on',x===b));renderRecs()});
 $('#hud').addEventListener('click',e=>{const t=e.target.closest('[data-o]');if(t)showOrgan(t.dataset.o)});
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-close],[data-closeorgan],[data-copy],[data-show],[data-pick],[data-editmem],[data-addmem],[data-sid],[data-lid],[data-addscale],[data-addlab],[data-copyplan],[data-goplan],[data-autogoal],[data-go],[data-golab],[data-goback],[data-fday],[data-timer],[data-ics],[data-meal],[data-ban],[data-shop],[data-export],[data-import],[data-autoimg],[data-aidoc],[data-ask],[data-fixh],[data-cmp],[data-wid],[data-addwatch],[data-exlog],[data-exrm],[data-sym]');if(!t)return;const d=t.dataset;
+  const t=e.target.closest('[data-close],[data-closeorgan],[data-copy],[data-show],[data-pick],[data-editmem],[data-addmem],[data-sid],[data-lid],[data-addscale],[data-addlab],[data-copyplan],[data-goplan],[data-autogoal],[data-go],[data-golab],[data-goback],[data-fday],[data-timer],[data-ics],[data-meal],[data-ban],[data-shop],[data-export],[data-import],[data-autoimg],[data-aidoc],[data-ask],[data-fixh],[data-cmp],[data-wid],[data-addwatch],[data-exlog],[data-exrm],[data-sym],[data-self],[data-selfnew],[data-selfdel],[data-selfai],[data-settings],[data-setsec],[data-fz],[data-tour],[data-summary]');if(!t)return;const d=t.dataset;
   if('close' in d)closeSheet();
   else if('closeorgan' in d){$('#organPanel').innerHTML='';$$('#hud .sel').forEach(e=>e.classList.remove('sel'))}
   else if(d.copy)copyText(PROMPTS[d.copy]());
   else if(d.show){const p=$('#pv-'+d.show);p.hidden=!p.hidden;if(!p.hidden)p.textContent=PROMPTS[d.show]()}
-  else if(d.pick){ACT=d.pick;S.set('active',ACT);closeSheet();renderAll();toast('已切換：'+me().name)}
-  else if(d.editmem)openMemberEdit(d.editmem,['fh','fit','vax','diet'].find(k=>k in d)||'');
+  else if(d.pick){const inSet=!!t.closest('.sgrp');ACT=d.pick;S.set('active',ACT);renderAll();if(inSet)openSettings();else closeSheet();toast('已切換：'+me().name)}
+  else if(d.editmem)openMemberEdit(d.editmem,['fh','fit','vax','diet'].find(k=>k in d)||'',!!t.closest('.sgrp'));
   else if(d.meal!=null)openMeal(+d.meal);
-  else if(d.ban){const m=me(),dt=dietOf(m);m.diet={...dt,ban:[...new Set([...dt.ban,d.ban])]};S.set('members',MEM);closeSheet();renderMenu();toast(`已移除「${BY_ID[d.ban].n}」，之後不再排（「我的 → 編輯 → 不吃的食物」可恢復）`)}
+  else if(d.ban){const m=me(),dt=dietOf(m);m.diet={...dt,ban:[...new Set([...dt.ban,d.ban])]};S.set('members',MEM);closeSheet();renderMenu();toast(`已移除「${BY_ID[d.ban].n}」，之後不再排（「⚙️ 設定 → 不吃的食物」可恢復）`)}
   else if('shop' in d)openShop();
   else if(d.fixh){const m=me();m.h=+d.fixh;S.set('members',MEM);renderAll();toast(`身高已改成 ${d.fixh} cm`)}
   else if('aidoc' in d)openAI();
@@ -2961,7 +3319,16 @@ document.addEventListener('click',e=>{
   else if('ics' in d)shareICS();
   else if('copyplan' in d)copyText(planText(me()),'已複製今年健檢建議，可以貼給醫師或健檢中心');
   else if('goplan' in d){go('body');setTimeout(()=>$('#planCard').scrollIntoView({behavior:'smooth',block:'start'}),400)}
-  else if('addmem' in d)openMemberEdit();
+  else if('addmem' in d)openMemberEdit(null,'',!!t.closest('.sgrp'));
+  else if('settings' in d)openSettings();
+  else if(d.setsec)openMemberEdit(ACT,d.setsec,true);
+  else if(d.fz){FZV=d.fz;S.set('fz',FZV);applyFz();$$('#set-fz button').forEach(x=>x.classList.toggle('on',x.dataset.fz===FZV));toast('字體：'+FZ.find(x=>x[0]===FZV)[1])}
+  else if('tour' in d)startTour();
+  else if('summary' in d)openSummary();
+  else if(d.self){const r=selfOf(me(),d.self)[0];if(r)openSelfResult(r.id);else openSelf(d.self)}
+  else if(d.selfnew)openSelf(d.selfnew);
+  else if(d.selfdel){if(confirm('刪除這筆檢測結果？'))delSelf(d.selfdel)}
+  else if('selfai' in d)openSelfAll();
   else if('autogoal' in d){const m=me();m.goal='auto';S.set('members',MEM);renderAll();toast('目標改成自動：'+GOALT[calc(m).goal])}
   else if(d.go)go(d.go);
   else if('golab' in d)go('lab');
@@ -2976,13 +3343,10 @@ document.addEventListener('click',e=>{
   else if('addscale' in d)openScaleSheet();
   else if('addlab' in d)openLabSheet();
 });
-$('#exportBtn').onclick=exportData;
-$('#importBtn').onclick=()=>$('#importFile').click();
 $('#importFile').onchange=e=>{const f=e.target.files[0];if(f)importData(f);e.target.value=''};
 function setGas(v,el){if(v&&!/^https:\/\/script\.google(usercontent)?\.com\//.test(v)){toast('請貼上 https://script.google.com/ 開頭的 GAS 網址');el.value=GAS;return}
-  GAS=v;S.set('gas',GAS);renderGallery();renderMe();toast(v?'已改用 GAS 圖片後端':'已改回 AI Horde 免費社群算力')}
-$('#f-gas').onchange=e=>setGas(e.target.value.trim(),e.target);
-$('#gearBtn').onclick=()=>openMemberEdit(ACT,'basic');
+  GAS=v;S.set('gas',GAS);renderGallery();toast(v?'已改用 GAS 圖片後端':'已改回 AI Horde 免費社群算力')}
+$('#gearBtn').onclick=openSettings;
 $('#labDish').onchange=updPrompt;
 $$('#labStyle button').forEach(b=>b.onclick=()=>{style=b.dataset.v;$$('#labStyle button').forEach(x=>x.classList.toggle('on',x===b));updPrompt()});
 $('#copyPrompt').onclick=async()=>{try{await navigator.clipboard.writeText($('#labPrompt').textContent);toast('已複製')}catch(e){toast('請長按提示詞手動複製')}};
@@ -3031,8 +3395,9 @@ function promoteExtras(r){if(!Array.isArray(r.extra)||!r.extra.length)return fal
     r.items[k]=ov!=null?{...old,v:k==='dxa'?Math.min(ov,c.v):Math.max(ov,c.v)}:{v:c.v,...(c.lo!=null?{lo:c.lo}:{}),...(c.hi!=null?{hi:c.hi}:{}),...(e.ref?{ref:String(e.ref).slice(0,60)}:{}),...(e.flag?{flag:e.flag}:{})};ch=true;return false});
   return ch}
 function migrateLabs(){let ch=false;for(const arr of Object.values(LABS))for(const r of Array.isArray(arr)?arr:[])if(promoteExtras(r))ch=true;if(ch)S.set('labs',LABS);return ch}
-migrateLabs();fillDish();renderAll();loadImages().then(()=>{updAuto();if(AUTO)setTimeout(autoNext,4000)});
-if(FRESH)setTimeout(()=>{go('me');openMemberEdit(MEM[0].id);toast('先建立你的資料，30 秒完成')},400);
+applyFz();migrateLabs();fillDish();renderAll();loadImages().then(()=>{updAuto();if(AUTO)setTimeout(autoNext,4000)});
+if(FRESH)setTimeout(()=>{openMemberEdit(MEM[0].id);toast('先建立你的資料，30 秒完成')},400);
+else if(!S.get('tour',0))setTimeout(()=>{if(!$('#sheet').classList.contains('on'))startTour()},1200);   // 版面改過（「我的」搬進設定）：舊使用者也看一次導覽
 </script>
 </body>
 </html>

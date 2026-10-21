@@ -31,7 +31,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   const newPage = async (seed, o = {}) => { const p = await ctx.newPage(); if (o.clock) await p.clock.install(); p.on('pageerror', e => errs.push(`[pageerror] ${e.message}`)); p.on('dialog', d => d.accept());
     p.on('console', m => { if (m.type() === 'error' && !/ERR_FAILED/.test(m.text())) errs.push(`[console] ${m.text()}`) });
     // 每個分頁第一次載入時清空並寫入自己的測試資料（同一分頁重新整理時保留）
-    if (seed) await p.addInitScript(([s]) => { if (!sessionStorage.getItem('seeded')) { localStorage.clear(); for (const [k, v] of Object.entries(s)) localStorage.setItem('nc_' + k, JSON.stringify(v)); sessionStorage.setItem('seeded', '1') } }, [seed]);
+    if (seed) await p.addInitScript(([s]) => { if (!sessionStorage.getItem('seeded')) { localStorage.clear(); for (const [k, v] of Object.entries({ tour: 1, ...s })) localStorage.setItem('nc_' + k, JSON.stringify(v)); sessionStorage.setItem('seeded', '1') } }, [seed]);
     await p.goto(o.url || PAGE); await p.waitForTimeout(500); return p };
 
   // 圖片工坊入口在「飲食」頁底部
@@ -153,12 +153,12 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       { id: 'ok1', name: '<b>好人</b>', sex: 'f', birth: '115/01/02', fh: { ca: ['crc', '<script>'], chr: 'x', early: 1 }, life: { smoke: 'x', ppd: 99 } }],
     active: 'ok1', scale: { ok1: [{ id: 'a1', t: '<img src=x onerror=window.__pwn=2>', weight: 60 }, { id: 'a2', t: '2026-01-01T07:00', weight: 60 }] }, labs: {}, img: { b1: 'javascript:alert(1)' }, gas: 'https://evil.example.com/' };
   const ep = path.join(require('os').tmpdir(), 'nc-evil.json'); fs.writeFileSync(ep, JSON.stringify(evil));
-  await page.click('#nav button[data-v="me"]'); await page.setInputFiles('#importFile', ep); await page.waitForTimeout(500);
+  await page.setInputFiles('#importFile', ep); await page.waitForTimeout(500);
   await page.click('#nav button[data-v="body"]'); await page.waitForTimeout(300);
   const after = await page.evaluate(() => ({ pwn: window.__pwn || 0, mem: MEM.map(m => m.id + ':' + m.birth).join(','), fh: MEM[0].fh, life: MEM[0].life, scale: (SCALE.ok1 || []).length, gas: GAS }));
   check('惡意備份檔被清洗、沒有執行', after.pwn === 0 && after.mem === 'ok1:2026-01-02' && after.fh.ca.join() === 'crc' && after.life.smoke === 'never' && after.life.ppd === 10 && after.scale === 1 && !/evil/.test(after.gas), JSON.stringify(after));
   const big = path.join(require('os').tmpdir(), 'nc-big.json'); fs.writeFileSync(big, '{"app":"NutriCore","pad":"' + 'x'.repeat(6 * 1048576) + '"}');
-  await page.click('#nav button[data-v="me"]'); await page.setInputFiles('#importFile', big); await page.waitForTimeout(400);
+  await page.setInputFiles('#importFile', big); await page.waitForTimeout(400);
   const bigRes = await page.evaluate(() => ({ t: document.querySelector('#toast').textContent, mem: MEM.map(m => m.id).join() }));
   check('超過 5MB 的檔案直接拒絕（不讀進記憶體）', /不是 NutriCore 備份/.test(bigRes.t) && bigRes.mem === 'ok1', bigRes.t.slice(0, 40)); fs.unlinkSync(big);
   check('輸入框字級 ≥16px（iOS 不自動放大）', await page.evaluate(() => { const t = document.createElement('textarea'); document.body.appendChild(t); const v = parseFloat(getComputedStyle(t).fontSize); t.remove(); return v >= 16 }));
@@ -173,6 +173,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   }
   const doc = fs.readFileSync(pfile, 'utf8');
   check('PROMPTS.md 與 App 內提示詞一致（體脂機、體檢、手錶）', doc.includes(md(prompts.scale)) && doc.includes(md(prompts.lab)) && doc.includes(md(prompts.watch)), '不一致時執行 node tests/e2e.js --update-prompts');
+  const selfHead = await page.evaluate(() => selfPrompt(me(), []).split('\n').slice(0, 2).join('\n'));
+  check('PROMPTS.md 第五節（自我檢測給 AI）的開頭規則和 App 一致', doc.includes('```text\n' + selfHead + '\n'), '改了 selfPrompt 開頭要同步 PROMPTS.md 第五節');
   await page.close();
 
   // =============== 6b. 儀表、營養師、健身教練、疫苗 ===============
@@ -277,10 +279,13 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   check('匯入：多個骨密度取最低、兩眼取較高眼壓、A/G 比對到 A/G（不是白蛋白）、握力對到', imp.dxa === '-0.4' && imp.iop === '12' && !imp.alb && imp.ag === '1.7' && imp.grip === '36', JSON.stringify(imp));
   await page.evaluate(() => closeSheet()); await page.waitForTimeout(200);
   await page.click('#gearBtn'); await page.waitForTimeout(400);
-  const st1 = await page.evaluate(() => ({ title: document.querySelector('#sheetBody h3').textContent, vis: [...document.querySelectorAll('#sheetBody .tabp')].filter(p => !p.hidden).map(p => p.dataset.t).join(), smoke: $('#m-smokebox').offsetParent === null }));
-  await page.click('#m-tabs [data-t="app"]'); await page.waitForTimeout(150);
-  const st2 = await page.evaluate(() => ({ vis: [...document.querySelectorAll('#sheetBody .tabp')].filter(p => !p.hidden).map(p => p.dataset.t).join(), save: $('#m-actions').offsetParent === null, exp: !!document.querySelector('#sheetBody [data-export]') }));
-  check('右上角 ⚙️ 設定：分頁一次只顯示一頁，App 設定頁藏起儲存鈕；沒吸菸時不顯示包數', /設定・宗鑫/.test(st1.title) && st1.vis === 'basic' && st1.smoke && st2.vis === 'app' && st2.save && st2.exp, JSON.stringify([st1, st2]));
+  const hub = await page.evaluate(() => ({ title: document.querySelector('#sheetBody h3').textContent, grp: [...document.querySelectorAll('#sheetBody .sgh')].map(e => e.textContent).join('｜'), exp: !!document.querySelector('#sheetBody [data-export]'), fz: document.querySelectorAll('#set-fz [data-fz]').length, mem: document.querySelectorAll('#sheetBody [data-pick]').length }));
+  await page.click('#sheetBody [data-setsec="basic"]'); await page.waitForTimeout(300);
+  const st1 = await page.evaluate(() => ({ title: document.querySelector('#sheetBody h3').textContent, back: !!document.querySelector('#sheetBody [data-settings]'), vis: [...document.querySelectorAll('#sheetBody .tabp')].filter(p => !p.hidden).map(p => p.dataset.t).join(), smoke: $('#m-smokebox').offsetParent === null, app: !!document.querySelector('#m-tabs [data-t="app"]') }));
+  await page.click('#sheetBody [data-settings]'); await page.waitForTimeout(300);
+  const st2 = await page.evaluate(() => !!document.querySelector('#sheetBody #set-fz') && !document.querySelector('#v-me') && !!document.querySelector('#nav [data-v="self"]'));
+  check('右上角 ⚙️ 設定中心（原「我的」）：個人資料、家庭成員、顯示、備份、圖片、關於分組；點「基本資料」進到那一頁、有「‹ 設定」返回；沒吸菸時不顯示包數；底部導覽「我的」改成「自我檢測」',
+    /設定/.test(hub.title) && /個人資料｜家庭成員.*｜顯示｜資料備份｜菜色圖片｜關於/.test(hub.grp) && hub.exp && hub.fz === 3 && hub.mem >= 1 && /宗鑫 的資料/.test(st1.title) && st1.back && st1.vis === 'basic' && st1.smoke && !st1.app && st2, JSON.stringify([hub, st1, st2]));
   await page.close();
   // 自動補齊全部菜色圖片：一次只跑一張、做完自動接下一張；連續失敗 3 次暫停（假時鐘快轉）
   horde.mode = 'ok'; let jobs = 0, maxOpen = 0, open = 0;
@@ -599,6 +604,109 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('手錶活動消耗 500（近 7 天平均）→ TDEE ＝ BMR × 1.1 ＋ 500 × 75%（取代活動量估算），總覽標「手錶校正」、熱量卡說明來源與打折', r.w500 === Math.round(r.bmr * 1.1 + 375) && r.w500 !== r.act && r.tag && r.card, JSON.stringify(r));
     check('填總卡路里（≥ BMR × 0.9）會先扣 BMR；活動太少下限 BMR × 1.2；超過 14 天沒更新改回活動量估算並提示；最新一筆沒填熱量就用較舊那筆', r.total === Math.round(r.bmr * 1.1 + (2100 - r.bmr) * .75) && r.low === Math.round(r.bmr * 1.2) && r.stale === r.act && r.staleTxt && r.older === r.w500 && r.none === r.act, JSON.stringify(r));
     check('有手錶時運動加吃：扣掉手錶每日運動 30 分（121 kcal）→ 游泳 60 分多吃 190；沒填運動分鐘就扣那 7 天運動紀錄平均（53）→ 240', r.b1 === '121|190|watch|true' && r.b2 === '53|240', `${r.b1}｜${r.b2}`);
+    await page.close();
+  }
+
+  // =============== 6p. 危急值（今天就醫）、跟上一份比「新出現／也有」、正常不等於沒病、看診摘要圖 ===============
+  {
+    page = await newPage({ members: [{ id: 'c', name: '王小明', sex: 'm', birth: '1984-03-15', h: 172, w: 70, act: '1.375', goal: 'keep' }], active: 'c',
+      labs: { c: [{ id: 'a1', t: '2025-09-01', items: { glu: { v: 92 }, ldl: { v: 135 }, k: { v: 4.2 }, hb: { v: 14 } }, extra: [] }, { id: 'a2', t: '2026-09-01', hospital: '測試醫院', items: { glu: { v: 112 }, ldl: { v: 140 }, k: { v: 6.8 }, hb: { v: 6.5 }, sbp: { v: 185 }, dbp: { v: 100 }, tsh: { v: 2 } }, extra: [] }] } });
+    const r = await page.evaluate(() => { const m = me(), l = labsOf(m)[0], iss = labEval(l, m), dp = deptPlan(iss);
+      return { crit: iss.filter(i => i.crit).map(i => i.k).sort().join(), lv: iss.filter(i => i.crit).every(i => i.lv === 3), k58: labEval({ items: { k: { v: 5.8 } } }, m).map(i => `${i.lv}${i.crit ? 'c' : ''}`).join(),
+        dash: $('#critBox').textContent, kd: dp.find(d => d.d === '腎臟科')?.when || '', first: dp[0].crit, ai: aiPrompt(m, { topic: 'all', fh: true, scale: true, watch: true, self: true }) } });
+    check('危急值：鉀 6.8、血紅素 6.5、收縮壓 185 → 「今天就醫」（不是 1–2 週內）；鉀 5.8 只是異常；總覽最上面紅色提醒、掛號排第一、AI 提示詞標「危急值」',
+      r.crit === 'hb,k,sbp' && r.lv && r.k58 === '2' && /危急值：今天就要處理/.test(r.dash) && /鉀 K 6\.8/.test(r.dash) && /今天就醫/.test(r.kd) && r.first && /危急值（今天就要處理）/.test(r.ai), JSON.stringify({ ...r, ai: '', dash: r.dash.slice(0, 60) }));
+    await page.click('#nav button[data-v="body"]'); await page.waitForTimeout(300);
+    const b = await page.evaluate(() => ({ crit: $('#critBody').textContent, list: $('#issueList').textContent, top: $('#issueList .issue .lv')?.textContent }));
+    check('身體頁：危急值橫幅、清單最上面是「危急」；跟 2025 年那份比：血糖「新出現」、LDL「2025 年也有」；附「正常不等於沒有疾病」說明',
+      /危急值/.test(b.crit) && b.top === '危急' && /🆕 新出現/.test(b.list) && /2025 年(也有|嚴重|改善)/.test(b.list) && /不等於沒有疾病/.test(b.list), JSON.stringify({ top: b.top, list: b.list.slice(0, 200) }));
+    const d = await page.evaluate(() => { openLabDetail('a1'); const t1 = $('#sheetBody').textContent; openLabDetail('a2'); return { old: !/新出現/.test(t1), cur: /危急值：今天就要處理/.test($('#sheetBody').textContent), note: /不等於沒有疾病/.test($('#sheetBody').textContent), btn: !!$('#sheetBody [data-summary]') } });
+    check('報告詳情：最新那份有危急值橫幅、免責說明、看診摘要按鈕；最舊那份沒有更早的可比，不標「新出現」', d.old && d.cur && d.note && d.btn, JSON.stringify(d));
+    const sm = await page.evaluate(async () => { const B = summaryBlocks(me()).map(b => b.s).join('\n'), cv = drawSummary(me()); window.__sh = null;
+      Object.defineProperty(navigator, 'canShare', { value: () => true, configurable: true }); Object.defineProperty(navigator, 'share', { value: async o => { window.__sh = o }, configurable: true });
+      await openSummary(); await new Promise(r => setTimeout(r, 300)); const img = $('#sheetBody img'); $('#sum-share').click(); await new Promise(r => setTimeout(r, 200));
+      return { crit: /危急值/.test(B) && /鉀 K 6\.8/.test(B), neu: /新出現/.test(B), dept: /建議掛號/.test(B) && /今天就醫/.test(B), hist: /歷年 /.test(B), w: cv.width, h: cv.height, img: !!img, share: window.__sh && window.__sh.files?.[0]?.type === 'image/png' && !('title' in window.__sh) && !('text' in window.__sh) } });
+    check('看診摘要圖：危急值、異常項目（含新出現、歷年數值）、建議掛號；1080 寬 PNG；分享只帶檔案（不帶 title，iOS 才不會丟檔）', sm.crit && sm.neu && sm.dept && sm.hist && sm.w === 1080 && sm.h > 600 && sm.img && sm.share, JSON.stringify(sm));
+    check('提示訊息 VoiceOver 會唸（role=status、aria-live）', await page.evaluate(() => $('#toast').getAttribute('role') === 'status' && $('#toast').getAttribute('aria-live') === 'polite'));
+    await page.close();
+  }
+
+  // =============== 6q. 自我檢測：中風、心臟、頭暈、記憶力 AD8、睡眠 STOP-Bang、憂鬱 PHQ-9、焦慮 GAD-7、肌少症 ===============
+  {
+    page = await newPage({ members: [{ id: 's', name: '王小明', sex: 'm', birth: '1970-06-01', h: 170, w: 80, neck: 42, act: '1.375', goal: 'keep', life: { smoke: 'current', betel: 'never', alc: 'none', ppd: 1, yrs: 20 } }], active: 's',
+      labs: { s: [{ id: 'l1', t: '2026-08-01', items: { sbp: { v: 135 }, dbp: { v: 85 }, ldl: { v: 150 }, glu: { v: 95 } }, extra: [] }] } });
+    const r = await page.evaluate(() => { const m = me(), R = (k, A) => selfRate(k, A, m), N = null;
+      const st1 = R('stroke', [0, 0, 1, 0, 0, 0]), st0 = R('stroke', [0, 0, 0, 0, 0, 0]);
+      const h1 = R('heart', [N, 1, 0, 0, N, 0, 0, 0, 0, N, 0, N, N, N, 0]), h2 = R('heart', [N, 0, 0, 0, N, 0, 0, 0, 0, N, 0, 72, 1, N, 0]), h3 = R('heart', [N, 0, 0, 0, N, 0, 0, 0, 1, N, 0, N, N, N, 0]);
+      const d1 = R('dizzy', [N, 0, 0, 0, N, 0, 0, 0, 0, 0, N, 130, 80, 105, 72]), d2 = R('dizzy', [N, 0, 0, 0, N, 0, 2, 2, 0, 0, N, N, N, N, N]), d3 = R('dizzy', [N, 1, 0, 0, N, 3, 3, 0, 0, 0, N, N, N, N, N]);
+      const ad = R('memory', [0, 0, 0, 1, 1, 1, 2, 1]), ad1 = R('memory', [1, 1, 1, 1, 1, 1, 1, 0]);
+      const pre = SELF.sleep.pre(m, selfF(m)), sl = R('sleep', [1, 0, 0, 1, 0, 1, 1, 1]);
+      const ph = R('phq9', [1, 1, 1, 1, 0, 0, 0, 0, 1]), ph0 = R('phq9', [0, 0, 0, 0, 0, 0, 0, 0, 0]), ga = R('gad7', [2, 2, 2, 2, 1, 1, 0]);
+      const mu = R('muscle', [N, 1, 1, 1, 1, 0, N, 13]), mu0 = R('muscle', [N, 0, 0, 0, 0, 0, N, 9]);
+      return { st1: `${st1.lv}|${/119/.test(st1.head)}|${st1.todo.some(t => /阿斯匹靈/.test(t))}`, st0: `${st0.lv}|${selfF(m) && ctxCV(m, selfF(m)).length}`,
+        h1: h1.lv, h2: `${h2.lv}|${h2.find.some(t => /心房顫動/.test(t))}|${h2.exams.join()}`, h3: `${h3.lv}|${h3.find.some(t => /心絞痛/.test(t))}`,
+        d1: `${d1.lv}|${d1.find.some(t => /耳石/.test(t))}|${d1.find.some(t => /姿勢性低血壓：站起來後收縮壓降 25、舒張壓降 8/.test(t))}|${d1.dept}`, d2: `${d2.lv}|${d2.find.some(t => /突發性耳聾/.test(t))}`, d3: d3.lv,
+        ad: `${ad.lv}|${ad.sc}|${ad.dept}`, ad1: `${ad1.lv}|${ad1.sc}`, pre: JSON.stringify(pre), sl: `${sl.lv}|${sl.sc}`,
+        ph: `${ph.lv}|${ph.sc}|${/1925/.test(ph.crisis)}`, ph0: `${ph0.lv}|${ph0.crisis}`, ga: `${ga.lv}|${ga.sc}|${ga.head}`, mu: `${mu.lv}|${mu.sc}|${mu.find.some(t => /13 秒/.test(t))}`, mu0: mu0.lv } });
+    check('中風 BE FAST：任一項「有」→ 立刻 119、提醒別吃阿斯匹靈；都沒有但有高血壓、血脂、吸菸、BMI 27.7 → 「注意」並列出 4 個危險因子', r.st1 === '4|true|true' && r.st0 === '1|4', `${r.st1}｜${r.st0}`);
+    check('心臟：胸痛 >5 分鐘 → 119；脈搏不規則 → 心房顫動、Holter；勞累胸悶休息就好 → 心絞痛儘快就醫', r.h1 === 4 && /^2\|true\|.*24 小時心電圖/.test(r.h2) && r.h3 === '3|true', `${r.h1}｜${r.h2}｜${r.h3}`);
+    check('頭暈：翻身天旋地轉 <1 分 → 耳石、耳鼻喉科；量到姿勢性低血壓（130/80 → 105/72）；聽力突然變差 → 突發性耳聾 3 天內；合併講話不清 → 119', /^2\|true\|true\|耳鼻喉科/.test(r.d1) && r.d2 === '3|true' && r.d3 === 4, `${r.d1}｜${r.d2}｜${r.d3}`);
+    check('記憶力 AD8：3 項改變 → 3/8 建議記憶門診；「不知道」不算分；1 項 → 觀察', r.ad === '2|3/8|神經內科或精神科（記憶門診）' && r.ad1 === '1|1/8', `${r.ad}｜${r.ad1}`);
+    check('睡眠呼吸中止 STOP-Bang：依資料先選好血壓、BMI、年齡、頸圍、男性；打鼾＋這些 → 5/8 高風險', r.pre === '{"3":1,"4":0,"5":1,"6":1,"7":1}' && r.sl === '2|5/8', `${r.pre}｜${r.sl}`);
+    check('憂鬱 PHQ-9：第 9 題只要不是「完全沒有」→ 至少「儘快」並顯示 1925 安心專線；全 0 沒有求助框；焦慮 GAD-7 10 分 → 中度', r.ph === '3|5/27|true' && r.ph0 === '0|' && r.ga === '2|10/21|焦慮症狀：中度', `${r.ph}｜${r.ph0}｜${r.ga}`);
+    check('肌少症：SARC-F 4 分 → 疑似肌少症；椅子起立 13 秒（≥12）列出；都正常 → 低風險', r.mu === '2|4/10|true' && r.mu0 === 0, `${r.mu}｜${r.mu0}`);
+    // 實際點畫面：底部「自我檢測」→ 記憶力 → 沒答就送出會提醒 → 作答 → 結果、存檔、整理給 AI
+    await page.click('#nav button[data-v="self"]'); await page.waitForTimeout(300);
+    const pg = await page.evaluate(() => ({ on: $('#v-self').classList.contains('on'), rows: document.querySelectorAll('#selfBody [data-self]').length, sym: !!$('#selfBody [data-sym]') }));
+    await page.click('#selfBody [data-self="memory"]'); await page.waitForTimeout(300); await page.click('#sf-go'); await page.waitForTimeout(150);
+    const t0 = await page.evaluate(() => $('#toast').textContent);
+    for (let i = 0; i < 8; i++) await page.click(`#sf-qs [data-qi="${i}"][data-oj="${i < 3 ? 0 : 1}"]`);
+    await page.click('#sf-go'); await page.waitForTimeout(300);
+    const res = await page.evaluate(() => ({ t: $('#sheetBody').textContent, pv: $('#sf-pv').textContent, saved: JSON.parse(localStorage.getItem('nc_self')).s.length, href: document.querySelector('[data-selfopen="chatgpt"]').href }));
+    check('自我檢測頁：8 項檢測＋其他症狀；沒答完會說第幾題；作答後顯示分數、要做什麼、掛哪科、可以安排的檢查，並存在手機', pg.on && pg.rows === 8 && pg.sym && /第 1 題還沒回答/.test(t0) && /3\/8/.test(res.t) && /記憶門診/.test(res.t) && /MoCA/.test(res.t) && res.saved === 1, JSON.stringify({ ...pg, t0, saved: res.saved }));
+    check('整理給 AI：附每一題的回答、App 判讀、相關數值；不含姓名；按鈕直接帶問題開 ChatGPT', /【自我檢測：記憶力（極早期失智篩檢 AD8）/.test(res.pv) && /重複問相同的問題、講相同的故事或話：是，有改變/.test(res.pv) && /App 判讀：建議門診評估/.test(res.pv) && !/王小明/.test(res.pv) && /chatgpt\.com\/\?q=/.test(res.href), res.pv.slice(0, 120));
+    await page.evaluate(() => closeSheet()); await page.waitForTimeout(200);
+    const after = await page.evaluate(() => ({ chip: $('#selfBody [data-self="memory"]').textContent, all: !!$('#selfBody [data-selfai]'), ai: aiPrompt(me(), { topic: 'all', self: true }) }));
+    check('列表顯示上次結果；可把全部結果一起給 AI；AI 醫生也會附上自我檢測', /上次 .*3\/8/.test(after.chip) && /門診/.test(after.chip) && after.all && /【自我檢測（1 年內最新一次）】/.test(after.ai) && /記憶力.*3\/8/.test(after.ai), after.chip);
+    // 椅子起立計時
+    await page.click('#selfBody [data-self="muscle"]'); await page.waitForTimeout(300); await page.click('#sf-t7'); await page.waitForTimeout(1100); await page.click('#sf-t7');
+    const tm = await page.evaluate(() => +$('#sf-n7').value);
+    check('椅子起立 5 次：按開始／停止自動計秒', tm >= .9 && tm <= 2.5, String(tm));
+    await page.evaluate(() => closeSheet());
+    const cb = await page.evaluate(() => JSON.stringify(cleanSelf({ s: [{ id: 'a', k: 'memory', t: '2026-10-01', a: [0, 1, 9, '1', null, 0, 0, 0] }, { id: 'b', k: 'evil', t: '2026-10-01', a: [] }, { id: 'c', k: 'memory', t: '2026-10-01', a: [0] }, { id: 'd', k: 'muscle', t: '2026-10-01', a: [5, 0, 0, 0, 0, 0, 3, 999] }], 'bad id': [] }, v => typeof v === 'string' && /^[\w-]{1,40}$/.test(v))));
+    check('備份檔的自我檢測會清洗：未知量表、題數不對丟掉；選項或數值超出範圍改成沒答', cb === '{"s":[{"id":"a","k":"memory","t":"2026-10-01","a":[0,1,null,1,null,0,0,0]},{"id":"d","k":"muscle","t":"2026-10-01","a":[null,0,0,0,0,0,null,null]}]}', cb);
+    await page.close();
+  }
+
+  // =============== 6r. 字體大小、第一次使用的功能導覽 ===============
+  {
+    page = await newPage({ tour: 0, members: [{ id: 't', name: '我', sex: 'f', birth: '1960-01-01', h: 158, w: 55, act: '1.375', goal: 'keep' }], active: 't' });
+    await page.waitForTimeout(1400);
+    const t1 = await page.evaluate(() => { const h = $('#tour .tour-hole').getBoundingClientRect(), n = $('#nav button[data-v="dash"]').getBoundingClientRect();
+      return { vis: !$('#tour').hidden, n: $('#tour-n').textContent, role: $('#tour').getAttribute('role'), hole: h.left <= n.left && h.right >= n.right && h.top <= n.top && h.bottom >= n.bottom } });
+    await page.keyboard.press('Escape'); await page.waitForTimeout(100);
+    const t2 = await page.evaluate(() => ({ hid: $('#tour').hidden, saved: localStorage.getItem('nc_tour') }));
+    await page.evaluate(() => startTour()); for (let i = 0; i < 6; i++) await page.click('#tour-next');
+    const t3 = await page.evaluate(() => ({ n: $('#tour-n').textContent, last: $('#tour-next').textContent, t: $('#tour-t').textContent }));
+    await page.click('#tour-next');
+    const t4 = await page.evaluate(() => $('#tour').hidden);
+    check('功能導覽：舊使用者第一次打開自動出現、聚光框住目前那一顆按鈕；Esc 關閉並記住；最後一步是「設定（原本的我的）」→「開始使用」關閉',
+      t1.vis && t1.n === '1 / 7' && t1.role === 'dialog' && t1.hole && t2.hid && t2.saved === '1' && t3.n === '7 / 7' && t3.last === '開始使用' && t3.t === '設定' && t4, JSON.stringify([t1, t2, t3, t4]));
+    await page.click('#gearBtn'); await page.waitForTimeout(300); await page.click('#set-fz [data-fz="1.25"]'); await page.waitForTimeout(200);
+    const f1 = await page.evaluate(() => ({ body: getComputedStyle(document.body).fontSize, h2: getComputedStyle(document.querySelector('.card h2')).fontSize, saved: localStorage.getItem('nc_fz') }));
+    await page.evaluate(() => closeSheet()); const fit = [];
+    for (const v of ['dash', 'body', 'menu', 'fit', 'self']) { await page.click(`#nav button[data-v="${v}"]`); await page.waitForTimeout(250);
+      fit.push(await page.evaluate(v => { const W = innerWidth, bad = [...document.querySelectorAll(`#v-${v} .card, #nav button`)].filter(e => e.offsetParent && e.getBoundingClientRect().right > W + 1).length; return bad }, v)) }
+    await page.reload(); await page.waitForTimeout(500);
+    const f2 = await page.evaluate(() => getComputedStyle(document.body).fontSize);
+    check('字體大小「特大」：全站字放大 1.25 倍（15→18.75px）、重新打開還在；各頁卡片與底部按鈕都沒超出螢幕', f1.body === '18.75px' && f1.h2 === '16.25px' && f1.saved === '"1.25"' && f2 === '18.75px' && fit.every(x => x === 0), JSON.stringify([f1, f2, fit]));
+    await page.close();
+    // 全新使用者：先建立資料，存好後才跑導覽
+    page = await newPage({ tour: 0 }); await page.waitForTimeout(700);
+    const fr = await page.evaluate(() => ({ sheet: $('#sheet').classList.contains('on'), tab: !!$('#m-name'), tour: !!$('#tour') && !$('#tour').hidden }));
+    await page.fill('#m-name', '新朋友'); await page.fill('#m-birth', '1990-01-01'); await page.fill('#m-h', '170'); await page.fill('#m-w', '65'); await page.click('#m-save'); await page.waitForTimeout(900);
+    const fr2 = await page.evaluate(() => ({ tour: !!$('#tour') && !$('#tour').hidden, n: $('#tour-n')?.textContent }));
+    check('全新使用者：先開「建立資料」、不被導覽擋住；存好後才開始導覽', fr.sheet && fr.tab && !fr.tour && fr2.tour && fr2.n === '1 / 7', JSON.stringify([fr, fr2]));
     await page.close();
   }
 
