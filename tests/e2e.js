@@ -227,7 +227,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   const db = await page.evaluate(() => { const ids = FOODS.map(f => f.id); return { n: FOODS.length, dup: ids.length - new Set(ids).size, unk: [...new Set(FOODS.flatMap(f => ingOf(f).map(i => i.n)).filter(n => !CAT_OF[n]))].join(','),
     bad: FOODS.filter(f => !f.g || !f.en || !['b', 'ld', 'v', 's'].includes(f.m) || Math.abs(f.k - (4 * (f.p + f.c) + 9 * f.f)) / f.k > .25).map(f => f.id).join(',') } });
   check('菜色庫 ≥130 道：id 不重複、每道都有食材與英文描述、食材都有分類、熱量與三大營養素一致', db.n >= 130 && !db.dup && !db.unk && !db.bad, `${db.n} 道｜未分類 ${db.unk || '無'}｜有問題 ${db.bad || '無'}`);
-  const days14 = await page.evaluate(() => [...Array(14)].map((_, i) => addDays(ymd(new Date()), i)));
+  const days14 = await page.evaluate(() => [...Array(14)].map((_, i) => addDays(mondayOf(ymd(new Date())), i)));   // 從本週一起算（不重複是以週一～週日為單位）
   const vary = await page.evaluate(d => { const ld = d.slice(0, 7).flatMap(x => plan(x).slots.filter(s => /午|晚/.test(s.n)).map(s => s.items[0].id)); return new Set(ld).size }, days14);
   check('一週 14 餐午晚餐不重複', vary === 14, `${vary} 種`);
   await page.click('#nav button[data-v="menu"]'); await page.waitForTimeout(300); await page.click('#meals [data-meal="1"]'); await page.waitForTimeout(400);
@@ -707,6 +707,29 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.fill('#m-name', '新朋友'); await page.fill('#m-birth', '1990-01-01'); await page.fill('#m-h', '170'); await page.fill('#m-w', '65'); await page.click('#m-save'); await page.waitForTimeout(900);
     const fr2 = await page.evaluate(() => ({ tour: !!$('#tour') && !$('#tour').hidden, n: $('#tour-n')?.textContent }));
     check('全新使用者：先開「建立資料」、不被導覽擋住；存好後才開始導覽', fr.sheet && fr.tab && !fr.tour && fr2.tour && fr2.n === '1 / 7', JSON.stringify([fr, fr2]));
+    await page.close();
+  }
+
+  // =============== 6s. 小米「健康摘要」匯入（步行平均心率、每週運動次數、資料區間）＋健康評語（體檢＋體脂＋手錶） ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    page = await newPage({ members: [{ id: 'h', name: '測', sex: 'm', birth: '1984-05-05', h: 172, w: 70, act: '1.375', goal: 'keep' }], active: 'h',
+      labs: { h: [{ id: 'l1', t: T(60), items: { sbp: { v: 118 }, dbp: { v: 76 }, glu: { v: 92 }, ldl: { v: 165 }, egfr: { v: 95 }, alt: { v: 25 } }, extra: [] }] },
+      scale: { h: [{ id: 's1', t: T(3) + 'T07:00', weight: 70, fat: 19, visceral: 8 }] }, watch: { h: [{ id: 'w0', t: T(40), steps: 3337 }] } });
+    const pw = await page.evaluate(() => promptWatch());
+    check('手錶提示詞：健康摘要取較近期的平均、步行平均心率填 walkhr、上月活動次數 ÷4.3、主要睡眠時長、卡路里日均消耗', /6 週平均 4778」填 4778/.test(pw) && /填本月 62/.test(pw) && /「步行平均心率」填 walkhr/.test(pw) && /上月 11 次 → 2\.6/.test(pw) && /主要睡眠時長」7h36m → 7\.6/.test(pw) && /卡路里日均消耗/.test(pw) && /"period":null/.test(pw) && /"walkhr":null/.test(pw) && /"workouts":null/.test(pw), '');
+    await page.click('#nav button[data-v="body"]'); await page.click('#v-body [data-addwatch]'); await page.waitForTimeout(400); await page.click('details.box.ai > summary');
+    await page.fill('#ai-in', JSON.stringify({ type: 'nutricore.watch', v: 1, date: T(0), device: '小米運動健康', period: '本月／6週／26週', rhr: 62, walkhr: 93, sleep: 7.6, steps: 4778, kcal: 166, workouts: 2.6, hrv: null }));
+    await page.click('#ai-go'); await page.waitForTimeout(200);
+    const f = await page.evaluate(() => ({ msg: $('#ai-msg').textContent, wh: $('#w-walkhr').value, wo: $('#w-workouts').value, pd: $('#w-period').value }));
+    await page.click('#wSave'); await page.waitForTimeout(500);
+    const d = await page.evaluate(() => { const r = watchOf(me())[0]; return { rec: `${r.walkhr}|${r.workouts}|${r.period}`, iss: watchEval(r, me()).map(i => i.k).join(), sheet: $('#sheetBody').textContent } });
+    check('小米健康摘要 JSON 匯入：步行平均心率 93、每週運動 2.6 次、資料區間存下來；每週不到 3 次提醒；手錶詳情直接附健康評語', /已填入 6 項/.test(f.msg) && f.wh === '93' && f.wo === '2.6' && f.pd === '本月／6週／26週' && d.rec === '93|2.6|本月／6週／26週' && /w_workouts/.test(d.iss) && /健康評語（結合體檢、體脂、手錶）/.test(d.sheet), JSON.stringify({ ...f, ...d, sheet: '' }));
+    await page.evaluate(() => { closeSheet(); go('dash') }); await page.waitForTimeout(300);
+    const c = await page.evaluate(() => { const h = healthComment(me()); return { h, card: $('#commentCard').hidden ? '' : $('#commentCard').textContent } });
+    check('健康評語：結合體檢（LDL 165）、體脂、手錶：寫出做得好的（血壓、血糖、肝腎正常、體脂標準、靜止心率、睡眠、步數進步）、要注意的與接下來先做（血脂 → 有氧、步數不夠先多走 2,000 步）',
+      /要找醫師|靠生活習慣/.test(c.h.head) && c.h.good.some(x => /血壓、血糖、肝功能、腎功能正常/.test(x)) && c.h.good.some(x => /體脂率 19%/.test(x)) && c.h.good.some(x => /靜止心率 62/.test(x)) && c.h.good.some(x => /睡 7\.6 小時/.test(x)) && c.h.good.some(x => /步數比上次多 1,?441/.test(x))
+        && c.h.bad.some(x => /LDL|低密度/.test(x)) && c.h.bad.some(x => /4,?778 步/.test(x)) && c.h.todo.some(x => /每週 150 分鐘有氧.*多走 2,000 步/.test(x)) && /健康評語/.test(c.card) && /請 AI 寫更完整的評語/.test(c.card), JSON.stringify(c.h));
     await page.close();
   }
 

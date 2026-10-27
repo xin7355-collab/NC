@@ -272,6 +272,7 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
     <div id="gauge"></div>
     <div class="grid2" id="coreStats" style="margin-top:12px"></div>
   </div>
+  <div class="card" id="commentCard" hidden></div>
   <div class="card" id="energyCard"></div>
   <div class="card" id="latestCard"></div>
   <div class="card">
@@ -1103,11 +1104,11 @@ function critHTML(list,t){const c=list.filter(i=>i.crit);if(!c.length)return '';
   return `<div class="banner" role="alert" style="margin:0 0 14px"><b style="font-size:calc(15px*var(--fz))">🚨 危急值：今天就要處理</b><div style="margin-top:6px">${c.map(i=>`<b>${esc(i.name)} ${esc(fmt(i.val))} ${esc(i.unit)}</b>：${esc(CRITM[i.k]||'')}`).join('<br>')}</div>
     <div style="margin-top:8px">${t?`報告日期 ${esc(t)}。`:''}醫院對危急值通常會主動打電話；如果還沒接到，<b>今天</b>就打給健檢中心或到急診複驗，不要等門診。現在有胸痛、呼吸困難、意識改變、單側無力，直接打 119。</div></div>`}
 /* ===== 手錶（近 7 天平均）：光學感測只能參考，看自己的趨勢；異常只提醒、不列入體檢分數 ===== */
-const WF=[{k:'rhr',n:'靜止心率',u:'bpm',min:25,max:200},{k:'hrv',n:'心率變異 HRV',u:'ms',min:3,max:300},{k:'stress',n:'平均壓力',u:'/100',min:0,max:100},{k:'spo2',n:'血氧',u:'%',min:70,max:100},{k:'sleep',n:'睡眠',u:'小時',min:0,max:16},
-  {k:'steps',n:'步數',u:'步／天',min:0,max:80000},{k:'exmin',n:'運動時間',u:'分鐘／天',min:0,max:600},{k:'vo2',n:'最大攝氧量 VO₂max',u:'ml/kg/min',min:10,max:90},{k:'resp',n:'睡眠呼吸速率',u:'次／分',min:5,max:40},
+const WF=[{k:'rhr',n:'靜止心率',u:'bpm',min:25,max:200},{k:'walkhr',n:'步行平均心率',u:'bpm',min:40,max:200},{k:'hrv',n:'心率變異 HRV',u:'ms',min:3,max:300},{k:'stress',n:'平均壓力',u:'/100',min:0,max:100},{k:'spo2',n:'血氧',u:'%',min:70,max:100},{k:'sleep',n:'睡眠',u:'小時',min:0,max:16},
+  {k:'steps',n:'步數',u:'步／天',min:0,max:80000},{k:'exmin',n:'運動時間',u:'分鐘／天',min:0,max:600},{k:'workouts',n:'運動次數',u:'次／週',min:0,max:30},{k:'vo2',n:'最大攝氧量 VO₂max',u:'ml/kg/min',min:10,max:90},{k:'resp',n:'睡眠呼吸速率',u:'次／分',min:5,max:40},
   {k:'kcal',n:'活動消耗',u:'kcal／天',min:0,max:6000},{k:'sbp',n:'收縮壓（手錶）',u:'mmHg',min:60,max:260},{k:'dbp',n:'舒張壓（手錶）',u:'mmHg',min:30,max:160}];
 const WFN=Object.fromEntries(WF.map(f=>[f.k,f]));
-const cleanWatch=r=>{const o={id:r.id,t:r.t};for(const f of WF){const v=num(r[f.k]);if(v!=null&&v>=f.min&&v<=f.max)o[f.k]=v}if(r.afib===true)o.afib=true;if(typeof r.device==='string'&&r.device.trim())o.device=r.device.trim().slice(0,30);return o};
+const cleanWatch=r=>{const o={id:r.id,t:r.t};for(const f of WF){const v=num(r[f.k]);if(v!=null&&v>=f.min&&v<=f.max)o[f.k]=v}if(r.afib===true)o.afib=true;if(typeof r.device==='string'&&r.device.trim())o.device=r.device.trim().slice(0,30);if(typeof r.period==='string'&&r.period.trim())o.period=r.period.trim().slice(0,20);return o};
 // VO₂max 分級（Cooper Institute／ACSM 常用表）：極差／差／普通／良好／優秀／頂尖；手錶是推估值，誤差約 ±10%
 const VO2N={m:[[29,[33,36.5,42.5,46.5,52.5]],[39,[31.5,35.5,41,45,49.5]],[49,[30.2,33.6,39,43.8,48.1]],[59,[26.1,31,35.8,41,45.4]],[200,[20.5,26.1,32.3,36.5,44.3]]],
   f:[[29,[23.6,29,33,37,41.1]],[39,[22.8,27,31.5,35.7,40.1]],[49,[21,24.5,29,32.9,37]],[59,[20.2,22.8,27,31.5,35.8]],[200,[17.5,20.2,24.5,30.3,31.5]]]};
@@ -1128,6 +1129,7 @@ function watchEval(r,m){const a=ageOf(m),out=[],v=k=>num(r?.[k]);if(!r)return ou
   if(sl!=null){if(sl<6)P('sleep',1,sl<5?'平均睡不到 5 小時：長期會讓血壓、血糖、體重都變差，是第一優先要改的':'平均睡不到 6 小時：成人建議 7–9 小時；睡不夠會增加食慾、讓減重變難',{organ:'brain',dir:'lo',ref:'7–9 小時'});
     else if(sl>9.5)P('sleep',1,'平均超過 9.5 小時：白天仍很累的話，可能是睡眠品質不好（如睡眠呼吸中止），或情緒、甲狀腺問題',{organ:'brain',ref:'7–9 小時'})}
   if(v('steps')!=null&&v('steps')<4000)P('steps',1,'每天不到 4,000 步屬於久坐：先以每天多走 2,000 步為目標（約 20 分鐘）；每天 7,000 步以上的人死亡風險明顯較低',{dir:'lo',ref:'≥7,000'});
+  if(v('workouts')!=null&&v('exmin')==null&&v('workouts')<3)P('workouts',1,`每週運動約 ${fmt(v('workouts'))} 次：建議每週至少 3 天、累積 150 分鐘中等強度（快走到微喘）`,{dir:'lo',ref:'每週 ≥3 次'});
   if(v('exmin')!=null&&v('exmin')*7<150)P('exmin',1,`一週約 ${Math.round(v('exmin')*7)} 分鐘，還沒達到 WHO 建議的每週 150 分鐘中等強度運動`,{dir:'lo',ref:'每週 ≥150 分鐘'});
   if(v('vo2')!=null){const c=vo2Cat(v('vo2'),a,m.sex);if(c<=1)P('vo2',1,`同年齡、同性別屬「${VO2T[c]}」：心肺耐力是長壽最有力的指標之一，規律有氧＋間歇訓練 3 個月通常能進步 10% 以上`,{organ:'heart',dir:'lo',ref:`普通 ≥${vo2Cut(a,m.sex)[1]}`})}
   if(v('resp')!=null&&v('resp')>20)P('resp',1,'睡眠呼吸速率偏快：發燒、感冒、心肺問題都可能；持續偏高請就醫',{organ:'lung',ref:'12–20'});
@@ -1786,12 +1788,55 @@ function bodySVG(m,issues,p){
 function issueHTML(list,showRef,ask){return list.map(i=>{const long=typeof i.val==='string'&&i.val.length>6,rv=revOf(i.k,i.val,i.ref);return `<div class="issue"><span class="lv lv${i.lv}">${i.crit?'危急':LVT[i.lv]}</span><div style="flex:1;min-width:0"><div class="t">${esc(i.name)}${revTag(rv)}${prevTag(i.prev)}</div><div class="s">${long?`<b style="color:var(--text)">${esc(i.val)}</b><br>`:''}${esc(i.src)}・${esc(i.msg)}${showRef&&i.ref?`<br>${/^原文/.test(i.ref)?'報告':'參考值 '}${esc(i.ref)}`:''}${i.dev&&i.msg.indexOf('設備')<0?`<br>設備判定：${esc(i.dev)}`:''}${rv&&rv[0]!=='rev'?`<br><span style="color:${REVTAG[rv[0]][1]}">${esc(rv[1])}</span>`:''}</div></div>${long?'':`<div class="v">${fmt(i.val)}<div class="sub">${esc(i.unit||'')}</div></div>`}${ask?`<button class="ask" data-ask="${esc(i.k)}" aria-label="問 AI：${esc(i.name)}">問 AI</button>`:''}</div>`}).join('')}
 function deptHTML(dp){return dp.length?dp.map(d=>`<div class="dept"><span class="lv lv${d.lv}">${d.crit?'危急':LVT[d.lv]}</span><div style="flex:1;min-width:0"><b>${esc(d.d)}</b><div class="sub" style="margin-top:2px">${d.when}</div><div class="sub" style="margin-top:2px">${esc(d.items.join('、'))}</div></div></div>`).join(''):'<div class="empty">目前不需要特別就診，維持每年健康檢查即可</div>'}
 
+/* ================= 健康評語：把最近的體檢、體脂、手錶、自我檢測合在一起，用固定規則寫成白話（不呼叫 AI，結果可重現） ================= */
+const LGRP=[['血壓',['sbp','dbp']],['血糖',['glu','hba1c']],['血脂',['tc','ldl','hdl','tg']],['肝功能',['alt','ast']],['腎功能',['cr','egfr']],['血液常規',['hb','wbc','plt']]];
+const nfmt=v=>Math.round(v).toLocaleString('en-US');
+function healthComment(m){const c=calc(m),{scale,lab,watch,s,l,w}=issuesOf(m),td=ymd(new Date()),good=[],bad=[],todo=[],src=[];
+  const wOk=!!w&&dayDiff(w.t,td)<=60,sOk=!!s&&dayDiff(String(s.t).slice(0,10),td)<=90,lOld=!!l&&dayDiff(l.t,td)>540;
+  if(l)src.push(`體檢 ${l.t}`);if(s)src.push(`體脂 ${String(s.t).slice(0,10)}`);if(w)src.push(`手錶 ${w.t}${w.period?`（${w.period}）`:''}`);if(!src.length)return null;
+  const wi=wOk?watch:[],si=sOk?scale:[],all=[...lab,...si,...wi],crit=lab.filter(i=>i.crit),mx=all.reduce((a,i)=>Math.max(a,i.lv),0),has=k=>all.some(i=>i.k===k),n=x=>all.filter(i=>i.lv===x).length;
+  const head=crit.length?'有危急值：今天先處理，其他的之後再說':mx>=3?`有 ${n(3)} 項需要 1–2 週內就醫`:mx===2?`整體還可以，但有 ${n(2)} 項要找醫師`:mx===1?`大致良好，有 ${n(1)} 項靠生活習慣就能改善`:'目前各項都在理想範圍';
+  // 做得好的
+  if(!c.kid&&c.bmi>=18.5&&c.bmi<24)good.push(`BMI ${r1(c.bmi)}，體重在健康範圍`);
+  if(l){const ok=LGRP.filter(([,ks])=>ks.some(k=>l.items?.[k]?.v!=null&&l.items[k].v!=='')&&!ks.some(k=>lab.some(i=>i.k===k))).map(([g])=>g);if(ok.length)good.push(`${ok.join('、')}正常（${l.t}）`)}
+  if(sOk&&!si.some(i=>['fat','visceral','bmi'].includes(i.k))&&s.fat!=null)good.push(`體脂率 ${fmt(s.fat)}%${s.visceral!=null?`、內臟脂肪 ${fmt(s.visceral)}`:''} 標準`);
+  if(wOk){const p=watchOf(m)[1];if(w.rhr>=45&&w.rhr<75)good.push(`靜止心率 ${fmt(w.rhr)}，心肺狀態不錯`);if(w.sleep>=7&&w.sleep<=9)good.push(`平均睡 ${fmt(w.sleep)} 小時，睡眠充足`);
+    if(w.steps>=7000)good.push(`每天 ${nfmt(w.steps)} 步，活動量足夠`);else if(p?.steps!=null&&w.steps!=null&&w.steps-p.steps>=500)good.push(`步數比上次多 ${nfmt(w.steps-p.steps)} 步，有在進步`);
+    if(w.vo2!=null&&vo2Cat(w.vo2,c.a,m.sex)>=3)good.push(`VO₂max ${fmt(w.vo2)}，同齡${VO2T[vo2Cat(w.vo2,c.a,m.sex)]}`)}
+  // 要注意的
+  if(crit.length)bad.push(`危急值：${crit.map(i=>`${i.name} ${tv(i.val)}`).join('、')}`);
+  all.filter(i=>i.lv>=2&&!i.crit).sort((a,b)=>b.lv-a.lv).slice(0,5).forEach(i=>bad.push(`${i.name}${typeof i.val==='number'||String(i.val).length<=8?` ${tv(i.val)}${i.unit?' '+i.unit:''}`:''}（${i.src}・${LVT[i.lv]}）`));
+  const l1=all.filter(i=>i.lv===1);if(l1.length)bad.push(`輕微：${l1.slice(0,6).map(i=>i.short||i.name).join('、')}${l1.length>6?` 等 ${l1.length} 項`:''}`);
+  if(wOk&&w.steps!=null&&w.steps<7000)bad.push(`每天 ${nfmt(w.steps)} 步，離 7,000 步還差約 ${nfmt(Math.ceil((7000-w.steps)/100)*100)} 步`);
+  // 接下來
+  if(crit.length)todo.push('今天聯絡健檢中心或到急診複驗危急值');
+  const dp=deptPlan(all).filter(d=>d.lv>=2&&!d.crit);if(dp.length)todo.push(`${dp[0].d}：${dp[0].when}（${dp[0].items.slice(0,3).join('、')}）${dp.length>1?`；另有 ${dp.length-1} 科`:''}`);
+  const lowAct=wOk&&((w.steps!=null&&w.steps<7000)||(w.workouts!=null&&w.workouts<3)||(w.exmin!=null&&w.exmin*7<150));
+  if(['ldl','tc','tg','sdldl','img_cac','cac','sbp','dbp','w_bp'].some(has))todo.push(`血脂、血壓或心血管有狀況：最有效的是每週 150 分鐘有氧（快走到微喘）${lowAct?'，你的手錶活動量還不夠，先每天多走 2,000 步':''}`);
+  else if(lowAct)todo.push('活動量偏少：先每天多走 2,000 步，再加每週 3 次、每次 30 分鐘快走');
+  if(['glu','hba1c','homa'].some(has))todo.push('血糖偏高：飯後散步 10–15 分鐘，少喝含糖飲料、白飯換一半糙米');
+  if(!c.kid&&c.bmi>=24)todo.push('體重偏高：每天少吃約 300–500 kcal（看飲食頁菜單），每週 2 次肌力訓練保住肌肉');
+  else if(si.some(i=>['fat','visceral'].includes(i.k)))todo.push('體重正常但體脂偏高：不用刻意少吃，重點是每週 2–3 次肌力訓練、每餐吃夠蛋白質，把脂肪換成肌肉');
+  if(sOk&&/低|不足/.test(s.status?.skeletal||s.status?.muscle||''))todo.push('肌肉量偏低：每週 2–3 次肌力訓練，每餐一個手掌大的蛋白質');
+  if(wOk&&w.sleep!=null&&w.sleep<6)todo.push('先把睡眠拉到 7 小時：睡不夠會讓血壓、血糖、體重都變差');
+  if(lOld)todo.push(`最近一份體檢是 ${l.t}，超過 1 年半：今年該再做一次健康檢查`);
+  if(!todo.length)todo.push('維持現在的習慣，每年健康檢查一次');
+  const hint=[!l&&'匯入體檢報告才看得到血液指標',!w&&'加上手錶數據可以一起看活動量和睡眠',w&&!wOk&&'手錶數據超過 2 個月，請更新',!s&&'加上體脂紀錄可以看脂肪和肌肉'].filter(Boolean);
+  return{head,lv:crit.length?4:mx,good,bad,todo:todo.slice(0,4),src,hint}}
+function commentHTML(m,compact){const h=healthComment(m);if(!h)return '';const col=[ 'var(--lime)','var(--cyan)','var(--amber)','var(--red)','var(--red)'][h.lv],li=a=>a.map(x=>`<div class="bl">${esc(x)}</div>`).join('');
+  return `${compact?'<div class="h4">健康評語（結合體檢、體脂、手錶）</div>':'<h2>健康評語</h2>'}<div style="font-size:16px;font-weight:800;color:${col};line-height:1.5">${esc(h.head)}</div><div class="sub" style="margin:4px 0 6px">依據：${esc(h.src.join('、'))}</div>
+    ${!compact&&h.good.length?`<div class="sub" style="margin-top:10px;color:var(--lime)">👍 做得好的</div>${li(h.good)}`:''}
+    ${h.bad.length?`<div class="sub" style="margin-top:10px;color:var(--amber)">⚠️ 要注意的</div>${li(compact?h.bad.slice(0,3):h.bad)}`:''}
+    <div class="sub" style="margin-top:10px;color:var(--cyan)">✅ 接下來先做</div>${li(h.todo)}
+    ${!compact&&h.hint.length?`<p class="note">${esc(h.hint.join('；'))}</p>`:''}
+    <button class="btn ai" data-aidoc style="margin-top:10px">🩺 請 AI 寫更完整的評語</button><p class="note">App 依固定規則整理，不是診斷。</p>`}
+
 /* ================= 渲染：總覽 ================= */
 function renderHeader(){const m=me();$('#memChip').innerHTML=`<span class="av" style="background:${avColor(m.id)}">${esc(m.name.slice(0,1)||'?')}</span><span>${esc(short(m.name,6))}</span><span class="sub">${sexT(m.sex)}・${Math.floor(ageOf(m))}歲 ▾</span>`}
 function renderDash(){
   const m=me(),c=calc(m),l0=labsOf(m)[0];
   $('#critBox').innerHTML=l0?critHTML(labEval(l0,m),l0.t):'';
-  $('#gauge').innerHTML=gauge(c.bmi,c.cuts,c.cat);countUp($('#gaugeNum'),c.bmi,1);renderEnergy(m,c);
+  $('#gauge').innerHTML=gauge(c.bmi,c.cuts,c.cat);countUp($('#gaugeNum'),c.bmi,1);renderEnergy(m,c);{const h=commentHTML(m);$('#commentCard').hidden=!h;$('#commentCard').innerHTML=h}
   $('#coreStats').innerHTML=
     stat('BMI 分級',c.cat[0],'',tagH(c.kid?'國健署兒童標準':'國健署成人標準',c.cat[1]))+
     stat('健康體重',`${c.wMin.toFixed(0)}–${c.wMax.toFixed(0)}`,'kg',c.sc?tagH('體脂機 '+fmt(c.w)+' kg','#22e4ff'):'')+
@@ -2557,23 +2602,24 @@ function promptWatch(){return `你是「健康數據擷取器」。我會附上�
 
 【規則】
 1. 只輸出一個 JSON 物件，前後不要有任何文字，也不要用 \`\`\` 包起來。
-2. 優先填「近 7 天平均」或「週平均」（畫面有「日／週／月」時用「週」）；畫面只有單日數字時才填單日。找不到的欄位一律填 null；除了第 6 條的加總，禁止推算或猜測。
+2. 優先填「近 7 天平均」或「週平均」（畫面有「日／週／月」時用「週」）；畫面只有單日數字時才填單日。「健康摘要」「趨勢」頁同一項有兩個平均時取比較近期的（例如「20 週平均 3337、6 週平均 4778」填 4778；「本月 62、上月 61、26 週平均 61」填本月 62）。period 填你用的區間（例如 "近7天"、"本月"、"6週"，各項不同就寫 "本月／6週／26週"）。找不到的欄位一律填 null；除了第 6 條的加總、workouts 的換算，禁止推算或猜測。
 3. 數值只填數字，不含單位。睡眠換算成小時（7 小時 30 分 → 7.5）；HRV 填毫秒；血氧填百分比數字（例如 96）。
 4. 畫面上的「目標」「範圍」「參考」「上次」不是數值本身，不要填入。
-5. rhr 只能填「靜止心率／安靜心率／靜息心率」，不要填平均心率、即時心率、心率範圍、步行平均心率。
+5. rhr 只能填「靜止心率／安靜心率／靜息心率」，不要填平均心率、即時心率、心率範圍；「步行平均心率」填 walkhr。
 6. exmin：有「中高強度」「運動時間」「熱血時間」的分鐘數就用它；只有「心率區間」時，加總「燃脂」以上各區（燃脂＋有氧＋無氧＋極限，不含熱身）。畫面是一週總和請 ÷7。
 7. sleep：有「夜間睡眠」就用夜間；含午睡的「全天睡眠」只在沒有夜間數字時才用。
-8. 不用填：睡眠分數、睡眠結構（深睡／淺睡／快速動眼比例）、睡眠效率、清醒次數、同齡排名、App 自己的「健康摘要」。
+8. 不用填：睡眠分數、睡眠結構（深睡／淺睡／快速動眼比例）、睡眠效率、清醒次數、同齡排名、App 的文字評語（「還不錯」「趨勢穩定」）；但「健康摘要」卡片裡的數字要讀。
+13. workouts＝每週運動次數：小米「活動次數」、Garmin「活動」、Apple「體能訓練」次數。有「上月」完整一個月的次數就 ÷4.3（四捨五入到小數 1 位，例如上月 11 次 → 2.6）；畫面是「本週」次數就直接填；只有「本月」還沒過完的次數填 null。
 9. 有「心律不整通知」「心房顫動」「AFib」「不規則心律」的紀錄或提醒，afib 填 true；沒看到填 null。
 10. date：截圖上的日期（7 天區間就填最後一天），格式 "YYYY-MM-DD"（西元年；民國年請加 1911），沒有填 null；device：手錶或 App 名稱。
 11. 不要輸出姓名、電話、帳號等個人資料。
 12. 輸出前逐欄自我核對：每個數字（第 6 條的加總、÷7 除外）都必須能在截圖中找到原文，小數點位置正確。
 
 【欄位對照】
-rhr＝靜止心率（bpm；小米叫「安靜心率」）、hrv＝心率變異 HRV（ms）、stress＝平均壓力（0–100；小米、華為、Garmin、Samsung 的「壓力」）、spo2＝血氧（%）、sleep＝每晚睡眠時數（小時）、steps＝每日步數、exmin＝每日運動分鐘（Apple「運動」圓圈、Garmin「熱血時間」；畫面是一週總分鐘請 ÷7）、vo2＝最大攝氧量 VO2max（ml/kg/min，Apple 健康叫「有氧體能」）、resp＝睡眠時呼吸速率（次／分）、kcal＝每日活動消耗（Apple「動態能量」、Garmin「活動卡路里」、小米「活動消耗」，kcal；只有「總卡路里」就填總卡路里，App 會自動扣掉基礎代謝；會用來校正每日該吃多少熱量）、sbp／dbp＝手錶量的收縮壓／舒張壓（mmHg）
+rhr＝靜止心率（bpm；小米叫「安靜心率」）、walkhr＝步行平均心率（bpm；Apple、小米都叫「步行平均心率」）、hrv＝心率變異 HRV（ms）、stress＝平均壓力（0–100；小米、華為、Garmin、Samsung 的「壓力」）、spo2＝血氧（%）、sleep＝每晚睡眠時數（小時；小米「主要睡眠時長」7h36m → 7.6）、steps＝每日步數、exmin＝每日運動分鐘（Apple「運動」圓圈、Garmin「熱血時間」；畫面是一週總分鐘請 ÷7）、vo2＝最大攝氧量 VO2max（ml/kg/min，Apple 健康叫「有氧體能」）、resp＝睡眠時呼吸速率（次／分）、kcal＝每日活動消耗（Apple「動態能量」、Garmin「活動卡路里」、小米「活動消耗」或健康摘要的「卡路里日均消耗」，kcal；只有「總卡路里」就填總卡路里，App 會自動扣掉基礎代謝；會用來校正每日該吃多少熱量）、sbp／dbp＝手錶量的收縮壓／舒張壓（mmHg）
 
 【輸出格式】
-{"type":"nutricore.watch","v":1,"date":null,"device":null,${WF.map(f=>`"${f.k}":null`).join(',')},"afib":null}`}
+{"type":"nutricore.watch","v":1,"date":null,"device":null,"period":null,${WF.map(f=>`"${f.k}":null`).join(',')},"afib":null}`}
 const PROMPTS={scale:()=>promptScale(),lab:()=>promptLab(),watch:()=>promptWatch()};
 function promptLab(){const OPT=LAB.filter(x=>x.t==='opt'),QI=LAB.filter(x=>x.t==='qi');return `你是「健康檢查報告數據擷取器」。我會附上體檢報告的照片或截圖（可能多張）。你的任務只有「逐字讀取數據」，不要診斷、不要給建議。
 
@@ -2634,6 +2680,7 @@ let wEditId=null;
 function openWatchSheet(rec){const m=me();wEditId=rec?.id||null;
   openSheet(sheetHead(rec?'編輯手錶數據':'新增手錶數據',`${esc(m.name)}・填「近 7 天平均」最準`)+aiBox('watch')+`
     <div class="grid2"><div><label>日期</label><input type="date" id="w-t" value="${esc(rec?.t||ymd(new Date()))}"></div><div><label>手錶（選填）</label><input id="w-device" value="${esc(rec?.device||'')}" placeholder="Apple Watch、Garmin…"></div></div>
+    <label>資料區間（選填）</label><input id="w-period" value="${esc(rec?.period||'')}" placeholder="例如 近7天、本月、6週" maxlength="20">
     <div class="grid2">${WF.map(f=>`<div><label>${f.n} <span class="sub">${f.u}</span></label><input id="w-${f.k}" type="text" inputmode="decimal" value="${rec?.[f.k]??''}" placeholder="—"></div>`).join('')}</div>
     <div class="chips" style="margin-top:12px"><button type="button" class="chip${rec?.afib?' on':''}" id="w-afib">手錶提示過心律不整／心房顫動</button></div>
     <p class="note">iPhone 看「健康」App →「瀏覽」各項目切到「週」；小米運動健康、Garmin、華為點進睡眠、心率、壓力、步數各卡片，切到「週」再截圖（早上截的「日」只有半天資料）。有的欄位填就好。睡眠分數、深睡淺睡比例、睡眠效率準確度低，App 不收。手錶是光學感測只能參考，App 看趨勢提醒，不列入體檢分數。</p>
@@ -2642,7 +2689,7 @@ function openWatchSheet(rec){const m=me();wEditId=rec?.id||null;
 function saveWatch(){const m=me(),r={id:wEditId||uid(),t:$('#w-t').value||ymd(new Date())},bad=[];
   for(const f of WF){const el=$('#w-'+f.k),raw=el.value.trim();el.classList.remove('bad');if(!raw)continue;const v=num(raw);if(v==null||v<f.min||v>f.max){bad.push(f.n);el.classList.add('bad');continue}r[f.k]=v}
   if(bad.length)return toast('數值不合理：'+bad.join('、')+'（請核對單位與小數點）');
-  if($('#w-afib').classList.contains('on'))r.afib=true;const dv=$('#w-device').value.trim();if(dv)r.device=dv.slice(0,30);
+  if($('#w-afib').classList.contains('on'))r.afib=true;const dv=$('#w-device').value.trim();if(dv)r.device=dv.slice(0,30);const pd=$('#w-period').value.trim();if(pd)r.period=pd.slice(0,20);
   if(!WF.some(f=>r[f.k]!=null)&&!r.afib)return toast('請至少填一個數值');
   const arr=WATCH[m.id]||(WATCH[m.id]=[]),i=arr.findIndex(x=>x.id===r.id);if(i>=0)arr[i]=r;else arr.push(r);
   if(!S.set('watch',WATCH))return;recTab='watch';renderAll();go('body');openWatchDetail(r.id)}
@@ -2652,13 +2699,14 @@ function fillWatch(o){
   let n=0;const warn=[];
   for(const f of WF){const el=$('#w-'+f.k);el.classList.remove('bad');let v=num(o[f.k]);if(v==null)continue;if(f.k==='spo2'&&v>0&&v<=1)v=Math.round(v*1000)/10;   // 0.96 → 96
     el.value=v;n++;if(v<f.min||v>f.max){el.classList.add('bad');warn.push(f.n)}}
-  if(o.afib===true){$('#w-afib').classList.add('on');n++}if(o.device)$('#w-device').value=String(o.device).slice(0,30);const d=parseYMD(o.date);if(d)$('#w-t').value=d;
+  if(o.afib===true){$('#w-afib').classList.add('on');n++}if(o.device)$('#w-device').value=String(o.device).slice(0,30);if(o.period)$('#w-period').value=String(o.period).slice(0,20);const d=parseYMD(o.date);if(d)$('#w-t').value=d;
   if(!n)throw new Error('JSON 裡沒有任何手錶數值');
   return `✅ 已填入 ${n} 項`+(warn.length?`<br><span style="color:var(--red)">⚠️ ${esc(warn.join('、'))} 數值不合理，請核對單位或小數點</span>`:'')+(d?'':'<br><span style="color:var(--amber)">⚠️ 沒有讀到日期，目前是今天，請確認</span>')+'<br>請往下核對後按「儲存」。'}
 function openWatchDetail(id){const m=me(),list=watchOf(m),r=list.find(x=>x.id===id);if(!r)return;const p=list[list.indexOf(r)+1],iss=watchEval(r,m).sort((a,b)=>b.lv-a.lv),vc=r.vo2!=null?vo2Cat(r.vo2,ageOf(m),m.sex):null;
-  openSheet(sheetHead('手錶數據',`${esc(m.name)}・${esc(r.t)}${r.device?'・'+esc(r.device):''}`)+`
+  openSheet(sheetHead('手錶數據',`${esc(m.name)}・${esc(r.t)}${r.device?'・'+esc(r.device):''}${r.period?'・'+esc(r.period):''}`)+`
     <div class="kv" style="margin:14px 0">${WF.filter(f=>r[f.k]!=null).map(f=>`<span>${f.n}</span><span><b>${fmt(r[f.k])}</b> <span class="sub">${f.u}</span>${f.k==='vo2'?` <em class="dev${vc>=2?' ok':''}">同齡${VO2T[vc]}</em>`:''}${p&&p[f.k]!=null?`<br><span class="sub">上次 ${fmt(p[f.k])}（${esc(p.t)}）</span>`:''}</span>`).join('')}${r.afib?'<span>心律不整提醒</span><span><b style="color:var(--red)">有</b></span>':''}</div>
     <div class="h4">判讀</div>${iss.length?issueHTML(iss,true):'<div class="empty">各項都在建議範圍 👍</div>'}
+    ${r.id===list[0].id?commentHTML(m,true):''}
     <p class="note">手錶是光學感測：靜止心率、睡眠、步數的趨勢可信；血氧、HRV、血壓、VO₂max 受配戴與演算法影響大，<b>和自己比</b>比看單次數字重要。手錶數據只提醒、不列入體檢分數，也不能取代醫師診斷。</p>
     <div class="row2"><button class="btn danger" id="wd-del" style="flex:0 0 30%">刪除</button><button class="btn ghost" id="wd-edit">編輯</button></div>`);
   $('#wd-edit').onclick=()=>openWatchSheet(r);$('#wd-del').onclick=()=>delWatch(r.id)}
