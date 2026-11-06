@@ -38,7 +38,26 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
 .sub{font-size:calc(11px*var(--fz));color:var(--mute)}
 .card{position:relative;background:var(--glass);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px;
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-.card h2{font-size:calc(13px*var(--fz));color:var(--mute);font-weight:600;letter-spacing:1px;margin-bottom:12px}
+.card h2{font-size:calc(14px*var(--fz));color:#cfd9ee;font-weight:700;letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h2::before{content:'';flex:0 0 3px;height:14px;border-radius:2px;background:linear-gradient(var(--cyan),var(--lime));box-shadow:0 0 8px rgba(34,228,255,.6)}
+.subnav{position:sticky;top:env(safe-area-inset-top);z-index:8;display:flex;gap:4px;margin:0 0 14px;padding:5px;border-radius:16px;background:rgba(9,15,29,.86);border:1px solid var(--line);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);overflow-x:auto;scrollbar-width:none}
+.subnav::-webkit-scrollbar{display:none}
+.subnav button{flex:1 0 auto;min-height:40px;padding:8px 10px;border:0;border-radius:11px;background:none;color:var(--mute);font-size:calc(13px*var(--fz));font-weight:700;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px}
+.subnav button.on{color:var(--text);background:linear-gradient(135deg,rgba(34,228,255,.24),rgba(182,255,60,.12));box-shadow:inset 0 0 0 1px rgba(34,228,255,.5),0 0 16px rgba(34,228,255,.16)}
+.subnav .bd{min-width:18px;height:18px;padding:0 5px;border-radius:99px;font-size:calc(10px*var(--fz));line-height:18px;font-weight:800;background:rgba(255,181,71,.18);color:var(--amber)}.subnav .bd.r{background:rgba(255,45,85,.2);color:#ff6b81}.subnav .bd.c{background:rgba(34,228,255,.16);color:var(--cyan)}
+.hero{overflow:hidden;background:radial-gradient(420px 220px at 100% 0%,rgba(34,228,255,.14),transparent 70%),var(--glass)}
+.hero-top{display:flex;gap:14px;align-items:center}.hero-top .m{flex:1;min-width:0}
+.hero-g{font-size:calc(12px*var(--fz));font-weight:800;letter-spacing:1.5px}
+.hero-h{font-size:calc(17px*var(--fz));font-weight:800;line-height:1.45;margin-top:3px}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.kpi{position:relative;overflow:hidden;text-align:left;background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:14px;padding:11px 12px 11px 15px;color:var(--text);min-width:0}
+.kpi::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:var(--acc,var(--cyan));box-shadow:0 0 10px var(--acc,var(--cyan))}
+.kpi .k{font-size:calc(11px*var(--fz));color:var(--mute)}
+.kpi .v{font-size:calc(22px*var(--fz));font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .u{font-size:calc(11px*var(--fz));color:var(--mute);font-weight:600;margin-left:3px}
+.kpi .t{font-size:calc(11px*var(--fz));margin-top:2px;color:var(--acc,var(--cyan));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ric{flex:0 0 34px;height:34px;border-radius:11px;display:grid;place-items:center;background:rgba(34,228,255,.09);border:1px solid rgba(34,228,255,.18);font-size:calc(17px*var(--fz))}
+.qa{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.qa .btn{padding:12px 4px;margin:0}
 .h4{font-size:calc(13px*var(--fz));color:var(--mute);font-weight:600;letter-spacing:1px;margin:18px 0 6px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .grid2>div{min-width:0}
@@ -268,80 +287,75 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 
 <!-- 總覽 -->
 <section class="view on" id="v-dash"><div id="critBox"></div>
-  <div class="card"><div class="scan"></div>
-    <h2>身體掃描</h2>
-    <div id="gauge"></div>
-    <div class="grid2" id="coreStats" style="margin-top:12px"></div>
-  </div>
+  <div class="card hero" id="heroCard"></div>
   <div class="card" id="commentCard" hidden></div>
-  <div class="card" id="energyCard"></div>
+  <div class="card" id="todayCard"></div>
   <div class="card" id="latestCard"></div>
-  <div class="card">
-    <h2>每日能量</h2>
-    <div style="display:flex;gap:14px;align-items:center">
-      <div id="ring" style="flex:0 0 130px"></div>
-      <div style="flex:1" id="macroList"></div>
-    </div>
-    <div class="tags" id="modeTags" style="margin-top:12px"></div>
-  </div>
-  <div class="card">
-    <h2>進階指標</h2>
-    <div class="grid2" id="advStats"></div>
-    <p class="note">所有數值為公式估算，僅供參考，不能取代醫師或營養師的專業評估。</p>
-  </div>
 </section>
 
 <!-- 身體 -->
 <section class="view" id="v-body"><div id="critBody"></div>
-  <div class="card" style="padding:12px 10px">
-    <div class="row" style="margin:0 6px 4px;align-items:flex-start">
-      <div style="min-width:0"><b id="bodyWho"></b><div class="sub" id="bodySrc"></div></div>
-      <div class="tags" id="bodyScore" style="justify-content:flex-end"></div>
+  <div class="subnav" data-for="body" role="tablist" aria-label="身體分頁"><button data-sub="now" role="tab">狀況</button><button data-sub="rec" role="tab">紀錄</button><button data-sub="plan" role="tab">健檢規劃</button><button data-sub="cond" role="tab">病史</button></div>
+  <div class="subp" data-sub="now">
+    <div class="card" style="padding:12px 10px">
+      <div class="row" style="margin:0 6px 4px;align-items:flex-start">
+        <div style="min-width:0"><b id="bodyWho"></b><div class="sub" id="bodySrc"></div></div>
+        <div class="tags" id="bodyScore" style="justify-content:flex-end"></div>
+      </div>
+      <div class="hud" id="hud"></div>
+      <div class="legend"><span><i style="background:#ff8a5c"></i>注意</span><span><i style="background:#ff4d6d"></i>異常</span><span><i style="background:#ff1f4b;box-shadow:0 0 6px #ff1f4b"></i>嚴重</span><span>點部位看細節</span></div>
+      <div id="organPanel"></div>
     </div>
-    <div class="hud" id="hud"></div>
-    <div class="legend"><span><i style="background:#ff8a5c"></i>注意</span><span><i style="background:#ff4d6d"></i>異常</span><span><i style="background:#ff1f4b;box-shadow:0 0 6px #ff1f4b"></i>嚴重</span><span>點部位看細節</span></div>
-    <div id="organPanel"></div>
+    <div class="qa" style="margin:0 0 14px"><button class="btn" data-addscale>＋ 體脂</button><button class="btn ghost" data-addlab>＋ 體檢</button><button class="btn ghost" data-addwatch>＋ 手錶</button></div>
+    <div class="card"><h2>需要注意</h2><div id="issueList"></div></div>
+    <div class="card"><h2>建議掛號科別</h2><div id="deptList"></div>
+      <div class="row2" style="margin-top:10px"><button class="btn ghost" data-summary>📄 看診摘要圖</button><button class="btn ghost" data-sumtext>📋 複製文字摘要</button></div>
+      <button class="btn ai" data-aitopic="visit" style="margin-top:8px">🩺 問 AI：幫我準備看診（掛哪科、問什麼）</button>
+      <p class="note">看醫生時給醫師看：病史、過敏、用藥、異常項目（含參考值與歷年數值）、建議科別都整理好了。依數值規則自動建議，不是醫療診斷；身體不適請直接就醫，不必等報告。</p></div>
+    <div class="row2" style="margin:0 0 14px"><button class="btn ai" data-aidoc>🩺 問 AI 醫生</button><button class="btn ghost" data-sym>🤒 我有症狀</button></div>
   </div>
-  <div class="row2" style="margin:0 0 14px">
-    <button class="btn" data-addscale>＋ 體脂</button>
-    <button class="btn ghost" data-addlab>＋ 體檢</button>
-    <button class="btn ghost" data-addwatch>＋ 手錶</button>
+  <div class="subp" data-sub="rec" hidden>
+    <div class="card">
+      <div class="seg" id="recSeg"><button data-v="scale" class="on">體脂紀錄</button><button data-v="lab">體檢報告</button><button data-v="watch">手錶</button></div>
+      <div id="recList" style="margin-top:12px"></div>
+    </div>
+    <div class="card" id="cmpCard" hidden><h2>歷年比較（3 年內）</h2><div id="cmpBody"></div></div>
+    <div class="card" id="derivedCard" hidden><h2>App 自動計算（不用問 AI）</h2><div id="derivedList"></div></div>
   </div>
-  <div class="row2" style="margin:0 0 14px"><button class="btn ai" data-aidoc>🩺 問 AI 醫生</button><button class="btn ghost" data-sym>🤒 我有症狀</button></div>
-  <div class="card"><h2>需要注意</h2><div id="issueList"></div></div>
-  <div class="card" id="condCard"><h2>我的病史（體檢看不到的）</h2><div id="condBody"></div></div>
-  <div class="card" id="derivedCard" hidden><h2>App 自動計算（不用問 AI）</h2><div id="derivedList"></div></div>
-  <div class="card" id="cmpCard" hidden><h2>歷年比較（3 年內）</h2><div id="cmpBody"></div></div>
-  <div class="card"><h2>建議掛號科別</h2><div id="deptList"></div>
-    <button class="btn ghost" data-summary style="margin-top:10px">📄 做成看診摘要圖（給醫師看、傳給家人）</button>
-    <p class="note">依數值規則自動建議，不是醫療診斷。身體不適請直接就醫，不必等報告。</p></div>
-  <div class="card" id="planCard"><h2>今年健檢建議</h2><div id="planBody"></div></div>
-  <div class="card" id="rotCard" hidden><h2>檢查輪替（未來 3 年）</h2><div id="rotBody"></div></div>
-  <div class="card">
-    <div class="seg" id="recSeg"><button data-v="scale" class="on">體脂紀錄</button><button data-v="lab">體檢報告</button><button data-v="watch">手錶</button></div>
-    <div id="recList" style="margin-top:12px"></div>
+  <div class="subp" data-sub="plan" hidden>
+    <div class="card" id="planCard"><h2>今年健檢建議</h2><div id="planBody"></div></div>
+    <div class="card" id="rotCard" hidden><h2>檢查輪替（未來 3 年）</h2><div id="rotBody"></div></div>
+  </div>
+  <div class="subp" data-sub="cond" hidden>
+    <div class="card" id="condCard"><h2>我的病史（體檢看不到的）</h2><div id="condBody"></div></div>
   </div>
 </section>
 
 <!-- 菜單 -->
 <section class="view" id="v-menu">
-  <div class="card" id="nutriCard"></div>
-  <div class="days" id="days"></div>
-  <button class="btn ghost" data-shop style="margin:0 0 14px">🛒 一週採買清單（依菜單自動算份量）</button>
-  <div class="tags" id="menuMode" style="margin-bottom:12px"></div>
-  <div class="card">
-    <h2 id="menuTitle">今日菜單</h2>
-    <div id="meals"></div>
+  <div class="subnav" data-for="menu" role="tablist" aria-label="飲食分頁"><button data-sub="menu" role="tab">今日菜單</button><button data-sub="nutri" role="tab">營養建議</button><button data-sub="kcal" role="tab">熱量計算</button></div>
+  <div class="subp" data-sub="menu">
+    <div class="days" id="days"></div>
+    <div class="tags" id="menuMode" style="margin-bottom:12px"></div>
+    <div class="card"><h2 id="menuTitle">今日菜單</h2><div id="meals"></div></div>
+    <div class="card"><h2>當日營養達成</h2><div id="menuSum"></div></div>
+    <button class="btn ghost" data-shop style="margin:0 0 10px">🛒 一週採買清單（依菜單自動算份量）</button>
+    <button class="btn ghost" data-golab style="margin:0 0 14px">🖼 菜色圖片工坊（幫菜單配圖）</button>
   </div>
-  <div class="card">
-    <h2>當日營養達成</h2>
-    <div id="menuSum"></div>
+  <div class="subp" data-sub="nutri" hidden><div class="card" id="nutriCard"></div></div>
+  <div class="subp" data-sub="kcal" hidden>
+    <div class="card"><div class="scan"></div><h2>身體數值</h2><div id="gauge"></div><div class="grid2" id="coreStats" style="margin-top:12px"></div></div>
+    <div class="card" id="energyCard"></div>
+    <div class="card"><h2>每日營養素</h2>
+      <div style="display:flex;gap:14px;align-items:center"><div id="ring" style="flex:0 0 130px"></div><div style="flex:1" id="macroList"></div></div>
+      <div class="tags" id="modeTags" style="margin-top:12px"></div></div>
+    <div class="card"><h2>進階指標</h2><div class="grid2" id="advStats"></div>
+      <p class="note">所有數值為公式估算，僅供參考，不能取代醫師或營養師的專業評估。</p></div>
   </div>
-  <button class="btn ghost" data-golab style="margin:0 0 14px">🖼 菜色圖片工坊（幫菜單配圖）</button>
 </section>
 
 <!-- 運動 -->
-<section class="view" id="v-fit"><div id="fitBody"></div></section>
+<section class="view" id="v-fit"><div class="subnav" data-for="fit" role="tablist" aria-label="運動分頁"><button data-sub="today" role="tab">今天</button><button data-sub="week" role="tab">本週課表</button><button data-sub="tips" role="tab">注意事項</button></div><div id="fitBody"></div></section>
 
 <!-- 圖片工坊 -->
 <section class="view" id="v-lab">
@@ -889,8 +903,8 @@ function scaleEval(rec,m){
     if(kid){const[lo,ov,ob]=childRow(a,m.sex);lv=b<lo?1:b>=ob?2:b>=ov?1:0;msg=b<lo?'低於同齡標準（國健署兒童標準）':'高於同齡標準（國健署兒童標準）'}
     else{lv=b<18.5?1:b>=27?2:b>=24?1:0;msg=b<18.5?'體重過輕':b>=35?'重度肥胖（BMI ≥35），建議與醫師討論減重計畫':b>=27?'肥胖（國健署 BMI ≥27）':'過重（BMI 24–27）'}
     push('bmi',lv,msg,'abdomen','家醫科')}
-  if(v('fat')!=null&&!kid){const f=v('fat'),T=male?[20,25,30]:[27,30,35],lo=male?8:15;
-    push('fat',f<lo?1:f>=T[2]?3:f>=T[1]?2:f>=T[0]?1:0,f<lo?'體脂過低':'體脂偏高（國健署：男 >25%、女 >30% 為肥胖）','abdomen','家醫科')}
+  if(v('fat')!=null&&!kid){const f=v('fat'),O=male?(a<30?20:25):(a<30?25:30),lo=male?8:15,gT=`國健署肥胖標準：${male?'男':'女'}性${a<30?' 30 歲以下':' 30 歲以上'} >${O}%`;
+    push('fat',f<lo?1:f>O?2:f>O-3?1:0,f<lo?'體脂過低：可能營養不足或肌肉量太少，請和營養師討論':f>O?`體脂偏高，已達${gT}`:`接近${gT}，再增加就算肥胖`,'abdomen','家醫科')}
   if(v('visceral')!=null){const x=v('visceral'),lv=x>=15?2:x>=10?1:0;
     push('visceral',lv,'內臟脂肪過高，代謝症候群與脂肪肝風險上升','abdomen','家醫科');
     if(Math.max(lv,devLv(st.visceral))>=1)out.push({src:'體脂',k:'visceral_liver',name:'內臟脂肪 → 脂肪肝風險',short:'內臟脂肪',val:x,unit:'級',lv:1,msg:'建議腹部超音波確認是否有脂肪肝',organ:'liver',dept:'腸胃肝膽科'})}
@@ -1046,12 +1060,13 @@ function cmpRow(o,rs,m){const ix=o.vals.map((v,i)=>v==null?-1:i).filter(i=>i>=0)
   const s0=String(o.vals[f]),s1=String(o.vals[l]),v0=num(s0),v1=num(s1),numeric=v0!=null&&v1!=null&&!/[一-龥]/.test(s0+s1);
   const x=LABK[o.k],neg=!!x?.neg,d=numeric?v1-v0:null,rel=!numeric?null:neg?d:v0?d/Math.abs(v0):null,big=neg?.3:BIGCHG[o.k]||.1,tiny=neg?.15:.05;
   const l0=o.lvs[f],l1=o.lvs[l],bad=o.bad??badDir(o.k,m,v1),tw=rel==null||!bad?0:Math.sign(rel)*bad;
-  const ha=(rs[f].hospital||'').trim(),hb=(rs[l].hospital||'').trim(),rf=o.refs[f]||'',rl=o.refs[l]||'',refDiff=rf!==rl||!!(ha&&hb&&ha!==hb);
+  const ha=(rs[f].hospital||'').trim(),hb=(rs[l].hospital||'').trim(),rf=o.refs[f]||'',rl=o.refs[l]||'',refDiff=rf!==rl,diffHosp=!!(ha&&hb&&ha!==hb);
   const H=x&&!x.t?thr(x,'H',m.sex):null,L=x&&!x.t?thr(x,'L',m.sex):null,near=(H&&bad>0&&v1>=H[0]*.9)||(L&&bad<0&&v1<=L[0]*1.1);
   const pct=d==null?'':neg?`${d>0?'+':''}${r2(d)}`:`${Math.round(Math.abs(rel||0)*100)}%`,refT=rf||rl?`（${rf||'App 標準'} → ${rl||'App 標準'}）`:'';
   let vd='flat',why='';
   if(l0!=null&&l1!=null&&l0!==l1){
     if(numeric&&rel!=null&&Math.abs(rel)<tiny&&refDiff){vd='std';why=`數值幾乎沒變（${fmt(v0)} → ${fmt(v1)}），判定不同是兩份報告的參考值不同${refT}，不是身體變了`}
+    else if(numeric&&rel!=null&&Math.abs(rel)<tiny){vd='flat';why=`數值幾乎沒變（${fmt(v0)} → ${fmt(v1)}），只是剛好跨過門檻，屬於測量誤差範圍`}
     else{vd=l1>l0?'worse':'better';if(refDiff&&refT)why=`兩份報告參考值不同${refT}，判定以各自報告為準`}}
   else if(numeric&&rel!=null&&Math.abs(rel)>=big){
     if(!bad){vd='chg';why=`${d>0?'上升':'下降'} ${pct}`}
@@ -1063,7 +1078,7 @@ function cmpRow(o,rs,m){const ix=o.vals.map((v,i)=>v==null?-1:i).filter(i=>i>=0)
     else if(vd==='worse'||vd==='better')why=[why,'不同醫院的試劑不同，數值不能直接比較，以各自報告的判定為準'].filter(Boolean).join('；')}
   // eGFR：正常老化每年約降 1；每年降超過 5 算偏快（KDIGO）
   if(o.k==='egfr'&&numeric){const yrs=dayDiff(rs[f].t,rs[l].t)/365.25,rate=yrs>=.75?(v0-v1)/yrs:null;
-    if(rate!=null&&rate>5){const t=`每年下降約 ${r1(rate)}（超過 5 算偏快；正常老化每年約 1）`;if(vd==='worse')why=[why,t].filter(Boolean).join('；');else{vd='trend';why=`${t}：建議 3 個月後複驗腎功能${refDiff?'，最好在同一家醫院比較':''}`}}
+    if(rate!=null&&rate>5){const t=`每年下降約 ${r1(rate)}（超過 5 算偏快；正常老化每年約 1）`;if(vd==='worse')why=[why,t].filter(Boolean).join('；');else{vd='trend';why=`${t}：建議 3 個月後複驗腎功能${refDiff||diffHosp?'，最好在同一家醫院比較':''}`}}
     else if(rate!=null&&rate<=1.5&&vd==='trend'&&!l1){vd='flat';why=`每年約下降 ${r1(Math.max(0,rate))}，屬正常老化`}}
   if(vd==='flat'&&l1>0&&l0>0)vd='stay';
   return{...o,vd,why,f,l}}
@@ -1100,8 +1115,8 @@ function scoreOf(iss){const g={};iss.forEach(i=>{const k=i.organ||('x_'+i.k);(g[
   const sc=Math.max(0,Math.round(100-d)),mx=iss.reduce((a,i)=>Math.max(a,i.lv),0);return Math.min(sc,[100,89,74,59][mx])}
 const grade=s=>s>=90?['優良','var(--lime)']:s>=75?['良好','var(--cyan)']:s>=60?['需注意','var(--amber)']:['建議就醫評估','var(--red)'];
 const URG=['','生活調整，3–6 個月後複檢','建議 1 個月內門診追蹤','建議 1–2 週內儘速就診'];
-function deptPlan(iss){const mp={};for(const i of iss){if(!i.dept)continue;const d=mp[i.dept]||(mp[i.dept]={lv:0,crit:false,items:[]});d.lv=Math.max(d.lv,i.lv);d.crit=d.crit||!!i.crit;if(!d.items.includes(i.name))d.items.push(i.name)}
-  return Object.entries(mp).sort((a,b)=>(b[1].crit-a[1].crit)||b[1].lv-a[1].lv).map(([d,o])=>({d,...o,when:o.crit?URG_CRIT:URG[o.lv]}))}
+function deptPlan(iss){const mp={};for(const i of iss){if(!i.dept)continue;const d=mp[i.dept]||(mp[i.dept]={lv:0,crit:false,img:true,items:[]});d.lv=Math.max(d.lv,i.lv);d.crit=d.crit||!!i.crit;d.img=d.img&&(/^img_/.test(i.k)||LABK[i.k]?.t==='opt');if(!d.items.includes(i.name))d.items.push(i.name)}
+  return Object.entries(mp).sort((a,b)=>(b[1].crit-a[1].crit)||b[1].lv-a[1].lv).map(([d,o])=>({d,...o,when:o.crit?URG_CRIT:o.lv===1&&o.img?'3–6 個月內帶報告回門診追蹤':URG[o.lv]}))}
 // 危急值橫幅：總覽、身體頁、報告詳情最上面
 function critHTML(list,t){const c=list.filter(i=>i.crit);if(!c.length)return '';
   return `<div class="banner" role="alert" style="margin:0 0 14px"><b style="font-size:calc(15px*var(--fz))">🚨 危急值：今天就要處理</b><div style="margin-top:6px">${c.map(i=>`<b>${esc(i.name)} ${esc(fmt(i.val))} ${esc(i.unit)}</b>：${esc(CRITM[i.k]||'')}`).join('<br>')}</div>
@@ -1856,7 +1871,7 @@ function lastDone(m){const lf=lifeOf(m),o={};
   for(const e of['colono','gastro','ldct']){const y=+lf[e]||0;if(y&&(!o[e]||y>o[e].y))o[e]={y,src:'自填'}}
   return o}
 function rotation(m){const a=Math.floor(ageOf(m)),fem=m.sex==='f',fh=fhOf(m),lf=lifeOf(m),ld=lastDone(m),Y=new Date().getFullYear(),labs=labsOf(m),L=labs[0],iss=L?labEval(L,m):[];
-  const lastLv=(e,k)=>{const it=ld[e]?.r?.items?.[k];return it?labEval({items:{[k]:it}},m).reduce((x,i)=>Math.max(x,i.lv),0):0},ab=k=>iss.some(i=>i.k===k),ever=(k,f)=>labs.some(r=>f(r.items?.[k]?.v));
+  const lastLv=(e,k)=>{const it=ld[e]?.r?.items?.[k];return it?labEval({items:{[k]:it}},m).filter(i=>i.k===k).reduce((x,i)=>Math.max(x,i.lv),0):0},ab=k=>iss.some(i=>i.k===k),ever=(k,f)=>labs.some(r=>f(r.items?.[k]?.v));   // lastLv 只看這項檢查本身的判定（同一段原文裡的附帶發現，例如冠狀動脈鈣化，不算 Lung-RADS 等級）
   const crcFH=fh.ca.includes('crc'),lungFH=fh.ca.includes('lung'),pk=packYears(lf),heavy=pk>=20&&(lf.smoke==='current'||(+lf.quit||0)<15),hbv=ever('hbsag',v=>qLv(v)>0);
   const by=+String(m.birth||'').slice(0,4)||Y-a,win=sa=>a>=sa-3;   // 3 年內會到開始年齡的也先排進來（從那一年開始）
   const R=[],add=(k,o)=>R.push({k,t:EXAMS.find(z=>z[0]===k)[1],...o,from:o.sa?by+o.sa:0});   // need：依風險或公費資格建議做；否則是想多做時「可考慮」
@@ -2226,9 +2241,9 @@ function healthComment(m){const c=calc(m),{scale,lab,watch,s,l,w}=issuesOf(m),td
   const hint=[!l&&'匯入體檢報告才看得到血液指標',!w&&'加上手錶數據可以一起看活動量和睡眠',w&&!wOk&&'手錶數據超過 2 個月，請更新',!s&&'加上體脂紀錄可以看脂肪和肌肉'].filter(Boolean);
   return{head:head2,lv:crit.length?4:mx,good,bad,cond,todo:todo.slice(0,5),src,hint}}
 const lv3cv=all=>all.some(i=>(i.k==='img_cac'||i.k==='cac')&&i.lv>=1);
-function commentHTML(m,compact){const h=healthComment(m);if(!h)return '';const col=[ 'var(--lime)','var(--cyan)','var(--amber)','var(--red)','var(--red)'][h.lv],li=a=>a.map(x=>`<div class="bl">${esc(x)}</div>`).join('');
-  return `${compact?'<div class="h4">健康評語（結合體檢、體脂、手錶）</div>':'<h2>健康評語</h2>'}<div style="font-size:16px;font-weight:800;color:${col};line-height:1.5">${esc(h.head)}</div><div class="sub" style="margin:4px 0 6px">依據：${esc(h.src.join('、'))}</div>
-    ${!compact&&h.good.length?`<div class="sub" style="margin-top:10px;color:var(--lime)">👍 做得好的</div>${li(h.good)}`:''}
+function commentHTML(m,compact,noHead){const h=healthComment(m);if(!h)return '';const col=[ 'var(--lime)','var(--cyan)','var(--amber)','var(--red)','var(--red)'][h.lv],li=a=>a.map(x=>`<div class="bl">${esc(x)}</div>`).join('');
+  return `${compact?'<div class="h4">健康評語（結合體檢、體脂、手錶）</div>':'<h2>健康評語</h2>'}${noHead?'':`<div style="font-size:calc(16px*var(--fz));font-weight:800;color:${col};line-height:1.5">${esc(h.head)}</div><div class="sub" style="margin:4px 0 6px">依據：${esc(h.src.join('、'))}</div>`}
+    ${!compact&&h.good.length?`<div class="sub" style="margin-top:${noHead?0:10}px;color:var(--lime)">👍 做得好的</div>${li(noHead?h.good.slice(0,3):h.good)}`:''}
     ${h.cond.length?`<div class="sub" style="margin-top:10px;color:#ff8fc8">🩺 依你的病史</div>${li(compact?h.cond.slice(0,3):h.cond)}`:''}
     ${h.bad.length?`<div class="sub" style="margin-top:10px;color:var(--amber)">⚠️ 要注意的</div>${li(compact?h.bad.slice(0,3):h.bad)}`:''}
     <div class="sub" style="margin-top:10px;color:var(--cyan)">✅ 接下來先做</div>${li(h.todo)}
@@ -2240,7 +2255,8 @@ function renderHeader(){const m=me();$('#memChip').innerHTML=`<span class="av" s
 function renderDash(){
   const m=me(),c=calc(m),l0=labsOf(m)[0];
   $('#critBox').innerHTML=l0?critHTML(labEval(l0,m),l0.t):'';
-  $('#gauge').innerHTML=gauge(c.bmi,c.cuts,c.cat);countUp($('#gaugeNum'),c.bmi,1);renderEnergy(m,c);{const h=commentHTML(m);$('#commentCard').hidden=!h;$('#commentCard').innerHTML=h}
+  $('#gauge').innerHTML=gauge(c.bmi,c.cuts,c.cat);countUp($('#gaugeNum'),c.bmi,1);renderEnergy(m,c);{const h=commentHTML(m,false,true);$('#commentCard').hidden=!h;$('#commentCard').innerHTML=h}
+  renderHero(m,c);renderToday(m,c);
   $('#coreStats').innerHTML=
     stat('BMI 分級',c.cat[0],'',tagH(c.kid?'國健署兒童標準':'國健署成人標準',c.cat[1]))+
     stat('健康體重',`${c.wMin.toFixed(0)}–${c.wMax.toFixed(0)}`,'kg',c.sc?tagH('體脂機 '+fmt(c.w)+' kg','#22e4ff'):'')+
@@ -2256,18 +2272,35 @@ function renderDash(){
     stat('建議飲水',(c.water/1000).toFixed(1),'L')+
     stat('目標',c.kid?'成長期':GOALT[c.goal],'',`<span class="tag" style="color:var(--cyan)">${c.gsel==='auto'&&!c.kid?'自動・':''}${Math.round(c.target-c.tdee)} kcal</span>`);
   const s=scalesOf(m)[0],l=labsOf(m)[0];
-  $('#latestCard').innerHTML=`<h2>最新紀錄</h2>`+
+  $('#latestCard').innerHTML=`<div class="row" style="margin:0 0 4px"><h2 style="margin:0">最新紀錄</h2><button class="btn sm ghost" data-go="body" data-gosub="rec">全部紀錄 ›</button></div>`+
     (s?`<button class="rec" data-sid="${esc(s.id)}"><div class="m"><b>體脂機</b><small>${fmtDT(s.t)}・體重 ${fmt(s.weight)} kg・體脂 ${fmt(s.fat)}%・內臟 ${fmt(s.visceral)}</small></div><span class="chev">›</span></button>`
        :`<button class="rec" data-addscale><div class="m"><b>尚無體脂紀錄</b><small>手動輸入或 AI 截圖匯入</small></div><span class="chev">＋</span></button>`)+
     (l?(()=>{const sc=scoreOf(labEval(l,m)),g=grade(sc);return `<button class="rec" data-lid="${esc(l.id)}"><div class="m"><b>體檢報告</b><small>${esc(l.t)}${l.hospital?'・'+esc(l.hospital):''}</small></div><span class="lv" style="background:${g[1]}22;color:${g[1]}">${sc} 分</span><span class="chev">›</span></button>`})()
        :`<button class="rec" data-addlab><div class="m"><b>尚無體檢報告</b><small>拍照給 AI 讀數字後匯入，App 自動評分</small></div><span class="chev">＋</span></button>`)+
     (()=>{const w=watchOf(m)[0];if(!w)return `<button class="rec" data-addwatch><div class="m"><b>⌚ 尚無手錶數據</b><small>靜止心率、睡眠、步數、VO₂max（週平均截圖給 AI 讀）</small></div><span class="chev">＋</span></button>`;
       const lv=watchEval(w,m).reduce((a,i)=>Math.max(a,i.lv),0);return `<button class="rec" data-wid="${esc(w.id)}"><div class="m"><b>⌚ 手錶</b><small>${esc(w.t)}・${[w.rhr!=null&&`心率 ${fmt(w.rhr)}`,w.sleep!=null&&`睡眠 ${fmt(w.sleep)} h`,w.steps!=null&&`${fmt(w.steps)} 步`].filter(Boolean).join('・')||'—'}</small></div><span class="lv lv${lv}">${LVT[lv]}</span><span class="chev">›</span></button>`})()+
-    (()=>{const pl=yearPlan(m),n1=pl.items.filter(o=>o.pr===1).length;return `<button class="rec" data-goplan><div class="m"><b>今年健檢建議</b><small>${pl.items.length} 項${n1?`・其中 ${n1} 項優先`:''}${pl.filled?'':'・還沒填家族史'}</small></div>${n1?`<span class="lv lv2">${n1} 優先</span>`:''}<span class="chev">›</span></button>`})()+
-    `<button class="rec" data-sym><div class="m"><b>🤒 我有症狀</b><small>勾選症狀，看要注意什麼、掛哪一科、做哪些檢查</small></div><span class="chev">›</span></button>`+
-    `<button class="rec" data-aidoc><div class="m"><b>🩺 問 AI 醫生</b><small>把你的數值整理好，一鍵帶到 ChatGPT／Claude／Gemini</small></div><span class="chev">›</span></button>`;
+    '<div class="qa" style="margin-top:12px"><button class="btn ghost" data-addscale>＋ 體脂</button><button class="btn ghost" data-addlab>＋ 體檢</button><button class="btn ghost" data-addwatch>＋ 手錶</button></div>';
 }
 
+// 總覽最上面：體檢分數環＋一句總結＋4 個關鍵數字（點了會跳到對應的頁）
+function renderHero(m,c){const{lab,l}=issuesOf(m),h=healthComment(m),sc=l?scoreOf(lab):null,g=sc!=null?grade(sc):null,td=ymd(new Date()),w=watchOf(m)[0],wOk=w&&dayDiff(w.t,td)<=60,ca=condActive(m),b=exBonus(m,td),dp=deptPlan([...lab,...(wOk?watchEval(w,m):[])]).filter(d=>d.lv>=2);
+  const kpi=(k,v,u,t,acc,attr)=>`<button class="kpi" style="--acc:${acc}" ${attr}><div class="k">${k}</div><div class="v">${v}<span class="u">${u}</span></div><div class="t">${t}</div></button>`;
+  const ring=sc!=null?scoreRing(sc,g[1]):`<svg viewBox="0 0 100 100" width="96" height="96" style="flex:0 0 96px"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="9"/><text x="50" y="56" text-anchor="middle" fill="#8a97b4" font-size="20" font-weight="800">—</text></svg>`;
+  $('#heroCard').innerHTML=`<div class="scan"></div><div class="row" style="margin:0 0 10px"><h2 style="margin:0">健康總覽</h2><span class="sub">${esc(m.name)}・${sexT(m.sex)}・${Math.floor(c.a)} 歲</span></div>
+    <div class="hero-top">${ring}<div class="m"><div class="hero-g" style="color:${g?g[1]:'var(--mute)'}">${g?`體檢 ${sc} 分・${g[0]}`:'還沒有體檢報告'}</div><div class="hero-h">${esc(h?h.head:'先新增體檢報告、體脂或手錶數據，App 會自動判讀')}</div><div class="sub" style="margin-top:4px">${esc(h?'依據：'+h.src.join('、'):'')}</div></div></div>
+    <div class="kpis">${kpi('BMI',r1(c.bmi),'',`${c.cat[0]}・健康體重 ${c.wMin.toFixed(0)}–${c.wMax.toFixed(0)} kg`,c.cat[1],'data-go="menu" data-gosub="kcal"')}
+      ${kpi('今天可以吃',Math.round(c.target+(b.add||0)),'kcal',`${GOALT[c.goal]}${b.add?`・運動加吃 +${b.add}`:''}${c.wt?.fresh?'・手錶校正':''}`,'var(--lime)','data-go="menu" data-gosub="kcal"')}
+      ${wOk&&w.steps!=null?kpi('每天步數',nfmt(w.steps),'步',w.rhr!=null?`靜止心率 ${fmt(w.rhr)}`:(w.period||w.t),w.steps>=7000?'var(--lime)':'var(--amber)','data-go="body" data-gosub="rec" data-rec="watch"'):kpi('手錶','—','','還沒有近 2 個月的數據','#8a97b4','data-addwatch')}
+      ${kpi(dp.length?'建議看醫師':'病史追蹤',dp.length?dp.length:ca.length,dp.length?'科':'項',dp.length?dp.slice(0,2).map(d=>d.d).join('、'):ca.length?ca.slice(0,2).map(x=>x.name).join('、'):'目前沒有',dp.some(d=>d.crit)||dp.some(d=>d.lv>=3)?'var(--red)':dp.length?'var(--amber)':'var(--cyan)',dp.length?'data-go="body" data-gosub="now"':'data-go="body" data-gosub="cond"')}</div>`}
+// 今天要做：吃多少、練什麼、今年健檢、問 AI／症狀
+function renderToday(m,c){const td=ymd(new Date()),b=exBonus(m,td),P=fitPlan(m),D=P.days[todayIdx()],W=exWeek(m,mondayOf(td)),pl=yearPlan(m),n1=pl.items.filter(o=>o.pr===1).length;
+  const lh=num(labsOf(m)[0]?.items?.ht?.v),fixH=lh&&Math.abs(lh-c.h)>=1?`<div class="hl" style="margin:0 0 10px;font-size:calc(12px*var(--fz))">📏 醫院量的身高是 ${lh} cm，你的設定是 ${c.h} cm（會影響 BMI 與熱量） <button class="btn sm" data-fixh="${lh}" style="margin-top:6px">改成 ${lh} cm</button></div>`:'',
+    goalX=!c.kid&&c.gsel!=='auto'&&c.gsel!==c.sg.goal?`<div class="hl" style="margin:0 0 10px;font-size:calc(12px*var(--fz))">🧑‍⚕️ 營養師建議目標「${GOALT[c.sg.goal]}」，你設定「${GOALT[c.gsel]}」 <button class="btn sm" data-autogoal style="margin-top:6px">改成自動</button></div>`:'';
+  $('#todayCard').innerHTML=`<h2>今天要做</h2>${fixH}${goalX}
+    <button class="rec" data-go="menu" data-gosub="menu"><span class="ric">🍽</span><div class="m"><b>吃約 ${Math.round(c.target+(b.add||0))} kcal・蛋白質 ${Math.round(c.prot)} g</b><small>${esc(c.mode.tags.slice(0,2).join('、')||'均衡飲食')}・看今日菜單</small></div><span class="chev">›</span></button>
+    <button class="rec" data-go="fit" data-gosub="today"><span class="ric">${D.rest?'🌿':EX[D.b[0].k].e}</span><div class="m"><b>${D.rest?'恢復日':'訓練日'}：${esc(D.b.map(y=>`${EX[y.k].n} ${y.min} 分`).join('＋'))}</b><small>約 ${D.kcal} kcal・本週有氧 ${W.aer} / ${P.aerT} 分</small></div><span class="chev">›</span></button>
+    <button class="rec" data-goplan><span class="ric">📋</span><div class="m"><b>今年健檢建議 ${pl.items.length} 項</b><small>${n1?`其中 ${n1} 項優先`:'沒有特別急的項目'}${pl.filled?'':'・還沒填家族史'}</small></div>${n1?`<span class="lv lv2">${n1} 優先</span>`:''}<span class="chev">›</span></button>
+    <div class="row2" style="margin-top:12px"><button class="btn ai" data-aidoc>🩺 問 AI 醫生</button><button class="btn ghost" data-sym>🤒 我有症狀</button></div>`}
 // 快走（MET 4.3）消耗：MET × 3.5 × 體重 ÷ 200 × 分鐘
 const metK=(met,w,min)=>met*3.5*w/200*min;
 function renderEnergy(m,c){
@@ -2289,7 +2322,7 @@ function renderEnergy(m,c){
     <div class="stg">${row('🍽',eat[0],eat[1])}
     ${row('🛑',`底線：每天別低於 BMR ${bmr} kcal`,'BMR 是躺著不動也要燒掉的熱量（心跳、呼吸、體溫）。長期吃得比它少，會先掉肌肉、代謝變慢，停下來更容易復胖')}
     ${(()=>{const b=exBonus(m,ymd(new Date()));return b.min?row('🏃',b.add?`今天運動後可多吃約 ${b.add} kcal（今天目標 ${tg+b.add}）`:'今天的運動已算在每日消耗裡',exBonusTxt(b,c)):''})()}
-    ${row('🚶','想多吃一點？提高 TDEE',`${wt?.fresh?`TDEE ＝ BMR × 1.1 ＋ 手錶活動消耗 × 75%`:`TDEE ＝ BMR × ${esc(m.act||'1.375')}（${esc(act)}）`}。每天多快走 30 分鐘 ≈ +${w30} kcal，一個月 ≈ ${(w30*30/7700).toFixed(1)} kg 脂肪；搭電梯改走樓梯、站著講電話都算 <button class="btn sm ghost" data-go="fit" style="margin-top:6px">看我的運動課表 ›</button>`)}
+    ${row('🚶','想多吃一點？提高 TDEE',`${wt?.fresh?`TDEE ＝ BMR × 1.1 ＋ 手錶活動消耗 × 75%`:`TDEE ＝ BMR × ${esc(m.act||'1.375')}（${esc(act)}）`}。每天多快走 30 分鐘 ≈ +${w30} kcal，一個月 ≈ ${(w30*30/7700).toFixed(1)} kg 脂肪；搭電梯改走樓梯、站著講電話都算 <button class="btn sm ghost" data-go="fit" data-gosub="week" style="margin-top:6px">看我的運動課表 ›</button>`)}
     ${row('💪','提高 BMR 只有一招：增加肌肉',`每週 2–3 次肌力訓練＋每天蛋白質 ${Math.round(c.prot)} g（每餐一個手掌大的魚、肉、蛋或豆腐）。肌肉多了，血糖更穩、比較不會復胖`)}
     ${row('⚖️','用體重校正數字','公式誤差約 ±10%。照這個熱量吃 2–3 週：體重沒動就再少 100–200 kcal；每週掉超過 1 kg 就加回 100–200 kcal')}</div>
     <details class="box"><summary>BMR、TDEE 是什麼？</summary><div class="note" style="margin:0">・<b>BMR 基礎代謝</b>：整天躺著不動，維持心跳、呼吸、體溫要的熱量，約佔一天消耗的 60–70%。<br>・<b>TDEE 每日總消耗</b>：BMR ＋ 走路、工作、運動、消化食物。吃剛好 TDEE 體重不變；少吃 500 kcal 約每週減 0.5 kg。<br>・兩個都是公式估算（${c.sc?.bmr?'體脂機有實測 BMR '+fmt(c.sc.bmr)+'，可對照':'Mifflin-St Jeor 公式'}），真正的答案看體重怎麼變。</div></details>`;
@@ -2298,27 +2331,29 @@ function renderEnergy(m,c){
 /* ================= 渲染：運動 ================= */
 let fitDay=null;const todayIdx=()=>(new Date().getDay()+6)%7;
 function renderFit(){
-  const m=me(),P=fitPlan(m),fp=P.fp,ti=todayIdx(),sel=fitDay??ti,D=P.days[sel],dm=D.b.reduce((t,y)=>t+y.min,0);
+  const m=me(),P=fitPlan(m),fp=P.fp,ti=todayIdx(),sel=fitDay??ti,D=P.days[sel];
   const blk=(y,cls='')=>{const e=EX[y.k];return `<div class="blk ${cls}"><span class="ic">${e.e}</span><div class="m"><b>${e.n}</b>${y.min?` <span class="sub">${y.min} 分鐘</span>`:''}<div class="s">${esc(y.note||e.how)}</div></div></div>`};
   const wk=P.days.map(x=>{const mn=x.b.reduce((t,y)=>t+y.min,0);return `<button data-fday="${x.d}" class="${x.d===ti?'td ':''}${x.d===sel?'on ':''}${x.rest?'rest':''}"><span>${x.d===ti?'今天':'週'+DOW[x.d]}</span><span class="e">${x.rest?'🌿':EX[x.b[0].k].e}</span><b>${mn}′</b></button>`}).join('');
   const row=(ic,t,d)=>`<div class="do"><span class="ic">${ic}</span><div><b>${esc(t)}</b><div class="s">${esc(d)}</div></div></div>`;
-  const aerOk=P.aer>=P.aerT;
-  $('#fitBody').innerHTML=`<div class="stg">
+  const aerOk=P.aer>=P.aerT,tips=P.W.filter(x=>!P.stop||x!==P.W[0]);
+  const dayCard=(X,lab)=>{const mn=X.b.reduce((t,y)=>t+y.min,0);return `<div class="card"><div class="row" style="margin:0 0 6px"><h2 style="margin:0">${lab}・${X.rest?'恢復日':'訓練日'}</h2><span class="tg">${mn} 分・約 ${X.kcal} kcal</span></div>
+      ${X.b.map(y=>blk(y)).join('')}
+      ${X.rest?'':`<div class="note" style="margin-top:4px">前後各 5 分鐘熱身、伸展。${fp.lvl==='new'?`新手前 2 週先做 ${Math.round(mn*.6/5)*5} 分鐘，之後每週加 10%。`:''}</div>`}
+      <button class="btn" data-timer="${X.d}">▶ 開始計時${X.b.some(y=>y.k==='slowjog')?'（含 180 步節拍器）':''}</button></div>`};
+  $('#fitBody').innerHTML=`<div class="subp" data-sub="today"><div class="stg">
     ${m.fit?'':`<div class="hl" style="margin-bottom:14px">🏋️ <b>先告訴教練你的狀況</b><div class="sub" style="margin-top:4px">膝蓋、腰、肩膀有沒有不舒服、一週能練幾天、喜歡什麼運動，課表會跟著調整。</div><button class="btn sm" data-editmem="${esc(m.id)}" data-fit="1">填寫運動狀況</button></div>`}
     ${P.stop?`<div class="banner">🚨 ${esc(P.W[0].t)}：${esc(P.W[0].d)}</div>`:''}
-    <div class="card"><div class="row" style="margin:0 0 6px"><h2 style="margin:0">${sel===ti?'今天':'週'+DOW[sel]}・${D.rest?'恢復日':'訓練日'}</h2><span class="tg">${dm} 分・約 ${D.kcal} kcal</span></div>
-      ${D.b.map(y=>blk(y)).join('')}
-      ${D.rest?'':`<div class="note" style="margin-top:4px">前後各 5 分鐘熱身、伸展。${fp.lvl==='new'?`新手前 2 週先做 ${Math.round(dm*.6/5)*5} 分鐘，之後每週加 10%。`:''}</div>`}
-      <button class="btn" data-timer="${sel}">▶ 開始計時${D.b.some(y=>y.k==='slowjog')?'（含 180 步節拍器）':''}</button></div>
+    ${dayCard(P.days[ti],'今天')}
     ${exlogCard(m,P)}
+    <button class="rec" data-go="fit" data-gosub="tips"><span class="ric">🧑‍🏫</span><div class="m"><b>教練提醒 ${tips.length} 則${P.no.length?`・暫不建議 ${P.no.length} 項`:''}</b><small>${esc(tips.slice(0,2).map(x=>x.t).join('、'))}</small></div><span class="chev">›</span></button></div></div>
+  <div class="subp" data-sub="week" hidden><div class="stg">
     <div class="card"><h2>本週課表・${esc(m.name)}</h2><div class="wk">${wk}</div>
       <div class="grid2" style="margin-top:12px">${stat('每週有氧',P.aer,` / ${P.aerT} 分`,tagH(aerOk?'達標':'未達標',aerOk?'#b6ff3c':'#ffb547'))}${stat('肌力訓練',P.nS,' 天／週',tagH('建議 ≥'+P.strT+' 天','#8a97b4'))}</div>
       ${aerOk?'':`<div class="hl" style="margin-top:10px">⏱ 有氧還差 ${P.aerT-P.aer} 分鐘${P.aer>=150?'（已達 WHO 最低 150 分鐘）':''}：每次拉長到 ${fp.min<60?[30,45,60].find(x=>x>fp.min):60} 分鐘，或每週多排 1 天，${P.c.goal==='cut'?'減脂會更明顯':'效果更好'}。</div>`}
       <div class="sub" style="margin-top:8px">一週約消耗 ${P.week} kcal ≈ ${(P.week/7700).toFixed(2)} kg 脂肪。${{cut:'搭配飲食的熱量赤字，減脂最有效。',keep:'維持體重、強化心肺與血糖控制。',bulk:'肌力日後 2 小時內記得補蛋白質。'}[P.c.goal]}</div>
       <button class="btn ghost" data-ics>📅 加入 iPhone 行事曆提醒（每週 ${fp.days} 天 ${fp.time}）</button>
       <button class="btn ghost" data-editmem="${esc(m.id)}" data-fit="1">⚙️ 調整運動狀況（天數、時間、身體限制）</button></div>
-    <div class="card"><h2>教練提醒</h2>${P.W.filter(x=>!P.stop||x!==P.W[0]).map(x=>row(x.ic,x.t,x.d)).join('')}</div>
-    ${P.no.length?`<div class="card"><h2>暫不建議</h2>${P.no.map(x=>blk({k:x.k,note:'原因：'+x.why.join('、')},'no')).join('')}</div>`:''}
+    ${dayCard(D,sel===ti?'今天':'週'+DOW[sel])}
     <div class="card"><h2>強度：心率區間</h2>
       <div style="position:relative"><div class="zone"><i style="background:#2b3a55"></i><i style="background:#22e4ff"></i><i style="background:#b6ff3c"></i><i style="background:#ffb547"></i><i style="background:#ff5d6c"></i></div>
         <span class="grow" style="position:absolute;top:-4px;bottom:-4px;left:${Math.max(0,(P.zone[0]/P.hrMax-.5)*200).toFixed(1)}%;width:${((P.zone[1]-P.zone[0])/P.hrMax*200).toFixed(1)}%;border:2px solid #fff;border-radius:99px;box-shadow:0 0 10px rgba(255,255,255,.5)"></span></div>
@@ -2326,8 +2361,12 @@ function renderFit(){
       <div style="font-size:calc(26px*var(--fz));font-weight:800;margin-top:8px">${P.zone[0]}–${P.zone[1]} <span class="u" style="font-size:calc(13px*var(--fz));color:var(--mute)">下／分鐘</span></div>
       <div class="note" style="margin-top:4px">${P.hrRest?`依你的靜止心率 ${fmt(P.hrRest)}（${P.hrSrc}，Karvonen 公式）計算。`:'用年齡估算；在「身體 → ＋ 手錶」填靜止心率會更準。'}沒有手錶就用「說話測試」：微喘、能講完整句子但唱不了歌，就是對的強度。有吃血壓藥（β 阻斷劑）的人心率會偏低，以說話測試為準。</div></div>
     <div class="card"><h2>${EX[P.str].e} 肌力動作（每次 ${P.sets} 組）</h2>${P.mv.map(x=>`<div class="do"><span class="ic">✓</span><div><b>${esc(x.n)}</b> <span class="sub">${x.r} ${x.u||'下'} × ${P.sets} 組</span><div class="s">${esc(x.d)}</div></div></div>`).join('')}
-      <p class="note">組間休息 60 秒。動作做對比做多重要；任何動作造成關節痛就跳過。</p></div></div>`;
-}
+      <p class="note">組間休息 60 秒。動作做對比做多重要；任何動作造成關節痛就跳過。</p></div></div></div>
+  <div class="subp" data-sub="tips" hidden><div class="stg">
+    <div class="card"><h2>教練提醒</h2>${tips.map(x=>row(x.ic,x.t,x.d)).join('')}</div>
+    ${P.no.length?`<div class="card"><h2>暫不建議</h2>${P.no.map(x=>blk({k:x.k,note:'原因：'+x.why.join('、')},'no')).join('')}</div>`:''}
+    <button class="btn ai" data-aitopic="fit" style="margin-bottom:14px">🩺 深入了解：問 AI 排 4 週運動計畫</button></div></div>`;
+  applySub('fit');subBadge('fit','tips',P.no.length||'','')}
 
 /* ---- 運動紀錄：手動輸入或計時完成後一鍵記錄；中等以上強度的有氧才算進 WHO 每週 150 分鐘 ---- */
 const INT=[['easy','輕鬆',.8],['mod','中等（微喘）',1],['hard','費力（很喘）',1.25]];
@@ -2340,7 +2379,7 @@ function exlogCard(m,P){const mon=mondayOf(ymd(new Date())),W=exWeek(m,mon),pw=e
     <div class="bar" style="margin-top:10px"><i style="width:${pct}%;background:linear-gradient(90deg,#22e4ff,#b6ff3c)"></i></div>
     ${W.L.length?W.L.map(r=>`<div class="rec"><span style="font-size:calc(22px*var(--fz))">${EX[r.k]?.e||'🏅'}</span><div class="m"><b>${esc(EX[r.k]?.n||r.note||'其他運動')} ${r.min} 分鐘</b><small>${mdT(r.d)}・${(INT.find(x=>x[0]===r.int)||INT[1])[1]}・約 ${r.kcal||0} kcal${r.note&&EX[r.k]?'・'+esc(r.note):''}</small></div><button class="x" data-exrm="${esc(r.id)}" aria-label="刪除這筆">✕</button></div>`).join('')
       :'<div class="empty" style="padding:10px 0">這週還沒有紀錄</div>'}
-    ${(()=>{const b=exBonus(m,ymd(new Date()));return b.min?`<div class="hl" style="margin-top:10px">🍽 ${exBonusTxt(b,P.c)} <button class="btn sm ghost" data-go="menu" style="margin-top:6px">看今天菜單 ›</button></div>`:''})()}
+    ${(()=>{const b=exBonus(m,ymd(new Date()));return b.min?`<div class="hl" style="margin-top:10px">🍽 ${exBonusTxt(b,P.c)} <button class="btn sm ghost" data-go="menu" data-gosub="menu" style="margin-top:6px">看今天菜單 ›</button></div>`:''})()}
     <button class="btn ghost" data-exlog="1" style="margin-top:8px">＋ 手動記錄運動</button>
     <p class="note">「輕鬆」強度（散步、伸展）會記下來，但不算進每週 150 分鐘；中等＝微喘還能說完整句子。</p></div>`}
 function openExLog(pre){const m=me(),o={d:ymd(new Date()),k:'walk',min:30,int:'mod',note:'',...(pre||{})};
@@ -2440,6 +2479,8 @@ function renderBody(){
   $('#issueList').innerHTML=all.length?issueHTML(all.slice(0,12),true,true)+(all.length>12?`<div class="note">另有 ${all.length-12} 項，請點紀錄看完整分析</div>`:''):`<div class="empty">${s||l||w?'目前沒有異常指標 👍':'尚無資料'}</div>`;
   if(l)$('#issueList').insertAdjacentHTML('beforeend',`<p class="note">${NORMAL_NOTE}</p>`);
   $('#deptList').innerHTML=deptHTML(deptPlan(all));$('#condBody').innerHTML=condCardHTML(m);
+  {const n2=all.filter(i=>i.lv>=2).length,pl=yearPlan(m).items.filter(o=>o.pr===1).length,cn=condOf(m).items.length,sg=condSuggest(m).length;
+   subBadge('body','now',n2||all.length,all.some(i=>i.crit||i.lv>=3)?'r':n2?'':'c');subBadge('body','plan',pl,'');subBadge('body','cond',cn||(sg?'＋':''),'c')}
   const dv=derivedOf(m);$('#derivedCard').hidden=!dv.length;
   $('#derivedList').innerHTML=dv.map(d=>`<div class="issue"><span class="lv lv${d.lv}">${d.lv?LVT[d.lv]:'正常'}</span><div style="flex:1;min-width:0"><div class="t">${esc(d.name)}</div><div class="s">${esc(d.txt)}<br><span style="font-size:calc(11px*var(--fz))">${esc(d.src)}</span></div></div><div class="v">${esc(d.val)}</div></div>`).join('');
   $('#planBody').innerHTML=planHTML(m);
@@ -3103,7 +3144,7 @@ function saveWatch(){const m=me(),r={id:wEditId||uid(),t:$('#w-t').value||ymd(ne
   if($('#w-afib').classList.contains('on'))r.afib=true;const dv=$('#w-device').value.trim();if(dv)r.device=dv.slice(0,30);const pd=$('#w-period').value.trim();if(pd)r.period=pd.slice(0,20);
   if(!WF.some(f=>r[f.k]!=null)&&!r.afib)return toast('請至少填一個數值');
   const arr=WATCH[m.id]||(WATCH[m.id]=[]),i=arr.findIndex(x=>x.id===r.id);if(i>=0)arr[i]=r;else arr.push(r);
-  if(!S.set('watch',WATCH))return;recTab='watch';renderAll();go('body');openWatchDetail(r.id)}
+  if(!S.set('watch',WATCH))return;recTab='watch';renderAll();go('body','now');openWatchDetail(r.id)}
 function delWatch(id){if(!confirm('確定刪除這筆手錶數據？'))return;const m=me();WATCH[m.id]=(WATCH[m.id]||[]).filter(x=>x.id!==id);S.set('watch',WATCH);closeSheet();renderAll();toast('已刪除')}
 function fillWatch(o){
   if(/lab|scale/i.test(o.type||''))throw new Error(/lab/i.test(o.type)?'這是體檢報告的 JSON，請改到「＋ 體檢」匯入':'這是體脂機的 JSON，請改到「＋ 體脂」匯入');
@@ -3165,7 +3206,7 @@ function saveScale(){
   const bt=$('#s-bodyType').value.trim(),dv=$('#s-device').value.trim();if(bt)r.bodyType=bt;if(dv)r.device=dv;
   const arr=SCALE[m.id]||(SCALE[m.id]=[]),i=arr.findIndex(x=>x.id===r.id);if(i>=0)arr[i]=r;else arr.push(r);
   if(!S.set('scale',SCALE))return;
-  closeSheet();recTab='scale';renderAll();go('body');toast(r.derived.includes('weight')?`已儲存（體重由其他數值推算為 ${r.weight} kg）`:'已儲存體脂紀錄');
+  closeSheet();recTab='scale';renderAll();go('body','now');toast(r.derived.includes('weight')?`已儲存（體重由其他數值推算為 ${r.weight} kg）`:'已儲存體脂紀錄');
 }
 function delScale(id){if(!confirm('確定刪除這筆體脂紀錄？'))return;const m=me();SCALE[m.id]=(SCALE[m.id]||[]).filter(x=>x.id!==id);S.set('scale',SCALE);closeSheet();renderAll();toast('已刪除')}
 function openScaleDetail(id){
@@ -3323,7 +3364,7 @@ function saveLab(){
   const rec={id:lEditId||uid(),t:$('#l-date').value||ymd(new Date()),hospital:$('#l-hosp').value.trim(),items,extra:lExtra};promoteExtras(rec);
   const arr=LABS[m.id]||(LABS[m.id]=[]),i=arr.findIndex(x=>x.id===rec.id);if(i>=0)arr[i]=rec;else arr.push(rec);
   if(!S.set('labs',LABS))return;
-  recTab='lab';renderAll();go('body');openLabDetail(rec.id);if(conv.length)toast('已換算為 10³/µL：'+conv.join('、'));
+  recTab='lab';renderAll();go('body','now');openLabDetail(rec.id);if(conv.length)toast('已換算為 10³/µL：'+conv.join('、'));
 }
 function delLab(id){if(!confirm('確定刪除這份體檢報告？'))return;const m=me();LABS[m.id]=(LABS[m.id]||[]).filter(x=>x.id!==id);S.set('labs',LABS);closeSheet();renderAll();toast('已刪除')}
 function openLabDetail(id){
@@ -3437,7 +3478,8 @@ function renderNutri(m){const n=nutriPlan(m),t=n.tgt,tile=(v,k)=>`<div><b>${v}</
       <div class="sub">${n.src?'依據 '+esc(n.src):'還沒有體檢／體脂紀錄，先依身高體重估算'}</div><div class="sub" style="margin-top:4px">左圖：每餐怎麼裝（211 餐盤）</div></div></div>
     <div class="tgt">${tile(t.kcal,'熱量 kcal')}${tile(t.p+'g','蛋白質')}${tile(t.cb+'g','碳水')}${tile(t.f+'g','脂肪')}${tile(t.fib+'g','纖維 ≥')}${tile(t.na,'鈉 mg ≤')}${tile(t.sug+'g','添加糖 ≤')}${tile(t.water.toFixed(1)+'L','喝水')}</div>
     ${n.F.map((f,i)=>`<details class="box"${i<1?' open':''}><summary><span>${f.ic} ${esc(f.t)}</span></summary>${f.why?`<div class="sub" style="color:var(--amber);margin:-4px 0 8px">📋 ${esc(f.why)}</div>`:''}<ul class="steps" style="color:var(--text)">${f.do.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><div class="chips">${f.eat.map(x=>`<span class="tg">✓ ${esc(x)}</span>`).join('')}${f.avoid.map(x=>`<span class="tg warn">✕ ${esc(x)}</span>`).join('')}</div></details>`).join('')}
-    <p class="note">下方菜單已照這些重點自動挑菜、調整份量；數值為一般建議，有慢性病請以醫師、營養師指示為準。</p>`}
+    <p class="note">「今日菜單」已照這些重點自動挑菜、調整份量；數值為一般建議，有慢性病請以醫師、營養師指示為準。</p>
+    <button class="btn ai" data-aitopic="diet" style="margin-top:6px">🩺 深入了解：問 AI 排一週飲食</button>`}
 
 /* ================= 一週採買清單 ================= */
 const addDays=(s,n)=>{const d=new Date(s+'T00:00');d.setDate(d.getDate()+n);return ymd(d)};
@@ -3650,10 +3692,10 @@ function openSettings(){const m=me(),c=calc(m),row=(attr,ic,t,sub)=>`<button cla
   $('#s-gas').onchange=e=>setGas(e.target.value.trim(),e.target)}
 
 /* ================= 功能導覽：聚光遮罩（box-shadow 挖洞）。捲動、轉向、iOS 鍵盤彈出會重新定位；Esc 或「略過」關閉；看完記住，不再自動出現 ================= */
-const TOUR=[['#nav button[data-v="dash"]','總覽','BMI、每日該吃多少熱量、最新紀錄；有危急值會在最上面用紅色提醒'],
-  ['#nav button[data-v="body"]','身體','體檢報告、體脂、手錶數據都在這裡：拍照給 AI 讀數字再匯入，App 自動判讀、比較歷年、建議掛哪一科，還能做成看診摘要圖'],
-  ['#nav button[data-v="menu"]','飲食','依你的身體狀況排的一週菜單和採買清單'],
-  ['#nav button[data-v="fit"]','運動','依身體限制排的課表；運動紀錄會算進當天可以多吃的熱量'],
+const TOUR=[['#nav button[data-v="dash"]','總覽','健康總覽、健康評語、今天要做什麼；有危急值會在最上面用紅色提醒'],
+  ['#nav button[data-v="body"]','身體','四個分頁：狀況（哪裡要注意、掛哪一科、看診摘要）、紀錄（體檢、體脂、手錶、歷年比較）、健檢規劃、病史'],
+  ['#nav button[data-v="menu"]','飲食','今日菜單、營養建議（依報告調整）、熱量計算（BMI、每天該吃多少）'],
+  ['#nav button[data-v="fit"]','運動','今天要練什麼、本週課表、注意事項；依身體限制與病史自動避開不適合的運動'],
   ['#nav button[data-v="self"]','自我檢測','中風、心臟、頭暈、記憶力、睡眠、情緒、肌力：在家就能測，告訴你掛哪科、做哪些檢查，也能整理給 AI'],
   ['#memChip','切換家人','一支手機可以管全家人的資料'],
   ['#gearBtn','設定','原本的「我的」搬到這裡：個人資料、家庭成員、字體大小、資料備份']];
@@ -3694,6 +3736,8 @@ function summaryBlocks(m){const c=calc(m),L=labsOf(m),l=L[0],B=[],a=Math.floor(a
   if(bits.length){H('家族史與生活習慣');bits.forEach(s=>I(s))}
   H('想問醫師');I('這些異常哪一項最需要先處理？需要再做哪些檢查？');I('多久後要回診或複驗？');
   B.push({t:'note',s:'依 App 規則整理的資料，不是診斷，以醫師判斷為準。'});return B}
+// 文字版看診摘要：和摘要圖同一份內容，可以貼到 LINE、Email 或掛號系統的備註
+function summaryText(m){return summaryBlocks(m).map(b=>b.t==='h1'?`【${b.s}】`:b.t==='h'?`\n■ ${b.s}`:b.t==='li'?`・${b.s}`:b.t==='note'?`\n（${b.s}）`:b.s).join('\n').replace(/^\n+/,'')}
 function drawSummary(m){const cv=document.createElement('canvas'),x=cv.getContext('2d');if(!x)return null;const W=1080,P=60,MAXH=9000,B=summaryBlocks(m);
   const F=(sz,b)=>`${b?'700 ':''}${sz}px -apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif`,ST={h1:[54,1,'#0b1220'],h:[36,1,'#0e7490'],p:[30,0,'#334155'],li:[31,0,'#0b1220'],note:[26,0,'#64748b']};
   // 換行：中文逐字斷，數字與英文（6.6、mmol/L、4.2 → 6.6）整段不拆開
@@ -3710,7 +3754,7 @@ async function openSummary(){const m=me(),cv=drawSummary(m);if(!cv)return toast(
   const blob=await new Promise(r=>cv.toBlob(r,'image/png'));if(!blob)return toast('圖片產生失敗：請關掉其他分頁後再試一次');
   if(sumURL)URL.revokeObjectURL(sumURL);sumURL=URL.createObjectURL(blob);const name=`看診摘要-${ymd(new Date())}.png`,file=new File([blob],name,{type:'image/png'});
   openSheet(sheetHead('📄 看診摘要圖','看醫生時給醫師看，或傳給家人')+`<img src="${sumURL}" alt="看診摘要" style="width:100%;border-radius:12px;margin:12px 0;background:#fff">
-    <button class="btn" id="sum-share">分享／儲存圖片</button><p class="note">iPhone：按上面按鈕選「儲存影像」或傳 LINE；也可以長按圖片儲存。圖片上有名字，傳給別人前請確認。</p>`);
+    <button class="btn" id="sum-share">分享／儲存圖片</button><button class="btn ghost" data-sumtext>📋 複製文字版（貼到 LINE、Email）</button><p class="note">iPhone：按上面按鈕選「儲存影像」或傳 LINE；也可以長按圖片儲存。圖片上有名字，傳給別人前請確認。</p>`);
   onSheetClose=()=>{if(sumURL){URL.revokeObjectURL(sumURL);sumURL=null}};
   $('#sum-share').onclick=async()=>{try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return}}catch(e){if(e.name==='AbortError')return}
     const a=document.createElement('a');a.href=sumURL;a.download=name;document.body.appendChild(a);a.click();a.remove();toast('已下載看診摘要圖')}}
@@ -3753,14 +3797,21 @@ function importData(file){
 }
 
 /* ================= 導覽 / 事件 ================= */
-function go(v){const nv=v==='lab'?'menu':v;$$('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));$$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===nv));scrollTo({top:0,behavior:'smooth'})}
-function renderAll(){renderHeader();renderDash();renderBody();renderNutri(me());renderDays();renderMenu();renderFit();renderSelf();renderGallery()}
+// 子分頁：身體（狀況／紀錄／健檢規劃／病史）、飲食（今日菜單／營養建議／熱量計算）、運動（今天／本週課表／注意事項）；只記在這次開啟期間，重開 App 回到第一頁
+const SUBS={body:['now','rec','plan','cond'],menu:['menu','nutri','kcal'],fit:['today','week','tips']},SUB={};
+function applySub(v){const k=SUBS[v].includes(SUB[v])?SUB[v]:SUBS[v][0];$$(`#v-${v} .subp`).forEach(p=>p.hidden=p.dataset.sub!==k);$$(`#v-${v} .subnav button`).forEach(b=>{const on=b.dataset.sub===k;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)})}
+function sub(v,k){SUB[v]=k;applySub(v);const n=$(`#v-${v} .subnav`);if(n&&n.getBoundingClientRect().top<0)scrollTo({top:0})}
+// 分頁上的數字徽章（例如：需要注意 3、病史 2）
+function subBadge(v,k,n,cls=''){const b=$(`#v-${v} .subnav [data-sub="${k}"]`);if(!b)return;b.querySelector('.bd')?.remove();if(n)b.insertAdjacentHTML('beforeend',`<span class="bd ${cls}">${n}</span>`)}
+function go(v,k){if(k&&SUBS[v]?.includes(k))SUB[v]=k;const nv=v==='lab'?'menu':v;$$('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));$$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===nv));if(SUBS[v])applySub(v);scrollTo({top:0,behavior:'smooth'})}
+function renderAll(){renderHeader();renderDash();renderBody();renderNutri(me());renderDays();renderMenu();renderFit();renderSelf();renderGallery();Object.keys(SUBS).forEach(applySub)}
 $$('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.v));
+$$('.subnav').forEach(n=>n.querySelectorAll('button').forEach(b=>b.onclick=()=>sub(n.dataset.for,b.dataset.sub)));
 $('#memChip').onclick=openMemberPicker;
 $$('#recSeg button').forEach(b=>b.onclick=()=>{recTab=b.dataset.v;$$('#recSeg button').forEach(x=>x.classList.toggle('on',x===b));renderRecs()});
 $('#hud').addEventListener('click',e=>{const t=e.target.closest('[data-o]');if(t)showOrgan(t.dataset.o)});
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-close],[data-closeorgan],[data-copy],[data-show],[data-pick],[data-editmem],[data-addmem],[data-sid],[data-lid],[data-addscale],[data-addlab],[data-copyplan],[data-goplan],[data-autogoal],[data-go],[data-golab],[data-goback],[data-fday],[data-timer],[data-ics],[data-meal],[data-ban],[data-shop],[data-export],[data-import],[data-autoimg],[data-aidoc],[data-ask],[data-fixh],[data-cmp],[data-wid],[data-addwatch],[data-exlog],[data-exrm],[data-sym],[data-self],[data-selfnew],[data-selfdel],[data-selfai],[data-settings],[data-setsec],[data-fz],[data-tour],[data-summary],[data-cond],[data-condadd],[data-condai]');if(!t)return;const d=t.dataset;
+  const t=e.target.closest('[data-close],[data-closeorgan],[data-copy],[data-show],[data-pick],[data-editmem],[data-addmem],[data-sid],[data-lid],[data-addscale],[data-addlab],[data-copyplan],[data-goplan],[data-autogoal],[data-go],[data-golab],[data-goback],[data-fday],[data-timer],[data-ics],[data-meal],[data-ban],[data-shop],[data-export],[data-import],[data-autoimg],[data-aidoc],[data-ask],[data-fixh],[data-cmp],[data-wid],[data-addwatch],[data-exlog],[data-exrm],[data-sym],[data-self],[data-selfnew],[data-selfdel],[data-selfai],[data-settings],[data-setsec],[data-fz],[data-tour],[data-summary],[data-cond],[data-condadd],[data-condai],[data-sumtext],[data-rec],[data-aitopic]');if(!t)return;const d=t.dataset;
   if('close' in d)closeSheet();
   else if('closeorgan' in d){$('#organPanel').innerHTML='';$$('#hud .sel').forEach(e=>e.classList.remove('sel'))}
   else if(d.copy)copyText(PROMPTS[d.copy]());
@@ -3781,7 +3832,8 @@ document.addEventListener('click',e=>{
   else if(d.timer!=null)openTimer(+d.timer);
   else if('ics' in d)shareICS();
   else if('copyplan' in d)copyText(planText(me()),'已複製今年健檢建議，可以貼給醫師或健檢中心');
-  else if('goplan' in d){go('body');setTimeout(()=>$('#planCard').scrollIntoView({behavior:'smooth',block:'start'}),400)}
+  else if('goplan' in d)go('body','plan');
+  else if('sumtext' in d)copyText(summaryText(me()),'已複製文字摘要：可以貼到 LINE、Email，或給醫師看');
   else if('addmem' in d)openMemberEdit(null,'',!!t.closest('.sgrp'));
   else if('settings' in d)openSettings();
   else if(d.setsec)openMemberEdit(ACT,d.setsec,true);
@@ -3791,12 +3843,13 @@ document.addEventListener('click',e=>{
   else if(d.cond)openCond(d.cond);
   else if(d.condadd)addCondFromSuggest(d.condadd);
   else if('condai' in d){aiO.topic='cond';openAI()}
+  else if(d.aitopic){aiO.topic=d.aitopic;openAI()}
   else if(d.self){const r=selfOf(me(),d.self)[0];if(r)openSelfResult(r.id);else openSelf(d.self)}
   else if(d.selfnew)openSelf(d.selfnew);
   else if(d.selfdel){if(confirm('刪除這筆檢測結果？'))delSelf(d.selfdel)}
   else if('selfai' in d)openSelfAll();
   else if('autogoal' in d){const m=me();m.goal='auto';S.set('members',MEM);renderAll();toast('目標改成自動：'+GOALT[calc(m).goal])}
-  else if(d.go)go(d.go);
+  else if(d.go){if(d.rec){recTab=d.rec;renderRecs()}go(d.go,d.gosub)}
   else if('golab' in d)go('lab');
   else if(d.goback)go(d.goback);
   else if(d.sid)openScaleDetail(d.sid);
