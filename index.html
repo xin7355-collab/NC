@@ -247,6 +247,7 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 .pr1{background:rgba(255,45,85,.18);color:#ff6b81}.pr2{background:rgba(255,181,71,.15);color:var(--amber)}.pr3{background:rgba(34,228,255,.1);color:var(--cyan)}
 .pt{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.pt i{font-style:normal;font-size:calc(11px*var(--fz));padding:2px 8px;border-radius:99px;background:rgba(255,255,255,.06);color:var(--text)}
 .lrow.wide{flex-wrap:wrap}.lrow.wide label{flex:1 1 100%}.lrow.wide select{flex:1 1 100%;width:100%}
+.cdet{padding:10px 0;border-top:1px solid var(--line)}
 .sq{padding:12px 0;border-top:1px solid var(--line)}.sq .t{font-size:calc(14px*var(--fz));font-weight:700;line-height:1.55;margin-bottom:8px}
 .bl{position:relative;padding:7px 0 7px 18px;border-top:1px solid var(--line);font-size:calc(13px*var(--fz));line-height:1.65}.bl::before{content:'•';position:absolute;left:4px;color:var(--cyan)}
 .sgrp{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:16px;padding:6px 14px 12px;margin:14px 0}.sgh{font-size:calc(12px*var(--fz));color:var(--mute);font-weight:600;letter-spacing:1px;padding:8px 0 4px}
@@ -308,6 +309,7 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
   </div>
   <div class="row2" style="margin:0 0 14px"><button class="btn ai" data-aidoc>🩺 問 AI 醫生</button><button class="btn ghost" data-sym>🤒 我有症狀</button></div>
   <div class="card"><h2>需要注意</h2><div id="issueList"></div></div>
+  <div class="card" id="condCard"><h2>我的病史（體檢看不到的）</h2><div id="condBody"></div></div>
   <div class="card" id="derivedCard" hidden><h2>App 自動計算（不用問 AI）</h2><div id="derivedList"></div></div>
   <div class="card" id="cmpCard" hidden><h2>歷年比較（3 年內）</h2><div id="cmpBody"></div></div>
   <div class="card"><h2>建議掛號科別</h2><div id="deptList"></div>
@@ -913,7 +915,7 @@ function qLv(s,Q,ti){s=String(s??'').trim().toLowerCase().replace(/\s/g,'');if(!
 function labEval(rec,m){
   const sex=m.sex,out=[];
   for(const[k,it]of Object.entries(rec.items||{})){
-    const x=LABK[k];if(!x||x.t==='qi')continue;let lv=0,dir='hi',om=null,bl=null,crit=false;
+    const x=LABK[k];if(!x||x.t==='qi')continue;let lv=0,dir='hi',om=null,bl=null,crit=false,cx=null;
     if(x.t==='opt'){const o=optFind(x,it.v);if(o){lv=o[1];om=o[2]||null}
       if(lv&&x.okRx&&x.okRx.test(it.ref||'')&&!x.badRx.test(it.ref||''))lv=0}   // 報告原文說肺部正常（例如只有脊椎側彎）就不算肺部異常
     else if(x.t==='q'){lv=qLv(it.v,x.Q,x.ti);
@@ -923,8 +925,9 @@ function labEval(rec,m){
       if(H){const h1=it.hi!=null?it.hi:H[0],h2=Math.max(H[1],h1),h3=Math.max(H[2],h2);lv=v>=h3?3:v>=h2?2:v>h1?1:0;if(lv===1&&h1>0&&(v-h1)/h1<.05)bl=Math.round((v-h1)/h1*1000)/10}
       if(!lv&&L){const l1=it.lo!=null?it.lo:L[0],l2=Math.min(L[1],l1),l3=Math.min(L[2],l2);lv=v<l3?3:v<l2?2:v<l1?1:0;if(lv)dir='lo';if(lv===1&&l1>0&&(l1-v)/l1<.05)bl=Math.round((l1-v)/l1*1000)/10}
       if(!lv){const fd=flagDir(it.flag);if(fd){lv=1;dir=fd}}
-      const C=CRIT[k];if(C&&((C[0]!=null&&v<=C[0])||(C[1]!=null&&v>=C[1]))){lv=3;crit=true;dir=C[0]!=null&&v<=C[0]?'lo':'hi';bl=null}}
-    if(lv)out.push({src:'體檢',k,name:x.n,short:LSHORT[k]||x.n,val:it.v,unit:x.u||'',lv,dir,bl,crit,msg:crit?`危急值：今天就要處理。${CRITM[k]}`:(bl!=null?`僅略${dir==='lo'?'低':'高'}於參考值 ${bl}%，單次輕微超出意義有限；`:'')+(om||(dir==='lo'?x.lo:x.hi)||(x.t==='opt'?'檢查結果需追蹤':dir==='lo'?'低於參考值':'高於參考值')),organ:x.o,dept:x.d,ref:it.ref||(it.lo!=null&&it.hi!=null?`${it.lo}–${it.hi}`:it.hi!=null?`≤${it.hi}`:it.lo!=null?`≥${it.lo}`:refText(x,sex))});   // 報告有自己的上下限就顯示報告的
+      const C=CRIT[k];if(C&&((C[0]!=null&&v<=C[0])||(C[1]!=null&&v>=C[1]))){lv=3;crit=true;dir=C[0]!=null&&v<=C[0]?'lo':'hi';bl=null}
+      if(k==='ldl'&&!crit){const t=ldlTgt(m);if(t&&v>=t.t){lv=Math.max(lv,t.lv);dir='hi';bl=null;om=t.msg;cx=t.short}}}
+    if(lv)out.push({src:'體檢',k,name:x.n,short:LSHORT[k]||x.n,val:it.v,unit:x.u||'',lv,dir,bl,crit,cx,msg:crit?`危急值：今天就要處理。${CRITM[k]}`:(bl!=null?`僅略${dir==='lo'?'低':'高'}於參考值 ${bl}%，單次輕微超出意義有限；`:'')+(om||(dir==='lo'?x.lo:x.hi)||(x.t==='opt'?'檢查結果需追蹤':dir==='lo'?'低於參考值':'高於參考值')),organ:x.o,dept:x.d,ref:it.ref||(it.lo!=null&&it.hi!=null?`${it.lo}–${it.hi}`:it.hi!=null?`≤${it.hi}`:it.lo!=null?`≥${it.lo}`:refText(x,sex))});   // 報告有自己的上下限就顯示報告的
   }
   // 衍生判讀：PSA 4–10 看游離比例；空腹血糖＋胰島素算 HOMA-IR
   const iv=k=>num(rec.items?.[k]?.v),ps=iv('psa'),fp=iv('fpsa'),g0=iv('glu'),in0=iv('ins');
@@ -1143,6 +1146,8 @@ function issuesOf(m){const s=scalesOf(m)[0],l=labsOf(m)[0],w=watchOf(m)[0];retur
 function dietMode(m){
   const{scale,lab}=issuesOf(m),all=[...scale,...lab],o={};all.forEach(i=>{if(i.organ)o[i.organ]=Math.max(o[i.organ]||0,i.lv)});
   const md={lowCarb:(o.pancreas||0)>=1||all.some(i=>i.k==='tg'||(i.k==='visceral'&&i.lv>=1)),heart:(o.vessel||0)>=1||all.some(i=>i.k==='cac'||i.k==='img_cac'),liver:(o.liver||0)>=1,lowPur:all.some(i=>i.k==='ua'),kidney:all.some(i=>['egfr','cr','upro'].includes(i.k)&&i.lv>=2)};
+  {const cd=condKeys(m);if(cd.has('dm')||cd.has('predm')||cd.has('nafld'))md.lowCarb=true;if(['htn','cac','cad','stroke','lipid','hf'].some(k=>cd.has(k)))md.heart=true;
+    if(['nafld','hbv','hcv'].some(k=>cd.has(k)))md.liver=true;if(cd.has('gout'))md.lowPur=true;if(cd.has('ckd'))md.kidney=true}
   md.tags=[md.lowCarb&&'控醣：碳水降、脂肪 30%',md.heart&&'護心：少油少鹽',md.liver&&'護肝：禁酒、少油炸',md.lowPur&&'低普林：避開海鮮濃湯',md.kidney&&'護腎：蛋白質 0.8 g/kg'].filter(Boolean);
   return md;
 }
@@ -1152,23 +1157,24 @@ function dietMode(m){
 function nutriPlan(m){
   const c=calc(m),{scale,lab,s,l}=issuesOf(m),all=[...lab,...scale],a=c.a,w=c.w;
   const lv=k=>all.reduce((x,i)=>i.k===k?Math.max(x,i.lv):x,0),lo=k=>all.some(i=>i.k===k&&i.dir==='lo'),v=k=>{const x=l?.items?.[k]?.v;return x==null?'':fmt(num(x)??x)};
+  const cd=condKeys(m),cw=ks=>{const n=condNames(m,ks);return n.length?'病史：'+n.join('、'):''},whyC=(ks,cks)=>[ks.filter(k=>lv(k)).map(k=>`${LSHORT[k]||LABK[k]?.n||k} ${v(k)}`).join('、'),cw(cks)].filter(Boolean).join('、');
   const why=ks=>ks.filter(k=>lv(k)).map(k=>`${LSHORT[k]||LABK[k]?.n||k} ${v(k)}`).join('、');
   const F=[],pref=new Set(),avd=new Set(),add=(o,p=[],x=[])=>{F.push(o);p.forEach(t=>pref.add(t));x.forEach(t=>avd.add(t))};
   const sugar=['glu','hba1c','pcg','ins','homa','uglu'].some(lv),visc=(s?.visceral||0)>=10,kid=c.mode.kidney;
   if(c.goal==='cut')add({ic:'🔥',t:'減脂',why:c.sg.why.join('、')||'目標設定為減脂',do:[`每天約 ${Math.round(c.target)} kcal，用「211 餐盤」：半盤蔬菜、¼ 蛋白質、¼ 全穀`,'每餐一個手掌大的蛋白質，飽足感高、減脂不掉肌肉','炸物、勾芡、濃湯、含糖飲料先停','晚餐 7 點前吃完，睡前 3 小時不進食'],eat:['燙青菜','魚、雞胸、豆腐、蛋','地瓜、糙米'],avoid:['炸雞排','手搖飲','宵夜']},[],['oil']);
   if(c.goal==='bulk')add({ic:'💪',t:a<18?'成長':'增肌增重',why:c.sg.why.join('、'),do:[`每天約 ${Math.round(c.target)} kcal，三餐＋2 次點心`,`蛋白質 ${Math.round(c.prot)} g，平均分到 4–5 餐（每餐 20–40 g）`,'重訓後 2 小時內吃蛋白質＋碳水（例：香蕉＋無糖豆漿）','睡前可吃無糖優格或豆花'],eat:['蛋、豆漿、優格','雞腿、牛肉、魚','香蕉、地瓜、燕麥'],avoid:['只吃澱粉不吃蛋白質']},['ca']);
-  if(sugar||visc||lv('tg'))add({ic:'🩸',t:'控糖',why:why(['glu','hba1c','pcg','ins','homa','uglu','tg'])||`內臟脂肪 ${s?.visceral}（胰島素阻抗風險）`,do:['吃飯順序：先菜、再肉、最後飯，血糖升得慢','白飯換糙米／五穀／地瓜，一餐半碗到八分滿','戒含糖飲料（手搖飲一杯約 10 顆方糖）','水果一天 2 份、每份一個拳頭，不打成果汁','飯後散步 10–15 分鐘，降血糖效果最好'],eat:['糙米、燕麥、地瓜','芭樂、番茄','毛豆、豆腐'],avoid:['含糖飲料、果汁','白粥、麵包、甜點','勾芡、糖醋']},['fib'],['hc']);
-  if(lv('ldl')||lv('tc')||lv('lpa')||lv('sdldl')||lv('cac')||lv('img_cac'))add({ic:'🫀',t:'降壞膽固醇',why:[why(['ldl','sdldl','tc','lpa','cac']),lv('img_cac')?'影像看到冠狀動脈鈣化':''].filter(Boolean).join('、'),do:['少飽和脂肪：肥肉、雞皮、豬油、奶油、椰子油、香腸培根','每天一碗燕麥或一份豆類（可溶性纖維降 LDL）','堅果一天一湯匙（約 10 顆杏仁）','魚每週至少 2 次，蒸、煮、烤'],eat:['燕麥、豆類','鯖魚、鮭魚','無調味堅果'],avoid:['肥肉、雞皮','加工肉','酥皮、奶油麵包','動物內臟（腦、腰子、肝）']},['fib','fish'],['oil']);
+  if(sugar||visc||lv('tg')||cd.has('dm')||cd.has('predm'))add({ic:'🩸',t:'控糖',why:whyC(['glu','hba1c','pcg','ins','homa','uglu','tg'],['dm','predm'])||`內臟脂肪 ${s?.visceral}（胰島素阻抗風險）`,do:['吃飯順序：先菜、再肉、最後飯，血糖升得慢','白飯換糙米／五穀／地瓜，一餐半碗到八分滿','戒含糖飲料（手搖飲一杯約 10 顆方糖）','水果一天 2 份、每份一個拳頭，不打成果汁','飯後散步 10–15 分鐘，降血糖效果最好'],eat:['糙米、燕麥、地瓜','芭樂、番茄','毛豆、豆腐'],avoid:['含糖飲料、果汁','白粥、麵包、甜點','勾芡、糖醋']},['fib'],['hc']);
+  if(lv('ldl')||lv('tc')||lv('lpa')||lv('sdldl')||lv('cac')||lv('img_cac')||['cac','cad','stroke','lipid'].some(k=>cd.has(k)))add({ic:'🫀',t:'降壞膽固醇',why:[why(['ldl','sdldl','tc','lpa','cac']),lv('img_cac')&&!cd.has('cac')?'影像看到冠狀動脈鈣化':'',cw(['cac','cad','stroke','lipid'])].filter(Boolean).join('、'),do:['少飽和脂肪：肥肉、雞皮、豬油、奶油、椰子油、香腸培根','每天一碗燕麥或一份豆類（可溶性纖維降 LDL）','堅果一天一湯匙（約 10 顆杏仁）','魚每週至少 2 次，蒸、煮、烤'],eat:['燕麥、豆類','鯖魚、鮭魚','無調味堅果'],avoid:['肥肉、雞皮','加工肉','酥皮、奶油麵包','動物內臟（腦、腰子、肝）']},['fib','fish'],['oil']);
   if(lv('tg'))add({ic:'🧈',t:'降三酸甘油酯',why:why(['tg']),do:['甜食、精製澱粉、果汁、酒精是三酸甘油酯的主因，先減這些','鯖魚、鮭魚、秋刀魚每週 2–3 次（Omega-3）','晚餐澱粉減量'],eat:['青背魚','蔬菜'],avoid:['酒','甜點、果汁','精緻澱粉']},['fish'],['hc']);
   if(lv('hdl'))add({ic:'⬆️',t:'提升好膽固醇',why:why(['hdl']),do:['每週 150 分鐘有氧運動最能提升 HDL','用橄欖油、苦茶油、堅果取代動物油','戒菸'],eat:['橄欖油、苦茶油','酪梨、堅果'],avoid:['反式脂肪（酥油、奶精）']});
-  if(lv('sbp')||lv('dbp'))add({ic:'🧂',t:'降血壓（得舒飲食）',why:why(['sbp','dbp']),do:['鹽一天 ≤5 g（鈉 2000 mg）：湯不喝完、醬料減半、少加工食品',kid||lv('k')?'蔬菜天天吃，但鉀要依腎功能控制':'得舒飲食：每天 5 份蔬菜＋2 份水果＋1.5 杯低脂乳','體重每減 1 kg，收縮壓約降 1 mmHg','酒一天最多 1 杯'],eat:['深綠蔬菜','低脂乳、豆漿','新鮮肉魚'],avoid:['泡麵、罐頭、醃漬物','火鍋湯、拉麵湯','香腸、火腿']},kid||lv('k')?[]:['kf'],['salt']);
-  if(lv('ua'))add({ic:'🦶',t:'降尿酸',why:why(['ua']),do:['少內臟、蝦蟹貝類、濃湯、火鍋湯底','戒含糖飲料（果糖會升尿酸）與啤酒','每天喝水 2–3 L（腎功能正常時）','雞蛋、低脂乳品、豆腐都是安全的蛋白質'],eat:['蛋、低脂乳','豆腐','大量白開水'],avoid:['內臟、海鮮','濃湯、火鍋湯','啤酒、含糖飲料']},['ca'],['pur']);
-  if(['alt','ast','ggt','us_liver'].some(lv))add({ic:'🫁',t:'護肝（脂肪肝）',why:why(['alt','ast','ggt','us_liver']),do:[`體重減 5%（到 ${(w*.95).toFixed(1)} kg）肝脂肪就會下降；減 7–10%（到 ${(w*.9).toFixed(1)}–${(w*.93).toFixed(1)} kg）可改善肝發炎`,'追蹤脂肪肝期間以不喝酒為佳；少含糖飲料（果糖直接在肝臟變脂肪）','少油炸、少宵夜','無糖黑咖啡一天 1–2 杯對肝有幫助'],eat:['蔬菜、全穀','魚、豆腐'],avoid:['酒','油炸','含糖飲料']},[],['oil']);
+  if(lv('sbp')||lv('dbp')||cd.has('htn')||cd.has('hf'))add({ic:'🧂',t:'降血壓（得舒飲食）',why:whyC(['sbp','dbp'],['htn','hf']),do:['鹽一天 ≤5 g（鈉 2000 mg）：湯不喝完、醬料減半、少加工食品',kid||lv('k')?'蔬菜天天吃，但鉀要依腎功能控制':'得舒飲食：每天 5 份蔬菜＋2 份水果＋1.5 杯低脂乳','體重每減 1 kg，收縮壓約降 1 mmHg','酒一天最多 1 杯'],eat:['深綠蔬菜','低脂乳、豆漿','新鮮肉魚'],avoid:['泡麵、罐頭、醃漬物','火鍋湯、拉麵湯','香腸、火腿']},kid||lv('k')?[]:['kf'],['salt']);
+  if(lv('ua')||cd.has('gout'))add({ic:'🦶',t:'降尿酸',why:whyC(['ua'],['gout']),do:['少內臟、蝦蟹貝類、濃湯、火鍋湯底','戒含糖飲料（果糖會升尿酸）與啤酒','每天喝水 2–3 L（腎功能正常時）','雞蛋、低脂乳品、豆腐都是安全的蛋白質'],eat:['蛋、低脂乳','豆腐','大量白開水'],avoid:['內臟、海鮮','濃湯、火鍋湯','啤酒、含糖飲料']},['ca'],['pur']);
+  if(['alt','ast','ggt','us_liver'].some(lv)||['nafld','hbv','hcv'].some(k=>cd.has(k)))add({ic:'🫁',t:'護肝（脂肪肝）',why:whyC(['alt','ast','ggt','us_liver'],['nafld','hbv','hcv']),do:[`體重減 5%（到 ${(w*.95).toFixed(1)} kg）肝脂肪就會下降；減 7–10%（到 ${(w*.9).toFixed(1)}–${(w*.93).toFixed(1)} kg）可改善肝發炎`,'追蹤脂肪肝期間以不喝酒為佳；少含糖飲料（果糖直接在肝臟變脂肪）','少油炸、少宵夜','無糖黑咖啡一天 1–2 杯對肝有幫助'],eat:['蔬菜、全穀','魚、豆腐'],avoid:['酒','油炸','含糖飲料']},[],['oil']);
   if(kid)add({ic:'🫘',t:'護腎',why:why(['egfr','cr','upro','uacr','bun']),do:[`蛋白質 0.8 g/kg（約 ${Math.round(w*.8)} g），不吃高蛋白補充品`,'鹽 ≤5 g','不亂吃止痛藥、中草藥偏方',(num(l?.items?.egfr?.v)??99)<45?'eGFR <45：鉀、磷要問營養師（加工食品、可樂含磷高）':'定期追蹤 eGFR 與尿蛋白'],eat:['適量魚、蛋、豆腐'],avoid:['高蛋白粉','加工食品','止痛藥']},[],['pro','salt']);
   if(lv('k')&&!lo('k'))add({ic:'🍌',t:'限鉀',why:why(['k']),do:['高鉀蔬果（香蕉、奇異果、地瓜葉、菠菜）先燙過、湯不喝','不用低鈉鹽（含鉀）'],eat:['燙過的蔬菜'],avoid:['香蕉、奇異果','菜湯、肉湯','低鈉鹽']},[],['kf']);
-  if(lo('hb')||lo('ferritin')||lo('fe'))add({ic:'🥩',t:'補鐵',why:why(['hb','ferritin','fe']),do:['紅肉（牛、豬）每週 2–3 次，深綠蔬菜天天吃','搭配維生素 C 水果（芭樂、奇異果）幫助吸收','茶、咖啡飯後隔 1 小時再喝'],eat:['牛肉','菠菜、地瓜葉','芭樂'],avoid:['飯後馬上喝茶']},['fe']);
+  if((lo('hb')||lo('ferritin')||lo('fe'))&&!(cd.has('thal')&&!lo('ferritin')&&!lo('fe')))add({ic:'🥩',t:'補鐵',why:why(['hb','ferritin','fe']),do:['紅肉（牛、豬）每週 2–3 次，深綠蔬菜天天吃','搭配維生素 C 水果（芭樂、奇異果）幫助吸收','茶、咖啡飯後隔 1 小時再喝'],eat:['牛肉','菠菜、地瓜葉','芭樂'],avoid:['飯後馬上喝茶']},['fe']);
   if(lo('vitd'))add({ic:'☀️',t:'補維生素 D',why:why(['vitd']),do:['每天曬太陽 10–15 分鐘（手腳露出）','鮭魚、鯖魚、蛋黃、曬過的香菇',num(l?.items?.vitd?.v)<20?'低於 20 ng/mL：和醫師討論補充劑量':'3 個月後複驗'],eat:['鮭魚、鯖魚','蛋黃'],avoid:[]},['fish']);
-  if(lv('dxa')||lo('ca')||(m.sex==='f'&&a>=50))add({ic:'🦴',t:'顧骨本',why:why(['dxa','ca'])||'50 歲以上女性',do:['鈣一天 1000–1200 mg：乳品 1.5–2 杯、板豆腐、小魚乾、深綠蔬菜','維生素 D 一起補','含糖飲料少喝、咖啡一天 ≤2 杯'],eat:['牛奶、優格','板豆腐','芥藍、小魚乾'],avoid:['碳酸飲料']},['ca']);
+  if(lv('dxa')||lo('ca')||(m.sex==='f'&&a>=50)||cd.has('osteo'))add({ic:'🦴',t:'顧骨本',why:whyC(['dxa','ca'],['osteo'])||'50 歲以上女性',do:['鈣一天 1000–1200 mg：乳品 1.5–2 杯、板豆腐、小魚乾、深綠蔬菜','維生素 D 一起補','含糖飲料少喝、咖啡一天 ≤2 杯'],eat:['牛奶、優格','板豆腐','芥藍、小魚乾'],avoid:['碳酸飲料']},['ca']);
   if(lo('b12')||lo('folate'))add({ic:'🧬',t:'補 B12／葉酸',why:why(['b12','folate']),do:['B12：蛋、奶、肉、魚（全素者要補充劑）','葉酸：深綠蔬菜、豆類'],eat:['蛋、奶','深綠蔬菜'],avoid:[]},['fe']);
   if(a>=65&&!kid)add({ic:'👴',t:'防肌少症',why:`${Math.floor(a)} 歲`,do:[`蛋白質 ${Math.round(c.prot)} g（每公斤 1.2 g 以上），每餐都要有`,'牙口不好改軟質：蒸蛋、豆腐、魚肉','配合每週 2 次肌力訓練'],eat:['蒸蛋、豆腐','魚'],avoid:['只吃稀飯配醬菜']},['ca']);
   if(!F.length)add({ic:'🥗',t:'均衡維持',why:'目前數值都在標準內',do:['照「我的餐盤」：每天 1.5–2 杯乳品、水果 2 份、蔬菜 3 份以上、全穀至少 ⅓','每週 2 次以上吃魚','含糖飲料少喝'],eat:['原型食物'],avoid:['加工食品']},['fib','fish']);
@@ -1191,12 +1197,12 @@ const EX={
   bike:{n:'騎腳踏車／飛輪',e:'🚴',t:'c',met:6,how:'座椅調到踩最低點時膝蓋微彎，阻力輕、每分鐘 70–90 轉',bad:[]},
   hike:{n:'爬山／爬樓梯',e:'⛰️',t:'c',met:7,how:'下坡最傷膝，用登山杖、放慢速度',bad:['knee','ankle','heart','obese','bp2']},
   ball:{n:'球類（羽球、桌球）',e:'🏸',t:'c',met:6,how:'急停轉向多，熱身要足',bad:['knee','ankle','back','osteo','preg','obese']},
-  hiit:{n:'間歇訓練 HIIT',e:'⚡',t:'c',met:8,how:'20 秒衝刺＋40 秒休息 × 8–10 組',bad:['knee','ankle','back','osteo','heart','preg','obese','bp2','old','new']},
+  hiit:{n:'間歇訓練 HIIT',e:'⚡',t:'c',met:8,how:'20 秒衝刺＋40 秒休息 × 8–10 組',bad:['knee','ankle','back','osteo','heart','cvr','preg','obese','bp2','old','new']},
   gym:{n:'重訓（器械）',e:'🏋️',t:'s',met:5,how:'用力時吐氣、不憋氣；器械比自由重量安全',bad:[]},
   home:{n:'居家肌力',e:'🤸',t:'s',met:3.8,how:'徒手或彈力帶，動作見下方',bad:[]},
   yoga:{n:'瑜伽／伸展',e:'🧘',t:'f',met:2.5,how:'每個伸展停 20–30 秒、不彈震',bad:[]},
   taichi:{n:'太極拳',e:'☯️',t:'b',met:3,how:'重心轉移練平衡，膝蓋不超過腳尖、不蹲太低',bad:[]}};
-const WHYNOT={knee:'膝蓋不適',ankle:'腳踝／足底不適',back:'下背痛',shoulder:'肩膀不適',osteo:'骨質疏鬆（怕衝擊、跌倒）',heart:'心臟病史（先讓醫師評估）',preg:'懷孕中',obese:'BMI ≥30，先用低衝擊保護關節',bp2:'血壓 ≥160/100，先暫停高強度',old:'65 歲以上，先練肌力與平衡',new:'新手，先打好有氧基礎'};
+const WHYNOT={knee:'膝蓋不適',ankle:'腳踝／足底不適',back:'下背痛',shoulder:'肩膀不適',osteo:'骨質疏鬆（怕衝擊、跌倒）',heart:'心臟病史（先讓醫師評估）',preg:'懷孕中',obese:'BMI ≥30，先用低衝擊保護關節',bp2:'血壓 ≥160/100，先暫停高強度',cvr:'冠狀動脈鈣化或中風病史（高強度前先讓醫師評估）',old:'65 歲以上，先練肌力與平衡',new:'新手，先打好有氧基礎'};
 const MOVES=[
   {n:'椅子深蹲',d:'坐下、站起，膝蓋對準腳尖',r:12,bad:['knee']},{n:'坐姿抬腿',d:'坐椅子把小腿伸直停 5 秒（護膝的大腿訓練）',r:12,bad:[]},
   {n:'臀橋',d:'躺姿抬臀、停 2 秒',r:15,bad:['preg']},{n:'弓箭步',d:'前後腳下蹲，每腳',r:10,bad:['knee','ankle','osteo']},
@@ -1208,12 +1214,13 @@ const fitOf=m=>{const f=obj(m.fit);return{lim:Array.isArray(f.lim)?f.lim.filter(
 const DOW='一二三四五六日';
 function fitPlan(m){
   const c=calc(m),a=c.a,fp=fitOf(m),{scale,lab,s,l}=issuesOf(m),all=[...lab,...scale],lv=k=>all.reduce((x,i)=>i.k===k?Math.max(x,i.lv):x,0),iv=k=>num(l?.items?.[k]?.v);
-  const sbp=iv('sbp'),dbp=iv('dbp'),F=new Set(fp.lim),wr=watchOf(m)[0];
+  const sbp=iv('sbp'),dbp=iv('dbp'),CL=condLims(m),CK=condKeys(m),F=new Set([...fp.lim,...CL.lims]),wr=watchOf(m)[0];
+  if(lv('cac')||lv('img_cac'))F.add('cvr');   // 冠狀動脈鈣化：高強度前先讓心臟科評估
   if(wr?.afib||num(wr?.rhr)>100)F.add('heart');   // 手錶提示心律不整、靜止心率 >100：先讓心臟科評估
   if(lv('dxa')>=2)F.add('osteo');if(lv('ekg')>=2||lv('ntprobnp')>=2)F.add('heart');if(c.bmi>=30)F.add('obese');
   if(sbp>=160||dbp>=100)F.add('bp2');if(a>=65&&fp.lvl!=='pro')F.add('old');if(fp.lvl==='new')F.add('new');
-  const stop=sbp>=180||dbp>=110,sugar=['glu','hba1c','pcg','homa','ins'].some(lv),ok=k=>!EX[k].bad.some(x=>F.has(x));
-  const no=Object.entries(EX).filter(([k,e])=>!ok(k)&&(fp.like.includes(k)||['run','slowjog','hike','ball','hiit'].includes(k))).map(([k,e])=>({k,e,why:e.bad.filter(x=>F.has(x)).map(x=>WHYNOT[x])}));
+  const stop=sbp>=180||dbp>=110,sugar=['glu','hba1c','pcg','homa','ins'].some(lv)||CK.has('dm')||CK.has('predm'),ok=k=>!EX[k].bad.some(x=>F.has(x));
+  const no=Object.entries(EX).filter(([k,e])=>!ok(k)&&(fp.like.includes(k)||['run','slowjog','hike','ball','hiit'].includes(k))).map(([k,e])=>({k,e,why:e.bad.filter(x=>F.has(x)).map(x=>CL.why[x]&&!fp.lim.includes(x)?`${CL.why[x]}（病史）`:WHYNOT[x])}));
   const def=F.has('knee')||F.has('obese')||F.has('ankle')?['aqua','swim','bike','walk']:fp.lvl==='pro'?['run','bike','swim','hiit','walk']:fp.lvl==='mid'?['slowjog','walk','bike','swim','run']:['walk','slowjog','bike','swim'];
   const cardio=[...new Set([...fp.like,...def])].filter(k=>EX[k].t==='c'&&ok(k)).slice(0,3);
   const str=fp.like.includes('gym')?'gym':'home',bal=a>=65||fp.like.includes('taichi')?'taichi':fp.like.includes('yoga')||F.has('back')?'yoga':null;
@@ -1229,34 +1236,423 @@ function fitPlan(m){
     days.push({d,rest:false,b})}
   // 休息日：有氧還差多少，就用快走補（每天 10–30 分）；血糖高改成飯後散步
   const rest=days.filter(x=>x.rest),per=Math.min(30,Math.max(sugar?15:10,Math.ceil(Math.max(0,aerT-aer)/Math.max(1,rest.length)/5)*5));
-  rest.forEach(x=>{x.b.push({k:'walk',min:per,note:sugar?'分成三餐飯後各走一段':'快走或散步都可以'});aer+=per});
+  rest.forEach(x=>{x.b.push({k:'walk',min:per,note:sugar?'分成三餐飯後各走一段':F.has('ankle')?'分 2 段走、穿厚底避震鞋；腳痛就改騎腳踏車':'快走或散步都可以'});aer+=per});
   days.forEach(x=>x.kcal=Math.round(x.b.reduce((t,y)=>t+metK(EX[y.k].met,c.w,y.min),0)));
-  const hrMax=Math.round(208-.7*a),hrRest=num(wr?.rhr)||num(s?.hr)||iv('pulse')||null,hrSrc=num(wr?.rhr)?'手錶 7 天平均':num(s?.hr)?'體脂機':iv('pulse')?'體檢':'',lo=fp.lvl==='pro'&&!F.has('heart')&&!F.has('bp2')?.6:.5,hi=F.has('heart')||F.has('bp2')||F.has('old')||fp.lvl==='new'?.65:.75;
+  const hrMax=Math.round(208-.7*a),hrRest=num(wr?.rhr)||num(s?.hr)||iv('pulse')||null,hrSrc=num(wr?.rhr)?'手錶 7 天平均':num(s?.hr)?'體脂機':iv('pulse')?'體檢':'',lo=fp.lvl==='pro'&&!F.has('heart')&&!F.has('bp2')?.6:.5,hi=F.has('heart')||F.has('cvr')||F.has('bp2')||F.has('old')||fp.lvl==='new'?.65:.75;
   const zone=hrRest?[Math.round(hrRest+(hrMax-hrRest)*lo),Math.round(hrRest+(hrMax-hrRest)*hi)]:[Math.round(hrMax*(lo+.1)),Math.round(hrMax*(hi+.1))];
   const mv=MOVES.filter(x=>!x.bad.some(y=>F.has(y))).sort((x,y)=>(a>=65&&y.n==='單腳站')-(a>=65&&x.n==='單腳站')).slice(0,6),sets=fp.lvl==='new'?2:3;
   const W=[];const w=(ic,t,d)=>W.push({ic,t,d});
   if(stop)w('🚨',`血壓 ${sbp}/${dbp} 太高`,'先就醫把血壓控制下來，再開始中高強度運動；目前只做輕鬆散步');
-  if(!F.has('heart')&&(lv('cac')||lv('img_cac')))w('❤️','冠狀動脈有鈣化：中等強度最好','快走、腳踏車、游泳對血管最有幫助；要做高強度（HIIT、比賽、重訓衝重量）前先問心臟科，必要時做運動心電圖；胸悶、胸痛立刻停');
+  for(const c of CL.items)if(c.T?.fw)w(...c.T.fw);
+  if(CK.has('stroke'))w('🧠','中風病史：中等強度與平衡訓練','高強度前先問神經內科或心臟內科；平衡不好時不要單獨爬高、走濕滑地面');
+  if(!F.has('heart')&&(lv('cac')||lv('img_cac')||CK.has('cac')))w('❤️','冠狀動脈有鈣化：中等強度最好','快走、腳踏車、游泳對血管最有幫助；要做高強度（HIIT、比賽、重訓衝重量）前先問心臟科，必要時做運動心電圖；胸悶、胸痛立刻停');
   if(F.has('heart'))w('❤️','心臟：先讓心臟科評估','醫師同意前只做中低強度；胸悶、胸痛、心悸立刻停');
   if(F.has('knee'))w('🦵','膝蓋：不排跑步、超慢跑、跳躍、爬山爬樓梯、球類','改游泳（自由式／仰式）、水中走路、腳踏車；運動後膝蓋腫痛超過 2 小時代表太多，下次減量');
-  if(F.has('ankle'))w('🦶','腳踝／足底：避免跑跳','選腳踏車、游泳；穿有足弓支撐的鞋');
+  if(F.has('ankle')&&!CK.has('ledd'))w('🦶','腳踝／足底：避免跑跳','選腳踏車、游泳；穿有足弓支撐的鞋');
   if(F.has('back'))w('🔙','下背：不做仰臥起坐、彎腰提重物','加強鳥狗式、臀橋，練核心穩定');
   if(F.has('shoulder'))w('💪','肩膀：避免過頭推舉、蝶式','游泳改仰式或踢水板');
   if(F.has('osteo'))w('🦴','骨鬆：避免衝擊、扭轉、彎腰駝背的動作','快走、肌力、平衡訓練最能保骨本、防跌倒');
   if(F.has('asthma'))w('🌬️','氣喘：隨身帶急救吸入劑','熱身 10 分鐘以上；冷天、空汙時改室內');
   if(F.has('preg'))w('🤰','孕期：先問產檢醫師','16 週後避免仰躺、碰撞、憋氣用力');
   if(F.has('obese'))w('⚖️','BMI ≥30：先低衝擊','水中運動、腳踏車最保護膝蓋；體重降下來再加跑步');
-  if(!stop&&(lv('sbp')||lv('dbp')))w('🩺',`血壓 ${sbp||'—'}/${dbp||'—'}：有氧運動可降 5–8 mmHg`,'重訓用力時吐氣、不憋氣，避免頭低腳高；有吃血壓藥的人用「說話測試」判斷強度');
+  if(!stop&&(lv('sbp')||lv('dbp')||CK.has('htn')))w('🩺',`血壓 ${sbp||'—'}/${dbp||'—'}${CK.has('htn')?'（高血壓病史）':''}：有氧運動可降 5–8 mmHg`,'重訓用力時吐氣、不憋氣，避免頭低腳高；有吃血壓藥的人用「說話測試」判斷強度');
   if(sugar)w('🩸','血糖偏高：飯後散步最有效','飯後 30 分鐘內走 10–15 分鐘；有吃降血糖藥的人運動前後量血糖、隨身帶糖果');
-  if(lv('ua'))w('💧','尿酸偏高：運動中每 15–20 分鐘喝水','避免劇烈到脫水；痛風發作時休息、冰敷');
+  if(lv('ua')||CK.has('gout'))w('💧','尿酸偏高／痛風：運動中每 15–20 分鐘喝水','避免劇烈到脫水；痛風發作時休息、冰敷');
   if(c.mode.kidney)w('🫘','腎功能異常：不做極高強度','也不要吃高蛋白補充品');
   if(a>=65)w('👴','65 歲以上：平衡訓練每週 3 次','單腳站、太極拳，降低跌倒風險');
-  if(wr?.steps!=null&&wr.steps<7000)w('👣',`手錶：每天約 ${fmt(Math.round(wr.steps))} 步`,wr.steps<4000?'先以每天多走 2,000 步為目標（例如午餐後走 20 分鐘），再慢慢加到 7,000 步以上':'目標每天 7,000–8,000 步；不夠的日子用飯後散步補');
+  if(wr?.steps!=null&&wr.steps<7000)w('👣',`手錶：每天約 ${fmt(Math.round(wr.steps))} 步`,F.has('ankle')||F.has('knee')?'足底或膝蓋有狀況：不用硬拚步數，用腳踏車、游泳、水中走路補足每週 150 分鐘有氧':wr.steps<4000?'先以每天多走 2,000 步為目標（例如午餐後走 20 分鐘），再慢慢加到 7,000 步以上':'目標每天 7,000–8,000 步；不夠的日子用飯後散步補');
   if(wr?.vo2!=null){const vc=vo2Cat(wr.vo2,a,m.sex);if(vc<=2)w('🫁',`手錶 VO₂max ${fmt(wr.vo2)}（同齡「${VO2T[vc]}」）`,'每週加 1 次間歇：快走或腳踏車「1 分鐘喘、2 分鐘輕鬆」× 6 組；3 個月後看手錶數字有沒有進步')}
   if(wr?.sleep!=null&&wr.sleep<6)w('😴',`手錶：平均睡 ${fmt(wr.sleep)} 小時`,'睡不夠時肌肉恢復差、容易受傷；先把睡眠拉到 7 小時，再加運動強度');
   w('🛑','出現這些立刻停','胸痛、頭暈、呼吸困難、冒冷汗、關節劇痛');
   return{c,fp,F,days,aer,aerT,strT,nS,cardio,str,bal,no,zone,hrMax,hrRest,hrSrc,mv,sets,W,stop,week:days.reduce((t,x)=>t+x.kcal,0)};
 }
+
+/* ================= 病史：醫師診斷過、體檢看不到的疾病（例如蹠筋膜纖維瘤症、CT 看到冠狀動脈鈣化） =================
+   使用者點選就好（年份、狀況、備註可不填）。App 依病史：調整運動課表（lim）、飲食模式（diet）、LDL 目標（ldl）、今年健檢建議（fu）、健康評語，
+   看診摘要圖附中英文病名與 ICD-10-CM 代碼給醫師看。內容依常見臨床指引整理，不是診斷；「已痊癒」只記錄、不影響建議 */
+const CONDG=[['cv','心臟血管'],['meta','代謝內分泌'],['gi','肝膽腸胃腎'],['msk','骨骼肌肉'],['resp','呼吸睡眠'],['neuro','神經情緒'],['other','其他']];
+const COND_ST=[['tx','治療中'],['fu','追蹤中'],['done','已痊癒（只記錄）']];
+const COND=[
+ {k:'htn',g:'cv',n:'高血壓',en:'Hypertension',icd:'I10',tip:'目標 <130/80，在家量血壓',diet:['heart'],lab:['sbp','dbp'],
+  w:['2022 台灣高血壓指引：多數人目標 <130/80 mmHg','在家量最準：722（連續 7 天、早晚各量 2 次，每次量 2 遍取平均）','降血壓藥不要自己停或減量；頭暈、腳腫等副作用告訴醫師'],
+  good:['快走、騎車、游泳等有氧，每週 150 分鐘（可降 5–8 mmHg）','輕到中等重量的肌力訓練，用力時吐氣'],bad:['憋氣用力（重訓衝重量、搬重物）','血壓 ≥180/110 時先不要運動，先就醫'],
+  care:['少鹽：每天鈉 <2,000 mg（約 5 克鹽），少加工食品、湯汁','多蔬果、全穀、低脂乳品（得舒飲食 DASH）','限酒、戒菸、維持腰圍（男 <90、女 <80 cm）','打鼾的人做「睡眠呼吸中止」檢測：沒治療血壓很難控制'],
+  red:['血壓 ≥180/120 合併胸痛、劇烈頭痛、視力模糊、單側無力或說話不清 → 立刻打 119'],dept:'心臟內科或家醫科',
+  q:['我的血壓目標是多少？在家量到多少要回診？','我的藥早上吃還是晚上吃比較好？','需要檢查腎臟、心臟有沒有受到高血壓影響嗎？'],
+  fu:[['居家血壓 722：連續 7 天、早晚各量 2 次','高血壓病史：用居家血壓判斷控制得好不好','自行量測','每 3 個月一次',2]]},
+ {k:'cac',g:'cv',n:'冠狀動脈鈣化（CT 發現）',en:'Coronary artery calcification (CAC)',icd:'I25.84',tip:'已有動脈硬化斑塊：LDL、血壓、血糖、不抽菸都要控制好',lim:['cvr'],diet:['heart'],
+  num:{n:'鈣化分數（Agatston，報告有寫才填）',min:0,max:10000},ldl:{t:70,lv:1,txt:'有冠狀動脈鈣化（已有動脈硬化斑塊）：這個 LDL 對一般人可能正常，但你的目標通常更嚴格，要降到多少、要不要用藥，由心臟內科依鈣化程度決定'},lab:['ldl','hdl','tg','sbp','dbp','glu','hba1c'],
+  w:['冠狀動脈有鈣化＝心臟血管壁已經有動脈硬化斑塊；鈣化不會消失，目標是讓斑塊穩定、不要再長','LDL、血壓、血糖、抽菸要控制得比一般人嚴格，目標由心臟內科依鈣化程度決定'],
+  good:['中等強度有氧：快走、騎車、游泳，每週 150 分鐘（微喘、還能說話）','每週 2 次肌力訓練（器械或彈力帶，用力時吐氣）','運動前暖身 5–10 分鐘、結束緩和 5 分鐘'],
+  bad:['還沒讓心臟內科評估前，先不做高強度（間歇 HIIT、衝刺、比賽、重訓衝最大重量）','寒冷清晨、剛吃飽、熬夜後做劇烈運動'],
+  care:['地中海飲食：多蔬菜、全穀、豆類、魚、堅果、橄欖油；少肥肉、油炸、酥皮、加工肉','完全戒菸、避開二手菸','維持體重與腰圍，睡足 7 小時','每年驗血脂、血糖；在家量血壓'],
+  red:['胸口悶、壓、痛超過 5 分鐘（尤其運動時），或合併冒冷汗、喘、噁心 → 立刻打 119','運動中胸悶、喘不過氣、頭暈 → 馬上停下並就醫'],dept:'心臟內科',
+  q:['我的冠狀動脈鈣化分數是多少？屬於哪個風險等級？','我的 LDL 要降到多少？需要吃降血脂藥（statin）嗎？','我可以做高強度運動嗎？需要先做運動心電圖嗎？','我需要吃阿斯匹靈嗎？'],
+  doc:'AHA/ACC 2018 膽固醇指引：CAC ≥100 建議使用 statin；1–99 偏向使用（尤其 ≥55 歲）；0 可延後（糖尿病、吸菸、早發家族史除外）。statin 治療後 CAC 分數可能上升（斑塊鈣化、較穩定），不建議重照 CAC 評估療效。',
+  fu:[['心臟內科：冠狀動脈有鈣化','依鈣化程度決定 LDL 目標、是否用 statin 或阿斯匹靈；必要時做運動心電圖','健保','今年',1]],
+  dyn:c=>{const s=c.score;if(s==null||s==='')return['報告沒寫分數：可以問醫師要不要做「冠狀動脈鈣化分數」CT；分數會影響 LDL 目標與是否用藥'];
+   return[s===0?'鈣化分數 0：這次沒有量到鈣化，短期風險低（糖尿病、抽菸、家族史仍要注意）':s<100?`鈣化分數 ${s}（輕度 1–99）：偏向使用降血脂藥，尤其 55 歲以上，請和心臟內科討論`:s<300?`鈣化分數 ${s}（中度 100–299）：依美國心臟學會指引建議使用降血脂藥（statin），請和心臟內科討論`:`鈣化分數 ${s}（重度 ≥300）：心血管風險明顯升高，請儘快和心臟內科討論用藥與檢查`]}},
+ {k:'cad',g:'cv',n:'冠心病／心肌梗塞／放過支架',en:'Coronary artery disease (s/p MI or stent)',icd:'I25.10',tip:'LDL <70、按時吃藥、心臟復健',lim:['heart'],diet:['heart'],ldl:{t:70,lv:2,src:'台灣血脂指引：冠心病'},lab:['ldl','sbp','dbp','hba1c'],
+  w:['台灣血脂指引：冠心病 LDL 目標 <70 mg/dL（急性冠心症後部分指引建議 <55）','抗血小板藥（阿斯匹靈、保栓通等）不能自己停；拔牙、開刀前先告訴醫師','血壓 <130/80、完全戒菸'],
+  good:['參加心臟復健（醫院有，在監測下逐步提高強度）','快走、騎車等中等強度有氧，每週 150 分鐘'],bad:['醫師評估前不做高強度、憋氣用力的運動','寒冷清晨外出劇烈運動'],
+  care:['地中海飲食、少鹽','按時吃藥；醫師有開舌下含片要隨身帶','每 3–6 個月回診驗血脂'],
+  red:['胸痛超過 5 分鐘、含舌下含片沒緩解、冒冷汗 → 立刻打 119'],dept:'心臟內科',
+  q:['我的 LDL 目標是 <70 還是 <55？現在的藥夠嗎？','我可以參加心臟復健嗎？運動心率上限是多少？','抗血小板藥要吃多久？拔牙要停嗎？'],
+  fu:[['心臟內科回診：血脂、血壓、用藥調整','冠心病 LDL 目標 <70 mg/dL','健保','每 3–6 個月',1]]},
+ {k:'af',g:'cv',n:'心房顫動／心律不整',en:'Atrial fibrillation',icd:'I48.91',tip:'中風風險高：評估抗凝血劑',lim:['heart'],
+  w:['心房顫動會讓中風風險增加約 5 倍；要不要吃抗凝血劑，醫師會用 CHA₂DS₂-VASc 分數決定','吃抗凝血劑的人：跌倒撞到頭、黑便、血尿要立刻就醫','手錶有心電圖功能的話，發作時記錄下來給醫師看'],
+  good:['中等強度有氧與肌力訓練（規律運動可減少發作）'],bad:['吃抗凝血劑時避免碰撞多的運動（籃球、武術）','運動中心悸、頭暈、胸悶立刻停'],
+  care:['少喝酒（常見誘因），咖啡因適量','治療睡眠呼吸中止、控制血壓與體重','按時吃藥，不要自己停抗凝血劑'],
+  red:['突然一側無力、嘴歪、說話不清 → 立刻打 119（中風）','心悸合併胸痛、喘或昏倒 → 立刻打 119'],dept:'心臟內科',
+  q:['我的 CHA₂DS₂-VASc 分數是多少？需要吃抗凝血劑嗎？','我是陣發性還是持續性？適合電燒嗎？','哪些藥或食物會影響我的抗凝血劑？'],
+  fw:['❤️','心房顫動：吃抗凝血劑時避免碰撞運動','運動中心悸、頭暈、胸悶立刻停；用「說話測試」控制強度（喘但還能說話）'],
+  fu:[['心臟內科：心房顫動追蹤（抗凝血評估）','用 CHA₂DS₂-VASc 分數評估是否需要抗凝血劑','健保','每 3–6 個月',1]]},
+ {k:'hf',g:'cv',n:'心衰竭',en:'Heart failure',icd:'I50.9',tip:'每天量體重、限鹽',lim:['heart'],diet:['heart'],
+  w:['每天早上上完廁所量體重：3 天內增加 2 公斤以上要提早回診（可能積水）','鹽和水分照醫師指示；按時吃藥'],
+  good:['心臟復健：在醫院監測下逐步運動，可改善體力與症狀'],bad:['症狀不穩定（休息也喘、腳腫加重）時先不要運動'],
+  care:['少鹽（鈉 <2,000 mg）','打流感、肺炎鏈球菌疫苗','不要自己吃消炎止痛藥（會讓心衰竭惡化）'],
+  red:['休息也喘、躺平會喘、半夜喘醒、咳粉紅色泡沫痰 → 立刻就醫或打 119'],dept:'心臟內科',
+  q:['我的心臟射出分率（EF）是多少？','每天水分要限制多少？體重增加多少要回診？','我可以參加心臟復健嗎？'],
+  fu:[['心臟內科：心臟超音波＋NT-proBNP','追蹤心臟功能','健保','依醫師安排',1]]},
+ {k:'stroke',g:'cv',n:'中風／小中風病史',en:'History of stroke or TIA',icd:'Z86.73',tip:'預防再中風：血壓、血脂、按時吃藥',lim:['cvr'],diet:['heart'],ldl:{t:100,lv:2,src:'缺血性中風'},lab:['sbp','dbp','ldl','hba1c'],
+  w:['預防再中風：血壓 <130/80、LDL <100（合併冠心病或醫師建議時 <70）','抗血小板或抗凝血藥不能自己停','記住 BE FAST：再出現任何一項立刻打 119'],
+  good:['復健科安排的運動與平衡訓練','快走、固定式腳踏車等有氧（依體力）'],bad:['平衡不好時不要單獨爬高、走濕滑地面','醫師評估前不做高強度'],
+  care:['控制三高、戒菸、少鹽','家中防跌：浴室止滑、夜燈','中風後情緒低落很常見，可以做「自我檢測 → 憂鬱」'],
+  red:['突然臉歪、手腳無力、說話不清、視力或平衡異常 → 立刻打 119（記下時間）'],dept:'神經內科',
+  q:['我的血壓、LDL 目標是多少？','抗血小板藥要吃多久？','需要做頸動脈超音波或心臟檢查找原因嗎？'],
+  fu:[['神經內科回診：血壓、血脂、抗血小板藥','預防再中風：血壓 <130/80、LDL <100','健保','依醫師安排',1]]},
+ {k:'varicose',g:'cv',n:'靜脈曲張',en:'Varicose veins',icd:'I83.90',tip:'久站久坐要動腳、穿彈性襪',
+  w:['久站久坐會加重：每 30–60 分鐘起來走動或踮腳','腳出現不容易好的傷口、皮膚變黑變硬要看醫生'],
+  good:['走路、游泳、騎車（小腿肌肉收縮幫血液回流）','坐著做踮腳尖運動'],bad:['長時間站著不動','重訓憋氣用力'],
+  care:['彈性襪（照醫師建議的壓力等級）','休息時把腳抬高','控制體重'],
+  red:['單腳突然腫痛、發熱發紅（可能是深部靜脈血栓）→ 儘快就醫；合併胸痛或呼吸困難 → 立刻打 119'],dept:'心臟血管外科',
+  q:['需要做下肢靜脈超音波嗎？','彈性襪要穿多少壓力？','適合雷射或手術嗎？']},
+ {k:'dm',g:'meta',n:'糖尿病',en:'Type 2 diabetes mellitus',icd:'E11.9',tip:'HbA1c <7%，每年查眼睛、腎臟、腳',diet:['lowCarb'],ldl:{t:100,lv:1,src:'糖尿病'},lab:['glu','hba1c','ldl','egfr','uacr'],
+  w:['多數人 HbA1c 目標 <7%（長者可放寬）；LDL <100、血壓 <130/80','每年檢查眼底、尿液微量白蛋白（UACR）、足部','用胰島素或磺醯脲類藥物的人小心低血糖：運動前後量血糖、隨身帶糖果'],
+  good:['每週 150 分鐘有氧＋2 次肌力訓練','飯後 30 分鐘內走 10–15 分鐘，降飯後血糖最有效'],bad:['血糖很高（>250）或身體不舒服時不要運動','腳麻木或有傷口時避免赤腳、長距離跑跳'],
+  care:['每天看腳：傷口、水泡、顏色變化；穿合腳的鞋','少含糖飲料；白飯換一半糙米或雜糧，先吃菜和蛋白質再吃飯','戒菸、控制體重（減 5% 就有效）'],
+  red:['血糖很高合併口渴多尿、噁心、意識不清，或低血糖冒冷汗、意識不清 → 立刻就醫或打 119'],dept:'新陳代謝科',
+  q:['我的 HbA1c 目標是多少？多久驗一次？','我的藥會造成低血糖嗎？運動前要先吃東西嗎？','我需要做眼底和腎臟檢查嗎？'],
+  fu:[['糖尿病年度檢查：眼底、尿液微量白蛋白 UACR、足部','糖尿病併發症（眼、腎、腳）早期沒有症狀','健保','每年',2],['糖化血色素 HbA1c','多數人目標 <7%','健保','每 3 個月',2]]},
+ {k:'predm',g:'meta',n:'糖尿病前期',en:'Prediabetes',icd:'R73.03',tip:'減重 5–7%＋規律運動，還來得及逆轉',diet:['lowCarb'],lab:['glu','hba1c'],
+  w:['空腹血糖 100–125 或 HbA1c 5.7–6.4%：還來得及逆轉','美國糖尿病預防研究（DPP）：減重 7%＋每週 150 分鐘運動，糖尿病風險降低約 58%'],
+  good:['每週 150 分鐘快走等有氧＋2 次肌力','飯後散步 10–15 分鐘'],bad:[],
+  care:['少含糖飲料、精緻澱粉；先吃菜和蛋白質再吃飯','睡足 7 小時'],red:[],dept:'家醫科或新陳代謝科',
+  q:['我多久要再驗一次 HbA1c？','需要吃藥預防嗎？'],
+  fu:[['糖化血色素 HbA1c','糖尿病前期每年追蹤','健保／自費','每年',2]]},
+ {k:'lipid',g:'meta',n:'高血脂（醫師診斷）',en:'Hyperlipidemia',icd:'E78.5',tip:'依整體風險決定 LDL 目標',diet:['heart'],lab:['ldl','hdl','tg','tc'],
+  w:['LDL 目標看整體風險：一般人依危險因子 <130–160，有糖尿病或慢性腎臟病 <100，冠心病 <70','吃降血脂藥（statin）不要自己停；肌肉痠痛無力、尿色變深要告訴醫師'],
+  good:['每週 150 分鐘有氧（可提高好膽固醇 HDL、降三酸甘油酯）'],bad:[],
+  care:['少飽和脂肪與反式脂肪：肥肉、油炸、酥皮、奶油、椰子油','多膳食纖維：燕麥、豆類、蔬菜','三酸甘油酯高：少酒、少甜食與精緻澱粉'],red:[],dept:'家醫科或心臟內科',
+  q:['我的 LDL 目標是多少？','我需要吃藥嗎？要吃多久？'],
+  fu:[['複驗空腹血脂（LDL、HDL、三酸甘油酯）','追蹤血脂控制','健保','每 3–6 個月',2]]},
+ {k:'gout',g:'meta',n:'痛風／高尿酸',en:'Gout',icd:'M10.9',tip:'尿酸 <6、多喝水、少酒少甜飲',diet:['lowPur'],lab:['ua','egfr'],
+  w:['治療目標尿酸 <6 mg/dL（有痛風石 <5）','降尿酸藥要長期吃，發作期間也不要自己停'],
+  good:['游泳、騎車等不傷關節的有氧','規律運動、慢慢減重'],bad:['發作時不要運動，也不要熱敷、按摩患部','劇烈運動到脫水、快速減重（尿酸會上升）'],
+  care:['每天喝水約 2,000 c.c.（心臟、腎臟病依醫師指示）','少酒（尤其啤酒）、少含糖飲料與果汁（果糖）','少內臟、濃湯、火鍋湯；豆腐、豆類不用刻意避開'],
+  red:['關節紅腫熱痛合併發燒 → 儘快就醫（要排除感染）'],dept:'風濕免疫科或新陳代謝科',
+  q:['我需要吃降尿酸藥嗎？要吃多久？','發作時可以吃什麼止痛？','我的腎功能有受影響嗎？'],
+  fu:[['複驗尿酸','治療目標 <6 mg/dL','健保','每 3–6 個月',2]]},
+ {k:'hyperthy',g:'meta',n:'甲狀腺亢進',en:'Hyperthyroidism',icd:'E05.90',tip:'規律吃藥、定期驗甲狀腺',lab:['tsh','ft4','wbc'],
+  w:['症狀：心悸、手抖、怕熱、體重下降；還沒控制好時心跳容易偏快','抗甲狀腺藥少數人會讓白血球下降：發燒、喉嚨痛要立刻驗血'],
+  good:['控制穩定後再逐步恢復運動強度'],bad:['還沒控制好（心悸、心跳快）時避免劇烈運動'],
+  care:['碘（海帶、紫菜）依醫師建議','戒菸（會讓眼睛凸出更嚴重）'],
+  red:['高燒、心跳 >140、意識改變、嘔吐腹瀉 → 立刻掛急診（甲狀腺風暴）'],dept:'新陳代謝科',
+  q:['我的藥要吃多久？可以考慮放射碘或手術嗎？','多久驗一次甲狀腺功能和白血球？'],
+  fu:[['複驗甲狀腺功能 TSH＋Free T4','追蹤甲狀腺亢進控制','健保','每 1–3 個月（穩定後拉長）',2]]},
+ {k:'hypothy',g:'meta',n:'甲狀腺低下',en:'Hypothyroidism',icd:'E03.9',tip:'早上空腹吃藥、定期抽血',lab:['tsh','ft4'],
+  w:['甲狀腺素早上空腹吃，30–60 分鐘後再吃早餐','和鈣片、鐵劑、制酸劑至少隔 4 小時'],
+  good:['規律有氧和肌力（劑量調好後體力會改善）'],bad:[],
+  care:['定期抽血調整劑量','懷孕或計畫懷孕要馬上告訴醫師（劑量通常要調高）'],red:[],dept:'新陳代謝科',
+  q:['我的 TSH 目標是多少？','藥可以和咖啡一起吃嗎？'],
+  fu:[['複驗甲狀腺功能 TSH＋Free T4','調整甲狀腺素劑量','健保','每 6–12 個月',2]]},
+ {k:'thynod',g:'meta',n:'甲狀腺結節',en:'Thyroid nodule',icd:'E04.1',tip:'照醫師安排追蹤超音波',lab:['thyus','tsh'],
+  w:['大多數是良性；依超音波特徵（TI-RADS）決定要不要細針穿刺','照醫師安排的時間追蹤超音波'],good:[],bad:[],
+  care:['不用刻意多吃或少吃海鮮（碘），除非醫師交代'],
+  red:['脖子腫塊變大變硬、聲音沙啞、吞嚥或呼吸困難 → 儘快回診'],dept:'新陳代謝科或一般外科',
+  q:['我的結節 TI-RADS 是幾類？需要細針穿刺嗎？','多久追蹤一次超音波？'],
+  fu:[['甲狀腺超音波追蹤','依結節大小與特徵決定間隔','健保','依醫師安排（常見 6–12 個月）',2]]},
+ {k:'nafld',g:'gi',n:'脂肪肝',en:'Fatty liver disease (MASLD)',icd:'K76.0',tip:'減重 7–10% 可明顯改善',diet:['liver','lowCarb'],lab:['alt','ast','ggt','us_liver'],
+  w:['脂肪肝可能進展成肝纖維化、肝硬化；App 會用 FIB-4 估算纖維化風險','減重 7–10% 可以明顯減少肝臟脂肪，≥10% 有機會改善纖維化'],
+  good:['每週 150–300 分鐘有氧＋肌力訓練（體重沒掉，運動本身也能減肝脂肪）'],bad:[],
+  care:['戒酒或少喝','少含糖飲料、果汁、精緻澱粉、宵夜','不要亂吃保肝偏方或來路不明的藥草'],
+  red:['皮膚眼白變黃、肚子脹大、黑便、吐血 → 儘快就醫'],dept:'腸胃肝膽科',
+  q:['我需要做肝臟纖維化掃描（FibroScan）嗎？','我的肝指數多久追蹤一次？'],
+  fu:[['複驗肝功能＋腹部超音波','脂肪肝追蹤','健保／自費','每年',2]]},
+ {k:'hbv',g:'gi',n:'B 肝帶原／慢性 B 肝',en:'Chronic hepatitis B',icd:'B18.1',tip:'每 6 個月抽血＋腹部超音波',diet:['liver'],lab:['alt','afp','us_liver'],
+  w:['B 肝帶原是肝癌高風險族群：每 6 個月抽血（肝功能、AFP）＋腹部超音波','要不要吃抗病毒藥由醫師依病毒量與肝指數決定；吃了不能自己停（停藥可能急性發作）'],
+  good:['規律運動、維持體重（避免再合併脂肪肝）'],bad:[],
+  care:['戒酒；不吃來路不明的草藥、保健品','家人（配偶、子女）驗 B 肝、沒抗體就打疫苗','化療或免疫抑制治療前，一定要告訴醫師你是 B 肝帶原'],
+  red:['疲倦、食慾差、茶色尿、皮膚眼白變黃 → 儘快就醫（可能急性發作）'],dept:'腸胃肝膽科',
+  q:['我的 B 肝病毒量是多少？需要吃抗病毒藥嗎？','有沒有肝硬化？需要做纖維化掃描嗎？'],
+  fu:[['B 肝追蹤：肝功能＋腹部超音波＋AFP','B 肝帶原是肝癌高風險族群，需定期追蹤並評估是否用藥','健保','每 6 個月',1]]},
+ {k:'hcv',g:'gi',n:'C 型肝炎',en:'Hepatitis C',icd:'B18.2',tip:'口服藥 8–12 週治癒率 >95%',diet:['liver'],lab:['alt','antihcv'],
+  w:['現在有口服抗病毒藥，8–12 週治癒率超過 95%，健保有給付','治癒後如果已有肝纖維化或肝硬化，仍要定期追蹤肝癌'],good:[],bad:[],
+  care:['戒酒','不共用刮鬍刀、牙刷'],red:['皮膚變黃、肚子脹大、黑便 → 儘快就醫'],dept:'腸胃肝膽科',
+  q:['我還有病毒嗎？可以用口服新藥治療嗎？','治好後還要追蹤什麼？'],
+  fu:[['C 肝病毒量 HCV RNA','確認是否仍有病毒；口服藥 8–12 週治癒率超過 95%','健保','還沒治療時儘快',1]]},
+ {k:'ckd',g:'gi',n:'慢性腎臟病',en:'Chronic kidney disease',icd:'N18.9',tip:'不亂吃止痛藥、控制血壓血糖',diet:['kidney'],ldl:{t:100,lv:1,src:'慢性腎臟病'},lab:['egfr','cr','uacr','k','sbp'],
+  w:['血壓 <130/80、血糖控制好、LDL <100 能延緩腎功能變差','避免消炎止痛藥（例如布洛芬、部分痠痛藥）與來路不明的中草藥','看任何科都要告訴醫師你有腎臟病（很多藥要調劑量）'],
+  good:['規律中等強度運動（快走、騎車）'],bad:['極高強度、會大量流汗脫水的運動'],
+  care:['少鹽；蛋白質照醫師或營養師建議（App 已自動限制在每公斤 0.8 克）','不吃高蛋白補充品、不亂吃草藥'],
+  red:['尿量明顯變少、全身水腫、喘 → 儘快就醫'],dept:'腎臟科',
+  q:['我是第幾期？eGFR 一年掉多少？','我的藥哪些要調劑量？','飲食要限鉀、限磷嗎？'],
+  fu:[['複驗腎功能：肌酸酐／eGFR＋尿液＋UACR','追蹤腎功能變化','健保','每 3–6 個月',1]]},
+ {k:'stone',g:'gi',n:'腎結石',en:'Kidney stone',icd:'N20.0',tip:'多喝水，尿色淡黃',lab:['ua','ca'],
+  w:['結石很容易復發：5–10 年內約一半的人會再長'],good:['規律運動'],bad:['運動流汗後沒補水'],
+  care:['每天喝水讓尿量 2–2.5 公升（尿色淡黃）','少鹽、少大量動物性蛋白','鈣質正常吃（刻意不吃鈣反而容易結石）；菠菜、濃茶、堅果等高草酸食物適量'],
+  red:['劇烈腰痛合併發燒、發抖 → 立刻掛急診（可能阻塞合併感染）'],dept:'泌尿科',
+  q:['我的結石是什麼成分？','需要定期照超音波嗎？']},
+ {k:'gallstone',g:'gi',n:'膽結石／膽囊瘜肉',en:'Gallstones / gallbladder polyp',icd:'K80.20',tip:'規律三餐、少油',lab:['us_gb'],
+  w:['沒有症狀的膽結石多數只需追蹤','膽囊瘜肉 ≥1 公分或越來越大要考慮手術'],good:[],bad:[],
+  care:['規律三餐、少油炸高脂大餐','避免快速減重（會增加結石）'],
+  red:['右上腹劇痛、發燒、皮膚或眼白變黃 → 立刻掛急診'],dept:'腸胃肝膽科或一般外科',
+  q:['我需要開刀嗎？','多久追蹤一次超音波？'],
+  fu:[['腹部超音波追蹤','追蹤膽結石或瘜肉大小','健保','每年',3]]},
+ {k:'gerd',g:'gi',n:'胃食道逆流',en:'Gastroesophageal reflux disease (GERD)',icd:'K21.9',tip:'睡前 3 小時不吃、床頭墊高',
+  w:['長期逆流可能造成食道發炎或巴瑞特食道（Barrett’s）'],good:['規律運動、減重有幫助'],bad:['剛吃飽就運動、彎腰或倒立的動作'],
+  care:['睡前 3 小時不吃東西、床頭墊高 15–20 公分','少咖啡、酒、辛辣、甜食、油炸；吃七分飽','戒菸、減重'],
+  red:['吞嚥困難、吐血、黑便、體重莫名下降 → 儘快做胃鏡'],dept:'腸胃科',
+  q:['我需要做胃鏡嗎？','制酸藥要吃多久？']},
+ {k:'polyp',g:'gi',n:'大腸瘜肉（切除過）',en:'History of colonic polyps',icd:'',tip:'依瘜肉病理決定下次大腸鏡',
+  w:['下次大腸鏡的時間依瘜肉病理（腺瘤數量、大小）決定，常見 3–5 年','在「家族史與生活習慣」填上次大腸鏡年份，App 會排進檢查輪替'],
+  good:['規律運動可以降低大腸癌風險'],bad:[],care:['多蔬果全穀，少紅肉與加工肉，少酒、戒菸'],
+  red:['血便、排便習慣改變、貧血 → 提早做大腸鏡'],dept:'腸胃科',
+  q:['我的瘜肉是哪一種？下次大腸鏡什麼時候？'],
+  fu:[['大腸鏡追蹤','依上次瘜肉病理決定間隔（腺瘤常見 3–5 年）','健保','依醫師安排',2]]},
+ {k:'ledd',g:'msk',n:'蹠筋膜纖維瘤症',en:'Plantar fibromatosis (Ledderhose disease)',icd:'M72.2',tip:'良性結節：減壓鞋墊、避免跑跳與重壓',lim:['ankle'],lab:['glu','hba1c'],
+  w:['足底筋膜長出的良性纖維結節（不是癌症、不會轉移），常兩腳都有、長得很慢','結節被壓到、久站、走太久會痛；不要自己深層按摩、用力推壓或敲打結節（反覆刺激可能讓它變大）','和手掌的「杜普伊特倫攣縮」同一類：也檢查手掌有沒有硬結、手指能不能伸直','糖尿病、抽菸、喝酒、肝病的人比較常見'],
+  good:['騎腳踏車／飛輪、游泳、水中走路、划船機：有氧但不壓到足底','上半身與核心肌力訓練','小腿與足底溫和伸展（不要壓到結節）','快走可以，但穿厚底避震鞋、分段走（每次 15–20 分鐘）'],
+  bad:['跑步、跳繩、跳躍類（間歇跳躍、籃球、羽球急停）','長時間站立、赤腳走硬地','用按摩球、滾筒直接滾壓結節'],
+  care:['鞋墊：軟材質、在結節位置挖空減壓（可請復健科或鞋墊師製作）','鞋子：厚底、足弓支撐好、鞋頭寬','控制體重減少足底壓力；戒菸、少喝酒、控制血糖','每幾個月拍照或量一次結節大小，記錄變化'],
+  red:['結節快速變大、變多、皮膚破皮，或腳趾開始彎曲 → 提早回診'],dept:'骨科（足踝）或復健科',
+  q:['我的結節有幾顆、多大？需要超音波或 MRI 追蹤嗎？','鞋墊要怎麼挖空？需要客製鞋墊嗎？','如果越來越痛，有哪些治療（類固醇注射、低劑量放射治療、手術）？','跑步可以做嗎？哪些運動最適合我？'],
+  doc:'Plantar fibromatosis（Ledderhose disease）：處置以觀察與減壓鞋墊為主；疼痛可考慮局部類固醇注射；早期進展者可考慮低劑量放射治療；手術（筋膜切除）復發率高，保留給嚴重症狀者。',
+  fw:['🦶','蹠筋膜纖維瘤症：有氧改用腳踏車、游泳、水中走路','跑跳、久站會壓到結節；快走穿厚底避震鞋、分段走；不要用按摩球滾壓結節'],
+  fu:[['骨科／復健科：蹠筋膜結節追蹤','結節變大、變多、越來越痛時回診；必要時超音波確認','健保','有變化時，或每年一次',3]]},
+ {k:'pf',g:'msk',n:'足底筋膜炎',en:'Plantar fasciitis',icd:'M72.2',tip:'早上第一步痛：伸展＋好鞋',lim:['ankle'],
+  w:['典型症狀：早上下床第一步、久坐站起來腳跟痛','多數人 6–12 個月內會好，持續伸展最重要'],
+  good:['騎腳踏車、游泳','每天做小腿與足底伸展（拉毛巾、踩階梯伸展），腳底滾冰水瓶 10 分鐘'],bad:['跑跳、爬山、赤腳走硬地','突然增加走路或跑步量'],
+  care:['穿有足弓支撐、鞋跟有緩衝的鞋，家裡也穿室內鞋','控制體重'],
+  red:['腳跟紅腫發熱、晚上痛到醒來，或超過 3 個月沒改善 → 看復健科或骨科（可考慮震波治療）'],dept:'復健科或骨科',
+  q:['我適合做震波或注射嗎？','需要夜間副木或鞋墊嗎？']},
+ {k:'kneeoa',g:'msk',n:'退化性膝關節炎',en:'Knee osteoarthritis',icd:'M17.9',tip:'練大腿肌力、減重、少爬山',lim:['knee'],
+  w:['每減 1 公斤，走路時膝蓋少承受約 4 公斤的力量'],
+  good:['騎腳踏車、游泳（自由式、仰式）、水中走路','坐姿抬腿、側躺抬腿等大腿與臀部肌力（最能保護膝蓋）'],bad:['深蹲、跪姿、爬山、大量上下樓梯','跑跳、急停轉向的球類'],
+  care:['減重','痛的時候冰敷 15 分鐘；不要長期自己吃消炎止痛藥（傷胃傷腎）'],
+  red:['膝蓋突然紅腫熱痛、發燒，或卡住伸不直 → 儘快就醫'],dept:'骨科或復健科',
+  q:['我的退化是第幾期？','適合打玻尿酸或增生療法嗎？','運動後痛多久算正常？']},
+ {k:'disc',g:'msk',n:'椎間盤突出／坐骨神經痛',en:'Lumbar disc herniation / sciatica',icd:'M51.26',tip:'核心訓練、不彎腰搬重',lim:['back'],
+  w:['多數人 6–12 週內會改善，不一定要開刀'],
+  good:['走路、游泳、水中運動','核心穩定訓練：鳥狗式、臀橋（在不痛的範圍）'],bad:['彎腰搬重物、仰臥起坐、扭腰的運動（高爾夫、網球）','久坐超過 30–60 分鐘不起來'],
+  care:['搬東西時蹲下、東西貼近身體','椅子有腰靠、螢幕在視線高度'],
+  red:['大小便失禁或解不出來、會陰部麻木、腳越來越無力 → 立刻掛急診（馬尾症候群）'],dept:'骨科、神經外科或復健科',
+  q:['需要做 MRI 嗎？','復健要做多久？什麼情況要考慮手術？']},
+ {k:'osteo',g:'msk',n:'骨質疏鬆',en:'Osteoporosis',icd:'M81.0',tip:'鈣＋維生素 D＋肌力訓練、防跌',lim:['osteo'],lab:['dxa','vitd','ca'],
+  w:['骨鬆本身不痛，第一個症狀常是骨折（手腕、脊椎、髖部）','依醫師指示用藥、不要自己停；拔牙前告訴牙醫你在用骨鬆藥'],
+  good:['快走、肌力訓練、太極拳（防跌）'],bad:['彎腰駝背加扭轉的動作（仰臥起坐、彎腰搬重）','跌倒風險高的運動'],
+  care:['鈣質每天約 1,000 mg（牛奶、優格、小魚乾、板豆腐、深綠色蔬菜）','維生素 D：曬太陽或依醫師補充','戒菸、少酒、家中防跌'],
+  red:['跌倒後背痛或髖部痛、不能走 → 儘快就醫（可能骨折）'],dept:'骨科、新陳代謝科或婦產科',
+  q:['我需要用骨鬆藥嗎？要用多久？','多久追蹤一次骨密度？','我的維生素 D 夠嗎？'],
+  fu:[['骨密度 DXA','追蹤骨鬆治療效果','健保／自費','每 1–2 年',2]]},
+ {k:'frozen',g:'msk',n:'五十肩（沾黏性肩關節囊炎）',en:'Adhesive capsulitis (frozen shoulder)',icd:'M75.00',tip:'持續做肩關節活動度運動',lim:['shoulder'],
+  w:['通常 1–2 年會慢慢恢復，持續復健可以縮短時間'],
+  good:['鐘擺運動、爬牆運動、毛巾背後拉（在可以忍受的痛內）','下半身與核心訓練照常做'],bad:['過頭推舉、蝶式游泳、硬拉到劇痛'],
+  care:['運動前熱敷 10–15 分鐘','睡覺不要壓痛的那一側'],
+  red:['肩膀痛合併手臂無力麻木；或左肩痛合併胸悶冒冷汗（要排除心臟）→ 儘快就醫'],dept:'復健科或骨科',
+  q:['需要做超音波確認旋轉肌腱嗎？','適合注射或水擴張術嗎？']},
+ {k:'ra',g:'msk',n:'類風濕性關節炎',en:'Rheumatoid arthritis',icd:'M06.9',tip:'按時用藥，三高與骨密度一起顧',
+  w:['心血管疾病與骨鬆風險較高：三高、骨密度要一起追蹤','用免疫藥物期間感染風險較高：發燒要儘快就醫'],
+  good:['低衝擊有氧（游泳、騎車）、關節活動度與肌力訓練'],bad:['關節紅腫發作時做劇烈運動'],
+  care:['按時用藥、回診抽血','打流感、肺炎鏈球菌疫苗（先問醫師）','戒菸（會讓病情更難控制）'],
+  red:['用免疫藥物時發燒、咳嗽、喘 → 儘快就醫'],dept:'風濕免疫科',
+  q:['我的疾病活動度如何？藥要調整嗎？','需要檢查骨密度嗎？']},
+ {k:'as',g:'msk',n:'僵直性脊椎炎',en:'Ankylosing spondylitis',icd:'M45.9',tip:'每天伸展、游泳很適合',
+  w:['早上僵硬、活動後改善是典型特徵'],good:['每天伸展與姿勢運動（擴胸、脊椎伸展）、游泳'],bad:['長時間維持同一個姿勢'],
+  care:['床不要太軟、枕頭不要太高','戒菸（影響肺功能與病情）'],
+  red:['眼睛突然紅、痛、怕光（虹彩炎）→ 儘快看眼科'],dept:'風濕免疫科',
+  q:['需要用生物製劑嗎？','哪些運動對我最好？']},
+ {k:'dupuy',g:'msk',n:'手掌筋膜纖維瘤（杜普伊特倫攣縮）',en:'Dupuytren’s contracture',icd:'M72.0',tip:'和蹠筋膜纖維瘤同一類：做桌面測試',lab:['glu','hba1c'],
+  w:['和蹠筋膜纖維瘤症同一類：手掌出現硬結或條索，手指慢慢彎曲伸不直','自我檢查：手掌能不能平貼桌面（桌面測試）'],
+  good:['手指伸展運動'],bad:['用力抓握會痛時要減量'],care:['戒菸、少喝酒、控制血糖'],
+  red:['手掌無法平貼桌面、影響抓握 → 回診評估（針刺鬆解或手術）'],dept:'骨科（手外科）或整形外科',
+  q:['需要治療了嗎？有哪些方式？']},
+ {k:'asthma',g:'resp',n:'氣喘',en:'Asthma',icd:'J45.909',tip:'控制藥每天用、隨身帶急救吸入劑',lim:['asthma'],
+  w:['控制藥（吸入型類固醇）要每天用，不是喘才用','急救吸入劑一週用超過 2 次＝控制不好，要回診'],
+  good:['游泳（溫暖潮濕的空氣較不易誘發）、快走、騎車','運動前暖身 10–15 分鐘'],bad:['冷空氣、空汙嚴重時在戶外劇烈運動'],
+  care:['隨身帶急救吸入劑','減少塵蟎、菸、香水等誘發物','每年打流感疫苗'],
+  red:['用了急救吸入劑還是很喘、講話講不完整、嘴唇發紫 → 立刻打 119'],dept:'胸腔內科或過敏免疫科',
+  q:['我的吸入器用法正確嗎？','什麼時候可以減藥？'],
+  fu:[['胸腔內科：肺功能檢查','追蹤控制狀況','健保','每年',3]]},
+ {k:'copd',g:'resp',n:'慢性阻塞性肺病（COPD）',en:'Chronic obstructive pulmonary disease',icd:'J44.9',tip:'戒菸、肺復原、打疫苗',lim:['asthma'],
+  w:['戒菸是延緩肺功能惡化最有效的方法'],
+  good:['肺復原運動：走路、騎車、上肢肌力，搭配噘嘴呼吸'],bad:['空汙、寒冷時在戶外運動'],
+  care:['完全戒菸','打流感、肺炎鏈球菌疫苗','照醫師指示每天用吸入藥'],
+  red:['喘明顯加重、痰變多變黃綠、嘴唇發紫 → 儘快就醫'],dept:'胸腔內科',
+  q:['我的肺功能是第幾級？','可以參加肺復原嗎？'],
+  fu:[['胸腔內科：肺功能檢查','追蹤肺功能','健保','每年',2]]},
+ {k:'osa',g:'resp',n:'睡眠呼吸中止',en:'Obstructive sleep apnea',icd:'G47.33',tip:'正壓呼吸器每晚 4 小時以上',
+  w:['沒治療會增加高血壓、心房顫動、中風、心臟病與車禍風險','正壓呼吸器（CPAP）每晚用 4 小時以上才有效'],
+  good:['規律有氧與減重（減 10% 體重可明顯改善）'],bad:[],
+  care:['側睡、睡前不喝酒；吃安眠藥前先問醫師','很睏的時候不要開車'],red:[],dept:'胸腔內科、耳鼻喉科或睡眠中心',
+  q:['我的 AHI（每小時呼吸中止次數）是多少？','適合正壓呼吸器、口腔止鼾器還是手術？']},
+ {k:'lungnod',g:'resp',n:'肺結節（追蹤中）',en:'Pulmonary nodule',icd:'R91.1',tip:'照醫師安排回診照 CT',lab:['ldct'],
+  w:['大部分肺結節是良性；照醫師安排的時間回診比較大小','不要自己延後追蹤；帶舊片一起比較最準'],good:['規律運動維持肺功能'],bad:[],
+  care:['戒菸、避開二手菸','煮飯開抽油煙機、減少油煙'],
+  red:['咳血、咳嗽超過 3 週、體重莫名下降 → 提早回診'],dept:'胸腔內科或胸腔外科',
+  q:['我的結節多大？是實心還是毛玻璃？','下次 CT 什麼時候照？'],
+  fu:[['胸部低劑量 CT 追蹤','肺結節：照醫師安排比較大小','健保','依醫師安排',1]]},
+ {k:'rhinitis',g:'resp',n:'過敏性鼻炎',en:'Allergic rhinitis',icd:'J30.9',tip:'鼻噴劑規律用、除塵蟎',
+  w:['類固醇鼻噴劑要規律使用才有效'],good:['規律運動可以改善鼻塞'],bad:[],
+  care:['寢具每週用 55–60°C 熱水洗（除塵蟎）','防蟎寢具、空氣清淨機'],red:[],dept:'耳鼻喉科或過敏免疫科',
+  q:['需要做過敏原檢測嗎？']},
+ {k:'migraine',g:'neuro',n:'偏頭痛',en:'Migraine',icd:'G43.909',tip:'記頭痛日記、止痛藥每月不超過 10 天',
+  w:['止痛藥一個月不要吃超過 10 天，否則容易變成「藥物過度使用頭痛」','記頭痛日記：睡眠不規律、餓肚子、壓力、紅酒、經期都是常見誘因'],
+  good:['規律有氧（每週 3 次、每次 30–40 分鐘）可以減少發作'],bad:['發作時不要運動'],
+  care:['固定睡眠時間、三餐規律、多喝水','每個月發作 4 天以上，可以請醫師開預防藥'],
+  red:['一生最痛的突發頭痛、合併發燒頸部僵硬、手腳無力或說話不清 → 立刻掛急診'],dept:'神經內科',
+  q:['我需要吃預防藥嗎？','我的止痛藥吃太多了嗎？']},
+ {k:'epilepsy',g:'neuro',n:'癲癇',en:'Epilepsy',icd:'G40.909',tip:'規律吃藥、睡飽、不單獨游泳',
+  w:['規律吃藥、睡眠充足是控制的關鍵；不要自己停藥'],good:['大部分運動都可以做'],bad:['不要單獨游泳、泡澡','避免攀岩、高處運動'],
+  care:['教家人發作時怎麼處理：讓他側躺、不要塞東西到嘴裡、記錄發作時間'],
+  red:['發作超過 5 分鐘，或連續發作中間沒醒 → 立刻打 119'],dept:'神經內科',
+  q:['我可以開車嗎？','我的藥會影響懷孕或其他藥嗎？'],
+  fw:['⚡','癲癇：不要單獨游泳、泡澡','避免攀岩、高處運動；運動時有人陪更安全']},
+ {k:'dep',g:'neuro',n:'憂鬱症',en:'Depression',icd:'F32.A',tip:'規律運動很有效，藥不要自己停',
+  w:['抗憂鬱藥通常 2–4 週才有效；好了也要繼續吃一段時間，不要自己停'],
+  good:['規律有氧運動（每週 3 次、每次 30 分鐘以上）對改善憂鬱很有效'],bad:[],
+  care:['固定作息、每天曬太陽','用「自我檢測 → 憂鬱 PHQ-9」每 2–4 週追蹤'],
+  red:['有傷害自己或不想活的念頭 → 現在就打 1925 安心專線；有計畫或準備 → 立刻打 119'],dept:'身心科（精神科）',
+  q:['我的藥要吃多久？有哪些副作用？','可以搭配心理治療嗎？']},
+ {k:'anx',g:'neuro',n:'焦慮症／恐慌症',en:'Anxiety disorder / panic disorder',icd:'F41.9',tip:'少咖啡因、規律運動、腹式呼吸',
+  w:['恐慌發作會心悸、胸悶、喘；第一次發作要先排除心臟問題'],good:['有氧運動、瑜伽、腹式呼吸'],bad:[],
+  care:['少咖啡因、能量飲料','用「自我檢測 → 焦慮 GAD-7」追蹤'],
+  red:['胸痛冒冷汗、分不清是不是恐慌 → 先就醫排除心臟'],dept:'身心科（精神科）',
+  q:['我適合認知行為治療嗎？','藥會不會依賴？']},
+ {k:'insomnia',g:'neuro',n:'失眠',en:'Insomnia',icd:'G47.00',tip:'固定起床時間，CBT-I 是第一線治療',
+  w:['第一線治療是「失眠認知行為治療」（CBT-I），效果比安眠藥更持久'],good:['白天規律運動（睡前 2–3 小時不要劇烈運動）'],bad:[],
+  care:['固定起床時間（假日也一樣）','床只用來睡覺；躺 20 分鐘睡不著就起來做放鬆的事','下午以後不喝咖啡、茶；睡前 1 小時不滑手機'],red:[],dept:'身心科或睡眠中心',
+  q:['我的失眠和打鼾、情緒有關嗎？','安眠藥可以吃多久？']},
+ {k:'cancer',g:'other',n:'癌症病史',en:'Personal history of cancer',icd:'Z85.9',tip:'照原醫院追蹤；備註寫癌別與年份',
+  w:['在備註寫癌別與治療年份，看其他科時醫師才會注意','照原診治醫院腫瘤科安排的時間追蹤'],
+  good:['規律運動（每週 150 分鐘）可以減少疲勞，也和降低部分癌症復發有關'],bad:[],care:['戒菸、少酒、維持體重'],
+  red:['新的腫塊、持續疼痛、體重莫名下降 → 提早回診'],dept:'原診治醫院腫瘤科',
+  q:['我還要追蹤多久？要做哪些檢查？'],
+  fu:[['原診治醫院腫瘤科追蹤','依癌別安排影像或腫瘤標記','健保','依醫師安排',1]]},
+ {k:'psoriasis',g:'other',n:'乾癬',en:'Psoriasis',icd:'L40.9',tip:'三高要一起追蹤',
+  w:['乾癬病人心血管疾病、糖尿病、脂肪肝的風險較高：三高要一起追蹤'],good:['規律運動'],bad:[],
+  care:['戒菸、少酒、控制體重','每天保濕'],red:['關節腫痛（乾癬性關節炎）→ 看風濕免疫科'],dept:'皮膚科',
+  q:['我適合照光或生物製劑嗎？']},
+ {k:'glaucoma',g:'other',n:'青光眼',en:'Glaucoma',icd:'H40.9',tip:'每天點藥、定期量眼壓',lab:['iop'],
+  w:['青光眼造成的視力損失不會恢復，要終身點藥與追蹤','部分感冒藥、抗組織胺、暈車藥會讓「隅角閉鎖型」青光眼急性發作：看病時告訴醫師'],
+  good:['有氧運動對眼壓有幫助'],bad:['頭下腳上的動作（瑜伽倒立、下犬式維持太久）','蛙鏡太緊'],
+  care:['每天按時點眼藥'],red:['眼睛突然劇痛、紅、視力模糊、看燈有光暈、頭痛噁心 → 立刻掛急診（急性青光眼）'],dept:'眼科',
+  q:['我是哪一型青光眼？眼壓目標是多少？'],
+  fw:['👁️','青光眼：不做頭下腳上的動作','瑜伽倒立、下犬式不要維持太久；游泳蛙鏡不要太緊'],
+  fu:[['眼科：眼壓＋視野檢查','青光眼要定期追蹤','健保','每 3–6 個月',2]]},
+ {k:'hearloss',g:'other',n:'聽力受損',en:'Hearing loss',icd:'H91.90',tip:'需要時配助聽器',lab:['hearing'],
+  w:['聽力受損是可以改變的失智危險因子：需要時配助聽器'],good:[],bad:[],care:['耳機遵守 60/60 原則：音量 60% 以下、每次 60 分鐘以內'],
+  red:['單耳突然聽不見 → 3 天內看耳鼻喉科（突發性耳聾）'],dept:'耳鼻喉科',q:['我需要配助聽器嗎？']},
+ {k:'thal',g:'other',n:'地中海型貧血（帶因）',en:'Thalassemia minor',icd:'D56.3',tip:'沒缺鐵就不要自己補鐵',lab:['hb','mcv','ferritin'],
+  w:['不是缺鐵：沒有驗出缺鐵就不要自己補鐵（鐵會堆積）','計畫懷孕前夫妻都要驗：兩人都是同型帶因，胎兒可能重度貧血'],good:[],bad:[],care:[],red:[],dept:'血液腫瘤科或婦產科（產前諮詢）',
+  q:['我是甲型還是乙型？']},
+ {k:'ida',g:'other',n:'缺鐵性貧血',en:'Iron deficiency anemia',icd:'D50.9',tip:'找出缺鐵原因',lab:['hb','ferritin','mcv'],
+  w:['要找出原因：月經量多、腸胃道出血最常見','男性與停經後女性缺鐵，建議做胃鏡、大腸鏡排除腸胃道出血'],good:[],bad:[],
+  care:['鐵劑空腹或搭配維生素 C 吸收較好；和茶、咖啡、牛奶隔開'],red:['黑便、血便、頭暈、喘 → 儘快就醫'],dept:'家醫科、血液科或腸胃科',
+  q:['我的缺鐵原因找到了嗎？','鐵劑要吃多久？']}];
+const CONDK=Object.fromEntries(COND.map(c=>[c.k,c]));
+// 清洗：備份檔、表單都走這裡（未知病名丟掉、自訂病名限長度、年份與分數要合理）
+function cleanCond(d){const o=obj(d),seen=new Set(),items=[],y0=new Date().getFullYear(),str=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'';
+  for(const it of Array.isArray(o.items)?o.items:[]){if(!it||typeof it!=='object')continue;const k=CONDK[it.k]?it.k:'',n=k?'':str(it.n,30);if(!k&&!n)continue;const id=k||'u:'+n;if(seen.has(id))continue;seen.add(id);
+    const y=Math.floor(num(it.y)),sc=num(it.score),c={st:COND_ST.some(x=>x[0]===it.st)?it.st:'fu',y:y>=1900&&y<=y0?y:'',note:str(it.note,60)};if(k)c.k=k;else c.n=n;
+    if(k&&CONDK[k].num)c.score=sc!=null&&sc>=CONDK[k].num.min&&sc<=CONDK[k].num.max?Math.round(sc):'';items.push(c);if(items.length>=40)break}
+  return{items,meds:str(o.meds,400),allergy:str(o.allergy,120),surg:str(o.surg,300)}}
+const condOf=m=>{const c=cleanCond(m?.cond);c.items.forEach(x=>{x.T=x.k?CONDK[x.k]:null;x.id=x.k||'u:'+x.n;x.name=x.T?x.T.n:x.n});return c};
+const condActive=m=>condOf(m).items.filter(c=>c.st!=='done');
+const condKeys=m=>new Set(condActive(m).map(c=>c.k).filter(Boolean));
+const condHas=(m,...ks)=>{const s=condKeys(m);return ks.some(k=>s.has(k))};
+const condNames=(m,ks)=>condActive(m).filter(c=>!ks||ks.includes(c.k)).map(c=>c.name);
+// 依病史的 LDL 目標（取最嚴格的）：冠心病 <70、中風 <100、糖尿病 <100、慢性腎臟病 <100；冠狀動脈鈣化 ≥70 就提醒和心臟科討論
+function ldlTgt(m){let b=null;for(const c of condActive(m)){const L=c.T?.ldl;if(!L)continue;if(!b||L.t<b.t||(L.t===b.t&&L.lv>b.lv))b={...L,names:[c.name]};else if(L.t===b.t&&!b.names.includes(c.name))b.names.push(c.name)}
+  if(b){b.msg=b.txt||`你有${b.names.join('、')}：LDL 目標 <${b.t} mg/dL（${b.src}），目前未達標，請和醫師討論飲食與是否調整用藥`;b.short=b.txt?'有冠狀動脈鈣化，LDL 目標應比一般人嚴格':`依病史（${b.names.join('、')}）目標 <${b.t}`}return b}
+// 運動限制：病史自動加上的 lim，並記住是哪個病（課表上說明原因）
+function condLims(m){const lims=new Set(),why={};for(const c of condActive(m))for(const l of c.T?.lim||[]){lims.add(l);(why[l]=why[l]||[]).push(c.name)}
+  return{lims,why:Object.fromEntries(Object.entries(why).map(([l,ns])=>[l,ns.join('、')])),items:condActive(m)}}
+// 報告裡已經寫到的 → 建議加入病史（使用者按「加入」才算，不自己假設）
+function condSuggest(m){const L=labsOf(m)[0];if(!L)return[];const iss=labEval(L,m),has=k=>iss.some(i=>i.k===k),ks=condOf(m).items.map(c=>c.k),out=[],add=(k,why,o={})=>{if(!ks.includes(k)&&!out.some(x=>x.k===k))out.push({k,why,...o})};
+  if(has('img_cac')||has('cac')){const s=num(L.items?.cac?.v);add('cac',`${L.t} 報告提到冠狀動脈鈣化`,{y:+L.t.slice(0,4),note:`${L.t} CT 報告`,score:s!=null?Math.round(s):''})}
+  if(has('hbsag'))add('hbv',`${L.t} 報告 B 肝表面抗原陽性`,{y:+L.t.slice(0,4)});
+  if(/脂肪肝/.test(String(L.items?.us_liver?.v||'')))add('nafld',`${L.t} 超音波：${L.items.us_liver.v}`,{y:+L.t.slice(0,4)});
+  if(/結石|瘜肉/.test(String(L.items?.us_gb?.v||'')))add('gallstone',`${L.t} 超音波：${L.items.us_gb.v}`,{y:+L.t.slice(0,4)});
+  if(has('thyus'))add('thynod',`${L.t} 甲狀腺超音波：${L.items.thyus.v}`,{y:+L.t.slice(0,4)});
+  if(iss.some(i=>i.k==='dxa'&&i.lv>=2))add('osteo',`${L.t} 骨密度 T 值 ${L.items.dxa.v}`,{y:+L.t.slice(0,4)});
+  return out}
+// 對照自己的資料：最近報告裡和這個病有關的數值、手錶
+function condCtx(c,m){const L=labsOf(m)[0],o=[];if(!c.T)return o;const iss=L?labEval(L,m):[];
+  for(const k of c.T.lab||[]){const v=L?.items?.[k]?.v;if(v==null||v==='')continue;const i=iss.find(x=>x.k===k),x=LABK[k];o.push(`${x?.s||x?.n||k} ${typeof v==='number'?fmt(v):v}${x?.u?' '+x.u:''}${i?`（${i.crit?'危急':LVT[i.lv]}）`:''}`)}
+  if(L&&o.length)o.unshift(`報告 ${L.t}`);
+  const w=watchOf(m)[0];if(w&&dayDiff(w.t,ymd(new Date()))<=60){if(['cac','cad','htn','dm','predm','nafld','lipid','stroke','hf','ledd','kneeoa'].includes(c.k)&&w.steps!=null)o.push(`手錶每天 ${fmt(Math.round(w.steps))} 步`);
+    if(['cac','cad','af','hf','htn'].includes(c.k)&&w.rhr!=null)o.push(`靜止心率 ${fmt(w.rhr)}`);if(c.k==='af'&&w.afib)o.push('手錶提示過心律不整');if(c.k==='osa'&&w.spo2!=null)o.push(`手錶血氧 ${fmt(w.spo2)}%`)}
+  if(['ledd','kneeoa','pf','osa','nafld','dm'].includes(c.k))o.push(`BMI ${r1(calc(m).bmi)}`);
+  if(['ledd','dupuy','cac','cad','copd','lungnod'].includes(c.k)){const lf=lifeOf(m);if(m.life&&lf.smoke==='current')o.push('目前吸菸');if(m.life&&lf.alc==='often')o.push('每週喝酒 3 次以上')}
+  if(c.k==='nafld'){const f=derivedOf(m).find(d=>d.k==='fib4');if(f)o.push(`FIB-4 ${f.val}`)}
+  return o}
+const condLine=(c,lang)=>`${c.name}${c.T?.en?` ${c.T.en}`:''}${c.T?.icd?`［ICD-10 ${c.T.icd}］`:''}${c.y?`・${c.y} 年`:''}・${(COND_ST.find(x=>x[0]===c.st)||COND_ST[1])[1]}${c.score!==''&&c.score!=null?`・鈣化分數 ${c.score}`:''}${c.note?`・${c.note}`:''}`;
+// 給 AI 的文字（AI 醫生、自我檢測共用）
+function condText(m){const c=condOf(m),o=[];if(c.items.length){o.push('【已知病史（醫師診斷過、體檢看不到的）】');c.items.forEach(x=>o.push(`- ${condLine(x)}`))}
+  if(c.meds)o.push(`【目前用藥】${c.meds}`);if(c.allergy)o.push(`【藥物過敏】${c.allergy}`);if(c.surg)o.push(`【手術／住院】${c.surg}`);return o}
+// 身體頁「我的病史」卡片
+function condCardHTML(m){const c=condOf(m),sg=condSuggest(m);
+  return (sg.length?sg.map(s=>`<div class="hl" style="margin-bottom:10px">📋 ${esc(s.why)}：要加入病史「${esc(CONDK[s.k].n)}」嗎？<div style="margin-top:8px"><button class="btn sm" data-condadd="${s.k}">＋ 加入病史</button></div></div>`).join(''):'')+
+    (c.items.length?c.items.map(x=>`<button class="rec" data-cond="${esc(x.id)}"><div class="m"><b>🩺 ${esc(x.name)}</b><small>${esc([x.T?.tip||'App 沒有內建這個病的建議，可以點進去問 AI',(COND_ST.find(s=>s[0]===x.st)||COND_ST[1])[1],x.y?x.y+' 年':''].filter(Boolean).join('・'))}</small></div><span class="chev">›</span></button>`).join('')
+      :'<div class="empty" style="padding:8px 0">有醫師診斷過、但體檢看不到的疾病嗎？例如蹠筋膜纖維瘤症、CT 看到心臟血管鈣化、痛風、氣喘。加進來後，運動、飲食、健檢建議和健康評語都會跟著調整。</div>')+
+    (c.items.length&&!c.allergy?'<p class="note" style="color:var(--amber)">⚠️ 還沒填「藥物過敏」：沒有過敏請填「無」，看診摘要給醫師看時才清楚</p>':'')+
+    `<div class="row2" style="margin-top:10px"><button class="btn ghost" data-setsec="cond">${c.items.length?'✎ 編輯病史與用藥':'＋ 新增病史'}</button>${c.items.length?'<button class="btn ai" data-condai>🩺 問 AI：病史怎麼保養</button>':''}</div>`}
+function openCond(id){const m=me(),c=condOf(m).items.find(x=>x.id===id);if(!c)return;const T=c.T,li=a=>a.map(x=>`<div class="bl">${esc(x)}</div>`).join(''),cx=condCtx(c,m);
+  const oth=condActive(m).filter(x=>x.id!==c.id),oL=l=>oth.filter(x=>(x.T?.lim||[]).some(z=>l.includes(z))).map(x=>x.name),mine=T?.lim||[],mix=[];
+  if(oL(['ankle','knee']).length&&!mine.some(z=>z==='ankle'||z==='knee'))mix.push(`你也有「${oL(['ankle','knee']).join('、')}」：有氧優先選騎腳踏車、游泳、水中走路；快走要穿厚底避震鞋、分段走`);
+  if(oL(['cvr','heart']).length&&!mine.some(z=>z==='cvr'||z==='heart'))mix.push(`你也有「${oL(['cvr','heart']).join('、')}」：運動保持中等強度（微喘、還能說話），高強度前先讓醫師評估`);
+  const qs=T?T.q:[`我有「${c.name}」，平常要注意什麼？`,`有「${c.name}」，哪些運動適合、哪些要避免？`,`「${c.name}」日常要怎麼保養？什麼情況要回診？`];
+  openSheet(sheetHead(`🩺 ${esc(c.name)}`,esc([T?.en,T?.icd?'ICD-10 '+T.icd:''].filter(Boolean).join('・')))+`
+    <div class="sub" style="margin:8px 0">${esc([(COND_ST.find(s=>s[0]===c.st)||COND_ST[1])[1],c.y?c.y+' 年確診':'',c.score!==''&&c.score!=null?'鈣化分數 '+c.score:'',c.note].filter(Boolean).join('・'))} <button class="btn sm ghost" data-setsec="cond" style="margin-left:6px">編輯</button></div>
+    ${T?`<div class="hl" style="margin:6px 0 4px"><b>${esc(T.tip)}</b></div>
+    <div class="h4">要注意什麼</div>${li([...(T.dyn?T.dyn(c,m):[]),...T.w])}
+    ${T.good.length||T.bad.length?`<div class="h4">怎麼運動</div>${mix.length?`<div class="hl" style="margin:6px 0;font-size:12px">🔗 合併你的其他病史：${esc(mix.join('；'))}</div>`:''}${T.good.length?`<div class="sub" style="color:var(--lime);margin-top:4px">✅ 適合</div>${li(T.good)}`:''}${T.bad.length?`<div class="sub" style="color:var(--amber);margin-top:8px">⛔ 先避免</div>${li(T.bad)}`:''}${T.lim?.length?'<p class="note">運動頁的課表已經自動避開不適合的運動。</p>':''}`:''}
+    ${T.care.length?`<div class="h4">怎麼保養</div>${li(T.care)}`:''}
+    ${T.red.length?`<div class="h4">什麼時候要就醫</div><div class="banner" style="margin:6px 0">${T.red.map(esc).join('<br>')}</div>`:''}
+    <div class="h4">追蹤</div><div style="font-size:14px"><b>${esc(T.dept)}</b>${T.fu?.length?`<div class="sub" style="margin-top:4px">${esc(T.fu.map(f=>`${f[0]}（${f[3]}）`).join('；'))}</div>`:''}</div>
+    ${cx.length?`<div class="hl" style="margin-top:12px;font-size:12px">📋 對照你的資料：${esc(cx.join('；'))}</div>`:''}
+    ${T.doc?`<details class="box"><summary>給醫師看（專業摘要）</summary><div class="note" style="margin:0">${esc(T.en)}${T.icd?`（ICD-10-CM ${esc(T.icd)}）`:''}：${esc(T.doc)}</div></details>`:''}`
+    :`<div class="hl" style="margin:10px 0">App 沒有內建「${esc(c.name)}」的建議。點下面的問題，App 會帶著你的病史、報告、手錶數據一起問 AI。</div>`}
+    <div class="h4">怎麼問（點一下，帶著你的資料問 AI）</div><div class="chips">${qs.map((q,i)=>`<button type="button" class="chip" data-condq="${i}">${esc(q)}</button>`).join('')}</div>
+    <p class="note">依常見臨床指引整理，不是診斷；治療與用藥請依你的醫師。看醫生時可以出示「看診摘要圖」，裡面有中英文病名給醫師看。</p>`);
+  $$('#sheetBody [data-condq]').forEach(b=>b.onclick=()=>{aiO.topic='cond';openAI(null,qs[+b.dataset.condq])})}
+function addCondFromSuggest(k){const m=me(),s=condSuggest(m).find(x=>x.k===k);if(!s)return;const c=cleanCond(m.cond);c.items.push({k,st:'fu',y:s.y||'',note:s.note||'',score:s.score??''});m.cond=cleanCond(c);
+  S.set('members',MEM);renderAll();toast(`已加入病史：${CONDK[k].n}`);openCond(k)}
+// 設定 → 病史分頁：搜尋、點選病名、填年份／狀況／備註，外加用藥、藥物過敏、手術
+function condTabHTML(m){const c=condOf(m),sg=condSuggest(m);
+  return `<div class="tabp" id="m-condbox" data-t="cond"><p class="note" style="margin-top:0">醫師診斷過、但體檢看不到的疾病（例如蹠筋膜纖維瘤症、CT 看到心臟血管鈣化）。點選就好，年份和備註可以不填。App 會依病史調整運動課表、飲食、今年健檢建議和健康評語；看診摘要圖會列出中英文病名給醫師看。</p>
+    ${sg.length?`<div class="hl" style="margin:8px 0">📋 報告裡提到，點一下加入：<div class="chips" style="margin-top:6px">${sg.map(s=>`<button type="button" class="chip" data-csg="${s.k}">＋ ${esc(CONDK[s.k].n)}</button>`).join('')}</div></div>`:''}
+    <input id="m-cq" placeholder="🔍 搜尋病名（例如：筋膜、鈣化、痛風）" style="margin-top:8px">
+    <div id="m-cgrp">${CONDG.map(([g,t])=>`<div data-cgw="${g}"><label>${t}</label><div class="chips">${COND.filter(x=>x.g===g).map(x=>`<button type="button" class="chip" data-ck="${x.k}" data-cn="${esc(x.n+' '+x.en)}">${esc(x.n)}</button>`).join('')}</div></div>`).join('')}</div>
+    <label>清單沒有的（自己輸入）</label><div style="display:flex;gap:8px"><input id="m-cown" maxlength="30" placeholder="例如：蕁麻疹" style="flex:1"><button type="button" class="btn sm" id="m-cadd" style="flex:0 0 auto">加入</button></div>
+    <div class="h4">已選的病史</div><div id="m-cdet"></div>
+    <label>目前用藥（藥名、劑量）</label><textarea id="m-meds" maxlength="400" style="min-height:64px;font-family:inherit" placeholder="例如：Rosuvastatin 10 mg 每天 1 顆">${esc(c.meds)}</textarea>
+    <label>藥物過敏（沒有請填「無」）</label><input id="m-allergy" maxlength="120" value="${esc(c.allergy)}" placeholder="例如：盤尼西林；沒有填「無」">
+    <label>手術／住院史（選填）</label><textarea id="m-surg" maxlength="300" style="min-height:56px;font-family:inherit" placeholder="例如：2019 闌尾切除">${esc(c.surg)}</textarea></div>`}
+function bindCondTab(m){const st=new Map(condOf(m).items.map(x=>[x.id,{k:x.k,n:x.n,y:x.y,st:x.st,note:x.note,score:x.score}])),blank=k=>({k,y:'',st:'fu',note:'',score:''});
+  const paint=()=>{$$('#m-cgrp [data-ck]').forEach(b=>b.classList.toggle('on',st.has(b.dataset.ck)));
+    $('#m-cdet').innerHTML=st.size?[...st].map(([id,v])=>{const T=v.k?CONDK[v.k]:null;return `<div class="cdet" data-cid="${esc(id)}"><div class="row" style="margin:0 0 6px"><b>${esc(T?T.n:v.n)}</b><button type="button" class="x" data-crm aria-label="移除">✕</button></div>
+      <div class="grid2"><div><label style="margin-top:0">確診年份（選填）</label><input data-f="y" inputmode="numeric" maxlength="4" value="${esc(v.y)}" placeholder="西元年"></div><div><label style="margin-top:0">狀況</label><select data-f="st">${COND_ST.map(([s,t])=>`<option value="${s}"${v.st===s?' selected':''}>${t}</option>`).join('')}</select></div></div>
+      ${T?.num?`<label>${esc(T.num.n)}</label><input data-f="score" inputmode="numeric" value="${esc(v.score)}">`:''}<label>備註（選填）</label><input data-f="note" maxlength="60" value="${esc(v.note)}" placeholder="例如：左腳 2 顆、2024 超音波"></div>`}).join(''):'<div class="sub">還沒有選。點上面的病名就會加進來。</div>';
+    $$('#m-cdet .cdet').forEach(el=>{const id=el.dataset.cid;el.querySelectorAll('[data-f]').forEach(inp=>{const h=()=>{const v=st.get(id);if(v)v[inp.dataset.f]=inp.value};inp.oninput=h;inp.onchange=h});el.querySelector('[data-crm]').onclick=()=>{st.delete(id);paint()}})};
+  $$('#m-cgrp [data-ck]').forEach(b=>b.onclick=()=>{const k=b.dataset.ck;if(st.has(k))st.delete(k);else st.set(k,blank(k));paint()});
+  $$('#m-condbox [data-csg]').forEach(b=>b.onclick=()=>{const s=condSuggest(m).find(x=>x.k===b.dataset.csg);if(s&&!st.has(s.k))st.set(s.k,{...blank(s.k),y:s.y||'',note:s.note||'',score:s.score??''});b.remove();paint()});
+  $('#m-cq').oninput=e=>{const q=e.target.value.trim().toLowerCase();$$('#m-cgrp [data-ck]').forEach(b=>b.hidden=!!q&&!b.dataset.cn.toLowerCase().includes(q));$$('#m-cgrp [data-cgw]').forEach(w=>w.hidden=![...w.querySelectorAll('[data-ck]')].some(b=>!b.hidden))};
+  $('#m-cadd').onclick=()=>{const n=$('#m-cown').value.trim().slice(0,30);if(!n)return toast('請輸入病名');const hit=COND.find(x=>x.n===n||(n.length>=3&&x.n.includes(n)));
+    if(hit){if(!st.has(hit.k))st.set(hit.k,blank(hit.k));toast(`清單裡有：${hit.n}，已幫你選好`)}else if(!st.has('u:'+n))st.set('u:'+n,{n,y:'',st:'fu',note:'',score:''});$('#m-cown').value='';paint()};
+  paint();
+  return()=>cleanCond({items:[...st.values()],meds:$('#m-meds').value,allergy:$('#m-allergy').value,surg:$('#m-surg').value})}
 
 /* ================= 家族史與生活習慣 ================= */
 const FH_CA=[['crc','大腸癌'],['lung','肺癌'],['breast','乳癌'],['ovary','卵巢癌'],['stomach','胃癌'],['liver','肝癌'],['prostate','攝護腺癌'],['pancreas','胰臟癌'],['npc','鼻咽癌'],['thyroid','甲狀腺癌'],['uterus','子宮內膜癌'],['other','其他癌症']];
@@ -1431,7 +1827,8 @@ function yearPlan(m){
   if(hav!=null&&!qLv(hav)&&!vaxDone(m,'hav'))add(S[5],3,'A 型肝炎疫苗','A 肝抗體陰性；40 歲以下多數沒有抗體，出國旅遊前尤其建議','自費','2 劑（間隔 6 個月）');
   if(((fem&&a>=65)||(!fem&&a>=70))&&!has('dxa'))add(S[6],3,'骨密度 DXA','65 歲以上女性、70 歲以上男性建議檢查','自費','每 2 年');
 
-  out.forEach(o=>o.si=SECS.indexOf(o.sec));out.sort((x,y)=>x.si-y.si||x.pr-y.pr);
+  for(const c of condActive(m))for(const f of c.T?.fu||[])add('病史追蹤',f[4]||2,f[0],`病史：${c.name}。${f[1]}`,f[2],f[3]);
+  const ORD=[SECS[0],'病史追蹤',...SECS.slice(1)];out.forEach(o=>o.si=ORD.indexOf(o.sec));out.sort((x,y)=>x.si-y.si||x.pr-y.pr);
   return{items:out,L,P,a,filled:!!(m.fh||m.life)};
 }
 function planHTML(m){const pl=yearPlan(m),sx=sexT(m.sex);
@@ -1791,11 +2188,14 @@ function deptHTML(dp){return dp.length?dp.map(d=>`<div class="dept"><span class=
 /* ================= 健康評語：把最近的體檢、體脂、手錶、自我檢測合在一起，用固定規則寫成白話（不呼叫 AI，結果可重現） ================= */
 const LGRP=[['血壓',['sbp','dbp']],['血糖',['glu','hba1c']],['血脂',['tc','ldl','hdl','tg']],['肝功能',['alt','ast']],['腎功能',['cr','egfr']],['血液常規',['hb','wbc','plt']]];
 const nfmt=v=>Math.round(v).toLocaleString('en-US');
-function healthComment(m){const c=calc(m),{scale,lab,watch,s,l,w}=issuesOf(m),td=ymd(new Date()),good=[],bad=[],todo=[],src=[];
+function healthComment(m){const c=calc(m),{scale,lab,watch,s,l,w}=issuesOf(m),td=ymd(new Date()),good=[],bad=[],todo=[],src=[],CA=condActive(m),CK=condKeys(m);
   const wOk=!!w&&dayDiff(w.t,td)<=60,sOk=!!s&&dayDiff(String(s.t).slice(0,10),td)<=90,lOld=!!l&&dayDiff(l.t,td)>540;
-  if(l)src.push(`體檢 ${l.t}`);if(s)src.push(`體脂 ${String(s.t).slice(0,10)}`);if(w)src.push(`手錶 ${w.t}${w.period?`（${w.period}）`:''}`);if(!src.length)return null;
+  if(l)src.push(`體檢 ${l.t}`);if(s)src.push(`體脂 ${String(s.t).slice(0,10)}`);if(w)src.push(`手錶 ${w.t}${w.period?`（${w.period}）`:''}`);if(CA.length)src.push(`病史 ${CA.length} 項`);if(!src.length)return null;
   const wi=wOk?watch:[],si=sOk?scale:[],all=[...lab,...si,...wi],crit=lab.filter(i=>i.crit),mx=all.reduce((a,i)=>Math.max(a,i.lv),0),has=k=>all.some(i=>i.k===k),n=x=>all.filter(i=>i.lv===x).length;
   const head=crit.length?'有危急值：今天先處理，其他的之後再說':mx>=3?`有 ${n(3)} 項需要 1–2 週內就醫`:mx===2?`整體還可以，但有 ${n(2)} 項要找醫師`:mx===1?`大致良好，有 ${n(1)} 項靠生活習慣就能改善`:'目前各項都在理想範圍';
+  const head2=CA.length&&!crit.length?`${head}${mx>=2?'；':'，'}另有 ${CA.length} 項病史要照醫師安排追蹤`:head;
+  const foot=CA.some(x=>(x.T?.lim||[]).some(z=>z==='ankle'||z==='knee')),actTxt=foot?'用騎腳踏車、游泳、水中走路累積（足底或膝蓋有狀況，不用硬拚步數）':'先每天多走 2,000 步';
+  const cond=CA.map(x=>`${x.name}：${x.T?x.T.tip:'App 沒有內建建議，到身體頁「我的病史」點進去問 AI'}`);
   // 做得好的
   if(!c.kid&&c.bmi>=18.5&&c.bmi<24)good.push(`BMI ${r1(c.bmi)}，體重在健康範圍`);
   if(l){const ok=LGRP.filter(([,ks])=>ks.some(k=>l.items?.[k]?.v!=null&&l.items[k].v!=='')&&!ks.some(k=>lab.some(i=>i.k===k))).map(([g])=>g);if(ok.length)good.push(`${ok.join('、')}正常（${l.t}）`)}
@@ -1805,15 +2205,16 @@ function healthComment(m){const c=calc(m),{scale,lab,watch,s,l,w}=issuesOf(m),td
     if(w.vo2!=null&&vo2Cat(w.vo2,c.a,m.sex)>=3)good.push(`VO₂max ${fmt(w.vo2)}，同齡${VO2T[vo2Cat(w.vo2,c.a,m.sex)]}`)}
   // 要注意的
   if(crit.length)bad.push(`危急值：${crit.map(i=>`${i.name} ${tv(i.val)}`).join('、')}`);
-  all.filter(i=>i.lv>=2&&!i.crit).sort((a,b)=>b.lv-a.lv).slice(0,5).forEach(i=>bad.push(`${i.name}${typeof i.val==='number'||String(i.val).length<=8?` ${tv(i.val)}${i.unit?' '+i.unit:''}`:''}（${i.src}・${LVT[i.lv]}）`));
+  all.filter(i=>i.lv>=2&&!i.crit&&!(CK.has('cac')&&(i.k==='img_cac'||i.k==='cac'))).sort((a,b)=>b.lv-a.lv).slice(0,5).forEach(i=>bad.push(`${i.name}${!/^img_/.test(i.k)&&(typeof i.val==='number'||String(i.val).length<=8)?` ${tv(i.val)}${i.unit?' '+i.unit:''}`:''}（${i.src}・${LVT[i.lv]}）`));
   const l1=all.filter(i=>i.lv===1);if(l1.length)bad.push(`輕微：${l1.slice(0,6).map(i=>i.short||i.name).join('、')}${l1.length>6?` 等 ${l1.length} 項`:''}`);
-  if(wOk&&w.steps!=null&&w.steps<7000)bad.push(`每天 ${nfmt(w.steps)} 步，離 7,000 步還差約 ${nfmt(Math.ceil((7000-w.steps)/100)*100)} 步`);
+  if(wOk&&w.steps!=null&&w.steps<7000)bad.push(foot?`每天 ${nfmt(w.steps)} 步：足底或膝蓋有狀況，不用硬拚步數，改看每週有氧分鐘（目標 150）`:`每天 ${nfmt(w.steps)} 步，離 7,000 步還差約 ${nfmt(Math.ceil((7000-w.steps)/100)*100)} 步`);
   // 接下來
   if(crit.length)todo.push('今天聯絡健檢中心或到急診複驗危急值');
   const dp=deptPlan(all).filter(d=>d.lv>=2&&!d.crit);if(dp.length)todo.push(`${dp[0].d}：${dp[0].when}（${dp[0].items.slice(0,3).join('、')}）${dp.length>1?`；另有 ${dp.length-1} 科`:''}`);
   const lowAct=wOk&&((w.steps!=null&&w.steps<7000)||(w.workouts!=null&&w.workouts<3)||(w.exmin!=null&&w.exmin*7<150));
-  if(['ldl','tc','tg','sdldl','img_cac','cac','sbp','dbp','w_bp'].some(has))todo.push(`血脂、血壓或心血管有狀況：最有效的是每週 150 分鐘有氧（快走到微喘）${lowAct?'，你的手錶活動量還不夠，先每天多走 2,000 步':''}`);
-  else if(lowAct)todo.push('活動量偏少：先每天多走 2,000 步，再加每週 3 次、每次 30 分鐘快走');
+  if(['ldl','tc','tg','sdldl','img_cac','cac','sbp','dbp','w_bp'].some(has)||['cac','cad','stroke','htn','lipid'].some(k=>CK.has(k)))todo.push(`血脂、血壓或心血管有狀況：最有效的是每週 150 分鐘有氧（${foot?'騎腳踏車、游泳到微喘':'快走到微喘'}）${lowAct?`，你的手錶活動量還不夠，${actTxt}`:''}${CK.has('cac')||lv3cv(all)?'；高強度運動前先讓心臟內科評估':''}`);
+  else if(lowAct)todo.push(foot?`活動量偏少：${actTxt}，每週累積 150 分鐘`:'活動量偏少：先每天多走 2,000 步，再加每週 3 次、每次 30 分鐘快走');
+  if(CK.has('ledd'))todo.push('蹠筋膜纖維瘤症：穿厚底避震鞋＋在結節處挖空的減壓鞋墊，不要按摩或重壓結節');
   if(['glu','hba1c','homa'].some(has))todo.push('血糖偏高：飯後散步 10–15 分鐘，少喝含糖飲料、白飯換一半糙米');
   if(!c.kid&&c.bmi>=24)todo.push('體重偏高：每天少吃約 300–500 kcal（看飲食頁菜單），每週 2 次肌力訓練保住肌肉');
   else if(si.some(i=>['fat','visceral'].includes(i.k)))todo.push('體重正常但體脂偏高：不用刻意少吃，重點是每週 2–3 次肌力訓練、每餐吃夠蛋白質，把脂肪換成肌肉');
@@ -1821,11 +2222,14 @@ function healthComment(m){const c=calc(m),{scale,lab,watch,s,l,w}=issuesOf(m),td
   if(wOk&&w.sleep!=null&&w.sleep<6)todo.push('先把睡眠拉到 7 小時：睡不夠會讓血壓、血糖、體重都變差');
   if(lOld)todo.push(`最近一份體檢是 ${l.t}，超過 1 年半：今年該再做一次健康檢查`);
   if(!todo.length)todo.push('維持現在的習慣，每年健康檢查一次');
+  if(CA.length)todo.push('看醫生時打開「看診摘要圖」：病史、用藥、過敏都有中英文，醫師一看就懂');
   const hint=[!l&&'匯入體檢報告才看得到血液指標',!w&&'加上手錶數據可以一起看活動量和睡眠',w&&!wOk&&'手錶數據超過 2 個月，請更新',!s&&'加上體脂紀錄可以看脂肪和肌肉'].filter(Boolean);
-  return{head,lv:crit.length?4:mx,good,bad,todo:todo.slice(0,4),src,hint}}
+  return{head:head2,lv:crit.length?4:mx,good,bad,cond,todo:todo.slice(0,5),src,hint}}
+const lv3cv=all=>all.some(i=>(i.k==='img_cac'||i.k==='cac')&&i.lv>=1);
 function commentHTML(m,compact){const h=healthComment(m);if(!h)return '';const col=[ 'var(--lime)','var(--cyan)','var(--amber)','var(--red)','var(--red)'][h.lv],li=a=>a.map(x=>`<div class="bl">${esc(x)}</div>`).join('');
   return `${compact?'<div class="h4">健康評語（結合體檢、體脂、手錶）</div>':'<h2>健康評語</h2>'}<div style="font-size:16px;font-weight:800;color:${col};line-height:1.5">${esc(h.head)}</div><div class="sub" style="margin:4px 0 6px">依據：${esc(h.src.join('、'))}</div>
     ${!compact&&h.good.length?`<div class="sub" style="margin-top:10px;color:var(--lime)">👍 做得好的</div>${li(h.good)}`:''}
+    ${h.cond.length?`<div class="sub" style="margin-top:10px;color:#ff8fc8">🩺 依你的病史</div>${li(compact?h.cond.slice(0,3):h.cond)}`:''}
     ${h.bad.length?`<div class="sub" style="margin-top:10px;color:var(--amber)">⚠️ 要注意的</div>${li(compact?h.bad.slice(0,3):h.bad)}`:''}
     <div class="sub" style="margin-top:10px;color:var(--cyan)">✅ 接下來先做</div>${li(h.todo)}
     ${!compact&&h.hint.length?`<p class="note">${esc(h.hint.join('；'))}</p>`:''}
@@ -2035,7 +2439,7 @@ function renderBody(){
   $('#hud').innerHTML=bodySVG(m,all,'b');$('#organPanel').innerHTML='';
   $('#issueList').innerHTML=all.length?issueHTML(all.slice(0,12),true,true)+(all.length>12?`<div class="note">另有 ${all.length-12} 項，請點紀錄看完整分析</div>`:''):`<div class="empty">${s||l||w?'目前沒有異常指標 👍':'尚無資料'}</div>`;
   if(l)$('#issueList').insertAdjacentHTML('beforeend',`<p class="note">${NORMAL_NOTE}</p>`);
-  $('#deptList').innerHTML=deptHTML(deptPlan(all));
+  $('#deptList').innerHTML=deptHTML(deptPlan(all));$('#condBody').innerHTML=condCardHTML(m);
   const dv=derivedOf(m);$('#derivedCard').hidden=!dv.length;
   $('#derivedList').innerHTML=dv.map(d=>`<div class="issue"><span class="lv lv${d.lv}">${d.lv?LVT[d.lv]:'正常'}</span><div style="flex:1;min-width:0"><div class="t">${esc(d.name)}</div><div class="s">${esc(d.txt)}<br><span style="font-size:calc(11px*var(--fz))">${esc(d.src)}</span></div></div><div class="v">${esc(d.val)}</div></div>`).join('');
   $('#planBody').innerHTML=planHTML(m);
@@ -2092,7 +2496,7 @@ const ACTS=[['1.2','久坐（幾乎不運動）'],['1.375','輕度（每週 1–
 function openMemberEdit(id,focus,back){
   const ex=id?MEM.find(x=>x.id===id):null;
   const m=ex?{...ex}:{id:uid(),name:'',sex:'m',birth:'',h:'',w:'',waist:'',neck:'',hip:'',act:'1.375',goal:'auto'};if(!GOALT[m.goal])m.goal='auto';
-  const TABS=[['basic','基本資料'],['fh','家族史'],['fit','運動'],['diet','不吃的'],['vax','疫苗']];
+  const TABS=[['basic','基本資料'],['cond','病史'],['fh','家族史'],['fit','運動'],['diet','不吃的'],['vax','疫苗']];
   openSheet((back?'<button class="btn sm ghost" data-settings style="margin-bottom:8px">‹ 設定</button>':'')+sheetHead(ex?esc(m.name)+' 的資料':'新增成員','')+`<div class="tabs" id="m-tabs" role="tablist">${TABS.map(([k,t])=>`<button data-t="${k}" role="tab">${t}</button>`).join('')}</div>
     <div class="tabp" data-t="basic"><p class="note" style="margin-top:0">性別＋出生日期會自動判斷兒童／青少年／成人／長者</p>
     <label>名稱</label><input id="m-name" value="${esc(m.name)}" placeholder="例如：爸爸、小明" maxlength="12">
@@ -2111,6 +2515,7 @@ function openMemberEdit(id,focus,back){
     <div class="note" style="margin-top:6px">自動＝營養師依 BMI、體脂、腰圍、肌肉量判斷${ex?`（目前建議：${GOALT[suggestGoal(m).goal]}）`:''}</div>
     <div class="note" id="m-kidnote"></div>
     <p class="note">有體脂紀錄時，計算會自動改用最新一筆體脂機體重。</p></div>
+    ${condTabHTML(m)}
     ${(()=>{const fh=fhOf(m),lf=lifeOf(m),chips=(id,list,on)=>`<div class="chips" id="${id}">${list.map(([k,n])=>`<button type="button" class="chip${on.includes(k)?' on':''}" data-k="${k}">${n}</button>`).join('')}</div>`;
       return `<div class="tabp" id="m-fhbox" data-t="fh"><p class="note" style="margin-top:0">影響今年健檢建議（篩檢年齡與項目）</p>
       <label>一等親（父母、兄弟姊妹、子女）罹患過的癌症</label>${chips('m-fhca',FH_CA,fh.ca)}
@@ -2125,7 +2530,7 @@ function openMemberEdit(id,focus,back){
       <label>做過的檢查（西元年，選填；報告裡有的會自動抓）</label>
       <div class="grid2" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div><label style="margin-top:4px">大腸鏡</label><input id="m-colono" inputmode="numeric" value="${esc(lf.colono||'')}" placeholder="西元年"></div><div><label style="margin-top:4px">胃鏡</label><input id="m-gastro" inputmode="numeric" value="${esc(lf.gastro||'')}" placeholder="西元年"></div><div><label style="margin-top:4px">肺部 CT</label><input id="m-ldct" inputmode="numeric" value="${esc(lf.ldct||'')}" placeholder="西元年"></div></div></div>`})()}
     ${(()=>{const fp=fitOf(m),chips=(id,list,on)=>`<div class="chips" id="${id}">${list.map(([k,n])=>`<button type="button" class="chip${on.includes(k)?' on':''}" data-k="${k}">${n}</button>`).join('')}</div>`,sg=(id,list)=>`<div class="seg" id="${id}">${list.map(([v,t])=>`<button data-v="${v}">${t}</button>`).join('')}</div>`;
-      return `<div class="tabp" id="m-fitbox" data-t="fit"><p class="note" style="margin-top:0">影響運動課表：身體限制會自動避開不適合的運動</p>
+      return `<div class="tabp" id="m-fitbox" data-t="fit"><p class="note" style="margin-top:0">影響運動課表：身體限制會自動避開不適合的運動</p>${(()=>{const L=condLims(m);return L.lims.size?`<p class="note">🩺 依病史已自動加上：${esc(Object.entries(L.why).map(([l,ns])=>`${(LIM.find(z=>z[0]===l)||[,l==='cvr'?'暫不做高強度':l])[1]}（${ns}）`).join('、'))}</p>`:''})()}
       <label>身體限制（會自動避開不適合的運動）</label>${chips('m-lim',LIM,fp.lim)}
       <label>體能程度</label>${sg('m-lvl',[['new','新手'],['mid','偶爾運動'],['pro','規律運動']])}
       <label>每週可以運動幾天</label>${sg('m-days',[2,3,4,5,6].map(d=>[d,d+' 天']))}
@@ -2143,7 +2548,7 @@ function openMemberEdit(id,focus,back){
     <div class="row2" id="m-actions">${ex&&MEM.length>1?'<button class="btn danger" id="m-del" style="flex:0 0 30%">刪除</button>':''}<button class="btn" id="m-save">儲存</button></div>`);
   const seen=new Set(),tab=t=>{seen.add(t);$$('#m-tabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===t);b.setAttribute('aria-selected',b.dataset.t===t)});
     $$('#sheetBody .tabp').forEach(p=>p.hidden=p.dataset.t!==t);$('.sheet-panel').scrollTop=0;$('#m-tabs [data-t="'+t+'"]')?.scrollIntoView({inline:'center',block:'nearest'})};
-  $$('#m-tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
+  $$('#m-tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));const getCond=bindCondTab(m);
   let sex=m.sex,goal=m.goal;
   const upd=()=>{const b=$('#m-birth').value,a=ageOf({birth:b}),kid=!!b&&a<18;
     $('#m-stage').textContent=b?`${Math.floor(a)} 歲・${stageOf(a)}${kid?'・使用國健署兒童青少年 BMI 標準與 Schofield 代謝公式':''}`:'';
@@ -2170,6 +2575,7 @@ function openMemberEdit(id,focus,back){
       quit:smoke==='former'?Math.min(80,num($('#m-quit').value)||0):0,colono:yr('#m-colono'),gastro:yr('#m-gastro'),ldct:yr('#m-ldct')};
     if(seen.has('fit')||m.fit)m.fit={lim:pick('#m-lim'),lvl,days:+days,min:+mins,like:pick('#m-like'),time:/^\d{2}:\d{2}$/.test($('#m-time').value)?$('#m-time').value:'07:00'};
     m.diet={no:pick('#m-no'),ban:pick('#m-ban')};
+    {const cd=getCond();if(cd.items.length||cd.meds||cd.allergy||cd.surg)m.cond=cd;else delete m.cond}
     const vx={},on=pick('#m-vax'),y=new Date().getFullYear();for(const k of on)vx[k]=vaxDone(m,k)?+obj(m.vax)[k]:(k==='flu'||k==='covid'?season():y);m.vax=vx;
     const i=MEM.findIndex(x=>x.id===m.id);if(i>=0)MEM[i]=m;else MEM.push(m);
     ACT=m.id;S.set('members',MEM);S.set('active',ACT);renderAll();if(back)openSettings();else closeSheet();toast('已儲存：'+name);
@@ -2187,7 +2593,8 @@ const AI_TOPICS=[['all','整體解讀','請整體解讀我的狀況：哪些最�
   ['each','異常逐項解釋','請逐項解釋每個異常：代表什麼、常見原因、風險高低、該看哪一科、多久內要看、生活上怎麼改善。'],
   ['visit','看診準備','我要去看醫生，請幫我整理：該掛哪一科、先後順序、要帶哪些資料，以及可以問醫生的 5 個問題。'],
   ['diet','飲食怎麼改','請依我的數值給一週飲食建議：台灣常見、外食族也做得到的選擇，哪些少吃、哪些多吃，並說明原因。'],
-  ['fit','運動怎麼練','請依我的數值和身體限制，安排 4 週運動計畫（每週幾次、多久、強度、要避開什麼）。']];
+  ['fit','運動怎麼練','請依我的數值和身體限制，安排 4 週運動計畫（每週幾次、多久、強度、要避開什麼）。'],
+  ['cond','病史怎麼保養','請依我的病史（包含體檢看不到的疾病）和下面的數值，逐一告訴我：①要注意什麼 ②怎麼運動（適合與要避免的）③日常怎麼保養（飲食、生活）④什麼情況要回診或立刻就醫 ⑤下次看診可以問醫生的 3 個問題。病史之間如果互相影響（例如運動限制衝突），請整合成一份每週計畫。']];
 const AIS=[['chatgpt','ChatGPT','https://chatgpt.com/','?q='],['claude','Claude','https://claude.ai/new','?q='],['gemini','Gemini','https://gemini.google.com/app','']];
 const aiHref=(k,t)=>{const[,,u,q]=AIS.find(x=>x[0]===k),e=encodeURIComponent(t);return q&&e.length<=6000?u+q+e:u};
 const tv=v=>typeof v==='number'?String(+v.toPrecision(4)):String(v??'');
@@ -2205,6 +2612,7 @@ function aiPrompt(m,o){
     if(m.life)out.push(`【生活習慣】吸菸：${{never:'從不',former:'已戒',current:'目前有'}[lf.smoke]}${lf.smoke!=='never'&&packYears(lf)?`（約 ${packYears(lf)} 包年）`:''}；喝酒：${{none:'不喝',some:'偶爾',often:'每週 3 次以上'}[lf.alc]}；檳榔：${{never:'從不',former:'已戒',current:'目前有'}[lf.betel]}`);
     if(fp.lim.length)out.push(`【身體限制】${fp.lim.map(k=>(LIM.find(z=>z[0]===k)||[,k])[1]).join('、')}`);
     if(dt.no.length)out.push(`【不吃的食物】${dt.no.map(k=>(EXG.find(z=>z[0]===k)||[,k])[1]).join('、')}`)}
+  if(o.cond){const ct=condText(m);if(ct.length)out.push(...ct)}
   if(l){out.push('',`【體檢報告 ${l.t}】App 判讀異常 ${lab.length} 項：`);
     lab.slice().sort((a,b)=>b.lv-a.lv).forEach(i=>{const pv=P?.items?.[i.k]?.v;out.push(`- ${iss(i)}${pv!=null&&pv!==''?`；前一次（${P.t}）${pv}`:''}`)});
     {const ab=new Set(lab.map(i=>i.k)),has=k=>{const v=l.items?.[k]?.v;return v!=null&&v!==''},core=AI_CORE.filter(k=>has(k)&&!ab.has(k)).map(k=>`${LABK[k].s||LABK[k].n} ${l.items[k].v}${LABK[k].u?' '+LABK[k].u:''}`),miss=AI_CORE.filter(k=>!has(k)&&!(k==='waist'&&m.waist)).map(k=>LABK[k].s||LABK[k].n);
@@ -2265,6 +2673,7 @@ const URGO=['obs','clinic','soon','now'];
 // 對照自己的資料：報告、手錶、生活習慣
 function symCtx(m,k){const a=Math.floor(ageOf(m)),labs=labsOf(m).slice(0,3),iss=labs.flatMap(r=>labEval(r,m)),has=key=>iss.some(i=>i.k===key),lv=key=>iss.reduce((x,i)=>i.k===key?Math.max(x,i.lv):x,0),w=watchOf(m)[0],lf=lifeOf(m),ld=lastDone(m),o=[];
   const iv=key=>{for(const r of labs){const v=num(r.items?.[key]?.v);if(v!=null)return v}return null};
+  {const ns=condNames(m,k==='chest'||k==='palp'||k==='sob'?['cac','cad','af','hf','htn']:k==='leg'?['hf','ckd','varicose']:k==='dizzy'?['af','htn','dm']:k==='joint'?['gout','ra','kneeoa']:[]);if(ns.length)o.push(`你的病史：${ns.join('、')}`)}
   if(k==='chest'||k==='palp'||k==='sob'){if(has('img_cac')||has('cac'))o.push('你的影像報告有冠狀動脈鈣化：胸悶胸痛更要當一回事，運動中出現要立刻停下並就醫');
     if(has('ldl')||has('sdldl'))o.push('你的血脂偏高，屬心血管風險因子');if(w?.afib)o.push('手錶提示過心律不整：帶手錶的心電圖紀錄去看診');if(num(w?.rhr)>100)o.push(`手錶靜止心率 ${w.rhr}，偏快`)}
   if(k==='sob'||k==='snore'){if(num(w?.spo2)<95)o.push(`手錶血氧平均 ${w.spo2}%，偏低`);if(lf.smoke!=='never')o.push('有吸菸史：喘或久咳要排除慢性阻塞性肺病')}
@@ -2308,13 +2717,13 @@ function openSym(){const m=me(),areas=[...new Set(SYM.map(x=>x.a))],own=x=>!x.se
     const rf=L.flatMap(x=>(x.rf||[]).filter((r,i)=>symRf.has(x.k+':'+i)).map(r=>r[0]));
     openAI(null,`我最近有這些症狀：${L.map(x=>x.n).join('、')}（${{new:'1–3 天',days:'4–14 天',long:'超過 2 週'}[symDur]}）${rf.length?`；另外有：${rf.join('、')}`:''}。請依我的數值判斷可能原因、要掛哪一科、需要哪些檢查、有沒有需要立刻就醫的警訊。`)};
   paint()}
-let aiO={topic:'all',fh:true,scale:true,watch:true,self:true,normals:false,q:'',item:null};
+let aiO={topic:'all',fh:true,cond:true,scale:true,watch:true,self:true,normals:false,q:'',item:null};
 function openAI(item,q){const m=me();aiO={...aiO,item:item||null,topic:item?'item':aiO.topic==='item'?'all':aiO.topic,q:String(q||'').slice(0,500)};
   const it=item&&[...issuesOf(m).lab,...issuesOf(m).scale,...issuesOf(m).watch].find(i=>i.k===item),topics=[...(it?[['item','這一項：'+(it.short||it.name)]]:[]),...AI_TOPICS];
   openSheet(sheetHead('🩺 AI 醫生','把你的數值整理成問題，帶到你常用的 AI 問')+`
     <label>想問什麼</label><div class="chips" id="ai-topic">${topics.map(([k,n])=>`<button class="chip${aiO.topic===k?' on':''}" data-k="${k}">${esc(n)}</button>`).join('')}</div>
     <label>補充問題（選填）</label><textarea id="ai-q" maxlength="500" style="min-height:70px;font-family:inherit" placeholder="例如：最近常覺得累，跟報告有關嗎？">${esc(aiO.q)}</textarea>
-    <label>要附上的資料</label><div class="chips" id="ai-opt"><button class="chip${aiO.fh?' on':''}" data-k="fh">家族史與生活習慣</button><button class="chip${aiO.scale?' on':''}" data-k="scale">體脂紀錄</button><button class="chip${aiO.watch?' on':''}" data-k="watch">手錶數據</button><button class="chip${aiO.self?' on':''}" data-k="self">自我檢測結果</button><button class="chip${aiO.normals?' on':''}" data-k="normals">正常的數值也附上</button></div>
+    <label>要附上的資料</label><div class="chips" id="ai-opt"><button class="chip${aiO.cond?' on':''}" data-k="cond">病史與用藥</button><button class="chip${aiO.fh?' on':''}" data-k="fh">家族史與生活習慣</button><button class="chip${aiO.scale?' on':''}" data-k="scale">體脂紀錄</button><button class="chip${aiO.watch?' on':''}" data-k="watch">手錶數據</button><button class="chip${aiO.self?' on':''}" data-k="self">自我檢測結果</button><button class="chip${aiO.normals?' on':''}" data-k="normals">正常的數值也附上</button></div>
     <details class="box"><summary>預覽要問的內容 <span class="sub" id="ai-n"></span></summary><div class="prompt" id="ai-pv"></div></details>
     <div class="aib">${AIS.map(([k,n])=>`<a class="btn" data-aiopen="${k}" href="${AIS.find(x=>x[0]===k)[2]}" target="_blank" rel="noopener">${n}</a>`).join('')}</div>
     <button class="btn ghost" id="ai-copy">只複製（自己貼到任何 AI）</button>
@@ -2344,7 +2753,8 @@ const ctxCV=(m,F)=>{const o=[],s=F.iv('sbp'),d=F.iv('dbp'),g=F.iv('glu'),a1=F.iv
   if(F.has('ldl')||F.has('tc'))o.push(`血脂偏高${ldl!=null?`（LDL ${ldl}）`:''}`);
   if(F.lf.smoke==='current')o.push('目前吸菸');
   if(F.w?.afib)o.push('手錶提示過心律不整（心房顫動會讓中風風險增加約 5 倍）');
-  if(F.has('img_cac')||F.has('cac'))o.push('影像報告有冠狀動脈鈣化');
+  {const ns=condNames(m,['htn','cac','cad','af','hf','stroke','dm','lipid','ckd','osa']);if(ns.length)o.push(`病史：${ns.join('、')}`)}
+  if((F.has('img_cac')||F.has('cac'))&&!condHas(m,'cac'))o.push('影像報告有冠狀動脈鈣化');
   if(F.fh.chr.includes('cvd'))o.push('一等親有早發心血管疾病');
   if(F.c.bmi>=27)o.push(`BMI ${r1(F.c.bmi)}（肥胖）`);
   return o};
@@ -2573,6 +2983,7 @@ function selfPrompt(m,recs){const F=selfF(m),out=[];
     const cx=T.ctx?T.ctx(m,F):[];if(cx.length)out.push(`相關的身體資料：${cx.join('；')}`)}
   const ab=F.iss.filter(i=>i.lv>=2&&i.src==='體檢').map(i=>`${i.name} ${tv(i.val)}${i.unit?' '+i.unit:''}`);if(ab.length)out.push('',`【最近一次體檢的異常項目】${ab.slice(0,12).join('、')}`);
   if(fhText(m))out.push(`【一等親家族史】${fhText(m)}`);
+  {const ct=condText(m);if(ct.length)out.push(...ct)}
   out.push('',`【我的問題】${recs.length>1?'請綜合這些自我檢測結果，告訴我最需要優先處理的是哪一項、彼此有沒有關聯，以及下一步。':'請幫我判斷這個結果要不要擔心、可能的原因，以及下一步該怎麼做。'}`);
   return out.join('\n')}
 function delSelf(id){const m=me();SELFR[m.id]=(SELFR[m.id]||[]).filter(r=>r.id!==id);S.set('self',SELFR);closeSheet();renderSelf();toast('已刪除這筆檢測')}
@@ -3221,6 +3632,7 @@ function openSettings(){const m=me(),c=calc(m),row=(attr,ic,t,sub)=>`<button cla
   openSheet(sheetHead('⚙️ 設定','')+`
     <div class="sgrp"><div class="sgh">${esc(m.name)} 的個人資料</div>
       ${row('data-setsec="basic"','👤','基本資料',`${sexT(m.sex)}・${Math.floor(ageOf(m))} 歲・${esc(m.h)} cm・${fmt(c.w)} kg・目標 ${GOALT[c.goal]}`)}
+      ${(()=>{const cd=condOf(m),ns=cd.items.map(x=>x.name);return row('data-setsec="cond"','🩺','病史與用藥',ns.length?esc(ns.slice(0,3).join('、')+(ns.length>3?` 等 ${ns.length} 項`:'')):'體檢看不到的疾病、目前用藥、藥物過敏')})()}
       ${row('data-setsec="fh"','🧬','家族史與生活習慣','吸菸、喝酒、做過的檢查（影響今年健檢建議）')}
       ${row('data-setsec="fit"','🏃','運動偏好與身體限制','影響運動課表')}
       ${row('data-setsec="diet"','🥗','不吃的食物','菜單、採買清單會避開')}
@@ -3267,23 +3679,25 @@ function summaryBlocks(m){const c=calc(m),L=labsOf(m),l=L[0],B=[],a=Math.floor(a
   B.push({t:'h1',s:'看診摘要'});P(`${m.name}・${sexT(m.sex)}性・${a} 歲・身高 ${c.h} cm・體重 ${fmt(c.w)} kg（BMI ${r1(c.bmi)}）`);P(`整理日期 ${ymd(new Date())}・NutriCore`,'#64748b');
   const lab=l?annotPrev(m,labEval(l,m).sort((x,y)=>(y.crit?1:0)-(x.crit?1:0)||y.lv-x.lv)):[],w=watchOf(m)[0],wi=w?watchEval(w,m).filter(i=>i.lv>=1):[];
   const crit=lab.filter(i=>i.crit);if(crit.length){H('🚨 危急值（今天就要處理）');crit.forEach(i=>I(`${i.name} ${tv(i.val)} ${i.unit}（報告 ${l.t}）`,'#b91c1c'))}
+  {const cd=condOf(m);if(cd.items.length||cd.meds||cd.allergy||cd.surg){H('病史 Medical history');if(cd.items.length)cd.items.forEach(x=>I(condLine(x),x.st==='done'?'#64748b':undefined));else P('未填寫');
+    H('藥物過敏 Allergies');P(cd.allergy||'未填寫',cd.allergy&&!/^(無|沒有|none|nkda)$/i.test(cd.allergy)?'#b91c1c':undefined);H('目前用藥 Medications');P(cd.meds||'未填寫');if(cd.surg){H('手術／住院 Surgery');P(cd.surg)}}}
   if(l){const cd=cmpData(m),tr=k=>{const r=cd?.rows.find(x=>x.k===k);return r&&r.vals.filter(v=>v!=null).length>1?`；歷年 ${r.vals.map(v=>v==null?'—':String(v).split(/[（(]/)[0]).join(' → ')}`:''};
     H(`體檢異常（${l.t}${l.hospital?'・'+l.hospital:''}，共 ${lab.length} 項）`);
     if(!lab.length)P('全部在參考範圍內');
-    lab.slice(0,24).forEach(i=>I(`【${i.crit?'危急':LVT[i.lv]}】${i.name} ${tv(i.val)}${i.unit?' '+i.unit:''}${i.ref&&!/^原文/.test(i.ref)?`（參考 ${i.ref}）`:''}${i.prev?'・'+prevTxt(i.prev):''}${tr(i.k)}`,i.crit||i.lv>=3?'#b91c1c':i.lv===2?'#c2410c':'#0b1220'));
+    lab.slice(0,24).forEach(i=>I(`【${i.crit?'危急':LVT[i.lv]}】${/^img_/.test(i.k)?`${i.name}（${i.val}）`:`${i.name} ${tv(i.val)}${i.unit?' '+i.unit:''}`}${i.ref&&!/^原文/.test(i.ref)?`（參考 ${i.ref}）`:''}${i.cx?`・${i.cx}`:''}${i.prev?'・'+prevTxt(i.prev):''}${tr(i.k)}`,i.crit||i.lv>=3?'#b91c1c':i.lv===2?'#c2410c':'#0b1220'));
     if(lab.length>24)P(`另有 ${lab.length-24} 項，請看 App`,'#64748b')}
   else{H('體檢報告');P('還沒有匯入體檢報告')}
   const dp=deptPlan([...lab,...wi]);if(dp.length){H('建議掛號');dp.forEach(d=>I(`${d.d}：${d.when}（${d.items.join('、')}）`,d.crit?'#b91c1c':undefined))}
-  if(wi.length){H(`手錶（${w.t}，近 7 天平均）`);wi.forEach(i=>I(`${i.name} ${tv(i.val)}${i.unit?' '+i.unit:''}：${i.msg}`))}
+  if(wi.length){H(`手錶（${w.t}，${w.period||'近 7 天平均'}）`);wi.forEach(i=>I(`${i.name} ${tv(i.val)}${i.unit?' '+i.unit:''}：${i.msg}`))}
   const sr=selfLatest(m,365).map(r=>({r,R:selfRate(r.k,r.a,m)})).filter(x=>x.R.lv>=1);if(sr.length){H('自我檢測（1 年內）');sr.forEach(({r,R})=>I(`${SELF[r.k].n}（${r.t}）：${R.sc?R.sc+'，':''}${R.head}`,R.lv>=3?'#b91c1c':undefined))}
   const lf=lifeOf(m),bits=[fhText(m)&&`家族史：${fhText(m)}`,m.life&&`吸菸：${{never:'從不',former:'已戒',current:'目前有'}[lf.smoke]}`,m.life&&`喝酒：${{none:'不喝',some:'偶爾',often:'每週 3 次以上'}[lf.alc]}`].filter(Boolean);
-  if(bits.length){H('病史與生活習慣');bits.forEach(s=>I(s))}
+  if(bits.length){H('家族史與生活習慣');bits.forEach(s=>I(s))}
   H('想問醫師');I('這些異常哪一項最需要先處理？需要再做哪些檢查？');I('多久後要回診或複驗？');
   B.push({t:'note',s:'依 App 規則整理的資料，不是診斷，以醫師判斷為準。'});return B}
 function drawSummary(m){const cv=document.createElement('canvas'),x=cv.getContext('2d');if(!x)return null;const W=1080,P=60,MAXH=9000,B=summaryBlocks(m);
   const F=(sz,b)=>`${b?'700 ':''}${sz}px -apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif`,ST={h1:[54,1,'#0b1220'],h:[36,1,'#0e7490'],p:[30,0,'#334155'],li:[31,0,'#0b1220'],note:[26,0,'#64748b']};
   // 換行：中文逐字斷，數字與英文（6.6、mmol/L、4.2 → 6.6）整段不拆開
-  const wrap=(s,sz,b,w)=>{x.font=F(sz,b);const out=[];let cur='';for(const tk of String(s).match(/[A-Za-z0-9.%\/+\-–]+|[\s\S]/gu)||[]){if(x.measureText(cur+tk).width>w&&cur.trim()){out.push(cur.trimEnd());cur=tk.trimStart()}else cur+=tk}if(cur)out.push(cur);return out};
+  const wrap=(s,sz,b,w)=>{x.font=F(sz,b);const out=[];let cur='';for(const tk of String(s).match(/［[^］]{1,24}］|[A-Za-z0-9.%\/+\-–]+|[\s\S]/gu)||[]){if(x.measureText(cur+tk).width>w&&cur.trim()){out.push(cur.trimEnd());cur=tk.trimStart()}else cur+=tk}if(cur)out.push(cur);return out};
   const ops=[];let y=P;
   for(const b of B){const[sz,bd,col]=ST[b.t],ind=b.t==='li'?40:0;if(b.t==='h')y+=30;if(b.t==='note')y+=24;
     wrap(b.s,sz,bd,W-P*2-ind).forEach((ln,i)=>{if(y+sz*1.5>MAXH-P)return;ops.push([ln,P+ind,y+sz,sz,bd,b.c||col,b.t==='li'&&i===0]);y+=Math.round(sz*1.5)});
@@ -3317,7 +3731,8 @@ function cleanBackup(d){
       if(m.life){const l=obj(m.life),e=(v,a)=>a.includes(v)?v:a[0];c.life={smoke:e(l.smoke,['never','former','current']),betel:e(l.betel,['never','former','current']),alc:e(l.alc,['none','some','often']),
         abo:!!l.abo,ppd:Math.min(10,num(l.ppd)||0),yrs:Math.min(80,num(l.yrs)||0),quit:Math.min(80,num(l.quit)||0),...Object.fromEntries(['colono','gastro','ldct'].map(k=>[k,num(l[k])>=1950&&num(l[k])<=2100?Math.floor(num(l[k])):'']))}}else delete c.life;
       c.goal=GOALT[m.goal]?m.goal:'auto';if(m.diet){const t=dietOf(m);c.diet={no:t.no,ban:t.ban}}else delete c.diet;if(m.fit)c.fit=fitOf(m);else delete c.fit;
-      if(m.vax){const v={};for(const[k,y]of Object.entries(obj(m.vax)))if(VAX.some(z=>z[0]===k)&&+y>=1950&&+y<=2100)v[k]=Math.floor(+y);c.vax=v}else delete c.vax;return c});
+      if(m.vax){const v={};for(const[k,y]of Object.entries(obj(m.vax)))if(VAX.some(z=>z[0]===k)&&+y>=1950&&+y<=2100)v[k]=Math.floor(+y);c.vax=v}else delete c.vax;
+      if(m.cond)c.cond=cleanCond(m.cond);else delete c.cond;return c});
   const recs=(o,re)=>{const r={};for(const[k,arr]of Object.entries(obj(o)))if(okId(k)&&Array.isArray(arr))r[k]=arr.filter(x=>x&&okId(x.id)&&re.test(String(x.t)));return r};
   const img={};for(const[k,v]of Object.entries(obj(d.img)))if(BY_ID[k]&&/^https:\/\//.test(String(v)))img[k]=String(v);
   const watch=recs(d.watch,/^\d{4}-\d{2}-\d{2}$/);for(const k in watch)watch[k]=watch[k].map(cleanWatch);
@@ -3345,7 +3760,7 @@ $('#memChip').onclick=openMemberPicker;
 $$('#recSeg button').forEach(b=>b.onclick=()=>{recTab=b.dataset.v;$$('#recSeg button').forEach(x=>x.classList.toggle('on',x===b));renderRecs()});
 $('#hud').addEventListener('click',e=>{const t=e.target.closest('[data-o]');if(t)showOrgan(t.dataset.o)});
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-close],[data-closeorgan],[data-copy],[data-show],[data-pick],[data-editmem],[data-addmem],[data-sid],[data-lid],[data-addscale],[data-addlab],[data-copyplan],[data-goplan],[data-autogoal],[data-go],[data-golab],[data-goback],[data-fday],[data-timer],[data-ics],[data-meal],[data-ban],[data-shop],[data-export],[data-import],[data-autoimg],[data-aidoc],[data-ask],[data-fixh],[data-cmp],[data-wid],[data-addwatch],[data-exlog],[data-exrm],[data-sym],[data-self],[data-selfnew],[data-selfdel],[data-selfai],[data-settings],[data-setsec],[data-fz],[data-tour],[data-summary]');if(!t)return;const d=t.dataset;
+  const t=e.target.closest('[data-close],[data-closeorgan],[data-copy],[data-show],[data-pick],[data-editmem],[data-addmem],[data-sid],[data-lid],[data-addscale],[data-addlab],[data-copyplan],[data-goplan],[data-autogoal],[data-go],[data-golab],[data-goback],[data-fday],[data-timer],[data-ics],[data-meal],[data-ban],[data-shop],[data-export],[data-import],[data-autoimg],[data-aidoc],[data-ask],[data-fixh],[data-cmp],[data-wid],[data-addwatch],[data-exlog],[data-exrm],[data-sym],[data-self],[data-selfnew],[data-selfdel],[data-selfai],[data-settings],[data-setsec],[data-fz],[data-tour],[data-summary],[data-cond],[data-condadd],[data-condai]');if(!t)return;const d=t.dataset;
   if('close' in d)closeSheet();
   else if('closeorgan' in d){$('#organPanel').innerHTML='';$$('#hud .sel').forEach(e=>e.classList.remove('sel'))}
   else if(d.copy)copyText(PROMPTS[d.copy]());
@@ -3373,6 +3788,9 @@ document.addEventListener('click',e=>{
   else if(d.fz){FZV=d.fz;S.set('fz',FZV);applyFz();$$('#set-fz button').forEach(x=>x.classList.toggle('on',x.dataset.fz===FZV));toast('字體：'+FZ.find(x=>x[0]===FZV)[1])}
   else if('tour' in d)startTour();
   else if('summary' in d)openSummary();
+  else if(d.cond)openCond(d.cond);
+  else if(d.condadd)addCondFromSuggest(d.condadd);
+  else if('condai' in d){aiO.topic='cond';openAI()}
   else if(d.self){const r=selfOf(me(),d.self)[0];if(r)openSelfResult(r.id);else openSelf(d.self)}
   else if(d.selfnew)openSelf(d.selfnew);
   else if(d.selfdel){if(confirm('刪除這筆檢測結果？'))delSelf(d.selfdel)}

@@ -733,6 +733,65 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6t. 病史（體檢看不到的疾病）：蹠筋膜纖維瘤症＋冠狀動脈鈣化 → 運動、飲食、LDL 目標、健檢建議、健康評語、AI、看診摘要 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    const labU = { id: 'a2', t: '2025-09-01', hospital: '臺安', items: { glu: { v: 92 }, ldl: { v: 108 }, hdl: { v: 52 }, tg: { v: 90 }, sbp: { v: 118 }, dbp: { v: 76 }, ldct: { v: 'Lung-RADS 1（陰性）', ref: '原文：冠狀動脈鈣化，建議心臟科門診追蹤。' } }, extra: [] };
+    page = await newPage({ members: [{ id: 'u', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 70, act: '1.375', goal: 'keep', life: { smoke: 'never', betel: 'never', alc: 'some' },
+      cond: { items: [{ k: 'ledd', y: 2024, st: 'fu', note: '左腳 2 顆' }, { k: 'cac', y: 2025, st: 'fu', note: '2025-09-01 LDCT' }], meds: '', allergy: '無', surg: '' } }], active: 'u',
+      labs: { u: [labU] }, watch: { u: [{ id: 'w0', t: T(40), steps: 3337 }, { id: 'w1', t: T(0), rhr: 62, sleep: 7.6, steps: 4778, kcal: 166, workouts: 2.6 }] } });
+    const r = await page.evaluate(() => { const m = me(), iss = labEval(labsOf(m)[0], m), ldl = iss.find(i => i.k === 'ldl'), F = fitPlan(m), P = yearPlan(m).items, h = healthComment(m), N = nutriPlan(m);
+      return { ldl: ldl && `${ldl.lv}|${/冠狀動脈鈣化/.test(ldl.msg)}|${ldl.cx}`, cardio: F.cardio.join(), no: F.no.map(x => `${x.k}:${x.why.join('/')}`).join('｜'), W: F.W.map(x => x.t).join('／'), hiZone: F.zone,
+        plan: P.filter(o => /冠狀動脈有鈣化|蹠筋膜結節/.test(o.t)).map(o => `${o.sec}|${o.pr}|${o.t}`).join('｜'), heart: dietMode(m).heart, nutri: (N.F.find(f => f.t === '降壞膽固醇') || {}).why || '',
+        head: h.head, cond: h.cond.join('｜'), bad: h.bad.join('｜'), todo: h.todo.join('｜'), rest: F.days.filter(d => d.rest).map(d => d.b[0]?.note || '').join('｜'),
+        ai: aiPrompt(m, { topic: 'cond', fh: true, cond: true, scale: true, watch: true, self: true }), self: selfPrompt(m, []), sum: summaryBlocks(m).map(b => b.s).join('\n'), card: (renderBody(), $('#condBody').textContent) } });
+    check('病史：冠狀動脈鈣化讓 LDL 108（一般人正常）改標「注意」並說明目標更嚴格；蹠筋膜纖維瘤症讓課表避開跑步、超慢跑、爬山、球類、HIIT 並寫原因，有氧改腳踏車、游泳、水中走路',
+      r.ldl === '1|true|有冠狀動脈鈣化，LDL 目標應比一般人嚴格' && !/run|slowjog|hiit|hike|ball/.test(r.cardio) && /bike/.test(r.cardio) && /swim/.test(r.cardio) && /run:蹠筋膜纖維瘤症（病史）/.test(r.no) && /hiit:.*冠狀動脈鈣化（CT 發現）（病史）/.test(r.no) && /蹠筋膜纖維瘤症：有氧改用腳踏車/.test(r.W) && /冠狀動脈有鈣化：中等強度最好/.test(r.W) && /分 2 段走、穿厚底避震鞋/.test(r.rest), JSON.stringify({ ldl: r.ldl, cardio: r.cardio, no: r.no, W: r.W, rest: r.rest }));
+    check('今年健檢建議：心臟內科（優先）＋「病史追蹤」蹠筋膜結節；營養師「降壞膽固醇」寫出病史；健康評語有「依你的病史」、不叫足底有狀況的人硬拚步數、鞋墊提醒、看診摘要提醒，報告的鈣化不重複列',
+      /追蹤報告異常\|1\|心臟內科：冠狀動脈有鈣化/.test(r.plan) && /病史追蹤\|3\|骨科／復健科：蹠筋膜結節追蹤/.test(r.plan) && r.heart && /病史：冠狀動脈鈣化（CT 發現）/.test(r.nutri) && /另有 2 項病史/.test(r.head)
+        && /蹠筋膜纖維瘤症：良性結節/.test(r.cond) && /冠狀動脈鈣化（CT 發現）：已有動脈硬化斑塊/.test(r.cond) && /不用硬拚步數/.test(r.bad) && !/冠狀動脈鈣化（體檢/.test(r.bad) && /騎腳踏車、游泳到微喘/.test(r.todo) && /減壓鞋墊/.test(r.todo) && /高強度運動前先讓心臟內科評估/.test(r.todo), JSON.stringify({ plan: r.plan, head: r.head, cond: r.cond, bad: r.bad, todo: r.todo }));
+    check('AI 醫生「病史怎麼保養」：附病史中英文、ICD-10、年份、狀況、備註、藥物過敏；自我檢測給 AI 也附病史；看診摘要圖有 Medical history、Allergies、Medications，LDL 註明依病史',
+      /【已知病史（醫師診斷過、體檢看不到的）】/.test(r.ai) && /- 蹠筋膜纖維瘤症 Plantar fibromatosis \(Ledderhose disease\)［ICD-10 M72\.2］・2024 年・追蹤中・左腳 2 顆/.test(r.ai) && /Coronary artery calcification \(CAC\)［ICD-10 I25\.84］/.test(r.ai) && /【藥物過敏】無/.test(r.ai) && /請依我的病史（包含體檢看不到的疾病）/.test(r.ai) && !/王小明/.test(r.ai)
+        && /【已知病史/.test(r.self) && /病史 Medical history/.test(r.sum) && /藥物過敏 Allergies\n無/.test(r.sum) && /目前用藥 Medications\n未填寫/.test(r.sum) && /・有冠狀動脈鈣化，LDL 目標應比一般人嚴格/.test(r.sum) && /蹠筋膜纖維瘤症/.test(r.card), (r.ai.match(/【已知病史[\s\S]{0,200}/) || [''])[0]);
+    // 其他病史的規則：冠心病 LDL <70、糖尿病 <100、腎臟病飲食、痛風、地中海貧血不補鐵、已痊癒只記錄
+    const o = await page.evaluate(() => { const base = { id: 'z', name: 'z', sex: 'm', birth: '1970-01-01', h: 170, w: 70 }, L = (items) => ({ t: '2026-01-01', items, extra: [] }), mk = items => ({ ...base, cond: { items } });
+      const E = (m, items) => labEval(L(items), m).filter(i => i.k === 'ldl').map(i => `${i.lv}:${/<70|<100/.exec(i.msg)?.[0] || ''}`).join();
+      const cad = mk([{ k: 'cad' }]), dm = mk([{ k: 'dm' }]), done = mk([{ k: 'cad', st: 'done' }]);
+      MEM.push({ ...base, id: 'tz', cond: { items: [{ k: 'thal' }] } }); LABS.tz = [{ id: 'tl', t: '2026-01-01', items: { hb: { v: 12 }, mcv: { v: 65 } }, extra: [] }];
+      const thal = nutriPlan(MEM.find(x => x.id === 'tz')).F.some(f => f.t === '補鐵'); MEM.pop(); delete LABS.tz;
+      return { cad: E(cad, { ldl: { v: 85 } }), dm: E(dm, { ldl: { v: 110 } }), dmLow: E(dm, { ldl: { v: 90 } }), done: E(done, { ldl: { v: 85 } }), kid: dietMode(mk([{ k: 'ckd' }])).kidney, pur: dietMode(mk([{ k: 'gout' }])).lowPur, thal,
+        fitDone: fitPlan(mk([{ k: 'kneeoa', st: 'done' }])).F.has('knee'), fitKnee: fitPlan(mk([{ k: 'kneeoa' }])).F.has('knee') } });
+    check('冠心病 LDL 85 → 異常（目標 <70）；糖尿病 LDL 110 → 注意（<100）、90 不提醒；慢性腎臟病 → 護腎飲食；痛風 → 低普林；地中海型貧血沒缺鐵不建議補鐵；「已痊癒」只記錄、不影響判讀與課表',
+      o.cad === '2:<70' && o.dm === '1:<100' && o.dmLow === '' && o.done === '' && o.kid && o.pur && !o.thal && !o.fitDone && o.fitKnee, JSON.stringify(o));
+    const cl = await page.evaluate(() => JSON.stringify(cleanCond({ items: [{ k: 'ledd', y: 3000, st: 'x', note: '<b>左</b>', score: 5 }, { k: 'evil' }, { n: '  蕁麻疹'.padEnd(40, '!') }, { k: 'ledd' }, { k: 'cac', score: 99999 }, { k: 'cac', y: '2025' }, null, 'x'], meds: 'a'.repeat(500), allergy: 5 })));
+    check('病史清洗：未知病名丟掉、自訂病名限 30 字、年份與狀況不合理改預設、重複的只留一筆、鈣化分數超出範圍清空、用藥限 400 字', cl === JSON.stringify({ items: [{ st: 'fu', y: '', note: '<b>左</b>', k: 'ledd' }, { st: 'fu', y: '', note: '', n: '蕁麻疹'.padEnd(30, '!') }, { st: 'fu', y: '', note: '', k: 'cac', score: '' }], meds: 'a'.repeat(400), allergy: '', surg: '' }), cl);
+    // 實際點畫面：⚙️ 設定 → 病史與用藥 → 搜尋、點選、自訂、存檔；身體頁建議加入；病史頁的問題直接帶去問 AI
+    await page.evaluate(() => { const m = me(); m.cond = { items: [{ k: 'ledd', y: 2024, st: 'fu', note: '左腳 2 顆' }], meds: '', allergy: '', surg: '' }; S.set('members', MEM); renderAll() });
+    await page.click('#gearBtn'); await page.waitForTimeout(300);
+    const hubRow = await page.evaluate(() => $('#sheetBody [data-setsec="cond"]')?.textContent || '');
+    await page.click('#sheetBody [data-setsec="cond"]'); await page.waitForTimeout(300);
+    const t0 = await page.evaluate(() => ({ vis: [...document.querySelectorAll('#sheetBody .tabp')].filter(p => !p.hidden).map(p => p.dataset.t).join(), sug: [...document.querySelectorAll('#m-condbox [data-csg]')].map(b => b.dataset.csg).join(), on: [...document.querySelectorAll('#m-cgrp .chip.on')].map(b => b.dataset.ck).join(), rows: document.querySelectorAll('#m-cdet .cdet').length }));
+    await page.fill('#m-cq', '筋膜'); await page.waitForTimeout(100);
+    const t1 = await page.evaluate(() => [...document.querySelectorAll('#m-cgrp [data-ck]')].filter(b => !b.hidden).map(b => b.dataset.ck).join());
+    await page.fill('#m-cq', ''); await page.click('#m-cgrp [data-ck="pf"]'); await page.click('#m-cgrp [data-ck="pf"]');
+    await page.click('#m-condbox [data-csg="cac"]'); await page.fill('#m-cown', '蕁麻疹'); await page.click('#m-cadd'); await page.fill('#m-cown', '蹠筋膜纖維瘤'); await page.click('#m-cadd'); await page.waitForTimeout(100);
+    const t2 = await page.evaluate(() => ({ rows: [...document.querySelectorAll('#m-cdet .cdet b')].map(b => b.textContent).join('、'), toast: $('#toast').textContent }));
+    await page.fill('#m-cdet [data-cid="cac"] [data-f="score"]', '45'); await page.fill('#m-allergy', '無'); await page.fill('#m-meds', 'Rosuvastatin 10 mg'); await page.click('#m-save'); await page.waitForTimeout(400);
+    const t3 = await page.evaluate(() => ({ cond: JSON.stringify(me().cond), back: !!$('#sheetBody #set-fz') }));
+    check('設定 → 病史與用藥：報告提到的冠狀動脈鈣化一鍵加入；搜尋「筋膜」只剩相關病名；點兩下取消；自訂「蕁麻疹」；打「蹠筋膜纖維瘤」會對到清單；存檔後回到設定',
+      /蹠筋膜纖維瘤症/.test(hubRow) && t0.vis === 'cond' && t0.sug === 'cac' && t0.on === 'ledd' && t0.rows === 1 && t1 === 'ledd,pf,dupuy' && t2.rows === '蹠筋膜纖維瘤症、冠狀動脈鈣化（CT 發現）、蕁麻疹' && /清單裡有：蹠筋膜纖維瘤症/.test(t2.toast)
+        && /"k":"cac","score":45/.test(t3.cond) && /"n":"蕁麻疹"/.test(t3.cond) && /"meds":"Rosuvastatin 10 mg","allergy":"無"/.test(t3.cond) && t3.back, JSON.stringify({ hubRow, t0, t1, t2, t3 }));
+    await page.evaluate(() => { closeSheet(); go('body') }); await page.waitForTimeout(300);
+    await page.click('#condBody [data-cond="cac"]'); await page.waitForTimeout(300);
+    const cs = await page.evaluate(() => $('#sheetBody').textContent);
+    await page.click('#sheetBody [data-condq="1"]'); await page.waitForTimeout(300);
+    const aq = await page.evaluate(() => ({ q: $('#ai-q').value, topic: document.querySelector('#ai-topic .chip.on')?.dataset.k, pv: $('#ai-pv').textContent }));
+    check('病史頁：要注意什麼（鈣化分數 45 → 輕度、偏向用藥）、怎麼運動（合併足底病史提醒）、怎麼保養、何時就醫、追蹤科別、給醫師看；點問題直接帶著資料問 AI',
+      /鈣化分數 45（輕度 1–99）/.test(cs) && /合併你的其他病史：你也有「蹠筋膜纖維瘤症」/.test(cs) && /怎麼保養/.test(cs) && /什麼時候要就醫/.test(cs) && /心臟內科/.test(cs) && /AHA\/ACC 2018/.test(cs)
+        && /LDL 要降到多少/.test(aq.q) && aq.topic === 'cond' && /鈣化分數 45/.test(aq.pv) && /【目前用藥】Rosuvastatin 10 mg/.test(aq.pv), JSON.stringify({ q: aq.q, topic: aq.topic }));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
