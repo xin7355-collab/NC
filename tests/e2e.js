@@ -566,7 +566,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     const s1 = await page.evaluate(() => $('#sym-out').textContent);
     await page.click('#sym-out [data-rf="chest:0"]'); await page.waitForTimeout(150);
     const s2 = await page.evaluate(() => ({ t: $('#sym-out').textContent, now: !!$('#sym-out .banner') }));
-    check('症狀：胸悶 → 心臟內科、心電圖，並對照報告提到冠狀動脈鈣化；勾危險徵兆（悶痛超過 15 分鐘）→ 立即就醫', /心臟內科/.test(s1) && /心電圖/.test(s1) && /冠狀動脈鈣化/.test(s1) && /安排門診/.test(s1) && s2.now && /立即就醫/.test(s2.t), s1.slice(0, 80));
+    check('症狀：胸悶 → 心臟內科、心電圖、預設 1–3 天內就醫，並對照報告提到冠狀動脈鈣化；勾危險徵兆（悶痛超過 5 分鐘）→ 立即就醫', /心臟內科/.test(s1) && /心電圖/.test(s1) && /冠狀動脈鈣化/.test(s1) && /儘快：1–3 天內/.test(s1) && s2.now && /立即就醫/.test(s2.t), s1.slice(0, 80));
     await page.click('[data-sk="chest"]'); await page.click('[data-sk="head"]'); await page.click('#sym-dur [data-v="long"]'); await page.waitForTimeout(150);
     const s3 = await page.evaluate(() => $('#sym-out').textContent);
     await page.click('#sym-ai'); await page.waitForTimeout(300);
@@ -753,7 +753,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       /追蹤報告異常\|1\|心臟內科：冠狀動脈有鈣化/.test(r.plan) && /病史追蹤\|3\|骨科／復健科：蹠筋膜結節追蹤/.test(r.plan) && r.heart && /病史：冠狀動脈鈣化（CT 發現）/.test(r.nutri) && /另有 2 項病史/.test(r.head)
         && /蹠筋膜纖維瘤症：良性結節/.test(r.cond) && /冠狀動脈鈣化（CT 發現）：已有動脈硬化斑塊/.test(r.cond) && /不用硬拚步數/.test(r.bad) && !/冠狀動脈鈣化（體檢/.test(r.bad) && /騎腳踏車、游泳到微喘/.test(r.todo) && /減壓鞋墊/.test(r.todo) && /高強度運動前先讓心臟內科評估/.test(r.todo), JSON.stringify({ plan: r.plan, head: r.head, cond: r.cond, bad: r.bad, todo: r.todo }));
     check('AI 醫生「病史怎麼保養」：附病史中英文、ICD-10、年份、狀況、備註、藥物過敏；自我檢測給 AI 也附病史；看診摘要圖有 Medical history、Allergies、Medications，LDL 註明依病史',
-      /【已知病史（醫師診斷過、體檢看不到的）】/.test(r.ai) && /- 蹠筋膜纖維瘤症 Plantar fibromatosis \(Ledderhose disease\)［ICD-10 M72\.2］・2024 年・追蹤中・左腳 2 顆/.test(r.ai) && /Coronary artery calcification \(CAC\)［ICD-10 I25\.84］/.test(r.ai) && /【藥物過敏】無/.test(r.ai) && /請依我的病史（包含體檢看不到的疾病）/.test(r.ai) && !/王小明/.test(r.ai)
+      /【已知病史（醫師診斷過、體檢看不到的）】/.test(r.ai) && /- 蹠筋膜纖維瘤症 Plantar fibromatosis \(Ledderhose disease\)［ICD-10 M72\.2］・2024 年・追蹤中・左腳 2 顆/.test(r.ai) && /Coronary artery calcification \(CAC\)［ICD-10 I25\.10＋I25\.84］/.test(r.ai) && /【藥物過敏】無/.test(r.ai) && /請依我的病史（包含體檢看不到的疾病）/.test(r.ai) && !/王小明/.test(r.ai)
         && /【已知病史/.test(r.self) && /病史 Medical history/.test(r.sum) && /藥物過敏 Allergies\n無/.test(r.sum) && /目前用藥 Medications\n未填寫/.test(r.sum) && /・有冠狀動脈鈣化，LDL 目標應比一般人嚴格/.test(r.sum) && /蹠筋膜纖維瘤症/.test(r.card), (r.ai.match(/【已知病史[\s\S]{0,200}/) || [''])[0]);
     // 其他病史的規則：冠心病 LDL <70、糖尿病 <100、腎臟病飲食、痛風、地中海貧血不補鐵、已痊癒只記錄
     const o = await page.evaluate(() => { const base = { id: 'z', name: 'z', sex: 'm', birth: '1970-01-01', h: 170, w: 70 }, L = (items) => ({ t: '2026-01-01', items, extra: [] }), mk = items => ({ ...base, cond: { items } });
@@ -819,6 +819,35 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('準確性：收縮壓 120 → 118（兩家醫院都沒附參考值）＝持平、測量誤差，不再誤標「標準不同」；體脂（國健署）：42 歲男 21% 正常、24% 接近、26% 肥胖，25 歲男 21% 就算肥胖；肋膜增厚是「帶報告回門診追蹤」不是「生活調整」；LDCT 的附帶發現不算成 Lung-RADS 異常（不會誤排明年再照）',
       a.bp === 'flat|true' && a.f21 === '0' && a.f24 === '1' && a.f26 === '2' && a.y21 === '2' && /國健署肥胖標準：男性 30 歲以上 >25%/.test(a.msg) && a.chest === '3–6 個月內帶報告回門診追蹤' && !/Lung-RADS 3 以上/.test(a.rot) && /不需要每年照/.test(a.rot), JSON.stringify({ ...a, tx: '', allTx: '', rot: a.rot.slice(0, 200) }));
     check('文字版看診摘要（和摘要圖同一份）：可以貼 LINE、Email；含病史中英文、藥物過敏、異常項目', /^【看診摘要】/.test(a.tx) && /■ 病史 Medical history/.test(a.allTx) && /Plantar fibromatosis/.test(a.allTx) && /■ 藥物過敏 Allergies\n無/.test(a.allTx) && /低密度膽固醇 LDL 165/.test(a.allTx), a.tx.slice(0, 120));
+    await page.close();
+  }
+
+  // =============== 6v. 醫療準確性修正：症狀紅旗、ANA 效價、腎功能與蛋白質、肥胖蛋白質、貧血檢查順序、LDL 合併病史、熱量下限、喝水 ===============
+  {
+    page = await newPage({ members: [{ id: 'q1', name: '甲', sex: 'm', birth: '1981-01-01', h: 170, w: 100, act: '1.375', goal: 'cut' }, { id: 'q2', name: '乙', sex: 'f', birth: '1966-01-01', h: 150, w: 45, act: '1.2', goal: 'cut' }], active: 'q1' });
+    const r = await page.evaluate(() => { const S = k => SYM.find(x => x.k === k), rfOf = (k, re) => (S(k).rf.find(x => re.test(x[0])) || [])[1], m = me(), E = (items, mm = m) => labEval({ items }, mm).map(i => `${i.k}:${i.lv}`).join();
+      const base = { id: 'zz', name: 'z', sex: 'm', birth: '1970-01-01', h: 170, w: 70, act: '1.375', goal: 'keep' }, withLab = (mm, items) => { MEM.push(mm); LABS[mm.id] = [{ id: 'x', t: '2026-01-01', items, extra: [] }]; const out = { c: calc(mm), plan: yearPlan(mm).items.map(o => o.t).join('｜'), mode: dietMode(mm) }; MEM.pop(); delete LABS[mm.id]; return out };
+      const mild = withLab({ ...base, id: 'k1', goal: 'cut' }, { egfr: { v: 55 } }), acr = withLab({ ...base, id: 'k2', goal: 'cut' }, { uacr: { v: 350 } });
+      const anN = withLab({ ...base, id: 'h1' }, { hb: { v: 12 }, ferritin: { v: 120 } }), anL = withLab({ ...base, id: 'h2' }, { hb: { v: 12 }, ferritin: { v: 20 } }), an0 = withLab({ ...base, id: 'h3' }, { hb: { v: 12 } }), mcv = withLab({ ...base, id: 'h4' }, { hb: { v: 14 }, mcv: { v: 65 } });
+      const stroke = { ...base, id: 'st', cond: { items: [{ k: 'stroke' }] } }, sc = { ...base, id: 'sc', cond: { items: [{ k: 'stroke' }, { k: 'cac' }] } }, L = (mm, v) => labEval({ items: { ldl: { v } } }, mm).map(i => i.lv).join() || '0';
+      const fem = { ...base, id: 'f', sex: 'f' }, hf = { ...base, id: 'hf', cond: { items: [{ k: 'hf' }] } };
+      const c1 = calc(m), c2 = calc(MEM.find(x => x.id === 'q2'));
+      return { chest: `${S('chest').u}|${rfOf('chest', /5 分鐘/)}|${rfOf('chest', /越來越頻繁/)}`, dizzy: rfOf('dizzy', /快昏倒/), abd: rfOf('abd', /右上腹/), bowel: rfOf('bowel', /黑便/), reflux: rfOf('reflux', /黑便/), joint: rfOf('joint', /紅腫熱痛/), ect: rfOf('bleed', /子宮外孕/), cough: S('cough').n,
+        ana: [E({ ana: { v: '1:640' } }), E({ ana: { v: '陽性 1:80' } }), E({ ana: { v: '陽性' } })].join('｜'), hbF: E({ hb: { v: 16.5 } }, fem), hbM: E({ hb: { v: 16.5 } }), cac300: E({ cac: { v: 300 } }), urbc: E({ urbc: { v: 3 } }),
+        mildPk: Math.round(mild.c.prot / 70 * 100) / 100, mildTag: mild.mode.tags.join(), acrPk: Math.round(acr.c.prot / 70 * 100) / 100,
+        obeseProt: Math.round(c1.prot), obeseCap: Math.round(c1.target * .35 / 4), obesePk: Math.round(c1.prot / 100 * 100) / 100,
+        anN: /胃鏡＋大腸鏡/.test(anN.plan), anL: /胃鏡＋大腸鏡（排除腸胃道出血）/.test(anL.plan), an0: /先驗鐵蛋白：缺鐵才需要胃鏡＋大腸鏡/.test(an0.plan), mcv: /先驗鐵蛋白，正常再驗海洋性貧血帶因/.test(mcv.plan),
+        ldl: [L(stroke, 85), L(stroke, 120), L(sc, 120), L(sc, 150)].join(), small: Math.round(c2.target), smallTdee: Math.round(c2.tdee), water: calc(hf).water, waterTxt: (renderDash(), true) } });
+    check('症狀紅旗：胸痛超過 5 分鐘或越來越頻繁 → 立即、預設 1–3 天內；快昏倒合併心悸胸痛、右上腹痛＋發燒黃疸、黑便、關節紅腫熱痛＋發燒、可能子宮外孕 → 立即；久咳改 2 週（結核篩檢）',
+      r.chest === 'soon|now|now' && r.dizzy === 'now' && r.abd === 'now' && r.bowel === 'now' && r.reflux === 'now' && r.joint === 'now' && r.ect === 'now' && r.cough === '咳嗽超過 2 週', JSON.stringify(r).slice(0, 300));
+    check('檢驗：ANA 看效價（1:640 異常、陽性 1:80 不算、只寫陽性算注意）；血紅素上限分性別（女 16.5 注意、男不算）；鈣化分數 ≥300 嚴重；尿沉渣紅血球 ≥3 就標',
+      r.ana === 'ana:1｜｜ana:1' && r.hbF === 'hb:1' && r.hbM === '' && r.cac300 === 'cac:3' && r.urbc === 'urbc:1', `${r.ana}｜${r.hbF}｜${r.hbM}｜${r.cac300}｜${r.urbc}`);
+    check('蛋白質：eGFR 55（腎功能略降）減脂也不超過 1.0 g/kg 並標「顧腎」；UACR 350 → 0.8 g/kg；BMI 34.6 減脂用調整體重算、不超過總熱量 35%',
+      r.mildPk <= 1 && /顧腎/.test(r.mildTag) && r.acrPk === 0.8 && r.obeseProt <= r.obeseCap && r.obesePk < 2, JSON.stringify({ mildPk: r.mildPk, acrPk: r.acrPk, obeseProt: r.obeseProt, cap: r.obeseCap, pk: r.obesePk }));
+    check('貧血檢查順序：鐵蛋白正常不排胃鏡大腸鏡；缺鐵（鐵蛋白 20）才排；還沒驗鐵蛋白先驗；小球性（MCV 65）先驗鐵蛋白、正常再驗海洋性貧血帶因',
+      !r.anN && r.anL && r.an0 && r.mcv, JSON.stringify({ anN: r.anN, anL: r.anL, an0: r.an0, mcv: r.mcv }));
+    check('LDL 合併病史取最嚴重：中風 85 注意、120 異常；中風＋冠狀動脈鈣化 120、150 都是異常（不再被鈣化降級）；嬌小女性減脂熱量不低於 1,200（且不超過每日消耗）；心衰竭喝水改「依醫囑」',
+      r.ldl === '1,2,2,2' && r.small >= Math.min(1200, r.smallTdee) && r.small <= r.smallTdee && r.water === null, JSON.stringify({ ldl: r.ldl, small: r.small, tdee: r.smallTdee, water: r.water }));
     await page.close();
   }
 

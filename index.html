@@ -654,7 +654,7 @@ const LAB=[
  {g:'血壓',k:'sbp',n:'收縮壓',u:'mmHg',H:[119,130,160],L:[90,80,70],o:'vessel',d:'心臟內科',hi:'依 2022 台灣高血壓指引 ≥130/80 即為高血壓（舊標準是 140/90，有些醫院手冊還在用），請居家量測 7 天確認（722 原則）'},
  {g:'血壓',k:'dbp',n:'舒張壓',u:'mmHg',H:[79,80,100],L:[60,50,40],o:'vessel',d:'心臟內科',hi:'舒張壓 ≥80 即達高血壓標準，請居家量測確認'},
  {g:'血糖',k:'glu',n:'空腹血糖',s:'空腹血糖',u:'mg/dL',H:[99,126,200],L:[70,60,50],o:'pancreas',d:'新陳代謝科',hi:'100–125 為糖尿病前期；≥126 疑似糖尿病，需複檢確認',lo:'血糖偏低，注意頭暈手抖'},
- {g:'血糖',k:'pcg',n:'飯後兩小時血糖',s:'飯後血糖',u:'mg/dL',H:[139,200,300],o:'pancreas',d:'新陳代謝科',hi:'飯後 2 小時 ≥140 為葡萄糖耐受不良；≥200 疑似糖尿病'},
+ {g:'血糖',k:'pcg',n:'飯後兩小時血糖',s:'飯後血糖',u:'mg/dL',H:[139,200,300],o:'pancreas',d:'新陳代謝科',hi:'飯後 2 小時 ≥140 偏高（要確診葡萄糖耐受不良需做 75 克口服葡萄糖耐受試驗）；≥200 疑似糖尿病'},
  {g:'血糖',k:'hba1c',n:'糖化血色素',s:'HbA1c',u:'%',H:[5.6,6.5,9],o:'pancreas',d:'新陳代謝科',hi:'5.7–6.4% 為糖尿病前期；≥6.5% 達糖尿病標準'},
  {g:'血糖',k:'ins',n:'空腹胰島素',s:'胰島素',u:'µIU/mL',H:[15,30,60],o:'pancreas',d:'新陳代謝科',hi:'胰島素偏高，可能有胰島素阻抗'},
  {g:'血脂',k:'tc',n:'總膽固醇',s:'總膽固醇',u:'mg/dL',H:[199,240,300],o:'vessel',d:'心臟內科'},
@@ -682,7 +682,7 @@ const LAB=[
  {g:'肝炎',k:'antihbc',n:'B型肝炎核心抗體',t:'qi',ph:'陽性／陰性'},
  {g:'肝炎',k:'antihav',n:'A型肝炎抗體 IgG',t:'qi',ph:'陽性／陰性'},
  {g:'腎臟',k:'cr',n:'肌酸酐',s:'肌酸酐',u:'mg/dL',H:{m:[1.3,2,4],f:[1.1,2,4]},o:'kidney',d:'腎臟科'},
- {g:'腎臟',k:'egfr',n:'腎絲球過濾率 eGFR',s:'eGFR',u:'mL/min',L:[60,45,30],o:'kidney',d:'腎臟科',lo:'腎功能下降；<60 持續 3 個月即為慢性腎臟病'},
+ {g:'腎臟',k:'egfr',n:'腎絲球過濾率 eGFR',s:'eGFR',u:'mL/min/1.73m²',L:[60,45,30],o:'kidney',d:'腎臟科',lo:'腎功能下降；<60 持續 3 個月即為慢性腎臟病'},
  {g:'腎臟',k:'bun',n:'尿素氮 BUN',s:'BUN',u:'mg/dL',H:[20,40,80],o:'kidney',d:'腎臟科'},
  {g:'腎臟',k:'ua',n:'尿酸',s:'尿酸',u:'mg/dL',H:{m:[7,9,11],f:[6,8,10]},o:'joint',d:'新陳代謝科／風濕免疫科',hi:'高尿酸，痛風與腎結石風險上升'},
  {g:'腎臟',k:'uacr',n:'尿液微量白蛋白 UACR',s:'UACR',u:'mg/g',H:[29,300,2200],o:'kidney',d:'腎臟科',hi:'微量白蛋白尿是腎臟與心血管的早期警訊，糖尿病、高血壓者每年要驗'},
@@ -702,12 +702,12 @@ const LAB=[
  {g:'尿液',k:'uleu',n:'白血球酯酶',s:'白血球酯酶',t:'q',Q:1,o:'pelvis',d:'泌尿科',hi:'白血球酯酶陽性：可能有泌尿道感染'},
  {g:'尿液',k:'usg',n:'尿比重',s:'尿比重',u:'',L:[1.003,1.001,.99],H:[1.03,1.04,1.06],o:'kidney',d:'腎臟科',hi:'尿比重偏高：可能喝水太少或脫水',lo:'尿比重偏低：喝水很多時正常，持續偏低需看腎臟濃縮功能'},
  {g:'尿液',k:'uph',n:'尿液酸鹼值 pH',s:'尿pH',u:'',L:[5,4.5,4],H:[8,8.5,9],o:'kidney',d:'腎臟科'},
- {g:'尿液',k:'urbc',n:'尿沉渣紅血球',s:'尿紅血球',u:'/HPF',H:[3,10,50],o:'pelvis',d:'泌尿科',hi:'尿中紅血球偏多：女性避開生理期複驗；持續出現需排除結石或腫瘤'},
+ {g:'尿液',k:'urbc',n:'尿沉渣紅血球',s:'尿紅血球',u:'/HPF',H:[2,10,50],o:'pelvis',d:'泌尿科',hi:'尿中紅血球偏多：女性避開生理期複驗；持續出現需排除結石或腫瘤'},
  {g:'尿液',k:'uwbc',n:'尿沉渣白血球',s:'尿白血球',u:'/HPF',H:[5,10,50],o:'pelvis',d:'泌尿科',hi:'尿中白血球偏多：可能有泌尿道感染'},
  {g:'尿液',k:'uepi',n:'尿沉渣上皮細胞',t:'qi',u:'/HPF'},
  {g:'尿液',k:'ucry',n:'尿結晶',s:'尿結晶',t:'q',o:'kidney',d:'泌尿科',hi:'尿中有結晶：多喝水；反覆出現或有腰痛、血尿要看泌尿科'},
  {g:'尿液',k:'ubact',n:'尿液細菌',s:'尿細菌',t:'q',o:'pelvis',d:'泌尿科',hi:'尿中有細菌：有頻尿、尿痛要看醫生；沒症狀可能是採檢汙染，可以複驗'},
- {g:'血液',k:'hb',n:'血紅素',s:'血紅素',u:'g/dL',L:{m:[13,10,8],f:[12,10,8]},H:[18,19.5,21],o:'blood',d:'血液腫瘤科',lo:'貧血，需查原因（缺鐵、海洋性貧血、出血）'},
+ {g:'血液',k:'hb',n:'血紅素',s:'血紅素',u:'g/dL',L:{m:[13,10,8],f:[12,10,8]},H:{m:[17.5,19.5,21],f:[16,17.5,19]},o:'blood',d:'血液腫瘤科',lo:'貧血，需查原因（缺鐵、海洋性貧血、出血）'},
  {g:'血液',k:'rbc',n:'紅血球',s:'紅血球',u:'10⁶/µL',L:{m:[4.2,3.6,3],f:[3.8,3.3,2.8]},H:{m:[6.2,6.8,7.5],f:[5.5,6,7]},o:'blood',d:'血液腫瘤科',hi:'紅血球偏多：海洋性貧血帶因常見「紅血球多但 MCV 小」，也可能是脫水或吸菸'},
  {g:'血液',k:'hct',n:'血球容積比 Hct',s:'Hct',u:'%',L:{m:[40,33,27],f:[36,30,25]},H:{m:[52,56,60],f:[48,52,56]},o:'blood',d:'血液腫瘤科'},
  {g:'血液',k:'mcv',n:'平均紅血球容積 MCV',s:'MCV',u:'fL',L:[80,70,60],H:[100,110,120],o:'blood',d:'血液腫瘤科',lo:'紅血球偏小，常見缺鐵或海洋性貧血'},
@@ -723,7 +723,7 @@ const LAB=[
  {g:'血液',k:'plt',n:'血小板',s:'血小板',u:'10³/µL',L:[150,100,50],H:[400,600,1000],o:'blood',d:'血液腫瘤科'},
  {g:'血液',k:'mpv',n:'血小板平均體積 MPV',t:'qi',u:'fL'},{g:'血液',k:'pdw',n:'血小板分布寬度 PDW',t:'qi',u:''},
  {g:'血液',k:'esr',n:'紅血球沉降速率 ESR',s:'ESR',u:'mm/hr',H:{m:[15,30,60],f:[20,40,80]},o:'blood',d:'家醫科',hi:'發炎指標偏高，需找原因（感染、自體免疫）'},
- {g:'營養與鐵',k:'ferritin',n:'鐵蛋白',s:'鐵蛋白',u:'ng/mL',L:{m:[30,20,10],f:[20,12,6]},H:{m:[400,1000,2000],f:[200,500,1000]},o:'blood',d:'血液腫瘤科',lo:'鐵蛋白偏低＝體內鐵存量不足（缺鐵）',hi:'鐵蛋白偏高：發炎、脂肪肝或鐵質沉積，需評估'},
+ {g:'營養與鐵',k:'ferritin',n:'鐵蛋白',s:'鐵蛋白',u:'ng/mL',L:{m:[30,20,10],f:[20,12,6]},H:{m:[400,1000,2000],f:[200,500,1000]},o:'blood',d:'血液腫瘤科',lo:'鐵蛋白偏低＝體內鐵存量不足（缺鐵）；男性與停經後女性缺鐵要找出血原因（胃鏡、大腸鏡）',hi:'鐵蛋白偏高：發炎、脂肪肝或鐵質沉積，需評估'},
  {g:'營養與鐵',k:'fe',n:'血清鐵',s:'血清鐵',u:'µg/dL',L:[60,40,25],H:[170,200,300],o:'blood',d:'血液腫瘤科'},
  {g:'營養與鐵',k:'b12',n:'維生素 B12',s:'B12',u:'pg/mL',L:[200,150,100],o:'blood',d:'血液腫瘤科',lo:'B12 不足：素食者、長期吃胃藥或二甲雙胍者常見'},
  {g:'營養與鐵',k:'folate',n:'葉酸',s:'葉酸',u:'ng/mL',L:[4,3,2],o:'blood',d:'血液腫瘤科'},
@@ -758,14 +758,14 @@ const LAB=[
  {g:'感染與免疫',k:'hp',n:'幽門桿菌（碳 13 呼氣／糞便抗原）',s:'幽門桿菌',t:'q',Q:2,o:'stomach',d:'腸胃科',hi:'幽門桿菌陽性：除菌治療可大幅降低胃癌風險，健保有給付'},
  {g:'感染與免疫',k:'hpab',n:'幽門桿菌抗體（血清 Anti-H.P）',s:'幽門桿菌抗體',t:'q',Q:1,o:'stomach',d:'腸胃科',hi:'抗體陽性可能只是以前感染過（除菌後抗體可持續 1 年以上）：要用碳 13 呼氣試驗或糞便抗原確認現在還有沒有感染，有才需要除菌'},
  {g:'感染與免疫',k:'rf',n:'類風濕因子 RF',s:'RF',u:'IU/mL',H:[14,30,1e9],o:'joint',d:'風濕免疫科',hi:'需配合關節症狀判讀'},
- {g:'感染與免疫',k:'ana',n:'抗核抗體 ANA',s:'ANA',t:'q',Q:1,o:'joint',d:'風濕免疫科',hi:'ANA 低效價（1:40–1:80）健康人也常見，有症狀才需風濕免疫科評估'},
+ {g:'感染與免疫',k:'ana',n:'抗核抗體 ANA',s:'ANA',t:'q',Q:1,ti:160,o:'joint',d:'風濕免疫科',hi:'ANA 低效價（1:40–1:80）健康人也常見，有症狀才需風濕免疫科評估'},
  {g:'其他',k:'fobt',n:'糞便潛血',s:'糞便潛血',t:'q',Q:2,o:'intestine',d:'腸胃科',hi:'陽性一定要做大腸鏡，不要只重驗糞便'},
  {g:'其他',k:'iop',n:'眼壓（取較高的一眼）',s:'眼壓',u:'mmHg',H:[21,25,30],o:'eye',d:'眼科',hi:'眼壓偏高需排除青光眼（眼底＋視野檢查）'},
  {g:'其他',k:'va_r',n:'矯正視力（右眼）',s:'右眼視力',u:'',L:[.8,.5,.2],o:'eye',d:'眼科',lo:'矯正後視力偏低：請眼科檢查（度數不合、白內障、黃斑部等）'},
  {g:'其他',k:'va_l',n:'矯正視力（左眼）',s:'左眼視力',u:'',L:[.8,.5,.2],o:'eye',d:'眼科',lo:'矯正後視力偏低：請眼科檢查（度數不合、白內障、黃斑部等）'},
  {g:'其他',k:'colorv',n:'辨色力',t:'qi',u:''},
  {g:'其他',k:'hearing',n:'聽力（取較差的一耳）',s:'聽力',t:'opt',O:[['正常',0],['單側異常',1,'建議耳鼻喉科做純音聽力檢查'],['雙側異常',2,'建議耳鼻喉科做純音聽力檢查']],o:'ent',d:'耳鼻喉科'},
- {g:'其他',k:'dxa',n:'骨密度 T 值',s:'骨密度T值',u:'',neg:true,L:[-1,-2.49,-3.5],o:'bone',d:'骨科／新陳代謝科',lo:'T 值 ≤ -1 為骨質缺乏、≤ -2.5 為骨質疏鬆'},
+ {g:'其他',k:'dxa',n:'骨密度 T 值',s:'骨密度T值',u:'',neg:true,L:[-1,-2.49,-3.5],o:'bone',d:'骨科／新陳代謝科',lo:'T 值 < -1 為骨質缺乏、≤ -2.5 為骨質疏鬆（停經前女性、50 歲以下男性要看 Z 值）'},
  {g:'其他',k:'testo',n:'睪固酮',s:'睪固酮',u:'ng/dL',L:[300,200,100],sex:'m',o:'pelvis',d:'泌尿科',lo:'睪固酮偏低：疲倦、性慾下降可與泌尿科討論'},
  {g:'影像與檢查',k:'us_liver',n:'腹部超音波：肝臟',s:'肝臟超音波',t:'opt',O:[['正常',0],['輕度脂肪肝',1],['中度脂肪肝',1],['重度脂肪肝',2,'重度脂肪肝：減重 5–10%、戒酒，追蹤肝功能'],['肝囊腫／血管瘤（良性）',0],['慢性肝病／肝硬化',2,'請腸胃肝膽科定期追蹤'],['肝腫瘤或結節（待查）',3,'請儘速腸胃肝膽科確認']],o:'liver',d:'腸胃肝膽科',hi:'脂肪肝：減重 5–10%、少喝含糖飲料與酒'},
  {g:'影像與檢查',k:'us_gb',n:'腹部超音波：膽囊',s:'膽囊超音波',t:'opt',O:[['正常',0],['膽結石（無症狀）',1],['膽囊瘜肉 <1 公分',1],['膽囊瘜肉 ≥1 公分',2,'瘜肉 ≥1 公分建議外科評估'],['膽囊壁增厚／疑似腫瘤',3,'請儘速腸胃肝膽科確認']],o:'liver',d:'腸胃肝膽科',hi:'每年超音波追蹤'},
@@ -774,11 +774,11 @@ const LAB=[
  {g:'影像與檢查',k:'pft',n:'肺功能',s:'肺功能',t:'opt',O:[['正常',0],['輕度限制或阻塞',1,'戒菸、避開空汙，追蹤肺功能'],['中重度限制或阻塞',2,'建議胸腔內科評估']],o:'lung',d:'胸腔內科'},
  {g:'影像與檢查',k:'prostus',sex:'m',n:'攝護腺超音波',s:'攝護腺超音波',t:'opt',O:[['正常',0],['攝護腺肥大',1,'有頻尿、夜尿、尿流變細再看泌尿科'],['鈣化或小結節',1,'通常良性，依醫師建議追蹤'],['疑似腫瘤',3,'請儘速泌尿科']],o:'pelvis',d:'泌尿科'},
  {g:'影像與檢查',k:'ldct',n:'低劑量胸部 CT（Lung-RADS）',s:'LDCT',t:'opt',O:[['Lung-RADS 1（陰性）',0],['Lung-RADS 2（良性）',0],['Lung-RADS 3（可能良性）',1,'6 個月後複查 LDCT'],['Lung-RADS 4A（可疑）',2,'3 個月後複查或進一步檢查'],['Lung-RADS 4B／4X（高度可疑）',3,'請儘速胸腔科評估']],o:'lung',d:'胸腔內科'},
- {g:'影像與檢查',k:'cac',n:'冠狀動脈鈣化分數（CAC）',s:'冠狀動脈鈣化',u:'分',H:[0,100,400],o:'heart',d:'心臟內科',hi:'冠狀動脈有鈣化＝已有動脈硬化斑塊：LDL、血壓要控制得更嚴格；≥100 建議心臟內科評估用藥'},
+ {g:'影像與檢查',k:'cac',n:'冠狀動脈鈣化分數（CAC）',s:'冠狀動脈鈣化',u:'分',H:[0,100,300],o:'heart',d:'心臟內科',hi:'冠狀動脈有鈣化＝已有動脈硬化斑塊：LDL、血壓要控制得更嚴格；≥100 建議心臟內科評估用藥'},
  {g:'影像與檢查',k:'ekg',n:'心電圖',s:'心電圖',t:'opt',O:[['正常',0],['非特異性變化',1],['心律不整',2,'請心臟內科評估'],['疑似心肌缺血／傳導阻滯',2,'請心臟內科評估']],o:'heart',d:'心臟內科'},
  {g:'影像與檢查',k:'gastro',n:'胃鏡',s:'胃鏡',t:'opt',O:[['正常',0],['胃炎／逆流性食道炎',1],['胃或十二指腸潰瘍',2,'需治療並確認幽門桿菌'],['萎縮性胃炎／腸化生',2,'胃癌風險較高，需定期胃鏡追蹤'],['疑似腫瘤',3,'請儘速腸胃科確認']],o:'stomach',d:'腸胃科'},
  {g:'影像與檢查',k:'colono',n:'大腸鏡',s:'大腸鏡',t:'opt',O:[['正常',0],['增生性瘜肉（已切除）',1],['腺瘤性瘜肉（已切除）',2,'依瘜肉數量大小，3–5 年後追蹤大腸鏡'],['進行性腺瘤／疑似腫瘤',3,'請儘速腸胃科確認']],o:'intestine',d:'腸胃科'},
- {g:'影像與檢查',k:'thyus',n:'甲狀腺超音波（TI-RADS）',s:'甲狀腺超音波',t:'opt',O:[['正常／TR1',0],['TR2（良性）',0],['TR3（輕度可疑）',1,'1–2 年後追蹤超音波'],['TR4（中度可疑）',2,'依大小評估細針穿刺'],['TR5（高度可疑）',3,'請儘速細針穿刺']],o:'thyroid',d:'新陳代謝科'},
+ {g:'影像與檢查',k:'thyus',n:'甲狀腺超音波（TI-RADS）',s:'甲狀腺超音波',t:'opt',O:[['正常／TR1',0],['TR2（良性）',0],['TR3（輕度可疑）',1,'1–2 年後追蹤超音波'],['TR4（中度可疑）',2,'≥1.5 公分建議細針穿刺，較小的追蹤超音波（ACR TI-RADS）'],['TR5（高度可疑）',3,'≥1 公分建議細針穿刺、0.5–0.9 公分每年追蹤（ACR TI-RADS），請儘快新陳代謝科評估']],o:'thyroid',d:'新陳代謝科'},
  {g:'影像與檢查',k:'mammo',n:'乳房攝影',s:'乳房攝影',t:'opt',sex:'f',O:BIRADS,o:'breast',d:'乳房外科'},
  {g:'影像與檢查',k:'breastus',n:'乳房超音波',s:'乳房超音波',t:'opt',sex:'f',O:BIRADS,o:'breast',d:'乳房外科'},
  {g:'影像與檢查',k:'pap',n:'子宮頸抹片',s:'子宮頸抹片',t:'opt',sex:'f',O:[['正常（陰性）',0],['發炎／反應性變化',0],['ASC-US（意義未明）',1,'加做 HPV 或 6–12 個月複驗'],['LSIL（輕度病變）',2,'請婦產科做陰道鏡'],['ASC-H／HSIL 以上',3,'請儘速婦產科陰道鏡切片']],o:'pelvis',d:'婦產科'},
@@ -940,7 +940,7 @@ function labEval(rec,m){
       if(!lv&&L){const l1=it.lo!=null?it.lo:L[0],l2=Math.min(L[1],l1),l3=Math.min(L[2],l2);lv=v<l3?3:v<l2?2:v<l1?1:0;if(lv)dir='lo';if(lv===1&&l1>0&&(l1-v)/l1<.05)bl=Math.round((l1-v)/l1*1000)/10}
       if(!lv){const fd=flagDir(it.flag);if(fd){lv=1;dir=fd}}
       const C=CRIT[k];if(C&&((C[0]!=null&&v<=C[0])||(C[1]!=null&&v>=C[1]))){lv=3;crit=true;dir=C[0]!=null&&v<=C[0]?'lo':'hi';bl=null}
-      if(k==='ldl'&&!crit){const t=ldlTgt(m);if(t&&v>=t.t){lv=Math.max(lv,t.lv);dir='hi';bl=null;om=t.msg;cx=t.short}}}
+      if(k==='ldl'&&!crit){const t=ldlTgt(m,v);if(t){lv=Math.max(lv,t.lv);dir='hi';bl=null;om=t.msg;cx=t.short}}}
     if(lv)out.push({src:'體檢',k,name:x.n,short:LSHORT[k]||x.n,val:it.v,unit:x.u||'',lv,dir,bl,crit,cx,msg:crit?`危急值：今天就要處理。${CRITM[k]}`:(bl!=null?`僅略${dir==='lo'?'低':'高'}於參考值 ${bl}%，單次輕微超出意義有限；`:'')+(om||(dir==='lo'?x.lo:x.hi)||(x.t==='opt'?'檢查結果需追蹤':dir==='lo'?'低於參考值':'高於參考值')),organ:x.o,dept:x.d,ref:it.ref||(it.lo!=null&&it.hi!=null?`${it.lo}–${it.hi}`:it.hi!=null?`≤${it.hi}`:it.lo!=null?`≥${it.lo}`:refText(x,sex))});   // 報告有自己的上下限就顯示報告的
   }
   // 衍生判讀：PSA 4–10 看游離比例；空腹血糖＋胰島素算 HOMA-IR
@@ -1160,10 +1160,10 @@ function watchEval(r,m){const a=ageOf(m),out=[],v=k=>num(r?.[k]);if(!r)return ou
 function issuesOf(m){const s=scalesOf(m)[0],l=labsOf(m)[0],w=watchOf(m)[0];return{scale:s?scaleEval(s,m):[],lab:l?labEval(l,m):[],watch:w?watchEval(w,m):[],s,l,w}}
 function dietMode(m){
   const{scale,lab}=issuesOf(m),all=[...scale,...lab],o={};all.forEach(i=>{if(i.organ)o[i.organ]=Math.max(o[i.organ]||0,i.lv)});
-  const md={lowCarb:(o.pancreas||0)>=1||all.some(i=>i.k==='tg'||(i.k==='visceral'&&i.lv>=1)),heart:(o.vessel||0)>=1||all.some(i=>i.k==='cac'||i.k==='img_cac'),liver:(o.liver||0)>=1,lowPur:all.some(i=>i.k==='ua'),kidney:all.some(i=>['egfr','cr','upro'].includes(i.k)&&i.lv>=2)};
+  const md={lowCarb:(o.pancreas||0)>=1||all.some(i=>i.k==='tg'||(i.k==='visceral'&&i.lv>=1)),heart:(o.vessel||0)>=1||all.some(i=>i.k==='cac'||i.k==='img_cac'),liver:(o.liver||0)>=1,lowPur:all.some(i=>i.k==='ua'),kidney:all.some(i=>['egfr','cr','upro','uacr'].includes(i.k)&&i.lv>=2),kidneyMild:all.some(i=>['egfr','cr','upro','uacr'].includes(i.k)&&i.lv===1),waterLim:all.some(i=>i.k==='egfr'&&i.lv>=3)};
   {const cd=condKeys(m);if(cd.has('dm')||cd.has('predm')||cd.has('nafld'))md.lowCarb=true;if(['htn','cac','cad','stroke','lipid','hf'].some(k=>cd.has(k)))md.heart=true;
-    if(['nafld','hbv','hcv'].some(k=>cd.has(k)))md.liver=true;if(cd.has('gout'))md.lowPur=true;if(cd.has('ckd'))md.kidney=true}
-  md.tags=[md.lowCarb&&'控醣：碳水降、脂肪 30%',md.heart&&'護心：少油少鹽',md.liver&&'護肝：禁酒、少油炸',md.lowPur&&'低普林：避開海鮮濃湯',md.kidney&&'護腎：蛋白質 0.8 g/kg'].filter(Boolean);
+    if(['nafld','hbv','hcv'].some(k=>cd.has(k)))md.liver=true;if(cd.has('gout'))md.lowPur=true;if(cd.has('ckd'))md.kidney=true;if(cd.has('hf'))md.waterLim=true;if(md.kidney)md.kidneyMild=false}
+  md.tags=[md.lowCarb&&'控醣：碳水降、脂肪 30%',md.heart&&'護心：少油少鹽',md.liver&&'護肝：禁酒、少油炸',md.lowPur&&'低普林：避開海鮮濃湯',md.kidney&&'護腎：蛋白質 0.8 g/kg',md.kidneyMild&&'顧腎：蛋白質 ≤1.0 g/kg'].filter(Boolean);
   return md;
 }
 
@@ -1182,9 +1182,10 @@ function nutriPlan(m){
   if(lv('ldl')||lv('tc')||lv('lpa')||lv('sdldl')||lv('cac')||lv('img_cac')||['cac','cad','stroke','lipid'].some(k=>cd.has(k)))add({ic:'🫀',t:'降壞膽固醇',why:[why(['ldl','sdldl','tc','lpa','cac']),lv('img_cac')&&!cd.has('cac')?'影像看到冠狀動脈鈣化':'',cw(['cac','cad','stroke','lipid'])].filter(Boolean).join('、'),do:['少飽和脂肪：肥肉、雞皮、豬油、奶油、椰子油、香腸培根','每天一碗燕麥或一份豆類（可溶性纖維降 LDL）','堅果一天一湯匙（約 10 顆杏仁）','魚每週至少 2 次，蒸、煮、烤'],eat:['燕麥、豆類','鯖魚、鮭魚','無調味堅果'],avoid:['肥肉、雞皮','加工肉','酥皮、奶油麵包','動物內臟（腦、腰子、肝）']},['fib','fish'],['oil']);
   if(lv('tg'))add({ic:'🧈',t:'降三酸甘油酯',why:why(['tg']),do:['甜食、精製澱粉、果汁、酒精是三酸甘油酯的主因，先減這些','鯖魚、鮭魚、秋刀魚每週 2–3 次（Omega-3）','晚餐澱粉減量'],eat:['青背魚','蔬菜'],avoid:['酒','甜點、果汁','精緻澱粉']},['fish'],['hc']);
   if(lv('hdl'))add({ic:'⬆️',t:'提升好膽固醇',why:why(['hdl']),do:['每週 150 分鐘有氧運動最能提升 HDL','用橄欖油、苦茶油、堅果取代動物油','戒菸'],eat:['橄欖油、苦茶油','酪梨、堅果'],avoid:['反式脂肪（酥油、奶精）']});
-  if(lv('sbp')||lv('dbp')||cd.has('htn')||cd.has('hf'))add({ic:'🧂',t:'降血壓（得舒飲食）',why:whyC(['sbp','dbp'],['htn','hf']),do:['鹽一天 ≤5 g（鈉 2000 mg）：湯不喝完、醬料減半、少加工食品',kid||lv('k')?'蔬菜天天吃，但鉀要依腎功能控制':'得舒飲食：每天 5 份蔬菜＋2 份水果＋1.5 杯低脂乳','體重每減 1 kg，收縮壓約降 1 mmHg','酒一天最多 1 杯'],eat:['深綠蔬菜','低脂乳、豆漿','新鮮肉魚'],avoid:['泡麵、罐頭、醃漬物','火鍋湯、拉麵湯','香腸、火腿']},kid||lv('k')?[]:['kf'],['salt']);
+  if(lv('sbp')||lv('dbp')||cd.has('htn')||cd.has('hf'))add({ic:'🧂',t:'降血壓（得舒飲食）',why:whyC(['sbp','dbp'],['htn','hf']),do:['鹽一天 ≤5 g（鈉 2000 mg）：湯不喝完、醬料減半、少加工食品',kid||lv('k')?'蔬菜天天吃，但鉀要依腎功能控制':'得舒飲食（國健署）：天天 5 份蔬菜＋5 份水果（有糖尿病的人水果 2–3 份）、低脂乳品 2 份、一小把堅果','體重每減 1 kg，收縮壓約降 1 mmHg','酒一天最多 1 杯'],eat:['深綠蔬菜','低脂乳、豆漿','新鮮肉魚'],avoid:['泡麵、罐頭、醃漬物','火鍋湯、拉麵湯','香腸、火腿']},kid||lv('k')?[]:['kf'],['salt']);
   if(lv('ua')||cd.has('gout'))add({ic:'🦶',t:'降尿酸',why:whyC(['ua'],['gout']),do:['少內臟、蝦蟹貝類、濃湯、火鍋湯底','戒含糖飲料（果糖會升尿酸）與啤酒','每天喝水 2–3 L（腎功能正常時）','雞蛋、低脂乳品、豆腐都是安全的蛋白質'],eat:['蛋、低脂乳','豆腐','大量白開水'],avoid:['內臟、海鮮','濃湯、火鍋湯','啤酒、含糖飲料']},['ca'],['pur']);
   if(['alt','ast','ggt','us_liver'].some(lv)||['nafld','hbv','hcv'].some(k=>cd.has(k)))add({ic:'🫁',t:'護肝（脂肪肝）',why:whyC(['alt','ast','ggt','us_liver'],['nafld','hbv','hcv']),do:[`體重減 5%（到 ${(w*.95).toFixed(1)} kg）肝脂肪就會下降；減 7–10%（到 ${(w*.9).toFixed(1)}–${(w*.93).toFixed(1)} kg）可改善肝發炎`,'追蹤脂肪肝期間以不喝酒為佳；少含糖飲料（果糖直接在肝臟變脂肪）','少油炸、少宵夜','無糖黑咖啡一天 1–2 杯對肝有幫助'],eat:['蔬菜、全穀','魚、豆腐'],avoid:['酒','油炸','含糖飲料']},[],['oil']);
+  if(!kid&&c.mode.kidneyMild)add({ic:'🫘',t:'顧腎（腎功能略降或微量白蛋白尿）',why:why(['egfr','cr','upro','uacr']),do:['蛋白質每公斤 1.0 克以內，不吃高蛋白補充品','鹽一天 ≤5 g；不亂吃止痛藥（NSAIDs）、中草藥偏方','血壓、血糖控制好；3 個月後複驗腎功能與尿液微量白蛋白，確認是不是持續'],eat:['原型食物','適量蛋白質'],avoid:['高蛋白補充品','止痛藥（NSAIDs）']});
   if(kid)add({ic:'🫘',t:'護腎',why:why(['egfr','cr','upro','uacr','bun']),do:[`蛋白質 0.8 g/kg（約 ${Math.round(w*.8)} g），不吃高蛋白補充品`,'鹽 ≤5 g','不亂吃止痛藥、中草藥偏方',(num(l?.items?.egfr?.v)??99)<45?'eGFR <45：鉀、磷要問營養師（加工食品、可樂含磷高）':'定期追蹤 eGFR 與尿蛋白'],eat:['適量魚、蛋、豆腐'],avoid:['高蛋白粉','加工食品','止痛藥']},[],['pro','salt']);
   if(lv('k')&&!lo('k'))add({ic:'🍌',t:'限鉀',why:why(['k']),do:['高鉀蔬果（香蕉、奇異果、地瓜葉、菠菜）先燙過、湯不喝','不用低鈉鹽（含鉀）'],eat:['燙過的蔬菜'],avoid:['香蕉、奇異果','菜湯、肉湯','低鈉鹽']},[],['kf']);
   if((lo('hb')||lo('ferritin')||lo('fe'))&&!(cd.has('thal')&&!lo('ferritin')&&!lo('fe')))add({ic:'🥩',t:'補鐵',why:why(['hb','ferritin','fe']),do:['紅肉（牛、豬）每週 2–3 次，深綠蔬菜天天吃','搭配維生素 C 水果（芭樂、奇異果）幫助吸收','茶、咖啡飯後隔 1 小時再喝'],eat:['牛肉','菠菜、地瓜葉','芭樂'],avoid:['飯後馬上喝茶']},['fe']);
@@ -1196,7 +1197,7 @@ function nutriPlan(m){
   const lowC=avd.has('hc');
   return{c,F,pref,avd,lowC,title:F.slice(0,2).map(f=>f.t).join('＋')+(F.length>2?` 等 ${F.length} 項`:''),src:[l&&'體檢 '+l.t,s&&'體脂 '+String(s.t).slice(0,10)].filter(Boolean).join('・'),
     tgt:{kcal:Math.round(c.target),p:Math.round(c.prot),cb:Math.round(c.carb),f:Math.round(c.fat),fib:Math.max(25,Math.round(c.target/1000*14)),
-      na:lv('sbp')||lv('dbp')||kid?2000:2400,sug:Math.round(c.target*(lowC?.05:.1)/4),water:(c.water+(lv('ua')&&!kid?500:0))/1000}};
+      na:lv('sbp')||lv('dbp')||kid?2000:2400,sug:Math.round(c.target*(lowC?.05:.1)/4),water:c.water==null?null:(c.water+(lv('ua')&&!kid?500:0))/1000}};
 }
 
 /* ================= 健身教練：依身體限制、體檢、目標排每週課表 =================
@@ -1289,14 +1290,14 @@ const CONDG=[['cv','心臟血管'],['meta','代謝內分泌'],['gi','肝膽腸�
 const COND_ST=[['tx','治療中'],['fu','追蹤中'],['done','已痊癒（只記錄）']];
 const COND=[
  {k:'htn',g:'cv',n:'高血壓',en:'Hypertension',icd:'I10',tip:'目標 <130/80，在家量血壓',diet:['heart'],lab:['sbp','dbp'],
-  w:['2022 台灣高血壓指引：多數人目標 <130/80 mmHg','在家量最準：722（連續 7 天、早晚各量 2 次，每次量 2 遍取平均）','降血壓藥不要自己停或減量；頭暈、腳腫等副作用告訴醫師'],
+  w:['2022 台灣高血壓指引：多數人目標 <130/80 mmHg','在家量最準：722（連續 7 天、每天早上起床與睡前各量一回、每回連量 2 次取平均）','降血壓藥不要自己停或減量；頭暈、腳腫等副作用告訴醫師'],
   good:['快走、騎車、游泳等有氧，每週 150 分鐘（可降 5–8 mmHg）','輕到中等重量的肌力訓練，用力時吐氣'],bad:['憋氣用力（重訓衝重量、搬重物）','血壓 ≥180/110 時先不要運動，先就醫'],
   care:['少鹽：每天鈉 <2,000 mg（約 5 克鹽），少加工食品、湯汁','多蔬果、全穀、低脂乳品（得舒飲食 DASH）','限酒、戒菸、維持腰圍（男 <90、女 <80 cm）','打鼾的人做「睡眠呼吸中止」檢測：沒治療血壓很難控制'],
   red:['血壓 ≥180/120 合併胸痛、劇烈頭痛、視力模糊、單側無力或說話不清 → 立刻打 119'],dept:'心臟內科或家醫科',
   q:['我的血壓目標是多少？在家量到多少要回診？','我的藥早上吃還是晚上吃比較好？','需要檢查腎臟、心臟有沒有受到高血壓影響嗎？'],
   fu:[['居家血壓 722：連續 7 天、早晚各量 2 次','高血壓病史：用居家血壓判斷控制得好不好','自行量測','每 3 個月一次',2]]},
- {k:'cac',g:'cv',n:'冠狀動脈鈣化（CT 發現）',en:'Coronary artery calcification (CAC)',icd:'I25.84',tip:'已有動脈硬化斑塊：LDL、血壓、血糖、不抽菸都要控制好',lim:['cvr'],diet:['heart'],
-  num:{n:'鈣化分數（Agatston，報告有寫才填）',min:0,max:10000},ldl:{t:70,lv:1,txt:'有冠狀動脈鈣化（已有動脈硬化斑塊）：這個 LDL 對一般人可能正常，但你的目標通常更嚴格，要降到多少、要不要用藥，由心臟內科依鈣化程度決定'},lab:['ldl','hdl','tg','sbp','dbp','glu','hba1c'],
+ {k:'cac',g:'cv',n:'冠狀動脈鈣化（CT 發現）',en:'Coronary artery calcification (CAC)',icd:'I25.10＋I25.84',tip:'已有動脈硬化斑塊：LDL、血壓、血糖、不抽菸都要控制好',lim:['cvr'],diet:['heart'],
+  num:{n:'鈣化分數（Agatston，報告有寫才填）',min:0,max:10000},ldl:{tiers:[[70,1]],txt:'有冠狀動脈鈣化（已有動脈硬化斑塊）：這個 LDL 對一般人可能正常，但你的目標通常更嚴格，要降到多少、要不要用藥，由心臟內科依鈣化程度決定'},lab:['ldl','hdl','tg','sbp','dbp','glu','hba1c'],
   w:['冠狀動脈有鈣化＝心臟血管壁已經有動脈硬化斑塊；鈣化不會消失，目標是讓斑塊穩定、不要再長','LDL、血壓、血糖、抽菸要控制得比一般人嚴格，目標由心臟內科依鈣化程度決定'],
   good:['中等強度有氧：快走、騎車、游泳，每週 150 分鐘（微喘、還能說話）','每週 2 次肌力訓練（器械或彈力帶，用力時吐氣）','運動前暖身 5–10 分鐘、結束緩和 5 分鐘'],
   bad:['還沒讓心臟內科評估前，先不做高強度（間歇 HIIT、衝刺、比賽、重訓衝最大重量）','寒冷清晨、剛吃飽、熬夜後做劇烈運動'],
@@ -1307,7 +1308,7 @@ const COND=[
   fu:[['心臟內科：冠狀動脈有鈣化','依鈣化程度決定 LDL 目標、是否用 statin 或阿斯匹靈；必要時做運動心電圖','健保','今年',1]],
   dyn:c=>{const s=c.score;if(s==null||s==='')return['報告沒寫分數：可以問醫師要不要做「冠狀動脈鈣化分數」CT；分數會影響 LDL 目標與是否用藥'];
    return[s===0?'鈣化分數 0：這次沒有量到鈣化，短期風險低（糖尿病、抽菸、家族史仍要注意）':s<100?`鈣化分數 ${s}（輕度 1–99）：偏向使用降血脂藥，尤其 55 歲以上，請和心臟內科討論`:s<300?`鈣化分數 ${s}（中度 100–299）：依美國心臟學會指引建議使用降血脂藥（statin），請和心臟內科討論`:`鈣化分數 ${s}（重度 ≥300）：心血管風險明顯升高，請儘快和心臟內科討論用藥與檢查`]}},
- {k:'cad',g:'cv',n:'冠心病／心肌梗塞／放過支架',en:'Coronary artery disease (s/p MI or stent)',icd:'I25.10',tip:'LDL <70、按時吃藥、心臟復健',lim:['heart'],diet:['heart'],ldl:{t:70,lv:2,src:'台灣血脂指引：冠心病'},lab:['ldl','sbp','dbp','hba1c'],
+ {k:'cad',g:'cv',n:'冠心病／心肌梗塞／放過支架',en:'Coronary artery disease (s/p MI or stent)',icd:'I25.10',tip:'LDL <70、按時吃藥、心臟復健',lim:['heart'],diet:['heart'],ldl:{tiers:[[70,2]],src:'台灣血脂指引：冠心病'},lab:['ldl','sbp','dbp','hba1c'],
   w:['台灣血脂指引：冠心病 LDL 目標 <70 mg/dL（急性冠心症後部分指引建議 <55）','抗血小板藥（阿斯匹靈、保栓通等）不能自己停；拔牙、開刀前先告訴醫師','血壓 <130/80、完全戒菸'],
   good:['參加心臟復健（醫院有，在監測下逐步提高強度）','快走、騎車等中等強度有氧，每週 150 分鐘'],bad:['醫師評估前不做高強度、憋氣用力的運動','寒冷清晨外出劇烈運動'],
   care:['地中海飲食、少鹽','按時吃藥；醫師有開舌下含片要隨身帶','每 3–6 個月回診驗血脂'],
@@ -1315,7 +1316,7 @@ const COND=[
   q:['我的 LDL 目標是 <70 還是 <55？現在的藥夠嗎？','我可以參加心臟復健嗎？運動心率上限是多少？','抗血小板藥要吃多久？拔牙要停嗎？'],
   fu:[['心臟內科回診：血脂、血壓、用藥調整','冠心病 LDL 目標 <70 mg/dL','健保','每 3–6 個月',1]]},
  {k:'af',g:'cv',n:'心房顫動／心律不整',en:'Atrial fibrillation',icd:'I48.91',tip:'中風風險高：評估抗凝血劑',lim:['heart'],
-  w:['心房顫動會讓中風風險增加約 5 倍；要不要吃抗凝血劑，醫師會用 CHA₂DS₂-VASc 分數決定','吃抗凝血劑的人：跌倒撞到頭、黑便、血尿要立刻就醫','手錶有心電圖功能的話，發作時記錄下來給醫師看'],
+  w:['心房顫動會讓中風風險增加約 5 倍；要不要吃抗凝血劑，醫師會用 CHA₂DS₂-VASc（或 2024 新版 CHA₂DS₂-VA）分數決定','吃抗凝血劑的人：跌倒撞到頭、黑便、血尿要立刻就醫','手錶有心電圖功能的話，發作時記錄下來給醫師看'],
   good:['中等強度有氧與肌力訓練（規律運動可減少發作）'],bad:['吃抗凝血劑時避免碰撞多的運動（籃球、武術）','運動中心悸、頭暈、胸悶立刻停'],
   care:['少喝酒（常見誘因），咖啡因適量','治療睡眠呼吸中止、控制血壓與體重','按時吃藥，不要自己停抗凝血劑'],
   red:['突然一側無力、嘴歪、說話不清 → 立刻打 119（中風）','心悸合併胸痛、喘或昏倒 → 立刻打 119'],dept:'心臟內科',
@@ -1329,20 +1330,20 @@ const COND=[
   red:['休息也喘、躺平會喘、半夜喘醒、咳粉紅色泡沫痰 → 立刻就醫或打 119'],dept:'心臟內科',
   q:['我的心臟射出分率（EF）是多少？','每天水分要限制多少？體重增加多少要回診？','我可以參加心臟復健嗎？'],
   fu:[['心臟內科：心臟超音波＋NT-proBNP','追蹤心臟功能','健保','依醫師安排',1]]},
- {k:'stroke',g:'cv',n:'中風／小中風病史',en:'History of stroke or TIA',icd:'Z86.73',tip:'預防再中風：血壓、血脂、按時吃藥',lim:['cvr'],diet:['heart'],ldl:{t:100,lv:2,src:'缺血性中風'},lab:['sbp','dbp','ldl','hba1c'],
-  w:['預防再中風：血壓 <130/80、LDL <100（合併冠心病或醫師建議時 <70）','抗血小板或抗凝血藥不能自己停','記住 BE FAST：再出現任何一項立刻打 119'],
+ {k:'stroke',g:'cv',n:'中風／小中風病史',en:'History of stroke or TIA',icd:'Z86.73',tip:'預防再中風：血壓、血脂、按時吃藥',lim:['cvr'],diet:['heart'],ldl:{tiers:[[70,1],[100,2]],src:'美國心臟／中風學會 2021：缺血性中風'},lab:['sbp','dbp','ldl','hba1c'],
+  w:['預防再中風：血壓 <130/80、LDL <70（美國心臟／中風學會 2021；依醫師評估）','抗血小板或抗凝血藥不能自己停','記住 BE FAST：再出現任何一項立刻打 119'],
   good:['復健科安排的運動與平衡訓練','快走、固定式腳踏車等有氧（依體力）'],bad:['平衡不好時不要單獨爬高、走濕滑地面','醫師評估前不做高強度'],
   care:['控制三高、戒菸、少鹽','家中防跌：浴室止滑、夜燈','中風後情緒低落很常見，可以做「自我檢測 → 憂鬱」'],
   red:['突然臉歪、手腳無力、說話不清、視力或平衡異常 → 立刻打 119（記下時間）'],dept:'神經內科',
   q:['我的血壓、LDL 目標是多少？','抗血小板藥要吃多久？','需要做頸動脈超音波或心臟檢查找原因嗎？'],
-  fu:[['神經內科回診：血壓、血脂、抗血小板藥','預防再中風：血壓 <130/80、LDL <100','健保','依醫師安排',1]]},
+  fu:[['神經內科回診：血壓、血脂、抗血小板藥','預防再中風：血壓 <130/80、LDL <70','健保','依醫師安排',1]]},
  {k:'varicose',g:'cv',n:'靜脈曲張',en:'Varicose veins',icd:'I83.90',tip:'久站久坐要動腳、穿彈性襪',
   w:['久站久坐會加重：每 30–60 分鐘起來走動或踮腳','腳出現不容易好的傷口、皮膚變黑變硬要看醫生'],
   good:['走路、游泳、騎車（小腿肌肉收縮幫血液回流）','坐著做踮腳尖運動'],bad:['長時間站著不動','重訓憋氣用力'],
   care:['彈性襪（照醫師建議的壓力等級）','休息時把腳抬高','控制體重'],
   red:['單腳突然腫痛、發熱發紅（可能是深部靜脈血栓）→ 儘快就醫；合併胸痛或呼吸困難 → 立刻打 119'],dept:'心臟血管外科',
   q:['需要做下肢靜脈超音波嗎？','彈性襪要穿多少壓力？','適合雷射或手術嗎？']},
- {k:'dm',g:'meta',n:'糖尿病',en:'Type 2 diabetes mellitus',icd:'E11.9',tip:'HbA1c <7%，每年查眼睛、腎臟、腳',diet:['lowCarb'],ldl:{t:100,lv:1,src:'糖尿病'},lab:['glu','hba1c','ldl','egfr','uacr'],
+ {k:'dm',g:'meta',n:'糖尿病',en:'Type 2 diabetes mellitus',icd:'E11.9',tip:'HbA1c <7%，每年查眼睛、腎臟、腳',diet:['lowCarb'],ldl:{tiers:[[100,1]],src:'糖尿病'},lab:['glu','hba1c','ldl','egfr','uacr'],
   w:['多數人 HbA1c 目標 <7%（長者可放寬）；LDL <100、血壓 <130/80','每年檢查眼底、尿液微量白蛋白（UACR）、足部','用胰島素或磺醯脲類藥物的人小心低血糖：運動前後量血糖、隨身帶糖果'],
   good:['每週 150 分鐘有氧＋2 次肌力訓練','飯後 30 分鐘內走 10–15 分鐘，降飯後血糖最有效'],bad:['血糖很高（>250）或身體不舒服時不要運動','腳麻木或有傷口時避免赤腳、長距離跑跳'],
   care:['每天看腳：傷口、水泡、顏色變化；穿合腳的鞋','少含糖飲料；白飯換一半糙米或雜糧，先吃菜和蛋白質再吃飯','戒菸、控制體重（減 5% 就有效）'],
@@ -1356,7 +1357,7 @@ const COND=[
   q:['我多久要再驗一次 HbA1c？','需要吃藥預防嗎？'],
   fu:[['糖化血色素 HbA1c','糖尿病前期每年追蹤','健保／自費','每年',2]]},
  {k:'lipid',g:'meta',n:'高血脂（醫師診斷）',en:'Hyperlipidemia',icd:'E78.5',tip:'依整體風險決定 LDL 目標',diet:['heart'],lab:['ldl','hdl','tg','tc'],
-  w:['LDL 目標看整體風險：一般人依危險因子 <130–160，有糖尿病或慢性腎臟病 <100，冠心病 <70','吃降血脂藥（statin）不要自己停；肌肉痠痛無力、尿色變深要告訴醫師'],
+  w:['LDL 目標看整體風險：一般人依危險因子 <130–160，有糖尿病或慢性腎臟病 <100，冠心病、缺血性中風 <70','吃降血脂藥（statin）不要自己停；肌肉痠痛無力、尿色變深要告訴醫師'],
   good:['每週 150 分鐘有氧（可提高好膽固醇 HDL、降三酸甘油酯）'],bad:[],
   care:['少飽和脂肪與反式脂肪：肥肉、油炸、酥皮、奶油、椰子油','多膳食纖維：燕麥、豆類、蔬菜','三酸甘油酯高：少酒、少甜食與精緻澱粉'],red:[],dept:'家醫科或心臟內科',
   q:['我的 LDL 目標是多少？','我需要吃藥嗎？要吃多久？'],
@@ -1406,7 +1407,7 @@ const COND=[
   care:['戒酒','不共用刮鬍刀、牙刷'],red:['皮膚變黃、肚子脹大、黑便 → 儘快就醫'],dept:'腸胃肝膽科',
   q:['我還有病毒嗎？可以用口服新藥治療嗎？','治好後還要追蹤什麼？'],
   fu:[['C 肝病毒量 HCV RNA','確認是否仍有病毒；口服藥 8–12 週治癒率超過 95%','健保','還沒治療時儘快',1]]},
- {k:'ckd',g:'gi',n:'慢性腎臟病',en:'Chronic kidney disease',icd:'N18.9',tip:'不亂吃止痛藥、控制血壓血糖',diet:['kidney'],ldl:{t:100,lv:1,src:'慢性腎臟病'},lab:['egfr','cr','uacr','k','sbp'],
+ {k:'ckd',g:'gi',n:'慢性腎臟病',en:'Chronic kidney disease',icd:'N18.9',tip:'不亂吃止痛藥、控制血壓血糖',diet:['kidney'],ldl:{tiers:[[100,1]],src:'慢性腎臟病'},lab:['egfr','cr','uacr','k','sbp'],
   w:['血壓 <130/80、血糖控制好、LDL <100 能延緩腎功能變差','避免消炎止痛藥（例如布洛芬、部分痠痛藥）與來路不明的中草藥','看任何科都要告訴醫師你有腎臟病（很多藥要調劑量）'],
   good:['規律中等強度運動（快走、騎車）'],bad:['極高強度、會大量流汗脫水的運動'],
   care:['少鹽；蛋白質照醫師或營養師建議（App 已自動限制在每公斤 0.8 克）','不吃高蛋白補充品、不亂吃草藥'],
@@ -1415,7 +1416,7 @@ const COND=[
   fu:[['複驗腎功能：肌酸酐／eGFR＋尿液＋UACR','追蹤腎功能變化','健保','每 3–6 個月',1]]},
  {k:'stone',g:'gi',n:'腎結石',en:'Kidney stone',icd:'N20.0',tip:'多喝水，尿色淡黃',lab:['ua','ca'],
   w:['結石很容易復發：5–10 年內約一半的人會再長'],good:['規律運動'],bad:['運動流汗後沒補水'],
-  care:['每天喝水讓尿量 2–2.5 公升（尿色淡黃）','少鹽、少大量動物性蛋白','鈣質正常吃（刻意不吃鈣反而容易結石）；菠菜、濃茶、堅果等高草酸食物適量'],
+  care:['每天喝水讓尿量至少 2.5 公升（尿色淡黃；心臟、腎臟病依醫師指示）','少鹽、少大量動物性蛋白','鈣質正常吃（刻意不吃鈣反而容易結石）；菠菜、濃茶、堅果等高草酸食物適量'],
   red:['劇烈腰痛合併發燒、發抖 → 立刻掛急診（可能阻塞合併感染）'],dept:'泌尿科',
   q:['我的結石是什麼成分？','需要定期照超音波嗎？']},
  {k:'gallstone',g:'gi',n:'膽結石／膽囊瘜肉',en:'Gallstones / gallbladder polyp',icd:'K80.20',tip:'規律三餐、少油',lab:['us_gb'],
@@ -1429,12 +1430,12 @@ const COND=[
   care:['睡前 3 小時不吃東西、床頭墊高 15–20 公分','少咖啡、酒、辛辣、甜食、油炸；吃七分飽','戒菸、減重'],
   red:['吞嚥困難、吐血、黑便、體重莫名下降 → 儘快做胃鏡'],dept:'腸胃科',
   q:['我需要做胃鏡嗎？','制酸藥要吃多久？']},
- {k:'polyp',g:'gi',n:'大腸瘜肉（切除過）',en:'History of colonic polyps',icd:'',tip:'依瘜肉病理決定下次大腸鏡',
-  w:['下次大腸鏡的時間依瘜肉病理（腺瘤數量、大小）決定，常見 3–5 年','在「家族史與生活習慣」填上次大腸鏡年份，App 會排進檢查輪替'],
+ {k:'polyp',g:'gi',n:'大腸瘜肉（切除過）',en:'History of colonic polyps',icd:'Z86.010',tip:'依瘜肉病理決定下次大腸鏡',
+  w:['下次大腸鏡的時間依瘜肉病理決定（USMSTF 2020）：1–2 顆小於 1 公分的腺瘤 7–10 年、3–4 顆 3–5 年、≥1 公分或高風險腺瘤 3 年','在「家族史與生活習慣」填上次大腸鏡年份，App 會排進檢查輪替'],
   good:['規律運動可以降低大腸癌風險'],bad:[],care:['多蔬果全穀，少紅肉與加工肉，少酒、戒菸'],
   red:['血便、排便習慣改變、貧血 → 提早做大腸鏡'],dept:'腸胃科',
   q:['我的瘜肉是哪一種？下次大腸鏡什麼時候？'],
-  fu:[['大腸鏡追蹤','依上次瘜肉病理決定間隔（腺瘤常見 3–5 年）','健保','依醫師安排',2]]},
+  fu:[['大腸鏡追蹤','依上次瘜肉病理決定間隔（3–10 年）','健保','依醫師安排',2]]},
  {k:'ledd',g:'msk',n:'蹠筋膜纖維瘤症',en:'Plantar fibromatosis (Ledderhose disease)',icd:'M72.2',tip:'良性結節：減壓鞋墊、避免跑跳與重壓',lim:['ankle'],lab:['glu','hba1c'],
   w:['足底筋膜長出的良性纖維結節（不是癌症、不會轉移），常兩腳都有、長得很慢','結節被壓到、久站、走太久會痛；不要自己深層按摩、用力推壓或敲打結節（反覆刺激可能讓它變大）','和手掌的「杜普伊特倫攣縮」同一類：也檢查手掌有沒有硬結、手指能不能伸直','糖尿病、抽菸、喝酒、肝病的人比較常見'],
   good:['騎腳踏車／飛輪、游泳、水中走路、划船機：有氧但不壓到足底','上半身與核心肌力訓練','小腿與足底溫和伸展（不要壓到結節）','快走可以，但穿厚底避震鞋、分段走（每次 15–20 分鐘）'],
@@ -1457,7 +1458,7 @@ const COND=[
   care:['減重','痛的時候冰敷 15 分鐘；不要長期自己吃消炎止痛藥（傷胃傷腎）'],
   red:['膝蓋突然紅腫熱痛、發燒，或卡住伸不直 → 儘快就醫'],dept:'骨科或復健科',
   q:['我的退化是第幾期？','適合打玻尿酸或增生療法嗎？','運動後痛多久算正常？']},
- {k:'disc',g:'msk',n:'椎間盤突出／坐骨神經痛',en:'Lumbar disc herniation / sciatica',icd:'M51.26',tip:'核心訓練、不彎腰搬重',lim:['back'],
+ {k:'disc',g:'msk',n:'椎間盤突出／坐骨神經痛',en:'Lumbar disc herniation with radiculopathy (sciatica)',icd:'M51.16',tip:'核心訓練、不彎腰搬重',lim:['back'],
   w:['多數人 6–12 週內會改善，不一定要開刀'],
   good:['走路、游泳、水中運動','核心穩定訓練：鳥狗式、臀橋（在不痛的範圍）'],bad:['彎腰搬重物、仰臥起坐、扭腰的運動（高爾夫、網球）','久坐超過 30–60 分鐘不起來'],
   care:['搬東西時蹲下、東西貼近身體','椅子有腰靠、螢幕在視線高度'],
@@ -1493,7 +1494,7 @@ const COND=[
   red:['手掌無法平貼桌面、影響抓握 → 回診評估（針刺鬆解或手術）'],dept:'骨科（手外科）或整形外科',
   q:['需要治療了嗎？有哪些方式？']},
  {k:'asthma',g:'resp',n:'氣喘',en:'Asthma',icd:'J45.909',tip:'控制藥每天用、隨身帶急救吸入劑',lim:['asthma'],
-  w:['控制藥（吸入型類固醇）要每天用，不是喘才用','急救吸入劑一週用超過 2 次＝控制不好，要回診'],
+  w:['照醫師開的方式用藥：有的人每天用控制藥，有的人用「需要時吸的抗發炎急救藥」（含類固醇的 ICS-formoterol）；只靠短效急救藥（例如 Ventolin）不夠','急救吸入劑一週用超過 2 次＝控制不好，要回診'],
   good:['游泳（溫暖潮濕的空氣較不易誘發）、快走、騎車','運動前暖身 10–15 分鐘'],bad:['冷空氣、空汙嚴重時在戶外劇烈運動'],
   care:['隨身帶急救吸入劑','減少塵蟎、菸、香水等誘發物','每年打流感疫苗'],
   red:['用了急救吸入劑還是很喘、講話講不完整、嘴唇發紫 → 立刻打 119'],dept:'胸腔內科或過敏免疫科',
@@ -1514,7 +1515,7 @@ const COND=[
  {k:'lungnod',g:'resp',n:'肺結節（追蹤中）',en:'Pulmonary nodule',icd:'R91.1',tip:'照醫師安排回診照 CT',lab:['ldct'],
   w:['大部分肺結節是良性；照醫師安排的時間回診比較大小','不要自己延後追蹤；帶舊片一起比較最準'],good:['規律運動維持肺功能'],bad:[],
   care:['戒菸、避開二手菸','煮飯開抽油煙機、減少油煙'],
-  red:['咳血、咳嗽超過 3 週、體重莫名下降 → 提早回診'],dept:'胸腔內科或胸腔外科',
+  red:['咳血、咳嗽超過 2 週、體重莫名下降 → 提早回診'],dept:'胸腔內科或胸腔外科',
   q:['我的結節多大？是實心還是毛玻璃？','下次 CT 什麼時候照？'],
   fu:[['胸部低劑量 CT 追蹤','肺結節：照醫師安排比較大小','健保','依醫師安排',1]]},
  {k:'rhinitis',g:'resp',n:'過敏性鼻炎',en:'Allergic rhinitis',icd:'J30.9',tip:'鼻噴劑規律用、除塵蟎',
@@ -1587,9 +1588,10 @@ const condActive=m=>condOf(m).items.filter(c=>c.st!=='done');
 const condKeys=m=>new Set(condActive(m).map(c=>c.k).filter(Boolean));
 const condHas=(m,...ks)=>{const s=condKeys(m);return ks.some(k=>s.has(k))};
 const condNames=(m,ks)=>condActive(m).filter(c=>!ks||ks.includes(c.k)).map(c=>c.name);
-// 依病史的 LDL 目標（取最嚴格的）：冠心病 <70、中風 <100、糖尿病 <100、慢性腎臟病 <100；冠狀動脈鈣化 ≥70 就提醒和心臟科討論
-function ldlTgt(m){let b=null;for(const c of condActive(m)){const L=c.T?.ldl;if(!L)continue;if(!b||L.t<b.t||(L.t===b.t&&L.lv>b.lv))b={...L,names:[c.name]};else if(L.t===b.t&&!b.names.includes(c.name))b.names.push(c.name)}
-  if(b){b.msg=b.txt||`你有${b.names.join('、')}：LDL 目標 <${b.t} mg/dL（${b.src}），目前未達標，請和醫師討論飲食與是否調整用藥`;b.short=b.txt?'有冠狀動脈鈣化，LDL 目標應比一般人嚴格':`依病史（${b.names.join('、')}）目標 <${b.t}`}return b}
+// 依病史的 LDL 目標：每個病史各自比對、取最嚴重的等級（同級取目標最低）：冠心病 ≥70 異常；缺血性中風 70–99 注意、≥100 異常；糖尿病、慢性腎臟病 ≥100 注意；冠狀動脈鈣化 ≥70 提醒和心臟科討論
+function ldlTgt(m,v){let b=null;for(const c of condActive(m))for(const[t,lv]of c.T?.ldl?.tiers||[])if(v>=t&&(!b||lv>b.lv||(lv===b.lv&&t<b.t)))b={t,lv,c};
+  if(!b)return null;const L=b.c.T.ldl,goal=L.tiers[0][0];
+  return{...b,msg:L.txt||`你有${b.c.name}：LDL 目標 <${goal} mg/dL（${L.src}），目前未達標，請和醫師討論飲食與是否調整用藥`,short:L.txt?'有冠狀動脈鈣化，LDL 目標應比一般人嚴格':`依病史（${b.c.name}）目標 <${goal}`}}
 // 運動限制：病史自動加上的 lim，並記住是哪個病（課表上說明原因）
 function condLims(m){const lims=new Set(),why={};for(const c of condActive(m))for(const l of c.T?.lim||[]){lims.add(l);(why[l]=why[l]||[]).push(c.name)}
   return{lims,why:Object.fromEntries(Object.entries(why).map(([l,ns])=>[l,ns.join('、')])),items:condActive(m)}}
@@ -1714,10 +1716,14 @@ function yearPlan(m){
   rule(['sbp','dbp'],(l,n)=>add(S[0],l>=2?1:2,'居家血壓 722：連續 7 天、早晚各量 2 次',`${ago} ${n}；診間血壓容易偏高，居家量測才準`,'自行量測','從今天開始'));
   rule(['cr','egfr','bun','upro','uacr','us_kidney'],(l,n)=>add(S[0],l>=2?1:2,'複驗腎功能：肌酸酐／eGFR＋尿液＋UACR',`${ago} ${n}；要隔 3 個月確認是否持續`,'健保','3 個月後'));
   rule(['ua'],(l,n)=>add(S[0],l>=2?2:3,'複驗尿酸',`${ago} ${n}`,'公費／健保','3–6 個月後'));
+  const ferV=num(vOf(L)('ferritin')),ferLo=lo('ferritin')||(ferV!=null&&ferV<45);   // AGA 2020：貧血時鐵蛋白 <45 ng/mL 視為缺鐵
   if(lo('hb')){['hb','rbc','hct'].forEach(k=>done.add(k));
     add(S[0],lvOf('hb')>=2?1:2,'貧血檢查：鐵蛋白、血清鐵、B12、葉酸',`${ago} ${names(['hb','mcv','ferritin'])}`,'健保','1 個月內');
-    if(!fem||a>=50)add(S[0],1,'胃鏡＋大腸鏡（排除腸胃道出血）',`${fem?'停經後女性':'男性'}不明原因貧血，常見原因是腸胃道慢性出血`,'健保','與醫師討論')}
-  rule(['mcv','mch','mchc','rdw','ferritin','fe','b12','folate'],(l,n)=>{if(lo('mcv')&&!lo('hb'))add(S[0],3,'海洋性貧血帶因檢查（血紅素電泳）',`${n}；台灣常見帶因者，計畫懷孕時夫妻都要驗`,'自費','有需要時');
+    if((!fem||a>=50)&&ferLo)add(S[0],1,'胃鏡＋大腸鏡（排除腸胃道出血）',`${fem?'停經後女性':'男性'}缺鐵性貧血（鐵蛋白 ${fmt(ferV)}），最常見原因是腸胃道慢性出血`,'健保','與醫師討論');
+    else if((!fem||a>=50)&&ferV==null)add(S[0],2,'先驗鐵蛋白：缺鐵才需要胃鏡＋大腸鏡',`${fem?'停經後女性':'男性'}貧血：鐵蛋白偏低（<45）代表缺鐵，才要排除腸胃道出血；台灣海洋性貧血帶因很常見，不是缺鐵就不用照`,'健保','1 個月內')}
+  rule(['mcv','mch','mchc','rdw','ferritin','fe','b12','folate'],(l,n)=>{if(lo('mcv')&&!lo('hb')){if(ferLo)add(S[0],2,'缺鐵：找原因並補鐵',`${n}；鐵蛋白偏低，男性與停經後女性要和醫師討論胃鏡、大腸鏡`,'健保','1–3 個月內');
+      else if(ferV==null)add(S[0],3,'小球性紅血球：先驗鐵蛋白，正常再驗海洋性貧血帶因',`${n}；缺鐵會讓血紅素電泳不準，所以先排除缺鐵`,'健保／自費','有需要時');
+      else add(S[0],3,'海洋性貧血帶因檢查（血紅素電泳）',`${n}；鐵蛋白正常，台灣常見帶因者，計畫懷孕時夫妻都要驗`,'自費','有需要時')}
     else add(S[0],l>=2?2:3,'複驗鐵蛋白與血液常規',`${ago} ${n}`,'健保','3 個月後')});
   rule(['wbc','plt','neut','lymph','mono','eos','baso','rbc','hct','hb','esr'],(l,n)=>add(S[0],l>=2?1:2,'複驗血液常規＋白血球分類',`${ago} ${n}`,'健保','1–3 個月後'));
   rule(['tsh','ft4','t3','ft3','t4','antitpo','thyus'],(l,n)=>add(S[0],l>=2?1:2,lvOf('thyus')>=2?'甲狀腺結節：新陳代謝科評估細針穿刺':'複驗甲狀腺功能 TSH＋Free T4',`${ago} ${n}`,'健保',l>=2?'1 個月內':'3–6 個月後'));
@@ -1727,8 +1733,8 @@ function yearPlan(m){
   rule(['hp'],()=>add(S[0],1,'幽門桿菌除菌治療，療程結束 4 週後複驗','除菌可大幅降低胃癌風險','健保','儘快'));
   rule(['hpab'],(l,n)=>{if(!lvOf('hp'))add(S[0],2,'幽門桿菌：用碳 13 呼氣試驗或糞便抗原確認',`${ago} ${n}；抗體陽性也可能是以前感染過（除菌後抗體會留 1 年以上），確認現在有感染才需要除菌`,'健保／自費','有胃痛或胃潰瘍病史就儘快')});
   rule(['gastro','ca724'],(l,n)=>add(S[0],l>=3?1:2,'胃鏡追蹤',`${ago} ${n}`,'健保',l>=3?'儘快':'每 1–3 年'));
-  rule(['colono'],(l,n)=>add(S[0],l>=3?1:3,'大腸鏡追蹤',`${ago} ${n}`,'健保',l>=3?'儘快':'依瘜肉病理（腺瘤通常 3 年後）'));
-  rule(['uob','urbc'],(l,n)=>{const again=P&&(qLv(P.items?.uob?.v)>0||num(P.items?.urbc?.v)>3);add(S[0],again?1:2,again?'泌尿科：連續兩年尿潛血，需超音波與尿液細胞學':'複驗尿液＋尿沉渣（女性避開生理期）',`${ago} ${n}`,'健保','1–3 個月後')});
+  rule(['colono'],(l,n)=>add(S[0],l>=3?1:3,'大腸鏡追蹤',`${ago} ${n}`,'健保',l>=3?'儘快':'依瘜肉病理：1–2 顆小腺瘤 7–10 年、3–4 顆 3–5 年、≥1 公分或高風險 3 年'));
+  rule(['uob','urbc'],(l,n)=>{const again=P&&(qLv(P.items?.uob?.v)>0||num(P.items?.urbc?.v)>3);add(S[0],again?1:2,again?'泌尿科：連續兩年尿潛血，需泌尿道影像（超音波）評估，醫師依風險決定是否做膀胱鏡':'複驗尿液＋尿沉渣（女性避開生理期）',`${ago} ${n}`,'健保','1–3 個月後')});
   rule(['unit','uleu','uwbc'],(l,n)=>add(S[0],2,'泌尿道感染評估（尿液培養）',`${ago} ${n}`,'健保','有症狀時儘快'));
   rule(['mammo','breastus','ca153'],(l,n)=>add(S[0],l>=2?1:2,'乳房追蹤：乳房外科',`${ago} ${n}`,'健保',l>=3?'儘快切片評估':l>=2?'加做檢查':'6 個月後追蹤'));
   rule(['pap','hpv'],(l,n)=>add(S[0],l>=2?1:2,'子宮頸追蹤：婦產科（陰道鏡／HPV）',`${ago} ${n}`,'健保',l>=2?'1 個月內':'6–12 個月後複驗'));
@@ -1804,7 +1810,7 @@ function yearPlan(m){
   // ⑥ 定期檢查：大腸鏡間隔（一般風險 45 歲起，正常每 10 年；一等親大腸癌 40 歲起每 5 年）、40 歲以上眼科、腹部超音波等
   // 上次大腸鏡：報告裡有、或成員資料填的年份（取較新）；上次有腺瘤 → 3 年
   const yr=new Date().getFullYear(),ldc=lastDone(m).colono,cy=ldc?.y||0,cl=ldc?.r?labEval({items:{colono:ldc.r.items.colono}},m).reduce((x,i)=>Math.max(x,i.lv),0):0;
-  if(a>=40&&a<=75&&!lvOf('colono')&&!out.some(o=>o.t.includes('大腸鏡'))){const iv=cl>=2?3:crcFH?5:10,why=cl>=2?'上次有腺瘤性瘜肉，約 3 年追蹤':crcFH?'一等親有大腸癌，每 5 年':'一般風險、上次正常，每 10 年';
+  if(a>=40&&a<=75&&!lvOf('colono')&&!out.some(o=>o.t.includes('大腸鏡'))){const iv=cl>=2?3:crcFH?5:10,why=cl>=2?'上次有瘜肉：依病理 3–10 年（醫師會告訴你，App 先排 3 年）':crcFH?'一等親有大腸癌，每 5 年（家人 60 歲以後才確診且只有 1 位，可和醫師討論改 10 年）':'一般風險、上次正常，每 10 年';
     if(cy){const due=Math.max(cy+iv,cl>=2?0:by+(crcFH?40:45));
       if(due<=yr)add(S[4],crcFH||cl>=2?1:2,'大腸鏡（今年該做了）',`上次 ${cy} 年；${why}一次，${due} 年到期`,'健保／自費','今年');
       else add(S[4],3,`大腸鏡：下次 ${due} 年`,`上次 ${cy} 年；${why}${cl>=2?'':'（有瘜肉依醫師建議縮短）'}`,'—',`${due} 年`)}
@@ -1876,7 +1882,7 @@ function rotation(m){const a=Math.floor(ageOf(m)),fem=m.sex==='f',fh=fhOf(m),lf=
   const by=+String(m.birth||'').slice(0,4)||Y-a,win=sa=>a>=sa-3;   // 3 年內會到開始年齡的也先排進來（從那一年開始）
   const R=[],add=(k,o)=>R.push({k,t:EXAMS.find(z=>z[0]===k)[1],...o,from:o.sa?by+o.sa:0});   // need：依風險或公費資格建議做；否則是想多做時「可考慮」
   if(win(crcFH?40:45)&&a<=75){const cl=lastLv('colono','colono');add('colono',{sa:cl>=2?0:crcFH?40:45,iv:cl>=2?3:crcFH?5:10,need:crcFH||cl>=2,big:true,ch:crcFH||cl>=2?'健保／自費':'自費',
-    why:cl>=2?'上次有腺瘤性瘜肉：約 3 年追蹤':crcFH?'一等親有大腸癌：每 5 年':'一般風險：正常的話每 10 年；不做的話，公費糞便潛血每 2 年是基本'})}
+    why:cl>=2?'上次有瘜肉：依病理 3–10 年（醫師會告訴你，App 先排 3 年）':crcFH?'一等親有大腸癌：每 5 年（家人 60 歲以後才確診且只有 1 位，可和醫師討論改 10 年）':'一般風險：正常的話每 10 年；不做的話，公費糞便潛血每 2 年是基本'})}
   const gl=lastLv('gastro','gastro'),hpPos=ever('hp',v=>qLv(v)>0)||ever('hpab',v=>qLv(v)>0);
   if(gl>=2)add('gastro',{iv:2,need:true,big:true,ch:'健保',why:'上次萎縮性胃炎／腸化生或潰瘍：1–3 年追蹤'});
   else if(a>=40&&(fh.ca.includes('stomach')||hpPos))add('gastro',{iv:3,need:false,big:true,ch:'自費',why:fh.ca.includes('stomach')?'胃癌家族史：可考慮每 2–3 年（與醫師討論）':'曾有幽門桿菌：除菌後胃癌風險仍較高，可考慮胃鏡'});
@@ -1953,18 +1959,19 @@ function calc(m){
   const bmr=kid?(male?(a<3?60.9*w-54:a<10?22.7*w+495:17.5*w+651):(a<3?61*w-51:a<10?22.5*w+499:12.2*w+746)):10*w+6.25*h-5*a+(male?5:-161);
   const tdeeAct=bmr*(+m.act||1.375),wt=watchTdee(m,bmr),tdee=wt?.fresh?wt.tdee:tdeeAct;
   const sg=suggestGoal(m),gsel=GOALT[m.goal]?m.goal:'auto',goal=kid?'keep':gsel==='auto'?sg.goal:gsel;
-  let target=goal==='cut'?tdee*.8:goal==='bulk'?tdee*1.1:tdee;target=Math.max(target,bmr);
+  let target=goal==='cut'?tdee*.8:goal==='bulk'?tdee*1.1:tdee;target=Math.max(target,bmr);if(goal==='cut'&&!kid)target=Math.min(tdee,Math.max(target,male?1500:1200));
   const mode=dietMode(m);
-  let pk=kid?1.1:{cut:2,keep:1.6,bulk:1.8}[goal];if(mode.kidney)pk=.8;   // 腎功能異常時禁止高蛋白
+  let pk=kid?1.1:{cut:2,keep:1.6,bulk:1.8}[goal];if(mode.kidney)pk=.8;   // 腎功能異常時禁止高蛋白（KDIGO 2024：CKD G3–G5 0.8 g/kg）
   if(!kid&&a>=65&&!mode.kidney)pk=Math.max(pk,1.2);                      // 長者：蛋白質至少 1.2 g/kg 防肌少症
+  if(mode.kidneyMild)pk=Math.min(pk,1);                                   // 腎功能略降或微量白蛋白尿：蛋白質不超過 1.0 g/kg，3 個月後複驗
   // 碳水佔熱量 50%（控糖 40%），脂肪補足其餘，並限制在 20–35%
-  const prot=w*pk;let carb=target*(mode.lowCarb?.4:.5)/4,fat=(target-prot*4-carb*4)/9;
+  const iw=22*hm*hm,pw=!kid&&bmi>=27?iw+.25*(w-iw):w;let prot=pw*pk;if(!kid&&prot*4>target*.35)prot=target*.35/4;let carb=target*(mode.lowCarb?.4:.5)/4,fat=(target-prot*4-carb*4)/9;
   if(fat*9>target*.35){fat=target*.35/9;carb=(target-prot*4-fat*9)/4}if(fat*9<target*.2){fat=target*.2/9;carb=Math.max(0,(target-prot*4-fat*9)/4)}
   let bf=sc?.fat??null,bfSrc=bf!=null?'體脂機':'';
   const wa=+m.waist,ne=+m.neck,hi=+m.hip;
   if(bf==null&&wa&&ne&&!kid){if(male&&wa>ne)bf=495/(1.0324-.19077*Math.log10(wa-ne)+.15456*Math.log10(h))-450;
     if(!male&&hi&&wa+hi>ne)bf=495/(1.29579-.35004*Math.log10(wa+hi-ne)+.221*Math.log10(h))-450;if(bf!=null)bfSrc='圍度估算'}
-  return{a,kid,h,w,bmi,cuts,cat,bmr,tdee,tdeeAct,wt,target,goal,gsel,sg,prot,fat,carb,bf,bfSrc,wMin:cuts[0]*hm*hm,wMax:cuts[1]*hm*hm,water:w*35,whtr:wa?wa/h:null,mode,sc};
+  return{a,kid,h,w,bmi,cuts,cat,bmr,tdee,tdeeAct,wt,target,goal,gsel,sg,prot,fat,carb,bf,bfSrc,wMin:cuts[0]*hm*hm,wMax:cuts[1]*hm*hm,water:mode.waterLim?null:w*35,whtr:wa?wa/h:null,mode,sc};
 }
 
 /* ================= 視覺元件 ================= */
@@ -2269,7 +2276,7 @@ function renderDash(){
   $('#advStats').innerHTML=
     stat('體脂率',c.bf!=null?c.bf.toFixed(1):'—',c.bf!=null?'%':'',c.bf!=null?tagH(c.bfSrc,'#8a97b4'):'<span class="tag" style="color:var(--mute)">填腰/頸圍或體脂紀錄</span>')+
     stat('腰高比',c.whtr?c.whtr.toFixed(2):'—','',c.whtr?tagH(c.whtr>.5?'偏高':'良好',c.whtr>.5?'#ff5d6c':'#b6ff3c'):'')+
-    stat('建議飲水',(c.water/1000).toFixed(1),'L')+
+    stat('建議飲水',c.water==null?'依醫囑':(c.water/1000).toFixed(1),c.water==null?'':'L',c.water==null?tagH('心衰竭或腎功能差：水量照醫師指示','#ffb547'):'')+
     stat('目標',c.kid?'成長期':GOALT[c.goal],'',`<span class="tag" style="color:var(--cyan)">${c.gsel==='auto'&&!c.kid?'自動・':''}${Math.round(c.target-c.tdee)} kcal</span>`);
   const s=scalesOf(m)[0],l=labsOf(m)[0];
   $('#latestCard').innerHTML=`<div class="row" style="margin:0 0 4px"><h2 style="margin:0">最新紀錄</h2><button class="btn sm ghost" data-go="body" data-gosub="rec">全部紀錄 ›</button></div>`+
@@ -2681,19 +2688,19 @@ function aiPrompt(m,o){
 /* ================= 症狀自我評估：先問危險徵兆 → 該掛哪一科、可以做哪些檢查，再對照自己的報告與手錶 =================
    u：基本急迫度 obs 先觀察／clinic 安排門診／soon 1–3 天內／now 立即就醫；rf：危險徵兆 [文字, now|soon]；這不是診斷 */
 const SYM=[
- {k:'chest',n:'胸悶／胸痛',a:'胸部',u:'clinic',rf:[['壓迫感或悶痛超過 15 分鐘、休息不會好','now'],['合併冒冷汗、喘、噁心，或痛到左手臂、下巴、背','now'],['運動時才出現、停下來會好','soon']],d:'心臟內科',t:['心電圖','抽血：心肌酵素、血脂、血糖','運動心電圖或心臟超音波（依醫師評估）'],tip:'也可能是胃食道逆流或肌肉拉傷，但胸痛一定先排除心臟問題'},
+ {k:'chest',n:'胸悶／胸痛',a:'胸部',u:'soon',rf:[['胸口壓迫、悶痛超過 5 分鐘，或休息也不會好','now'],['合併冒冷汗、喘、噁心，或痛到左手臂、下巴、背','now'],['最近才開始、越來越頻繁，或輕微活動、休息時也會痛','now'],['運動時才出現、停下來就好','soon']],d:'心臟內科',t:['心電圖','抽血：心肌酵素、血脂、血糖','運動心電圖或心臟超音波（依醫師評估）'],tip:'也可能是胃食道逆流或肌肉拉傷，但胸痛一定先排除心臟問題'},
  {k:'palp',n:'心悸／心跳亂',a:'胸部',u:'clinic',rf:[['合併昏倒、胸痛或很喘','now'],['心跳持續 >150 或 <40','now']],d:'心臟內科',t:['心電圖','24 小時心電圖（Holter）','甲狀腺 TSH、血紅素、電解質'],tip:'發作時用手錶量一段心電圖或記下心跳，看診很有幫助；咖啡因、睡眠不足、壓力也常見'},
  {k:'sob',n:'喘／呼吸困難',a:'胸部',u:'soon',rf:[['休息時也喘、說不出完整句子','now'],['嘴唇發紫、血氧 <90%','now'],['躺平更喘、晚上喘醒、腳腫','soon']],d:'胸腔內科／心臟內科',t:['胸部 X 光','肺功能','心臟超音波、BNP','血氧'],tip:''},
- {k:'cough',n:'咳嗽超過 3 週',a:'胸部',u:'clinic',rf:[['咳血','soon'],['體重減輕、夜間盜汗、發燒','soon']],d:'胸腔內科',t:['胸部 X 光','痰液檢查（排除結核）','肺功能'],tip:'鼻涕倒流、胃食道逆流、氣喘也是久咳常見原因'},
+ {k:'cough',n:'咳嗽超過 2 週',a:'胸部',u:'clinic',rf:[['咳血','soon'],['體重減輕、夜間盜汗、發燒','soon']],d:'胸腔內科',t:['胸部 X 光','痰液檢查（排除結核）','肺功能'],tip:'鼻涕倒流、胃食道逆流、氣喘也是久咳常見原因'},
  {k:'head',n:'頭痛',a:'頭頸',u:'obs',rf:[['突然爆炸般劇痛（一生最痛）','now'],['合併單側無力、講話不清、意識改變','now'],['發燒＋脖子僵硬','now'],['50 歲後第一次出現、越來越頻繁','soon']],d:'神經內科',t:['量血壓（居家 722）','必要時頭部電腦斷層／核磁共振'],tip:'壓力型頭痛、睡眠不足、咖啡因戒斷最常見；止痛藥一個月吃超過 10 天反而會更痛'},
- {k:'dizzy',n:'頭暈／天旋地轉',a:'頭頸',u:'obs',rf:[['合併單側無力、嘴歪、講話不清、看東西重疊','now'],['走路不穩、站不起來','now'],['快昏倒、合併心悸胸痛','soon']],d:'耳鼻喉科（天旋地轉）／神經內科／心臟內科（快昏倒）',t:['躺站血壓','血紅素、血糖','心電圖','聽力檢查'],tip:'轉頭就暈、幾十秒就好，多半是耳石脫落，耳鼻喉科可以復位'},
+ {k:'dizzy',n:'頭暈／天旋地轉',a:'頭頸',u:'obs',rf:[['合併單側無力、嘴歪、講話不清、看東西重疊','now'],['走路不穩、站不起來','now'],['快昏倒、合併心悸或胸痛','now']],d:'耳鼻喉科（天旋地轉）／神經內科／心臟內科（快昏倒）',t:['躺站血壓','血紅素、血糖','心電圖','聽力檢查'],tip:'轉頭就暈、幾十秒就好，多半是耳石脫落，耳鼻喉科可以復位'},
  {k:'stroke',n:'單側無力、嘴歪、講話不清',a:'頭頸',u:'now',rf:[],d:'急診（中風）',t:['立刻打 119'],tip:'記住發作時間：中風黃金治療時間只有幾個小時，不要等它自己好'},
  {k:'eye',n:'視力模糊／眼睛痛',a:'頭頸',u:'clinic',rf:[['突然看不見或視野缺一塊','now'],['眼睛紅痛＋頭痛噁心、看燈有光暈','now']],d:'眼科',t:['視力、眼壓、眼底檢查'],tip:''},
  {k:'ear',n:'耳鳴／聽力變差',a:'頭頸',u:'clinic',rf:[['突然單側聽不到','soon']],d:'耳鼻喉科',t:['純音聽力檢查'],tip:'突發性耳聾 3 天內治療效果最好，不要拖'},
  {k:'nose',n:'鼻塞、鼻涕帶血、脖子摸到硬塊',a:'頭頸',u:'clinic',rf:[['脖子腫塊越來越大、不會痛','soon']],d:'耳鼻喉科',t:['鼻咽內視鏡','EB 病毒抗體','頸部超音波'],tip:'台灣鼻咽癌較多，單側鼻塞、帶血絲超過 2 週要看'},
- {k:'abd',n:'肚子痛／胃痛',a:'腹部',u:'obs',rf:[['劇痛、肚子硬、碰到更痛','now'],['吐血、黑便','now'],['右上腹痛＋發燒或皮膚變黃','soon']],d:'腸胃科',t:['腹部超音波','胃鏡（50 歲以上新症狀優先）','幽門桿菌（呼氣或糞便抗原）','肝功能、澱粉酶'],tip:''},
- {k:'reflux',n:'火燒心／胃酸逆流',a:'腹部',u:'obs',rf:[['吞東西卡卡、吞嚥會痛','soon'],['體重減輕、貧血、黑便','soon']],d:'腸胃科',t:['胃鏡','幽門桿菌'],tip:'少量多餐、睡前 3 小時不吃、少咖啡酒精、抬高床頭'},
- {k:'bowel',n:'排便習慣改變／便血',a:'腹部',u:'clinic',rf:[['大量出血、頭暈','now'],['黑便（像柏油）','soon']],d:'腸胃科',t:['糞便潛血','大腸鏡（便血或排便習慣改變建議直接做）','血紅素'],tip:'痔瘡出血是鮮紅色、附在糞便表面；顏色暗、混在糞便裡更要檢查'},
+ {k:'abd',n:'肚子痛／胃痛',a:'腹部',u:'obs',rf:[['劇痛、肚子硬、碰到更痛','now'],['吐血、黑便','now'],['右上腹痛＋發燒或皮膚變黃','now']],d:'腸胃科',t:['腹部超音波','胃鏡（50 歲以上新症狀優先）','幽門桿菌（呼氣或糞便抗原）','肝功能、澱粉酶'],tip:''},
+ {k:'reflux',n:'火燒心／胃酸逆流',a:'腹部',u:'obs',rf:[['吞東西卡卡、吞嚥會痛','soon'],['黑便（像柏油）','now'],['體重莫名減輕、貧血','soon']],d:'腸胃科',t:['胃鏡','幽門桿菌'],tip:'少量多餐、睡前 3 小時不吃、少咖啡酒精、抬高床頭'},
+ {k:'bowel',n:'排便習慣改變／便血',a:'腹部',u:'clinic',rf:[['大量出血、頭暈','now'],['黑便（像柏油）或暗紅色血便','now']],d:'腸胃科',t:['糞便潛血','大腸鏡（便血或排便習慣改變建議直接做）','血紅素'],tip:'痔瘡出血是鮮紅色、附在糞便表面；顏色暗、混在糞便裡更要檢查'},
  {k:'wtloss',n:'體重莫名下降（半年 >5%）',a:'全身',u:'clinic',rf:[],d:'家醫科',t:['血液常規、血糖／HbA1c、甲狀腺','肝腎功能、胸部 X 光','糞便潛血或內視鏡（依年齡）'],tip:'腫瘤標記只能輔助，正常不代表沒事'},
  {k:'tired',n:'疲倦、沒力',a:'全身',u:'obs',rf:[['合併喘、胸痛、體重下降','soon']],d:'家醫科',t:['血液常規（貧血）、鐵蛋白','甲狀腺 TSH','血糖／HbA1c、肝腎功能','維生素 B12、D'],tip:'睡不夠、睡眠呼吸中止、情緒低落也是常見原因'},
  {k:'thirst',n:'口渴、尿多',a:'全身',u:'clinic',rf:[['合併嘔吐、意識不清','now']],d:'新陳代謝科',t:['空腹血糖、HbA1c','尿液'],tip:''},
@@ -2704,11 +2711,11 @@ const SYM=[
  {k:'urine',n:'頻尿、夜尿、尿流變細',a:'泌尿',u:'obs',rf:[['完全尿不出來','now']],d:'泌尿科',t:['尿液','PSA（男性）','攝護腺或膀胱超音波','血糖'],tip:'睡前 2 小時少喝水、少咖啡酒精'},
  {k:'dysuria',n:'解尿痛／血尿',a:'泌尿',u:'soon',rf:[['發燒、腰痛（腎臟發炎）','soon']],d:'泌尿科',t:['尿液、尿液培養','腎臟超音波','血尿持續：尿液細胞學、膀胱鏡'],tip:'沒有疼痛的血尿反而更要檢查'},
  {k:'back',n:'腰痛／背痛',a:'骨骼肌肉',u:'obs',rf:[['大小便失禁或腳麻無力','now'],['發燒、夜間痛醒、體重下降','soon']],d:'復健科／骨科',t:['6 週沒改善再照 X 光','有神經症狀才做核磁共振'],tip:'多數 4–6 週會自己好；適度活動比臥床好'},
- {k:'joint',n:'關節痛、腫',a:'骨骼肌肉',u:'obs',rf:[['單一關節紅腫熱痛＋發燒','soon']],d:'風濕免疫科／骨科',t:['尿酸','類風濕因子、Anti-CCP','ESR／CRP','X 光'],tip:'早上僵硬超過 1 小時、多個小關節腫，要看風濕免疫科'},
+ {k:'joint',n:'關節痛、腫',a:'骨骼肌肉',u:'obs',rf:[['單一關節紅腫熱痛＋發燒（可能是關節感染）','now']],d:'風濕免疫科／骨科',t:['尿酸','類風濕因子、Anti-CCP','ESR／CRP','X 光'],tip:'早上僵硬超過 1 小時、多個小關節腫，要看風濕免疫科'},
  {k:'snore',n:'打鼾、白天很想睡',a:'睡眠情緒',u:'clinic',rf:[['開車時打瞌睡','soon']],d:'胸腔內科／耳鼻喉科（睡眠中心）',t:['睡眠多項生理檢查','手錶夜間血氧可先參考'],tip:'睡眠呼吸中止會讓血壓、血糖變差，減重 10% 常常明顯改善'},
  {k:'mood',n:'情緒低落、焦慮、失眠超過 2 週',a:'睡眠情緒',u:'clinic',rf:[['有傷害自己的念頭','now']],d:'身心科／家醫科',t:['甲狀腺 TSH','情緒量表評估'],tip:'有傷害自己的念頭請立刻打 1925 安心專線或 119'},
  {k:'breast',n:'乳房腫塊／乳頭分泌物',a:'女性',sex:'f',u:'clinic',rf:[['乳頭流血、皮膚凹陷或像橘子皮','soon']],d:'乳房外科',t:['乳房超音波','乳房攝影'],tip:''},
- {k:'bleed',n:'不正常陰道出血',a:'女性',sex:'f',u:'clinic',rf:[['大量出血、頭暈','now'],['停經後出血','soon']],d:'婦產科',t:['抹片、HPV','陰道超音波'],tip:''}];
+ {k:'bleed',n:'不正常陰道出血',a:'女性',sex:'f',u:'clinic',rf:[['大量出血、頭暈','now'],['可能懷孕，合併下腹痛、肩膀痛或頭暈（排除子宮外孕）','now'],['停經後出血','soon']],d:'婦產科',t:['抹片、HPV','陰道超音波'],tip:''}];
 const URGT={now:['立即就醫：打 119 或掛急診','var(--red)'],soon:['儘快：1–3 天內看門診','#ff8a5c'],clinic:['安排門診：1–2 週內','var(--amber)'],obs:['先觀察與自我照顧；超過 2 週或變嚴重再看門診','var(--lime)']};
 const URGO=['obs','clinic','soon','now'];
 // 對照自己的資料：報告、手錶、生活習慣
@@ -3476,7 +3483,7 @@ function renderNutri(m){const n=nutriPlan(m),t=n.tgt,tile=(v,k)=>`<div><b>${v}</
     <div style="display:flex;gap:12px;align-items:center"><div style="flex:0 0 118px">${plateSVG()}</div>
       <div style="flex:1;min-width:0"><div class="sub">你的飲食策略</div><div style="font-size:calc(19px*var(--fz));font-weight:800;line-height:1.35;margin:2px 0 4px">${esc(n.title)}</div>
       <div class="sub">${n.src?'依據 '+esc(n.src):'還沒有體檢／體脂紀錄，先依身高體重估算'}</div><div class="sub" style="margin-top:4px">左圖：每餐怎麼裝（211 餐盤）</div></div></div>
-    <div class="tgt">${tile(t.kcal,'熱量 kcal')}${tile(t.p+'g','蛋白質')}${tile(t.cb+'g','碳水')}${tile(t.f+'g','脂肪')}${tile(t.fib+'g','纖維 ≥')}${tile(t.na,'鈉 mg ≤')}${tile(t.sug+'g','添加糖 ≤')}${tile(t.water.toFixed(1)+'L','喝水')}</div>
+    <div class="tgt">${tile(t.kcal,'熱量 kcal')}${tile(t.p+'g','蛋白質')}${tile(t.cb+'g','碳水')}${tile(t.f+'g','脂肪')}${tile(t.fib+'g','纖維 ≥')}${tile(t.na,'鈉 mg ≤')}${tile(t.sug+'g','添加糖 ≤')}${tile(t.water==null?'依醫囑':t.water.toFixed(1)+'L','喝水')}</div>
     ${n.F.map((f,i)=>`<details class="box"${i<1?' open':''}><summary><span>${f.ic} ${esc(f.t)}</span></summary>${f.why?`<div class="sub" style="color:var(--amber);margin:-4px 0 8px">📋 ${esc(f.why)}</div>`:''}<ul class="steps" style="color:var(--text)">${f.do.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><div class="chips">${f.eat.map(x=>`<span class="tg">✓ ${esc(x)}</span>`).join('')}${f.avoid.map(x=>`<span class="tg warn">✕ ${esc(x)}</span>`).join('')}</div></details>`).join('')}
     <p class="note">「今日菜單」已照這些重點自動挑菜、調整份量；數值為一般建議，有慢性病請以醫師、營養師指示為準。</p>
     <button class="btn ai" data-aitopic="diet" style="margin-top:6px">🩺 深入了解：問 AI 排一週飲食</button>`}
