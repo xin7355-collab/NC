@@ -266,6 +266,7 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 .pr1{background:rgba(255,45,85,.18);color:#ff6b81}.pr2{background:rgba(255,181,71,.15);color:var(--amber)}.pr3{background:rgba(34,228,255,.1);color:var(--cyan)}
 .pt{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.pt i{font-style:normal;font-size:calc(11px*var(--fz));padding:2px 8px;border-radius:99px;background:rgba(255,255,255,.06);color:var(--text)}
 .lrow.wide{flex-wrap:wrap}.lrow.wide label{flex:1 1 100%}.lrow.wide select{flex:1 1 100%;width:100%}
+#sbar{position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top);background:rgba(6,9,18,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:9;pointer-events:none}
 .cdet{padding:10px 0;border-top:1px solid var(--line)}
 .sq{padding:12px 0;border-top:1px solid var(--line)}.sq .t{font-size:calc(14px*var(--fz));font-weight:700;line-height:1.55;margin-bottom:8px}
 .bl{position:relative;padding:7px 0 7px 18px;border-top:1px solid var(--line);font-size:calc(13px*var(--fz));line-height:1.65}.bl::before{content:'•';position:absolute;left:4px;color:var(--cyan)}
@@ -279,6 +280,7 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 </style>
 </head>
 <body>
+<div id="sbar" aria-hidden="true"></div>
 <header>
   <div class="logo">Nutri<b>Core</b></div>
   <div style="display:flex;gap:8px;align-items:center;min-width:0"><button class="mchip" id="memChip" aria-label="切換成員" style="max-width:56vw"></button>
@@ -897,7 +899,7 @@ function scaleEval(rec,m){
   const a=ageOf(m),male=m.sex!=='f',kid=a<18,st=rec.status||{},out=[];
   // 體脂機是生物電阻估算的慢性指標：最高只到「異常」，不觸發「1–2 週內就診」與分數上限
   const push=(k,lv,msg,organ,dept,cap=2)=>{const d=devLv(st[k]),L=Math.min(cap,Math.max(lv,d));if(!L)return;
-    out.push({src:'體脂',k,name:SFN[k].n,short:SFN[k].n,val:rec[k],unit:SFN[k].u,lv:L,msg:lv?msg:`設備判定「${st[k]}」`,dev:st[k]||null,organ,dept})};
+    out.push({src:'體脂',k,name:SFN[k].n,short:SFN[k].n,val:rec[k],unit:SFN[k].u,lv:L,msg:lv?msg:`設備判定「${st[k]}」；App 的內建標準判定正常（各品牌標準不同，也請確認 AI 有沒有讀錯）`,dev:st[k]||null,organ,dept})};
   const v=k=>rec[k];
   if(v('bmi')!=null){const b=v('bmi');let lv,msg;
     if(kid){const[lo,ov,ob]=childRow(a,m.sex);lv=b<lo?1:b>=ob?2:b>=ov?1:0;msg=b<lo?'低於同齡標準（國健署兒童標準）':'高於同齡標準（國健署兒童標準）'}
@@ -1126,7 +1128,7 @@ const WF=[{k:'rhr',n:'靜止心率',u:'bpm',min:25,max:200},{k:'walkhr',n:'步�
   {k:'steps',n:'步數',u:'步／天',min:0,max:80000},{k:'exmin',n:'運動時間',u:'分鐘／天',min:0,max:600},{k:'workouts',n:'運動次數',u:'次／週',min:0,max:30},{k:'vo2',n:'最大攝氧量 VO₂max',u:'ml/kg/min',min:10,max:90},{k:'resp',n:'睡眠呼吸速率',u:'次／分',min:5,max:40},
   {k:'kcal',n:'活動消耗',u:'kcal／天',min:0,max:6000},{k:'sbp',n:'收縮壓（手錶）',u:'mmHg',min:60,max:260},{k:'dbp',n:'舒張壓（手錶）',u:'mmHg',min:30,max:160}];
 const WFN=Object.fromEntries(WF.map(f=>[f.k,f]));
-const cleanWatch=r=>{const o={id:r.id,t:r.t};for(const f of WF){const v=num(r[f.k]);if(v!=null&&v>=f.min&&v<=f.max)o[f.k]=v}if(r.afib===true)o.afib=true;if(typeof r.device==='string'&&r.device.trim())o.device=r.device.trim().slice(0,30);if(typeof r.period==='string'&&r.period.trim())o.period=r.period.trim().slice(0,20);return o};
+const cleanWatch=r=>{const o={id:r.id,t:r.t};for(const f of WF){const v=num(r[f.k]);if(v!=null&&v>=f.min&&v<=f.max)o[f.k]=v}if(r.afib===true)o.afib=true;if(typeof r.device==='string'&&r.device.trim())o.device=r.device.trim().slice(0,30);if(typeof r.period==='string'&&r.period.trim())o.period=r.period.trim().slice(0,20);const x=normOther(r.extra,new Set());if(x.length)o.extra=x;return o};
 // VO₂max 分級（Cooper Institute／ACSM 常用表）：極差／差／普通／良好／優秀／頂尖；手錶是推估值，誤差約 ±10%
 const VO2N={m:[[29,[33,36.5,42.5,46.5,52.5]],[39,[31.5,35.5,41,45,49.5]],[49,[30.2,33.6,39,43.8,48.1]],[59,[26.1,31,35.8,41,45.4]],[200,[20.5,26.1,32.3,36.5,44.3]]],
   f:[[29,[23.6,29,33,37,41.1]],[39,[22.8,27,31.5,35.7,40.1]],[49,[21,24.5,29,32.9,37]],[59,[20.2,22.8,27,31.5,35.8]],[200,[17.5,20.2,24.5,30.3,31.5]]]};
@@ -1286,7 +1288,7 @@ function fitPlan(m){
 /* ================= 病史：醫師診斷過、體檢看不到的疾病（例如蹠筋膜纖維瘤症、CT 看到冠狀動脈鈣化） =================
    使用者點選就好（年份、狀況、備註可不填）。App 依病史：調整運動課表（lim）、飲食模式（diet）、LDL 目標（ldl）、今年健檢建議（fu）、健康評語，
    看診摘要圖附中英文病名與 ICD-10-CM 代碼給醫師看。內容依常見臨床指引整理，不是診斷；「已痊癒」只記錄、不影響建議 */
-const CONDG=[['cv','心臟血管'],['meta','代謝內分泌'],['gi','肝膽腸胃腎'],['msk','骨骼肌肉'],['resp','呼吸睡眠'],['neuro','神經情緒'],['other','其他']];
+const CONDG=[['cv','心臟血管'],['meta','代謝內分泌'],['gi','肝膽腸胃腎'],['msk','骨骼肌肉'],['resp','呼吸睡眠'],['ent','耳鼻喉眼'],['neuro','神經情緒'],['skin','皮膚'],['other','其他']];
 const COND_ST=[['tx','治療中'],['fu','追蹤中'],['done','已痊癒（只記錄）']];
 const COND=[
  {k:'htn',g:'cv',n:'高血壓',en:'Hypertension',icd:'I10',tip:'目標 <130/80，在家量血壓',diet:['heart'],lab:['sbp','dbp'],
@@ -1437,15 +1439,15 @@ const COND=[
   q:['我的瘜肉是哪一種？下次大腸鏡什麼時候？'],
   fu:[['大腸鏡追蹤','依上次瘜肉病理決定間隔（3–10 年）','健保','依醫師安排',2]]},
  {k:'ledd',g:'msk',n:'蹠筋膜纖維瘤症',en:'Plantar fibromatosis (Ledderhose disease)',icd:'M72.2',tip:'良性結節：減壓鞋墊、避免跑跳與重壓',lim:['ankle'],lab:['glu','hba1c'],
-  w:['足底筋膜長出的良性纖維結節（不是癌症、不會轉移），常兩腳都有、長得很慢','結節被壓到、久站、走太久會痛；不要自己深層按摩、用力推壓或敲打結節（反覆刺激可能讓它變大）','和手掌的「杜普伊特倫攣縮」同一類：也檢查手掌有沒有硬結、手指能不能伸直','糖尿病、抽菸、喝酒、肝病的人比較常見'],
+  w:['足底筋膜長出的良性纖維結節（不是癌症、不會轉移），常兩腳都有、長得很慢','結節被壓到、久站、走太久會痛；不要自己深層按摩、用力推壓或敲打結節（反覆刺激可能讓它變大）','和手掌的「杜普伊特倫攣縮」同一類：也檢查手掌有沒有硬結、手指能不能伸直','糖尿病、抽菸、喝酒、肝病的人比較常見','腳底痛不一定是結節造成：滑囊炎、足底筋膜炎也會痛，由醫師分辨；醫師說是別的問題，就在病史另外加上（例如「足底／腳跟滑囊炎」）'],
   good:['騎腳踏車／飛輪、游泳、水中走路、划船機：有氧但不壓到足底','上半身與核心肌力訓練','小腿與足底溫和伸展（不要壓到結節）','快走可以，但穿厚底避震鞋、分段走（每次 15–20 分鐘）'],
   bad:['跑步、跳繩、跳躍類（間歇跳躍、籃球、羽球急停）','長時間站立、赤腳走硬地','用按摩球、滾筒直接滾壓結節'],
   care:['鞋墊：軟材質、在結節位置挖空減壓（可請復健科或鞋墊師製作）','鞋子：厚底、足弓支撐好、鞋頭寬','控制體重減少足底壓力；戒菸、少喝酒、控制血糖','每幾個月拍照或量一次結節大小，記錄變化'],
   red:['結節快速變大、變多、皮膚破皮，或腳趾開始彎曲 → 提早回診'],dept:'骨科（足踝）或復健科',
   q:['我的結節有幾顆、多大？需要超音波或 MRI 追蹤嗎？','鞋墊要怎麼挖空？需要客製鞋墊嗎？','如果越來越痛，有哪些治療（類固醇注射、低劑量放射治療、手術）？','跑步可以做嗎？哪些運動最適合我？'],
-  doc:'Plantar fibromatosis（Ledderhose disease）：處置以觀察與減壓鞋墊為主；疼痛可考慮局部類固醇注射；早期進展者可考慮低劑量放射治療；手術（筋膜切除）復發率高，保留給嚴重症狀者。',
+  doc:'處置以觀察與減壓鞋墊為主；疼痛可考慮局部類固醇注射；早期進展者可考慮低劑量放射治療；手術（筋膜切除）復發率高，保留給嚴重症狀者。',
   fw:['🦶','蹠筋膜纖維瘤症：有氧改用腳踏車、游泳、水中走路','跑跳、久站會壓到結節；快走穿厚底避震鞋、分段走；不要用按摩球滾壓結節'],
-  fu:[['骨科／復健科：蹠筋膜結節追蹤','結節變大、變多、越來越痛時回診；必要時超音波確認','健保','有變化時，或每年一次',3]]},
+  fu:[['骨科／復健科：蹠筋膜結節追蹤','結節變大、變多、越來越痛時回診；要不要照超音波由醫師決定','健保','有變化時，或每年一次',3]]},
  {k:'pf',g:'msk',n:'足底筋膜炎',en:'Plantar fasciitis',icd:'M72.2',tip:'早上第一步痛：伸展＋好鞋',lim:['ankle'],
   w:['典型症狀：早上下床第一步、久坐站起來腳跟痛','多數人 6–12 個月內會好，持續伸展最重要'],
   good:['騎腳踏車、游泳','每天做小腿與足底伸展（拉毛巾、踩階梯伸展），腳底滾冰水瓶 10 分鐘'],bad:['跑跳、爬山、赤腳走硬地','突然增加走路或跑步量'],
@@ -1518,7 +1520,7 @@ const COND=[
   red:['咳血、咳嗽超過 2 週、體重莫名下降 → 提早回診'],dept:'胸腔內科或胸腔外科',
   q:['我的結節多大？是實心還是毛玻璃？','下次 CT 什麼時候照？'],
   fu:[['胸部低劑量 CT 追蹤','肺結節：照醫師安排比較大小','健保','依醫師安排',1]]},
- {k:'rhinitis',g:'resp',n:'過敏性鼻炎',en:'Allergic rhinitis',icd:'J30.9',tip:'鼻噴劑規律用、除塵蟎',
+ {k:'rhinitis',g:'ent',n:'過敏性鼻炎',en:'Allergic rhinitis',icd:'J30.9',tip:'鼻噴劑規律用、除塵蟎',
   w:['類固醇鼻噴劑要規律使用才有效'],good:['規律運動可以改善鼻塞'],bad:[],
   care:['寢具每週用 55–60°C 熱水洗（除塵蟎）','防蟎寢具、空氣清淨機'],red:[],dept:'耳鼻喉科或過敏免疫科',
   q:['需要做過敏原檢測嗎？']},
@@ -1555,18 +1557,18 @@ const COND=[
   red:['新的腫塊、持續疼痛、體重莫名下降 → 提早回診'],dept:'原診治醫院腫瘤科',
   q:['我還要追蹤多久？要做哪些檢查？'],
   fu:[['原診治醫院腫瘤科追蹤','依癌別安排影像或腫瘤標記','健保','依醫師安排',1]]},
- {k:'psoriasis',g:'other',n:'乾癬',en:'Psoriasis',icd:'L40.9',tip:'三高要一起追蹤',
+ {k:'psoriasis',g:'skin',n:'乾癬',en:'Psoriasis',icd:'L40.9',tip:'三高要一起追蹤',
   w:['乾癬病人心血管疾病、糖尿病、脂肪肝的風險較高：三高要一起追蹤'],good:['規律運動'],bad:[],
   care:['戒菸、少酒、控制體重','每天保濕'],red:['關節腫痛（乾癬性關節炎）→ 看風濕免疫科'],dept:'皮膚科',
   q:['我適合照光或生物製劑嗎？']},
- {k:'glaucoma',g:'other',n:'青光眼',en:'Glaucoma',icd:'H40.9',tip:'每天點藥、定期量眼壓',lab:['iop'],
+ {k:'glaucoma',g:'ent',n:'青光眼',en:'Glaucoma',icd:'H40.9',tip:'每天點藥、定期量眼壓',lab:['iop'],
   w:['青光眼造成的視力損失不會恢復，要終身點藥與追蹤','部分感冒藥、抗組織胺、暈車藥會讓「隅角閉鎖型」青光眼急性發作：看病時告訴醫師'],
   good:['有氧運動對眼壓有幫助'],bad:['頭下腳上的動作（瑜伽倒立、下犬式維持太久）','蛙鏡太緊'],
   care:['每天按時點眼藥'],red:['眼睛突然劇痛、紅、視力模糊、看燈有光暈、頭痛噁心 → 立刻掛急診（急性青光眼）'],dept:'眼科',
   q:['我是哪一型青光眼？眼壓目標是多少？'],
   fw:['👁️','青光眼：不做頭下腳上的動作','瑜伽倒立、下犬式不要維持太久；游泳蛙鏡不要太緊'],
   fu:[['眼科：眼壓＋視野檢查','青光眼要定期追蹤','健保','每 3–6 個月',2]]},
- {k:'hearloss',g:'other',n:'聽力受損',en:'Hearing loss',icd:'H91.90',tip:'需要時配助聽器',lab:['hearing'],
+ {k:'hearloss',g:'ent',n:'聽力受損',en:'Hearing loss',icd:'H91.90',tip:'需要時配助聽器',lab:['hearing'],
   w:['聽力受損是可以改變的失智危險因子：需要時配助聽器'],good:[],bad:[],care:['耳機遵守 60/60 原則：音量 60% 以下、每次 60 分鐘以內'],
   red:['單耳突然聽不見 → 3 天內看耳鼻喉科（突發性耳聾）'],dept:'耳鼻喉科',q:['我需要配助聽器嗎？']},
  {k:'thal',g:'other',n:'地中海型貧血（帶因）',en:'Thalassemia minor',icd:'D56.3',tip:'沒缺鐵就不要自己補鐵',lab:['hb','mcv','ferritin'],
@@ -1575,12 +1577,68 @@ const COND=[
  {k:'ida',g:'other',n:'缺鐵性貧血',en:'Iron deficiency anemia',icd:'D50.9',tip:'找出缺鐵原因',lab:['hb','ferritin','mcv'],
   w:['要找出原因：月經量多、腸胃道出血最常見','男性與停經後女性缺鐵，建議做胃鏡、大腸鏡排除腸胃道出血'],good:[],bad:[],
   care:['鐵劑空腹或搭配維生素 C 吸收較好；和茶、咖啡、牛奶隔開'],red:['黑便、血便、頭暈、喘 → 儘快就醫'],dept:'家醫科、血液科或腸胃科',
-  q:['我的缺鐵原因找到了嗎？','鐵劑要吃多久？']}];
+  q:['我的缺鐵原因找到了嗎？','鐵劑要吃多久？']},
+ {k:'bursitis',g:'msk',n:'足底／腳跟滑囊炎',en:'Bursitis of the foot (heel)',icd:'M71.57',tip:'溫水泡腳泡到小腿、先放鬆小腿；減少壓迫與久站',lim:['ankle'],lab:['ua','glu'],
+  w:['滑囊是骨頭與肌腱旁減少摩擦的小水囊，反覆壓迫、摩擦或小腿太緊都會讓它發炎腫痛','小腿緊會增加腳跟與足底的拉扯：先把小腿放鬆，腳底才比較會改善','沒有外傷、醫師檢查組織沒問題時，通常不需要 X 光或超音波；有變化再由醫師決定','痛在腳跟「後方」（跟腱和骨頭之間）的滑囊炎：伸展只拉到緊、不要拉到痛，鞋跟可以稍微墊高減少壓迫'],
+  good:['溫水泡腳，水位到小腿，10–15 分鐘；泡完做小腿伸展','小腿伸展：雙手扶牆、患側腳在後，膝蓋伸直（拉腓腸肌）和微彎（拉比目魚肌）各停 30 秒 × 3 次，每天 2–3 回','坐著用網球或滾筒放鬆小腿肚（不要壓發炎的痛點）','騎腳踏車、游泳等不壓腳跟的有氧'],
+  bad:['跑跳、長時間站立、走硬地','後跟很硬或磨腳的鞋','直接用力按壓或滾壓發炎的地方'],
+  care:['照醫師交代：溫水泡腳、熱敷，水要淹到小腿（約 38–40°C；糖尿病或腳麻的人先用手肘試水溫，避免燙傷）','鞋子選後跟柔軟、有緩衝的；必要時加矽膠跟墊','控制體重、避免一次站或走太久','止痛藥照醫師開的用，不要自己長期吃'],
+  red:['突然紅、腫、發熱，或發燒（可能是感染性滑囊炎）→ 先不要熱敷，儘快就醫','照做 6 週以上沒改善、越來越痛，或腳受過傷 → 回診，由醫師決定要不要照 X 光或超音波'],dept:'骨科（足踝）或復健科',
+  q:['我是哪一個滑囊發炎？泡腳、熱敷要多久、多熱？','小腿要怎麼放鬆和伸展？可以按摩嗎？','什麼情況才需要照 X 光或超音波？','快走、騎腳踏車可以照常做嗎？'],
+  doc:'保守治療為主（減少負重與壓迫、後跟緩衝、小腿伸展、溫熱敷，必要時 NSAIDs）；無外傷且理學檢查無特殊發現時不需常規影像，有外傷、表現不典型或保守治療約 6 週無效再考慮 X 光／超音波；紅、腫、熱合併發燒須排除感染性滑囊炎。',
+  fw:['🦶','滑囊炎：先放鬆小腿','溫水泡腳到小腿 10–15 分鐘後做小腿伸展；有氧改騎腳踏車、游泳，避免跑跳與久站']},
+ {k:'achilles',g:'msk',n:'阿基里斯腱炎（跟腱炎）',en:'Achilles tendinopathy',icd:'M76.6',tip:'腳跟後方痛：離心提踵復健、避免跑跳',lim:['ankle'],
+  w:['腳跟後方、跟腱的位置痛，早上起床或運動剛開始最痛','復健最有證據的是「離心提踵」，通常要持續 12 週','吃 quinolone 類抗生素（例如 Levofloxacin）時跟腱痛要馬上告訴醫師（會增加斷裂風險）'],
+  good:['騎腳踏車、游泳','離心提踵：站在階梯邊、雙腳踮起後，患側慢慢放下，3 組 × 15 下、每天 2 回（痛度不超過 5 分，最好有物理治療師指導）','小腿伸展'],
+  bad:['跑跳、爬坡、突然增加運動量','赤腳或穿很平、沒有後跟支撐的鞋'],
+  care:['鞋子後跟稍微墊高可以減輕拉扯','運動量每週增加不超過 10%'],
+  red:['突然像被踢到一樣劇痛、聽到「啪」一聲、無法踮腳 → 可能跟腱斷裂，立刻就醫'],dept:'復健科或骨科',
+  q:['我需要做幾週的離心訓練？','什麼時候可以恢復跑步？']},
+ {k:'septum',g:'ent',n:'鼻中隔彎曲',en:'Deviated nasal septum',icd:'J34.2',tip:'躺著鼻塞：側睡、墊高枕頭、洗鼻；藥物沒改善再評估手術',
+  w:['鼻中隔彎曲常合併下鼻甲肥大或過敏性鼻炎；躺下時鼻黏膜充血，所以躺著更塞','鼻塞會讓打鼾、睡眠呼吸中止更嚴重：白天很睏可以做「自我檢測 → 睡眠呼吸中止」','血管收縮型鼻噴劑（例如含 oxymetazoline 的）連續用不要超過 3 天，否則會「反彈性鼻塞」越用越塞'],
+  good:['一般運動都可以；游泳池的氯可能讓鼻子更不舒服'],bad:[],
+  care:['睡覺側睡、枕頭墊高','睡前用生理食鹽水洗鼻','醫師開的類固醇鼻噴劑要每天規律噴（不是塞才噴），規律用幾天到 2 週效果才完整','減少塵蟎、菸、香水等刺激物'],
+  red:['單側鼻塞合併鼻涕或痰帶血、單側耳悶、脖子摸到硬塊 → 儘快看耳鼻喉科（排除鼻咽癌）','鼻塞合併發燒、臉頰或眼睛周圍腫痛 → 儘快就醫'],dept:'耳鼻喉科',
+  q:['我的鼻塞主要是鼻中隔彎曲、下鼻甲肥大還是過敏造成的？','藥物沒改善時，適合鼻中隔矯正或下鼻甲手術嗎？','躺著鼻塞又打鼾，需要做睡眠檢查嗎？']},
+ {k:'turbinate',g:'ent',n:'下鼻甲肥大',en:'Hypertrophy of nasal turbinates',icd:'J34.3',tip:'類固醇鼻噴劑規律用；沒改善可考慮下鼻甲手術',
+  w:['常和過敏性鼻炎、鼻中隔彎曲一起出現；躺下、冷空氣、喝酒後更塞','血管收縮型鼻噴劑連續用不要超過 3 天（反彈性鼻塞）'],good:['規律運動能暫時改善鼻塞'],bad:[],
+  care:['醫師開的類固醇鼻噴劑每天規律用','睡前洗鼻、側睡、枕頭墊高','藥物治療 1–3 個月沒改善，可以和醫師討論下鼻甲電燒或減積手術'],
+  red:['單側鼻塞合併鼻涕帶血、單側耳悶 → 儘快看耳鼻喉科'],dept:'耳鼻喉科',q:['我適合下鼻甲手術嗎？']},
+ {k:'sinusitis',g:'ent',n:'慢性鼻竇炎',en:'Chronic rhinosinusitis',icd:'J32.9',tip:'每天洗鼻＋類固醇鼻噴劑',
+  w:['症狀超過 12 週：鼻塞、黃綠鼻涕或鼻涕倒流、臉部悶脹、嗅覺變差'],good:['規律運動'],bad:[],
+  care:['每天生理食鹽水洗鼻','類固醇鼻噴劑規律使用','戒菸、避開二手菸'],
+  red:['眼睛周圍紅腫、視力改變、劇烈頭痛或高燒 → 立刻掛急診（可能是併發症）'],dept:'耳鼻喉科',
+  q:['需要做鼻竇電腦斷層嗎？','有沒有鼻息肉？需要手術嗎？']},
+ {k:'tinnitus',g:'ent',n:'耳鳴',en:'Tinnitus',icd:'H93.1',tip:'單側或合併聽力下降要檢查',
+  w:['單側耳鳴、合併聽力下降或頭暈，要看耳鼻喉科做聽力檢查'],good:['規律運動、放鬆訓練'],bad:[],
+  care:['避免噪音、耳機音量 60% 以下','睡前播放白噪音、控制壓力與睡眠'],
+  red:['單耳突然聽不見 → 3 天內看耳鼻喉科（突發性耳聾）','耳鳴跟著心跳一跳一跳（搏動性耳鳴）→ 回診檢查血管'],dept:'耳鼻喉科',q:['需要做聽力檢查嗎？']},
+ {k:'dryeye',g:'ent',n:'乾眼症',en:'Dry eye disease',icd:'H04.12',tip:'20-20-20、人工淚液、熱敷眼皮',
+  w:['長時間看螢幕、冷氣房、配戴隱形眼鏡都會加重'],good:[],bad:[],
+  care:['每看螢幕 20 分鐘，看 6 公尺外 20 秒','人工淚液（長期用選不含防腐劑的）','熱敷眼皮 5–10 分鐘'],
+  red:['眼睛紅痛、怕光、視力變差 → 儘快看眼科'],dept:'眼科',q:['我是哪一型乾眼？需要用處方眼藥嗎？']},
+ {k:'urticaria',g:'skin',n:'慢性蕁麻疹',en:'Chronic urticaria',icd:'L50.8',tip:'抗組織胺規律吃；嘴唇舌頭腫或喘立刻就醫',
+  w:['反覆發作超過 6 週算慢性；多數找不到原因，不一定是食物過敏'],good:[],bad:[],
+  care:['照醫師開的抗組織胺規律吃（不是癢才吃）','避免太熱的洗澡水、少抓癢','記錄誘因：止痛藥（NSAIDs）、酒精、壓力、感冒'],
+  red:['嘴唇、舌頭、眼皮腫起來，或喘、呼吸困難、頭暈 → 立刻打 119（嚴重過敏）'],dept:'皮膚科或過敏免疫科',q:['需要找過敏原嗎？藥要吃多久？']},
+ {k:'atopic',g:'skin',n:'異位性皮膚炎',en:'Atopic dermatitis',icd:'L20.9',tip:'每天保濕、照醫囑擦藥',
+  w:['皮膚屏障差、容易癢；季節變化、流汗、壓力會加重'],good:['運動後儘快沖澡、擦保濕'],bad:[],
+  care:['洗澡後 3 分鐘內擦保濕','溫水、短時間洗澡','照醫師開的藥膏擦，類固醇藥膏照醫囑使用是安全的'],
+  red:['皮膚流湯、結黃痂、發燒（可能感染）→ 儘快就醫'],dept:'皮膚科',q:['我適合新型的外用或生物製劑嗎？']},
+ {k:'hemorrhoid',g:'gi',n:'痔瘡',en:'Hemorrhoids',icd:'K64.9',tip:'多纖維多喝水、不久蹲；血便要分辨',
+  w:['痔瘡出血通常是鮮紅色、附在糞便表面或衛生紙上；45 歲以上、顏色暗紅、混在糞便裡或排便習慣改變，要做大腸鏡排除大腸癌'],
+  good:['規律運動有助排便'],bad:['重訓用力時憋氣（要吐氣）'],
+  care:['多喝水、多吃蔬菜水果和全穀（每天膳食纖維 25–30 克）','不要在馬桶上滑手機久坐（超過 5 分鐘）','溫水坐浴 10–15 分鐘'],
+  red:['大量出血、頭暈；或肛門劇痛、摸到很痛的硬塊（血栓性痔瘡）→ 儘快就醫'],dept:'大腸直腸外科',q:['需要做大腸鏡嗎？','適合哪種治療？']},
+ {k:'bph',g:'other',sex:'m',n:'攝護腺肥大',en:'Benign prostatic hyperplasia',icd:'N40',tip:'睡前少喝水；感冒藥可能讓尿解不出來',lab:['psa'],
+  w:['夜尿、尿流變細、解不乾淨；50 歲以上男性很常見','攝護腺肥大也會讓 PSA 上升，要不要追蹤由泌尿科判斷'],good:['規律運動'],bad:['久坐不動、騎很久的硬座腳踏車'],
+  care:['睡前 2 小時少喝水，少喝咖啡和酒','感冒藥（含抗組織胺、偽麻黃素）可能讓尿解不出來：看病時告訴醫師你有攝護腺肥大'],
+  red:['完全解不出尿、下腹脹痛 → 立刻掛急診（急性尿滯留）','血尿或發燒 → 儘快就醫'],dept:'泌尿科',q:['需要吃藥嗎？','PSA 多久追蹤一次？']}];
 const CONDK=Object.fromEntries(COND.map(c=>[c.k,c]));
 // 清洗：備份檔、表單都走這裡（未知病名丟掉、自訂病名限長度、年份與分數要合理）
 function cleanCond(d){const o=obj(d),seen=new Set(),items=[],y0=new Date().getFullYear(),str=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'';
   for(const it of Array.isArray(o.items)?o.items:[]){if(!it||typeof it!=='object')continue;const k=CONDK[it.k]?it.k:'',n=k?'':str(it.n,30);if(!k&&!n)continue;const id=k||'u:'+n;if(seen.has(id))continue;seen.add(id);
-    const y=Math.floor(num(it.y)),sc=num(it.score),c={st:COND_ST.some(x=>x[0]===it.st)?it.st:'fu',y:y>=1900&&y<=y0?y:'',note:str(it.note,60)};if(k)c.k=k;else c.n=n;
+    const y=Math.floor(num(it.y)),sc=num(it.score),c={st:COND_ST.some(x=>x[0]===it.st)?it.st:'fu',y:y>=1900&&y<=y0?y:'',note:str(it.note,60)};const dr=str(it.dr,200);if(dr)c.dr=dr;if(k)c.k=k;else c.n=n;
     if(k&&CONDK[k].num)c.score=sc!=null&&sc>=CONDK[k].num.min&&sc<=CONDK[k].num.max?Math.round(sc):'';items.push(c);if(items.length>=40)break}
   return{items,meds:str(o.meds,400),allergy:str(o.allergy,120),surg:str(o.surg,300)}}
 const condOf=m=>{const c=cleanCond(m?.cond);c.items.forEach(x=>{x.T=x.k?CONDK[x.k]:null;x.id=x.k||'u:'+x.n;x.name=x.T?x.T.n:x.n});return c};
@@ -1610,18 +1668,18 @@ function condCtx(c,m){const L=labsOf(m)[0],o=[];if(!c.T)return o;const iss=L?lab
   if(L&&o.length)o.unshift(`報告 ${L.t}`);
   const w=watchOf(m)[0];if(w&&dayDiff(w.t,ymd(new Date()))<=60){if(['cac','cad','htn','dm','predm','nafld','lipid','stroke','hf','ledd','kneeoa'].includes(c.k)&&w.steps!=null)o.push(`手錶每天 ${fmt(Math.round(w.steps))} 步`);
     if(['cac','cad','af','hf','htn'].includes(c.k)&&w.rhr!=null)o.push(`靜止心率 ${fmt(w.rhr)}`);if(c.k==='af'&&w.afib)o.push('手錶提示過心律不整');if(c.k==='osa'&&w.spo2!=null)o.push(`手錶血氧 ${fmt(w.spo2)}%`)}
-  if(['ledd','kneeoa','pf','osa','nafld','dm'].includes(c.k))o.push(`BMI ${r1(calc(m).bmi)}`);
+  if(['ledd','kneeoa','pf','bursitis','achilles','osa','nafld','dm'].includes(c.k))o.push(`BMI ${r1(calc(m).bmi)}`);
   if(['ledd','dupuy','cac','cad','copd','lungnod'].includes(c.k)){const lf=lifeOf(m);if(m.life&&lf.smoke==='current')o.push('目前吸菸');if(m.life&&lf.alc==='often')o.push('每週喝酒 3 次以上')}
   if(c.k==='nafld'){const f=derivedOf(m).find(d=>d.k==='fib4');if(f)o.push(`FIB-4 ${f.val}`)}
   return o}
-const condLine=(c,lang)=>`${c.name}${c.T?.en?` ${c.T.en}`:''}${c.T?.icd?`［ICD-10 ${c.T.icd}］`:''}${c.y?`・${c.y} 年`:''}・${(COND_ST.find(x=>x[0]===c.st)||COND_ST[1])[1]}${c.score!==''&&c.score!=null?`・鈣化分數 ${c.score}`:''}${c.note?`・${c.note}`:''}`;
+const condLine=(c,lang)=>`${c.name}${c.T?.en?` ${c.T.en}`:''}${c.T?.icd?`［ICD-10 ${c.T.icd}］`:''}${c.y?`・${c.y} 年`:''}・${(COND_ST.find(x=>x[0]===c.st)||COND_ST[1])[1]}${c.score!==''&&c.score!=null?`・鈣化分數 ${c.score}`:''}${c.note?`・${c.note}`:''}${c.dr?`・醫師交代：${c.dr}`:''}`;
 // 給 AI 的文字（AI 醫生、自我檢測共用）
 function condText(m){const c=condOf(m),o=[];if(c.items.length){o.push('【已知病史（醫師診斷過、體檢看不到的）】');c.items.forEach(x=>o.push(`- ${condLine(x)}`))}
   if(c.meds)o.push(`【目前用藥】${c.meds}`);if(c.allergy)o.push(`【藥物過敏】${c.allergy}`);if(c.surg)o.push(`【手術／住院】${c.surg}`);return o}
 // 身體頁「我的病史」卡片
 function condCardHTML(m){const c=condOf(m),sg=condSuggest(m);
   return (sg.length?sg.map(s=>`<div class="hl" style="margin-bottom:10px">📋 ${esc(s.why)}：要加入病史「${esc(CONDK[s.k].n)}」嗎？<div style="margin-top:8px"><button class="btn sm" data-condadd="${s.k}">＋ 加入病史</button></div></div>`).join(''):'')+
-    (c.items.length?c.items.map(x=>`<button class="rec" data-cond="${esc(x.id)}"><div class="m"><b>🩺 ${esc(x.name)}</b><small>${esc([x.T?.tip||'App 沒有內建這個病的建議，可以點進去問 AI',(COND_ST.find(s=>s[0]===x.st)||COND_ST[1])[1],x.y?x.y+' 年':''].filter(Boolean).join('・'))}</small></div><span class="chev">›</span></button>`).join('')
+    (c.items.length?c.items.map(x=>`<button class="rec" data-cond="${esc(x.id)}"><div class="m"><b>🩺 ${esc(x.name)}</b><small>${esc([x.dr?'醫師交代：'+x.dr:x.T?.tip||'App 沒有內建這個病的建議，可以點進去問 AI',(COND_ST.find(s=>s[0]===x.st)||COND_ST[1])[1],x.y?x.y+' 年':''].filter(Boolean).join('・'))}</small></div><span class="chev">›</span></button>`).join('')
       :'<div class="empty" style="padding:8px 0">有醫師診斷過、但體檢看不到的疾病嗎？例如蹠筋膜纖維瘤症、CT 看到心臟血管鈣化、痛風、氣喘。加進來後，運動、飲食、健檢建議和健康評語都會跟著調整。</div>')+
     (c.items.length&&!c.allergy?'<p class="note" style="color:var(--amber)">⚠️ 還沒填「藥物過敏」：沒有過敏請填「無」，看診摘要給醫師看時才清楚</p>':'')+
     `<div class="row2" style="margin-top:10px"><button class="btn ghost" data-setsec="cond">${c.items.length?'✎ 編輯病史與用藥':'＋ 新增病史'}</button>${c.items.length?'<button class="btn ai" data-condai>🩺 問 AI：病史怎麼保養</button>':''}</div>`}
@@ -1632,6 +1690,7 @@ function openCond(id){const m=me(),c=condOf(m).items.find(x=>x.id===id);if(!c)re
   const qs=T?T.q:[`我有「${c.name}」，平常要注意什麼？`,`有「${c.name}」，哪些運動適合、哪些要避免？`,`「${c.name}」日常要怎麼保養？什麼情況要回診？`];
   openSheet(sheetHead(`🩺 ${esc(c.name)}`,esc([T?.en,T?.icd?'ICD-10 '+T.icd:''].filter(Boolean).join('・')))+`
     <div class="sub" style="margin:8px 0">${esc([(COND_ST.find(s=>s[0]===c.st)||COND_ST[1])[1],c.y?c.y+' 年確診':'',c.score!==''&&c.score!=null?'鈣化分數 '+c.score:'',c.note].filter(Boolean).join('・'))} <button class="btn sm ghost" data-setsec="cond" style="margin-left:6px">編輯</button></div>
+    ${c.dr?`<div class="hl" style="margin:6px 0 10px;border-color:rgba(182,255,60,.55)"><b style="color:var(--lime)">🩺 醫師交代（以醫師為準）</b><div style="margin-top:4px;font-size:calc(14px*var(--fz))">${esc(c.dr)}</div><div class="sub" style="margin-top:4px">下面是 App 的一般建議；和醫師交代不同時，以醫師交代為準。</div></div>`:''}
     ${T?`<div class="hl" style="margin:6px 0 4px"><b>${esc(T.tip)}</b></div>
     <div class="h4">要注意什麼</div>${li([...(T.dyn?T.dyn(c,m):[]),...T.w])}
     ${T.good.length||T.bad.length?`<div class="h4">怎麼運動</div>${mix.length?`<div class="hl" style="margin:6px 0;font-size:12px">🔗 合併你的其他病史：${esc(mix.join('；'))}</div>`:''}${T.good.length?`<div class="sub" style="color:var(--lime);margin-top:4px">✅ 適合</div>${li(T.good)}`:''}${T.bad.length?`<div class="sub" style="color:var(--amber);margin-top:8px">⛔ 先避免</div>${li(T.bad)}`:''}${T.lim?.length?'<p class="note">運動頁的課表已經自動避開不適合的運動。</p>':''}`:''}
@@ -1651,17 +1710,18 @@ function condTabHTML(m){const c=condOf(m),sg=condSuggest(m);
   return `<div class="tabp" id="m-condbox" data-t="cond"><p class="note" style="margin-top:0">醫師診斷過、但體檢看不到的疾病（例如蹠筋膜纖維瘤症、CT 看到心臟血管鈣化）。點選就好，年份和備註可以不填。App 會依病史調整運動課表、飲食、今年健檢建議和健康評語；看診摘要圖會列出中英文病名給醫師看。</p>
     ${sg.length?`<div class="hl" style="margin:8px 0">📋 報告裡提到，點一下加入：<div class="chips" style="margin-top:6px">${sg.map(s=>`<button type="button" class="chip" data-csg="${s.k}">＋ ${esc(CONDK[s.k].n)}</button>`).join('')}</div></div>`:''}
     <input id="m-cq" placeholder="🔍 搜尋病名（例如：筋膜、鈣化、痛風）" style="margin-top:8px">
-    <div id="m-cgrp">${CONDG.map(([g,t])=>`<div data-cgw="${g}"><label>${t}</label><div class="chips">${COND.filter(x=>x.g===g).map(x=>`<button type="button" class="chip" data-ck="${x.k}" data-cn="${esc(x.n+' '+x.en)}">${esc(x.n)}</button>`).join('')}</div></div>`).join('')}</div>
+    <div id="m-cgrp">${CONDG.map(([g,t])=>`<div data-cgw="${g}"><label>${t}</label><div class="chips">${COND.filter(x=>x.g===g&&(!x.sex||x.sex===m.sex||condOf(m).items.some(c=>c.k===x.k))).map(x=>`<button type="button" class="chip" data-ck="${x.k}" data-cn="${esc(x.n+' '+x.en)}">${esc(x.n)}</button>`).join('')}</div></div>`).join('')}</div>
     <label>清單沒有的（自己輸入）</label><div style="display:flex;gap:8px"><input id="m-cown" maxlength="30" placeholder="例如：蕁麻疹" style="flex:1"><button type="button" class="btn sm" id="m-cadd" style="flex:0 0 auto">加入</button></div>
     <div class="h4">已選的病史</div><div id="m-cdet"></div>
     <label>目前用藥（藥名、劑量）</label><textarea id="m-meds" maxlength="400" style="min-height:64px;font-family:inherit" placeholder="例如：Rosuvastatin 10 mg 每天 1 顆">${esc(c.meds)}</textarea>
     <label>藥物過敏（沒有請填「無」）</label><input id="m-allergy" maxlength="120" value="${esc(c.allergy)}" placeholder="例如：盤尼西林；沒有填「無」">
     <label>手術／住院史（選填）</label><textarea id="m-surg" maxlength="300" style="min-height:56px;font-family:inherit" placeholder="例如：2019 闌尾切除">${esc(c.surg)}</textarea></div>`}
-function bindCondTab(m){const st=new Map(condOf(m).items.map(x=>[x.id,{k:x.k,n:x.n,y:x.y,st:x.st,note:x.note,score:x.score}])),blank=k=>({k,y:'',st:'fu',note:'',score:''});
+function bindCondTab(m){const st=new Map(condOf(m).items.map(x=>[x.id,{k:x.k,n:x.n,y:x.y,st:x.st,note:x.note,score:x.score,dr:x.dr||''}])),blank=k=>({k,y:'',st:'fu',note:'',score:''});
   const paint=()=>{$$('#m-cgrp [data-ck]').forEach(b=>b.classList.toggle('on',st.has(b.dataset.ck)));
     $('#m-cdet').innerHTML=st.size?[...st].map(([id,v])=>{const T=v.k?CONDK[v.k]:null;return `<div class="cdet" data-cid="${esc(id)}"><div class="row" style="margin:0 0 6px"><b>${esc(T?T.n:v.n)}</b><button type="button" class="x" data-crm aria-label="移除">✕</button></div>
       <div class="grid2"><div><label style="margin-top:0">確診年份（選填）</label><input data-f="y" inputmode="numeric" maxlength="4" value="${esc(v.y)}" placeholder="西元年"></div><div><label style="margin-top:0">狀況</label><select data-f="st">${COND_ST.map(([s,t])=>`<option value="${s}"${v.st===s?' selected':''}>${t}</option>`).join('')}</select></div></div>
-      ${T?.num?`<label>${esc(T.num.n)}</label><input data-f="score" inputmode="numeric" value="${esc(v.score)}">`:''}<label>備註（選填）</label><input data-f="note" maxlength="60" value="${esc(v.note)}" placeholder="例如：左腳 2 顆、2024 超音波"></div>`}).join(''):'<div class="sub">還沒有選。點上面的病名就會加進來。</div>';
+      ${T?.num?`<label>${esc(T.num.n)}</label><input data-f="score" inputmode="numeric" value="${esc(v.score)}">`:''}<label>備註（選填）</label><input data-f="note" maxlength="60" value="${esc(v.note)}" placeholder="例如：左腳 2 顆、2024 超音波">
+      <label>醫師交代（選填，App 會以這個為準）</label><textarea data-f="dr" maxlength="200" style="min-height:56px;font-family:inherit" placeholder="例如：溫水泡腳到小腿、先放鬆小腿；醫師說不用照 X 光和超音波">${esc(v.dr||'')}</textarea></div>`}).join(''):'<div class="sub">還沒有選。點上面的病名就會加進來。</div>';
     $$('#m-cdet .cdet').forEach(el=>{const id=el.dataset.cid;el.querySelectorAll('[data-f]').forEach(inp=>{const h=()=>{const v=st.get(id);if(v)v[inp.dataset.f]=inp.value};inp.oninput=h;inp.onchange=h});el.querySelector('[data-crm]').onclick=()=>{st.delete(id);paint()}})};
   $$('#m-cgrp [data-ck]').forEach(b=>b.onclick=()=>{const k=b.dataset.ck;if(st.has(k))st.delete(k);else st.set(k,blank(k));paint()});
   $$('#m-condbox [data-csg]').forEach(b=>b.onclick=()=>{const s=condSuggest(m).find(x=>x.k===b.dataset.csg);if(s&&!st.has(s.k))st.set(s.k,{...blank(s.k),y:s.y||'',note:s.note||'',score:s.score??''});b.remove();paint()});
@@ -2217,7 +2277,7 @@ function healthComment(m){const c=calc(m),{scale,lab,watch,s,l,w}=issuesOf(m),td
   const head=crit.length?'有危急值：今天先處理，其他的之後再說':mx>=3?`有 ${n(3)} 項需要 1–2 週內就醫`:mx===2?`整體還可以，但有 ${n(2)} 項要找醫師`:mx===1?`大致良好，有 ${n(1)} 項靠生活習慣就能改善`:'目前各項都在理想範圍';
   const head2=CA.length&&!crit.length?`${head}${mx>=2?'；':'，'}另有 ${CA.length} 項病史要照醫師安排追蹤`:head;
   const foot=CA.some(x=>(x.T?.lim||[]).some(z=>z==='ankle'||z==='knee')),actTxt=foot?'用騎腳踏車、游泳、水中走路累積（足底或膝蓋有狀況，不用硬拚步數）':'先每天多走 2,000 步';
-  const cond=CA.map(x=>`${x.name}：${x.T?x.T.tip:'App 沒有內建建議，到身體頁「我的病史」點進去問 AI'}`);
+  const cond=CA.map(x=>`${x.name}：${x.dr?'醫師交代：'+x.dr:x.T?x.T.tip:'App 沒有內建建議，到身體頁「我的病史」點進去問 AI'}`);
   // 做得好的
   if(!c.kid&&c.bmi>=18.5&&c.bmi<24)good.push(`BMI ${r1(c.bmi)}，體重在健康範圍`);
   if(l){const ok=LGRP.filter(([,ks])=>ks.some(k=>l.items?.[k]?.v!=null&&l.items[k].v!=='')&&!ks.some(k=>lab.some(i=>i.k===k))).map(([g])=>g);if(ok.length)good.push(`${ok.join('、')}正常（${l.t}）`)}
@@ -2479,8 +2539,8 @@ function renderBody(){
   $('#bodyWho').textContent=`${m.name}・${sexT(m.sex)}・${Math.floor(a)} 歲・${stageOf(a)}`;
   $('#bodySrc').innerHTML=[s&&'體脂 '+fmtDT(s.t),l&&'體檢 '+esc(l.t),w&&'手錶 '+esc(w.t)].filter(Boolean).map(x=>`<span style="white-space:nowrap;margin-right:10px">${x}</span>`).join('')||'尚無資料，先新增體脂或體檢紀錄';
   const chips=[];
-  if(l){const sc=scoreOf(lab),g=grade(sc);chips.push(`<span class="tg" style="color:${g[1]};border-color:${g[1]}55">體檢 ${sc}</span>`)}
-  if(s){const sc=s.score??scoreOf(scale);chips.push(`<span class="tg">體脂 ${sc}</span>`)}
+  if(l){const sc=scoreOf(lab),g=grade(sc);chips.push(`<span class="tg" style="color:${g[1]};border-color:${g[1]}55">體檢 ${sc} 分</span>`)}
+  if(s){const sc=s.score??scoreOf(scale);chips.push(`<span class="tg">${s.score!=null?'體脂機':'體脂'} ${sc} 分</span>`)}
   $('#bodyScore').innerHTML=chips.join('');
   $('#hud').innerHTML=bodySVG(m,all,'b');$('#organPanel').innerHTML='';
   $('#issueList').innerHTML=all.length?issueHTML(all.slice(0,12),true,true)+(all.length>12?`<div class="note">另有 ${all.length-12} 項，請點紀錄看完整分析</div>`:''):`<div class="empty">${s||l||w?'目前沒有異常指標 👍':'尚無資料'}</div>`;
@@ -2672,9 +2732,9 @@ function aiPrompt(m,o){
       if(nm.length)out.push(`其他正常或只記錄的項目：${nm.join('、')}`)}}
   else out.push('','【體檢報告】還沒有');
   {const td=ymd(new Date()),L=exlogOf(m).filter(r=>dayDiff(r.d,td)<7&&r.d<=td);if(L.length)out.push('',`【近 7 天運動紀錄】${L.map(r=>`${r.d.slice(5)} ${EX[r.k]?.n||r.note||'其他'} ${r.min} 分（${(INT.find(x=>x[0]===r.int)||INT[1])[1]}）`).join('、')}；中等以上有氧共 ${L.filter(r=>(EX[r.k]?.t||'c')==='c'&&r.int!=='easy').reduce((t,r)=>t+r.min,0)} 分`)}
-  const w=watchOf(m)[0];if(o.watch&&w){out.push('',`【手錶 ${w.t}（近 7 天平均${w.device?'、'+w.device:''}）】${WF.filter(f=>w[f.k]!=null).map(f=>`${f.n} ${fmt(w[f.k])} ${f.u}${f.k==='vo2'?`（同齡${VO2T[vo2Cat(w.vo2,c.a,m.sex)]}）`:''}`).join('、')}${w.afib?'、手錶提示過心律不整':''}`);
+  const w=watchOf(m)[0];if(o.watch&&w){out.push('',`【手錶 ${w.t}（近 7 天平均${w.device?'、'+w.device:''}）】${WF.filter(f=>w[f.k]!=null).map(f=>`${f.n} ${fmt(w[f.k])} ${f.u}${f.k==='vo2'?`（同齡${VO2T[vo2Cat(w.vo2,c.a,m.sex)]}）`:''}`).join('、')}${w.afib?'、手錶提示過心律不整':''}${xTxt(w.extra)}`);
     watchEval(w,m).forEach(i=>out.push(`- ${iss(i)}`))}
-  if(o.scale&&s){out.push('',`【體脂計 ${String(s.t).slice(0,10)}】${['weight','fat','visceral','muscle','skeletal','bmr'].filter(k=>s[k]!=null).map(k=>`${SFN[k].n} ${tv(s[k])}${SFN[k].u?' '+SFN[k].u:''}`).join('、')}`);
+  if(o.scale&&s){out.push('',`【體脂計 ${String(s.t).slice(0,10)}${s.device?'・'+s.device:''}】${['weight','fat','visceral','muscle','skeletal','bmr'].filter(k=>s[k]!=null).map(k=>`${SFN[k].n} ${tv(s[k])}${SFN[k].u?' '+SFN[k].u:''}`).join('、')}${xTxt(s.extra)}`);
     scale.forEach(i=>out.push(`- ${iss(i)}`))}
   if(o.self){const rs=selfLatest(m,365);if(rs.length){out.push('','【自我檢測（1 年內最新一次）】');rs.forEach(r=>{const R=selfRate(r.k,r.a,m);out.push(`- ${SELF[r.k].n}（${r.t}）：${R.sc?R.sc+'，':''}${SLV[R.lv][0]}——${R.head}`)})}}
   const pr=yearPlan(m).items.filter(x=>x.pr===1);if(pr.length)out.push('',`【App 依規則列出的優先檢查】${pr.map(x=>x.t).join('、')}`);
@@ -2697,7 +2757,7 @@ const SYM=[
  {k:'stroke',n:'單側無力、嘴歪、講話不清',a:'頭頸',u:'now',rf:[],d:'急診（中風）',t:['立刻打 119'],tip:'記住發作時間：中風黃金治療時間只有幾個小時，不要等它自己好'},
  {k:'eye',n:'視力模糊／眼睛痛',a:'頭頸',u:'clinic',rf:[['突然看不見或視野缺一塊','now'],['眼睛紅痛＋頭痛噁心、看燈有光暈','now']],d:'眼科',t:['視力、眼壓、眼底檢查'],tip:''},
  {k:'ear',n:'耳鳴／聽力變差',a:'頭頸',u:'clinic',rf:[['突然單側聽不到','soon']],d:'耳鼻喉科',t:['純音聽力檢查'],tip:'突發性耳聾 3 天內治療效果最好，不要拖'},
- {k:'nose',n:'鼻塞、鼻涕帶血、脖子摸到硬塊',a:'頭頸',u:'clinic',rf:[['脖子腫塊越來越大、不會痛','soon']],d:'耳鼻喉科',t:['鼻咽內視鏡','EB 病毒抗體','頸部超音波'],tip:'台灣鼻咽癌較多，單側鼻塞、帶血絲超過 2 週要看'},
+ {k:'nose',n:'鼻涕帶血、單側鼻塞或脖子硬塊',a:'頭頸',u:'clinic',rf:[['脖子腫塊越來越大、不會痛','soon']],d:'耳鼻喉科',t:['鼻咽內視鏡','EB 病毒抗體','頸部超音波'],tip:'台灣鼻咽癌較多，單側鼻塞、帶血絲超過 2 週要看'},
  {k:'abd',n:'肚子痛／胃痛',a:'腹部',u:'obs',rf:[['劇痛、肚子硬、碰到更痛','now'],['吐血、黑便','now'],['右上腹痛＋發燒或皮膚變黃','now']],d:'腸胃科',t:['腹部超音波','胃鏡（50 歲以上新症狀優先）','幽門桿菌（呼氣或糞便抗原）','肝功能、澱粉酶'],tip:''},
  {k:'reflux',n:'火燒心／胃酸逆流',a:'腹部',u:'obs',rf:[['吞東西卡卡、吞嚥會痛','soon'],['黑便（像柏油）','now'],['體重莫名減輕、貧血','soon']],d:'腸胃科',t:['胃鏡','幽門桿菌'],tip:'少量多餐、睡前 3 小時不吃、少咖啡酒精、抬高床頭'},
  {k:'bowel',n:'排便習慣改變／便血',a:'腹部',u:'clinic',rf:[['大量出血、頭暈','now'],['黑便（像柏油）或暗紅色血便','now']],d:'腸胃科',t:['糞便潛血','大腸鏡（便血或排便習慣改變建議直接做）','血紅素'],tip:'痔瘡出血是鮮紅色、附在糞便表面；顏色暗、混在糞便裡更要檢查'},
@@ -2715,6 +2775,11 @@ const SYM=[
  {k:'snore',n:'打鼾、白天很想睡',a:'睡眠情緒',u:'clinic',rf:[['開車時打瞌睡','soon']],d:'胸腔內科／耳鼻喉科（睡眠中心）',t:['睡眠多項生理檢查','手錶夜間血氧可先參考'],tip:'睡眠呼吸中止會讓血壓、血糖變差，減重 10% 常常明顯改善'},
  {k:'mood',n:'情緒低落、焦慮、失眠超過 2 週',a:'睡眠情緒',u:'clinic',rf:[['有傷害自己的念頭','now']],d:'身心科／家醫科',t:['甲狀腺 TSH','情緒量表評估'],tip:'有傷害自己的念頭請立刻打 1925 安心專線或 119'},
  {k:'breast',n:'乳房腫塊／乳頭分泌物',a:'女性',sex:'f',u:'clinic',rf:[['乳頭流血、皮膚凹陷或像橘子皮','soon']],d:'乳房外科',t:['乳房超音波','乳房攝影'],tip:''},
+ {k:'stuffy',n:'鼻塞（躺下更塞）、流鼻水、打噴嚏',a:'頭頸',u:'obs',rf:[['單側鼻塞合併鼻涕帶血、單側耳悶或脖子硬塊','soon'],['發燒、臉頰或眼睛周圍腫痛','soon'],['眼睛周圍紅腫、視力改變、劇烈頭痛','now']],d:'耳鼻喉科',t:['鼻腔內視鏡','過敏原檢測（抽血）','必要時鼻竇電腦斷層'],tip:'躺下鼻塞常見於過敏性鼻炎、鼻中隔彎曲、下鼻甲肥大；側睡、枕頭墊高、睡前洗鼻；血管收縮型鼻噴劑連續用不要超過 3 天'},
+ {k:'throat',n:'喉嚨痛、聲音沙啞',a:'頭頸',u:'obs',rf:[['吞嚥困難、流口水、呼吸有雜音或喘','now'],['沙啞超過 4 週，或咳血、脖子硬塊、體重下降','soon']],d:'耳鼻喉科',t:['喉頭內視鏡','頸部觸診或超音波'],tip:'抽菸、嚼檳榔、喝酒的人聲音沙啞要提早看，不要等 4 週'},
+ {k:'skin',n:'皮膚癢、紅疹、蕁麻疹',a:'全身',u:'obs',rf:[['嘴唇舌頭腫、喘或頭暈','now'],['發燒合併大片紅疹、水泡或嘴巴破（嚴重藥物過敏）','now'],['紅腫範圍快速擴大、發熱疼痛','soon']],d:'皮膚科',t:['醫師看診（多數不需要抽血）','必要時過敏原檢測'],tip:'最近 2 個月內開始吃的新藥（例如痛風藥 allopurinol、抗癲癇藥、抗生素、止痛藥），出疹時一定要告訴醫師'},
+ {k:'neck',n:'頸肩痛',a:'骨骼肌肉',u:'obs',rf:[['胸悶、冒冷汗合併左肩頸痛','now'],['發燒合併脖子僵硬、頭痛','now'],['手臂麻、無力，或走路不穩','soon']],d:'復健科／骨科',t:['醫師評估','依需要頸椎 X 光或 MRI'],tip:'每 30–60 分鐘起來動一動、螢幕在視線高度；熱敷、伸展'},
+ {k:'heel',n:'腳底／腳跟痛',a:'骨骼肌肉',u:'obs',rf:[['突然像被踢到一樣劇痛、無法踮腳（可能跟腱斷裂）','now'],['紅、腫、發熱或發燒','soon'],['腳受過傷後痛、不能踩地','soon']],d:'復健科／骨科（足踝）',t:['醫師觸診與步態評估','有外傷，或照顧 6 週以上沒改善，才由醫師決定照 X 光或超音波'],tip:'早上下床第一步痛多半是足底筋膜炎；腳跟後方痛多是跟腱或滑囊。沒有外傷、沒有紅腫發熱時：先放鬆、伸展小腿，穿後跟有緩衝的鞋，減少跑跳與久站；醫師交代泡腳熱敷就照做（泡到小腿）'},
  {k:'bleed',n:'不正常陰道出血',a:'女性',sex:'f',u:'clinic',rf:[['大量出血、頭暈','now'],['可能懷孕，合併下腹痛、肩膀痛或頭暈（排除子宮外孕）','now'],['停經後出血','soon']],d:'婦產科',t:['抹片、HPV','陰道超音波'],tip:''}];
 const URGT={now:['立即就醫：打 119 或掛急診','var(--red)'],soon:['儘快：1–3 天內看門診','#ff8a5c'],clinic:['安排門診：1–2 週內','var(--amber)'],obs:['先觀察與自我照顧；超過 2 週或變嚴重再看門診','var(--lime)']};
 const URGO=['obs','clinic','soon','now'];
@@ -2736,6 +2801,8 @@ function symCtx(m,k){const a=Math.floor(ageOf(m)),labs=labsOf(m).slice(0,3),iss=
   if(k==='abd'){if(has('us_gb'))o.push('你有膽囊結石或瘜肉紀錄：右上腹、飯後痛要考慮膽囊');if(has('hp')||has('hpab'))o.push('幽門桿菌陽性紀錄：胃痛要確認是否需要除菌');if(has('us_liver'))o.push('有脂肪肝紀錄')}
   if(k==='reflux'&&(has('hp')||has('hpab')))o.push('幽門桿菌陽性紀錄');
   if(k==='joint'&&has('ua'))o.push('你的尿酸偏高：大拇趾、腳踝突然紅腫熱痛要考慮痛風');
+  if(k==='heel'){const ns=condNames(m,['ledd','pf','bursitis','achilles']);if(ns.length)o.push(`你的病史：${ns.join('、')}（點「病史」看醫師交代與保養）`);if(condHas(m,'dm')||has('hba1c'))o.push('有糖尿病或血糖偏高：腳痛、傷口要每天檢查，泡腳先試水溫')}
+  if(k==='stuffy'){const ns=condNames(m,['septum','turbinate','sinusitis','rhinitis']);if(ns.length)o.push(`你的病史：${ns.join('、')}`);if(condHas(m,'osa'))o.push('有睡眠呼吸中止：鼻塞會讓它更嚴重')}
   if(k==='eye'&&has('iop'))o.push('你的眼壓偏高：眼睛痛、視力模糊要儘快看眼科');
   if(k==='ear'&&has('hearing'))o.push('你的聽力檢查有異常紀錄');
   if(k==='wtloss'&&a>=40)o.push('40 歲以上不明原因體重下降，建議做完整檢查');
@@ -3047,16 +3114,17 @@ function promptScale(){return `你是「體脂計數據擷取器」。我會附�
 2. 截圖上找不到的欄位一律填 null，禁止推算或猜測（例如畫面沒有「體重」就填 null，不要用其他數字算）。
 3. 數值只填數字，不含單位。重量一律用 kg（畫面是「斤」請 ÷2，「lb」請 ×0.4536）。
 4. 數字旁的 ↑0.2、↓0.3 是「與上次比較的變化量」，不是數值本身，不要填入。
-5. status 填畫面上各項目的原始判定文字（如：標準、偏高、警戒、偏低），簡體轉繁體，key 用下方欄位名，例如 {"fat":"偏高","visceral":"警戒"}；沒有判定的項目不要列。
+5. status 只填畫面上真的有寫的判定文字（如：標準、偏高、偏低），簡體轉繁體，key 用下方欄位名；畫面沒寫判定的項目不要列，也不要自己判斷或照抄這裡的例子。
 6. measuredAt：畫面有量測日期時間才填 "YYYY-MM-DD HH:mm"（西元年；民國年請加 1911），沒有填 null（手機狀態列的時鐘不是量測時間）。
 7. 不要輸出姓名、電話、帳號等個人資料。
 8. 輸出前逐欄自我核對：每個數字都必須能在截圖中找到原文，小數點位置正確。
+9. 畫面上有、但下方「欄位對照」沒有的數值（例如內臟脂肪面積、肌肉均衡、脂肪控制量），放進 other：[{"name":"畫面上的名稱","value":數字或文字,"unit":"單位"}]，不要丟掉。
 
 【欄位對照】
 ${SF.map(f=>`${f.k}＝${f.n}${f.u?`（${f.u}）`:''}`).join('、')}、bodyType＝身體類型（文字）、device＝體脂計品牌或 App 名稱
 
 【輸出格式】
-{"type":"nutricore.scale","v":1,"measuredAt":null,"device":null,${SF.map(f=>`"${f.k}":null`).join(',')},"bodyType":null,"status":{}}`}
+{"type":"nutricore.scale","v":1,"measuredAt":null,"device":null,${SF.map(f=>`"${f.k}":null`).join(',')},"bodyType":null,"status":{},"other":[]}`}
 function promptWatch(){return `你是「健康數據擷取器」。我會附上智慧手錶或健康 App（Apple 健康、Garmin Connect、華為運動健康、Samsung Health、小米運動健康、Fitbit 等）的截圖（可能多張）。你的任務只有「讀取畫面上的數字」，不要分析、不要給建議。
 
 【規則】
@@ -3068,17 +3136,18 @@ function promptWatch(){return `你是「健康數據擷取器」。我會附上�
 6. exmin：有「中高強度」「運動時間」「熱血時間」的分鐘數就用它；只有「心率區間」時，加總「燃脂」以上各區（燃脂＋有氧＋無氧＋極限，不含熱身）。畫面是一週總和請 ÷7。
 7. sleep：有「夜間睡眠」就用夜間；含午睡的「全天睡眠」只在沒有夜間數字時才用。
 8. 不用填：睡眠分數、睡眠結構（深睡／淺睡／快速動眼比例）、睡眠效率、清醒次數、同齡排名、App 的文字評語（「還不錯」「趨勢穩定」）；但「健康摘要」卡片裡的數字要讀。
-13. workouts＝每週運動次數：小米「活動次數」、Garmin「活動」、Apple「體能訓練」次數。有「上月」完整一個月的次數就 ÷4.3（四捨五入到小數 1 位，例如上月 11 次 → 2.6）；畫面是「本週」次數就直接填；只有「本月」還沒過完的次數填 null。
-9. 有「心律不整通知」「心房顫動」「AFib」「不規則心律」的紀錄或提醒，afib 填 true；沒看到填 null。
-10. date：截圖上的日期（7 天區間就填最後一天），格式 "YYYY-MM-DD"（西元年；民國年請加 1911），沒有填 null；device：手錶或 App 名稱。
-11. 不要輸出姓名、電話、帳號等個人資料。
-12. 輸出前逐欄自我核對：每個數字（第 6 條的加總、÷7 除外）都必須能在截圖中找到原文，小數點位置正確。
+9. workouts＝每週運動次數：小米「活動次數」、Garmin「活動」、Apple「體能訓練」次數。有「上月」完整一個月的次數就 ÷4.3（四捨五入到小數 1 位，例如上月 11 次 → 2.6）；畫面是「本週」次數就直接填；只有「本月」還沒過完的次數填 null。
+10. 畫面上有、但下方「欄位對照」沒有的數值（例如體溫、體能分數、恢復時間），放進 other：[{"name":"畫面上的名稱","value":數字或文字,"unit":"單位"}]，不要丟掉。
+11. 有「心律不整通知」「心房顫動」「AFib」「不規則心律」的紀錄或提醒，afib 填 true；沒看到填 null。
+12. date：截圖上的日期（7 天區間就填最後一天），格式 "YYYY-MM-DD"（西元年；民國年請加 1911），沒有填 null；device：手錶或 App 名稱。
+13. 不要輸出姓名、電話、帳號等個人資料。
+14. 輸出前逐欄自我核對：每個數字（第 6 條的加總、÷7 除外）都必須能在截圖中找到原文，小數點位置正確。
 
 【欄位對照】
 rhr＝靜止心率（bpm；小米叫「安靜心率」）、walkhr＝步行平均心率（bpm；Apple、小米都叫「步行平均心率」）、hrv＝心率變異 HRV（ms）、stress＝平均壓力（0–100；小米、華為、Garmin、Samsung 的「壓力」）、spo2＝血氧（%）、sleep＝每晚睡眠時數（小時；小米「主要睡眠時長」7h36m → 7.6）、steps＝每日步數、exmin＝每日運動分鐘（Apple「運動」圓圈、Garmin「熱血時間」；畫面是一週總分鐘請 ÷7）、vo2＝最大攝氧量 VO2max（ml/kg/min，Apple 健康叫「有氧體能」）、resp＝睡眠時呼吸速率（次／分）、kcal＝每日活動消耗（Apple「動態能量」、Garmin「活動卡路里」、小米「活動消耗」或健康摘要的「卡路里日均消耗」，kcal；只有「總卡路里」就填總卡路里，App 會自動扣掉基礎代謝；會用來校正每日該吃多少熱量）、sbp／dbp＝手錶量的收縮壓／舒張壓（mmHg）
 
 【輸出格式】
-{"type":"nutricore.watch","v":1,"date":null,"device":null,"period":null,${WF.map(f=>`"${f.k}":null`).join(',')},"afib":null}`}
+{"type":"nutricore.watch","v":1,"date":null,"device":null,"period":null,${WF.map(f=>`"${f.k}":null`).join(',')},"afib":null,"other":[]}`}
 const PROMPTS={scale:()=>promptScale(),lab:()=>promptLab(),watch:()=>promptWatch()};
 function promptLab(){const OPT=LAB.filter(x=>x.t==='opt'),QI=LAB.filter(x=>x.t==='qi');return `你是「健康檢查報告數據擷取器」。我會附上體檢報告的照片或截圖（可能多張）。你的任務只有「逐字讀取數據」，不要診斷、不要給建議。
 
@@ -3136,9 +3205,10 @@ function bindAI(kind){$('#ai-go').onclick=()=>{
 
 /* ================= 手錶數據 ================= */
 let wEditId=null;
-function openWatchSheet(rec){const m=me();wEditId=rec?.id||null;
+let wExtra=[];
+function openWatchSheet(rec){const m=me();wEditId=rec?.id||null;wExtra=(rec?.extra||[]).slice();const wdevs=[...new Set(watchOf(m).map(x=>x.device).filter(Boolean))].slice(0,6);
   openSheet(sheetHead(rec?'編輯手錶數據':'新增手錶數據',`${esc(m.name)}・填「近 7 天平均」最準`)+aiBox('watch')+`
-    <div class="grid2"><div><label>日期</label><input type="date" id="w-t" value="${esc(rec?.t||ymd(new Date()))}"></div><div><label>手錶（選填）</label><input id="w-device" value="${esc(rec?.device||'')}" placeholder="Apple Watch、Garmin…"></div></div>
+    <div class="grid2"><div><label>日期</label><input type="date" id="w-t" value="${esc(rec?.t||ymd(new Date()))}"></div><div><label>手錶（選填）</label><input id="w-device" list="dl-wdev" value="${esc(rec?rec.device||'':wdevs[0]||'')}" placeholder="Apple Watch、Garmin…"><datalist id="dl-wdev">${wdevs.map(d=>`<option value="${esc(d)}">`).join('')}</datalist></div></div>
     <label>資料區間（選填）</label><input id="w-period" value="${esc(rec?.period||'')}" placeholder="例如 近7天、本月、6週" maxlength="20">
     <div class="grid2">${WF.map(f=>`<div><label>${f.n} <span class="sub">${f.u}</span></label><input id="w-${f.k}" type="text" inputmode="decimal" value="${rec?.[f.k]??''}" placeholder="—"></div>`).join('')}</div>
     <div class="chips" style="margin-top:12px"><button type="button" class="chip${rec?.afib?' on':''}" id="w-afib">手錶提示過心律不整／心房顫動</button></div>
@@ -3148,7 +3218,7 @@ function openWatchSheet(rec){const m=me();wEditId=rec?.id||null;
 function saveWatch(){const m=me(),r={id:wEditId||uid(),t:$('#w-t').value||ymd(new Date())},bad=[];
   for(const f of WF){const el=$('#w-'+f.k),raw=el.value.trim();el.classList.remove('bad');if(!raw)continue;const v=num(raw);if(v==null||v<f.min||v>f.max){bad.push(f.n);el.classList.add('bad');continue}r[f.k]=v}
   if(bad.length)return toast('數值不合理：'+bad.join('、')+'（請核對單位與小數點）');
-  if($('#w-afib').classList.contains('on'))r.afib=true;const dv=$('#w-device').value.trim();if(dv)r.device=dv.slice(0,30);const pd=$('#w-period').value.trim();if(pd)r.period=pd.slice(0,20);
+  if($('#w-afib').classList.contains('on'))r.afib=true;const dv=$('#w-device').value.trim();if(dv)r.device=dv.slice(0,30);const pd=$('#w-period').value.trim();if(pd)r.period=pd.slice(0,20);if(wExtra.length)r.extra=wExtra.slice();
   if(!WF.some(f=>r[f.k]!=null)&&!r.afib)return toast('請至少填一個數值');
   const arr=WATCH[m.id]||(WATCH[m.id]=[]),i=arr.findIndex(x=>x.id===r.id);if(i>=0)arr[i]=r;else arr.push(r);
   if(!S.set('watch',WATCH))return;recTab='watch';renderAll();go('body','now');openWatchDetail(r.id)}
@@ -3159,26 +3229,35 @@ function fillWatch(o){
   for(const f of WF){const el=$('#w-'+f.k);el.classList.remove('bad');let v=num(o[f.k]);if(v==null)continue;if(f.k==='spo2'&&v>0&&v<=1)v=Math.round(v*1000)/10;   // 0.96 → 96
     el.value=v;n++;if(v<f.min||v>f.max){el.classList.add('bad');warn.push(f.n)}}
   if(o.afib===true){$('#w-afib').classList.add('on');n++}if(o.device)$('#w-device').value=String(o.device).slice(0,30);if(o.period)$('#w-period').value=String(o.period).slice(0,20);const d=parseYMD(o.date);if(d)$('#w-t').value=d;
-  if(!n)throw new Error('JSON 裡沒有任何手錶數值');
-  return `✅ 已填入 ${n} 項`+(warn.length?`<br><span style="color:var(--red)">⚠️ ${esc(warn.join('、'))} 數值不合理，請核對單位或小數點</span>`:'')+(d?'':'<br><span style="color:var(--amber)">⚠️ 沒有讀到日期，目前是今天，請確認</span>')+'<br>請往下核對後按「儲存」。'}
+  wExtra=normOther(o.other,new Set(['type','v','date','device','period','afib','other',...WF.map(f=>f.k)]),o);
+  if(!n&&!wExtra.length)throw new Error('JSON 裡沒有任何手錶數值');
+  return `✅ 已填入 ${n} 項`+(warn.length?`<br><span style="color:var(--red)">⚠️ ${esc(warn.join('、'))} 數值不合理，請核對單位或小數點</span>`:'')+(d?'':'<br><span style="color:var(--amber)">⚠️ 沒有讀到日期，目前是今天，請確認</span>')+extraNote(wExtra,'其他數值')+'<br>請往下核對後按「儲存」。'}
 function openWatchDetail(id){const m=me(),list=watchOf(m),r=list.find(x=>x.id===id);if(!r)return;const p=list[list.indexOf(r)+1],iss=watchEval(r,m).sort((a,b)=>b.lv-a.lv),vc=r.vo2!=null?vo2Cat(r.vo2,ageOf(m),m.sex):null;
   openSheet(sheetHead('手錶數據',`${esc(m.name)}・${esc(r.t)}${r.device?'・'+esc(r.device):''}${r.period?'・'+esc(r.period):''}`)+`
     <div class="kv" style="margin:14px 0">${WF.filter(f=>r[f.k]!=null).map(f=>`<span>${f.n}</span><span><b>${fmt(r[f.k])}</b> <span class="sub">${f.u}</span>${f.k==='vo2'?` <em class="dev${vc>=2?' ok':''}">同齡${VO2T[vc]}</em>`:''}${p&&p[f.k]!=null?`<br><span class="sub">上次 ${fmt(p[f.k])}（${esc(p.t)}）</span>`:''}</span>`).join('')}${r.afib?'<span>心律不整提醒</span><span><b style="color:var(--red)">有</b></span>':''}</div>
-    <div class="h4">判讀</div>${iss.length?issueHTML(iss,true):'<div class="empty">各項都在建議範圍 👍</div>'}
+    ${extraHTML(r.extra)}<div class="h4">判讀</div>${iss.length?issueHTML(iss,true):'<div class="empty">各項都在建議範圍 👍</div>'}
     ${r.id===list[0].id?commentHTML(m,true):''}
     <p class="note">手錶是光學感測：靜止心率、睡眠、步數的趨勢可信；血氧、HRV、血壓、VO₂max 受配戴與演算法影響大，<b>和自己比</b>比看單次數字重要。手錶數據只提醒、不列入體檢分數，也不能取代醫師診斷。</p>
     <div class="row2"><button class="btn danger" id="wd-del" style="flex:0 0 30%">刪除</button><button class="btn ghost" id="wd-edit">編輯</button></div>`);
   $('#wd-edit').onclick=()=>openWatchSheet(r);$('#wd-del').onclick=()=>delWatch(r.id)}
 
 /* ================= 體脂紀錄 ================= */
-let sStatus={},sEditId=null;
+let sStatus={},sEditId=null,sExtra=[];
+// App 還沒有專屬欄位的數值：AI 放在 other 的、或 JSON 裡不認得的鍵，先存在這筆紀錄的「其他數值」，並提示要更新 App
+const normOther=(arr,known,obj0)=>{const out=[],okV=v=>typeof v==='number'?Number.isFinite(v):typeof v==='string'&&v.trim()!=='';
+  for(const e of Array.isArray(arr)?arr:[])if(e&&typeof e==='object'&&typeof e.name==='string'&&e.name.trim()&&okV(e.value))out.push({name:e.name.trim().slice(0,30),value:typeof e.value==='string'?e.value.trim().slice(0,40):e.value,unit:typeof e.unit==='string'?e.unit.trim().slice(0,12):''});
+  for(const[k,v]of Object.entries(obj0||{}))if(!known.has(k)&&okV(v)&&!out.some(x=>x.name===k))out.push({name:k.slice(0,30),value:typeof v==='string'?v.trim().slice(0,40):v,unit:''});
+  return out.slice(0,20)};
+const xTxt=L=>Array.isArray(L)&&L.length?`；其他數值（App 沒有專屬欄位，請一併參考）：${L.filter(e=>e&&e.name).map(e=>`${e.name} ${e.value}${e.unit?' '+e.unit:''}`).join('、')}`:'';
+const extraNote=(L,where)=>L.length?`<br>📋 <b>App 還沒有專屬欄位</b>，已先存進這筆紀錄的「${where}」：${esc(L.map(e=>e.name).join('、'))}。這些不會自動判讀；想正式加入，把這段訊息給 Claude 更新 App。`:'';
+const extraHTML=L=>(L=(Array.isArray(L)?L:[]).filter(e=>e&&typeof e.name==='string')).length?`<div class="h4">其他數值（App 還沒有專屬欄位）</div><div class="kv" style="margin:6px 0 12px">${L.map(e=>`<span>${esc(e.name)}</span><span><b>${esc(typeof e.value==='number'?fmt(e.value):e.value)}</b> <span class="sub">${esc(e.unit||'')}</span></span>`).join('')}</div>`:'';
 function openScaleSheet(rec){
-  const m=me();sEditId=rec?.id||null;sStatus={...(rec?.status||{})};
+  const m=me();sEditId=rec?.id||null;sStatus={...(rec?.status||{})};sExtra=(rec?.extra||[]).slice();const devs=[...new Set(scalesOf(m).map(x=>x.device).filter(Boolean))].slice(0,6);
   openSheet(sheetHead(rec?'編輯體脂紀錄':'新增體脂紀錄',`${esc(m.name)}・${sexT(m.sex)}・${Math.floor(ageOf(m))} 歲`)+aiBox('scale')+`
     <label>量測時間</label><input type="datetime-local" id="s-t" value="${esc(rec?.t||dtLocal(new Date()))}">
     <div class="grid2">${SF.map(f=>`<div><label>${f.n}${f.u?` <span class="sub">${f.u}</span>`:''}<em class="dev" id="st-${f.k}" hidden></em></label><input id="s-${f.k}" type="text" inputmode="decimal" value="${rec?.[f.k]??''}" placeholder="—"></div>`).join('')}</div>
     <label>身體類型（選填）</label><input id="s-bodyType" value="${esc(rec?.bodyType||'')}">
-    <label>體脂機品牌（選填）</label><input id="s-device" value="${esc(rec?.device||'')}">
+    <label>體脂機品牌（選填，會記住上次的）</label><input id="s-device" list="dl-sdev" value="${esc(rec?rec.device||'':devs[0]||'')}"><datalist id="dl-sdev">${devs.map(d=>`<option value="${esc(d)}">`).join('')}</datalist>
     <p class="note">有的欄位填就好。沒有「體重」時，會用「去脂體重＋脂肪量」或「BMI × 身高²」自動推算。體脂機是生物電阻估算，請每天固定在早上起床、如廁後、進食前量測，看趨勢比看單次重要。</p>
     <div class="row2">${rec?'<button class="btn danger" id="sDel" style="flex:0 0 30%">刪除</button>':''}<button class="btn" id="sSave">儲存</button></div>`);
   paintStatus();bindAI('scale');$('#sSave').onclick=saveScale;if(rec)$('#sDel').onclick=()=>delScale(rec.id);
@@ -3195,8 +3274,9 @@ function fillScale(o){
     if(day)$('#s-t').value=`${day}T${hm&&+hm[1]<24&&+hm[2]<60?pad(+hm[1])+':'+hm[2]:($('#s-t').value.slice(11,16)||'08:00')}`;
     else dtNote=`<br><span style="color:var(--amber)">⚠️ 看不懂量測時間「${esc(d.measuredAt)}」，請手動確認</span>`}
   if(d.bodyType)$('#s-bodyType').value=d.bodyType;if(d.device)$('#s-device').value=d.device;
-  if(!n)throw new Error('JSON 裡沒有任何可用數值');
-  return `✅ 已填入 ${n} 個欄位${bad.length?`，<span style="color:var(--red)">${esc(bad.join('、'))} 超出合理範圍，請核對是否讀錯</span>`:''}。請往下檢查後按「儲存」。${dtNote}`;
+  sExtra=normOther(d.other,new Set(['type','v','measuredAt','date','time','device','status','bodyType','other','data',...SF.map(f=>f.k)]),d);
+  if(!n&&!sExtra.length)throw new Error('JSON 裡沒有任何可用數值');
+  return `✅ 已填入 ${n} 個欄位${bad.length?`，<span style="color:var(--red)">${esc(bad.join('、'))} 超出合理範圍，請核對是否讀錯</span>`:''}。請往下檢查後按「儲存」。${dtNote}${extraNote(sExtra,'其他數值')}`;
 }
 function saveScale(){
   const m=me(),r={id:sEditId||uid(),t:$('#s-t').value||dtLocal(new Date())},bad=[];
@@ -3210,7 +3290,7 @@ function saveScale(){
   if(r.bmi==null&&hm){r.bmi=r1(r.weight/(hm*hm));r.derived.push('bmi')}
   if(r.fat==null&&r.fatMass!=null){r.fat=r1(r.fatMass/r.weight*100);r.derived.push('fat')}
   r.status={};for(const[k,v]of Object.entries(sStatus))if(r[k]!=null)r.status[k]=v;
-  const bt=$('#s-bodyType').value.trim(),dv=$('#s-device').value.trim();if(bt)r.bodyType=bt;if(dv)r.device=dv;
+  const bt=$('#s-bodyType').value.trim(),dv=$('#s-device').value.trim();if(bt)r.bodyType=bt;if(dv)r.device=dv;if(sExtra.length)r.extra=sExtra.slice();
   const arr=SCALE[m.id]||(SCALE[m.id]=[]),i=arr.findIndex(x=>x.id===r.id);if(i>=0)arr[i]=r;else arr.push(r);
   if(!S.set('scale',SCALE))return;
   closeSheet();recTab='scale';renderAll();go('body','now');toast(r.derived.includes('weight')?`已儲存（體重由其他數值推算為 ${r.weight} kg）`:'已儲存體脂紀錄');
@@ -3220,7 +3300,7 @@ function openScaleDetail(id){
   const m=me(),r=scalesOf(m).find(x=>x.id===id);if(!r)return;const iss=scaleEval(r,m).sort((a,b)=>b.lv-a.lv);
   openSheet(sheetHead('體脂紀錄',`${esc(m.name)}・${fmtDT(r.t)}${r.device?'・'+esc(r.device):''}`)+`
     <div class="kv" style="margin:14px 0">${SF.filter(f=>r[f.k]!=null).map(f=>`<span>${f.n}${(r.derived||[]).includes(f.k)?' <em class="dev">推算</em>':''}</span><span><b>${fmt(r[f.k])}</b> <span class="sub">${f.u}</span>${r.status?.[f.k]?` <em class="dev${devLv(r.status[f.k])?'':' ok'}">${esc(r.status[f.k])}</em>`:''}</span>`).join('')}${r.bodyType?`<span>身體類型</span><span>${esc(r.bodyType)}</span>`:''}</div>
-    <div class="h4">判讀</div>${iss.length?issueHTML(iss):'<div class="empty">各項指標正常 👍</div>'}${bodyCompare(r,m)}
+    ${extraHTML(r.extra)}<div class="h4">判讀</div>${iss.length?issueHTML(iss):'<div class="empty">各項指標正常 👍</div>'}${bodyCompare(r,m)}
     <p class="note">內建判定採國健署成人標準與一般體脂計分級（內臟脂肪 1–9 標準、10–14 偏高、≥15 過高）。各品牌標準不同，設備判定與內建判定並列，取較嚴重者。</p>
     <div class="row2"><button class="btn danger" id="sd-del" style="flex:0 0 30%">刪除</button><button class="btn ghost" id="sd-edit">編輯</button></div>`);
   $('#sd-edit').onclick=()=>openScaleSheet(r);$('#sd-del').onclick=()=>delScale(r.id);
@@ -3294,7 +3374,7 @@ function openLabSheet(rec){
       :`<input id="l-${x.k}" type="text" inputmode="${x.t==='qi'||x.neg?'text':'decimal'}" value="${esc(v)}" placeholder="${esc(x.ph||x.u||'')}">`;
     return `<div class="lrow${x.t==='opt'?' wide':''}"><label for="l-${x.k}">${x.n}<small id="lm-${x.k}">${metaTxt(x)}</small></label>${inp}</div>`}).join('');
   openSheet(sheetHead(rec?'編輯體檢報告':'新增體檢報告',`${esc(m.name)}・${sexT(m.sex)}・${Math.floor(ageOf(m))} 歲`)+aiBox('lab')+`
-    <div class="grid2"><div><label>檢查日期</label><input type="date" id="l-date" value="${esc(rec?.t||ymd(new Date()))}"></div><div><label>醫院／健檢中心</label><input id="l-hosp" value="${esc(rec?.hospital||'')}" placeholder="選填"></div></div>
+    <div class="grid2"><div><label>檢查日期</label><input type="date" id="l-date" value="${esc(rec?.t||ymd(new Date()))}"></div><div><label>醫院／健檢中心</label><input id="l-hosp" list="dl-hosp" value="${esc(rec?.hospital||'')}" placeholder="選填"><datalist id="dl-hosp">${[...new Set(labsOf(me()).map(x=>x.hospital).filter(Boolean))].slice(0,8).map(h=>`<option value="${esc(h)}">`).join('')}</datalist></div></div>
     <p class="note">只填報告上有的項目。數值請用台灣常用單位（mg/dL）；AI 匯入時，mmol/L、μmol/L 會自動換算。</p>
     ${groups.map(g=>{const r=rows(g);return r?`<details class="box"${rec&&LAB.some(x=>x.g===g&&rec.items?.[x.k])?' open':''}><summary>${g}</summary>${r}</details>`:''}).join('')}
     <details class="box"${lExtra.length?' open':''}><summary>其他項目 <span class="sub" id="exCnt"></span></summary><div id="exList"></div>
@@ -3319,11 +3399,11 @@ function fillLab(o){
   if(/scale/i.test(o.type||''))throw new Error('這是體脂機的 JSON，請改到「體脂紀錄」匯入');
   const m=me(),items=o.items||{},entries=[...(Array.isArray(items)?items.map(it=>[it.key||it.k||it.name,it]):Object.entries(items)),...(Array.isArray(o.extra)?o.extra.filter(e=>e&&typeof e==='object').map(e=>[e.name||e.key,{...e,_x:1}]):[])];
   // 只補 JSON 裡有的項目，不清掉表單上已經有的：多頁報告可以分次匯入，舊報告也能只補一頁
-  let n=0;const conv=[],warn=[],skip=[],hs=new Set(),now=new Set();   // now：這次匯入已經填過的項目（左右眼、左右耳、多個骨密度才取較差／較高）
+  let n=0;const conv=[],warn=[],skip=[],unk=[],hs=new Set(),now=new Set();   // now：這次匯入已經填過的項目（左右眼、左右耳、多個骨密度才取較差／較高）
   for(const[rk,raw]of entries){
     const it=raw&&typeof raw==='object'?raw:{value:raw};
     const k=LABK[rk]?rk:(resolveKey(rk)||resolveKey(it.name));
-    if(!k){lExtra.push(normExtra({name:rk,...it}));continue}
+    if(!k){lExtra.push(normExtra({name:rk,...it}));if(!it._x)unk.push(String(rk));continue}
     const x=LABK[k],el=$('#l-'+k);
     if(!el){if(it._x)lExtra.push(normExtra({name:rk,...it}));else skip.push(x.n);continue}
     const val=it.value??it.v;
@@ -3354,7 +3434,7 @@ function fillLab(o){
   const dateNote=day?'':`<br><span style="color:var(--amber)">⚠️ ${o.date?`看不懂日期「${esc(o.date)}」`:'JSON 沒有檢查日期'}，目前是今天，請手動改成檢查日期</span>`;
   if(o.hospital)$('#l-hosp').value=o.hospital;
   if(!n&&!lExtra.length)throw new Error('JSON 裡沒有任何檢驗項目');
-  return `✅ 已填入 ${n} 項${lExtra.length?`＋其他 ${lExtra.length} 項`:''}`+
+  return `✅ 已填入 ${n} 項${lExtra.length?`＋其他 ${lExtra.length} 項`:''}`+(unk.length?`<br>📋 <b>App 還沒有專屬欄位</b>：${esc(unk.slice(0,10).join('、'))}${unk.length>10?` 等 ${unk.length} 項`:''}，已放進「其他項目」（仍會看報告的異常標記）；想正式判讀，把這段訊息給 Claude 更新 App。`:'')+
     (conv.length?`<br>🔁 已自動換算單位：${esc(conv.join('、'))}`:'')+
     (warn.length?`<br><span style="color:var(--red)">⚠️ ${esc(warn.join('、'))} 數值離譜，請核對是否讀錯小數點</span>`:'')+
     (skip.length?`<br>略過（與性別不符）：${esc(skip.join('、'))}`:'')+dateNote+'<br>請往下核對後按「儲存並分析」。';
@@ -3788,7 +3868,8 @@ function cleanBackup(d){
   const img={};for(const[k,v]of Object.entries(obj(d.img)))if(BY_ID[k]&&/^https:\/\//.test(String(v)))img[k]=String(v);
   const watch=recs(d.watch,/^\d{4}-\d{2}-\d{2}$/);for(const k in watch)watch[k]=watch[k].map(cleanWatch);
   const exlog={};for(const[k,arr]of Object.entries(obj(d.exlog)))if(okId(k)&&Array.isArray(arr))exlog[k]=arr.filter(x=>x&&okId(x.id)&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.d))).map(cleanExLog);   // 手錶只留已知欄位、合理範圍的數字
-  return{mem,self:cleanSelf(d.self,okId),scale:recs(d.scale,/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/),labs:recs(d.labs,/^\d{4}-\d{2}-\d{2}$/),watch,exlog,img,
+  const scale=recs(d.scale,/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/);for(const k in scale)scale[k]=scale[k].map(x=>{const o={...x};delete o.extra;const e=normOther(x.extra,new Set());if(e.length)o.extra=e;return o});   // 體脂「其他數值」只留名稱／數值／單位
+  return{mem,self:cleanSelf(d.self,okId),scale,labs:recs(d.labs,/^\d{4}-\d{2}-\d{2}$/),watch,exlog,img,
     gas:typeof d.gas==='string'&&(!d.gas||/^https:\/\/script\.google(usercontent)?\.com\//.test(d.gas))?d.gas:null};
 }
 const MAX_BACKUP=5*1048576;   // 正常備份只有幾十 KB；超過 5MB 一定不是備份檔，整個讀進記憶體會讓 iPhone 分頁當掉

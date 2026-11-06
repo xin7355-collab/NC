@@ -776,13 +776,13 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.fill('#m-cq', '筋膜'); await page.waitForTimeout(100);
     const t1 = await page.evaluate(() => [...document.querySelectorAll('#m-cgrp [data-ck]')].filter(b => !b.hidden).map(b => b.dataset.ck).join());
     await page.fill('#m-cq', ''); await page.click('#m-cgrp [data-ck="pf"]'); await page.click('#m-cgrp [data-ck="pf"]');
-    await page.click('#m-condbox [data-csg="cac"]'); await page.fill('#m-cown', '蕁麻疹'); await page.click('#m-cadd'); await page.fill('#m-cown', '蹠筋膜纖維瘤'); await page.click('#m-cadd'); await page.waitForTimeout(100);
+    await page.click('#m-condbox [data-csg="cac"]'); await page.fill('#m-cown', '帶狀皰疹'); await page.click('#m-cadd'); await page.fill('#m-cown', '蹠筋膜纖維瘤'); await page.click('#m-cadd'); await page.waitForTimeout(100);
     const t2 = await page.evaluate(() => ({ rows: [...document.querySelectorAll('#m-cdet .cdet b')].map(b => b.textContent).join('、'), toast: $('#toast').textContent }));
     await page.fill('#m-cdet [data-cid="cac"] [data-f="score"]', '45'); await page.fill('#m-allergy', '無'); await page.fill('#m-meds', 'Rosuvastatin 10 mg'); await page.click('#m-save'); await page.waitForTimeout(400);
     const t3 = await page.evaluate(() => ({ cond: JSON.stringify(me().cond), back: !!$('#sheetBody #set-fz') }));
-    check('設定 → 病史與用藥：報告提到的冠狀動脈鈣化一鍵加入；搜尋「筋膜」只剩相關病名；點兩下取消；自訂「蕁麻疹」；打「蹠筋膜纖維瘤」會對到清單；存檔後回到設定',
-      /蹠筋膜纖維瘤症/.test(hubRow) && t0.vis === 'cond' && t0.sug === 'cac' && t0.on === 'ledd' && t0.rows === 1 && t1 === 'ledd,pf,dupuy' && t2.rows === '蹠筋膜纖維瘤症、冠狀動脈鈣化（CT 發現）、蕁麻疹' && /清單裡有：蹠筋膜纖維瘤症/.test(t2.toast)
-        && /"k":"cac","score":45/.test(t3.cond) && /"n":"蕁麻疹"/.test(t3.cond) && /"meds":"Rosuvastatin 10 mg","allergy":"無"/.test(t3.cond) && t3.back, JSON.stringify({ hubRow, t0, t1, t2, t3 }));
+    check('設定 → 病史與用藥：報告提到的冠狀動脈鈣化一鍵加入；搜尋「筋膜」只剩相關病名；點兩下取消；自訂「帶狀皰疹」（清單沒有的）；打「蹠筋膜纖維瘤」會對到清單；存檔後回到設定',
+      /蹠筋膜纖維瘤症/.test(hubRow) && t0.vis === 'cond' && t0.sug === 'cac' && t0.on === 'ledd' && t0.rows === 1 && t1 === 'ledd,pf,dupuy' && t2.rows === '蹠筋膜纖維瘤症、冠狀動脈鈣化（CT 發現）、帶狀皰疹' && /清單裡有：蹠筋膜纖維瘤症/.test(t2.toast)
+        && /"k":"cac","score":45/.test(t3.cond) && /"n":"帶狀皰疹"/.test(t3.cond) && /"meds":"Rosuvastatin 10 mg","allergy":"無"/.test(t3.cond) && t3.back, JSON.stringify({ hubRow, t0, t1, t2, t3 }));
     await page.evaluate(() => { closeSheet(); go('body', 'cond') }); await page.waitForTimeout(300);
     await page.click('#condBody [data-cond="cac"]'); await page.waitForTimeout(300);
     const cs = await page.evaluate(() => $('#sheetBody').textContent);
@@ -848,6 +848,77 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       !r.anN && r.anL && r.an0 && r.mcv, JSON.stringify({ anN: r.anN, anL: r.anL, an0: r.an0, mcv: r.mcv }));
     check('LDL 合併病史取最嚴重：中風 85 注意、120 異常；中風＋冠狀動脈鈣化 120、150 都是異常（不再被鈣化降級）；嬌小女性減脂熱量不低於 1,200（且不超過每日消耗）；心衰竭喝水改「依醫囑」',
       r.ldl === '1,2,2,2' && r.small >= Math.min(1200, r.smallTdee) && r.small <= r.smallTdee && r.water === null, JSON.stringify({ ldl: r.ldl, small: r.small, tdee: r.smallTdee, water: r.water }));
+    await page.close();
+  }
+
+  // =============== 6w. 匯入：App 沒有的欄位存成「其他數值」並提示；記住體脂機／手錶／醫院；病史「醫師交代」；滑囊炎、鼻中隔彎曲等新病名與症狀 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    page = await newPage({ members: [{ id: 'w', name: '測', sex: 'm', birth: '1984-05-05', h: 172, w: 70, act: '1.375', goal: 'keep' }, { id: 'f', name: '乙', sex: 'f', birth: '1990-01-01', h: 160, w: 55, act: '1.375', goal: 'keep' }], active: 'w',
+      scale: { w: [{ id: 's0', t: T(30) + 'T07:00', weight: 71, fat: 20, device: '小米體脂秤2' }] }, watch: { w: [{ id: 'w0', t: T(10), steps: 5000, device: '小米手環 9' }] },
+      labs: { w: [{ id: 'l0', t: '2025-09-01', hospital: '測試醫院', items: { ldl: { v: 120 } }, extra: [] }] } });
+    // 體脂機：品牌自動帶上次的；AI 給了 App 沒有的數值 → 存進「其他數值」並提示要更新 App
+    await page.evaluate(() => openScaleSheet()); await page.waitForTimeout(300);
+    const s0 = await page.evaluate(() => ({ dev: $('#s-device').value, opts: [...document.querySelectorAll('#dl-sdev option')].map(o => o.value).join() }));
+    await page.click('details.box.ai > summary');
+    await page.fill('#ai-in', JSON.stringify({ type: 'nutricore.scale', v: 1, measuredAt: T(0) + ' 07:10', device: null, weight: 70.2, fat: 19.5, visceral: 6, status: { visceral: '標準' }, other: [{ name: '內臟脂肪面積', value: 85, unit: 'cm²' }, { name: '肌肉均衡', value: '標準', unit: '' }, { name: '', value: 3 }, { name: '壞資料', value: {} }], fatControl: -1.2 }));
+    await page.click('#ai-go'); await page.waitForTimeout(200);
+    const s1 = await page.evaluate(() => $('#ai-msg').textContent);
+    await page.click('#sSave'); await page.waitForTimeout(400);
+    const s2 = await page.evaluate(() => { const m = me(), r = scalesOf(m)[0]; openScaleDetail(r.id); const det = $('#sheetBody').textContent; closeSheet();
+      return { rec: JSON.stringify({ dev: r.device, ex: r.extra }), det, ai: aiPrompt(m, { topic: 'diet', scale: true, watch: true }), ps: promptScale(), pw: promptWatch(),
+        dv: scaleEval({ visceral: 6, status: { visceral: '警戒' } }, m).find(i => i.k === 'visceral')?.msg || '' } });
+    check('體脂機匯入：品牌自動帶上次的「小米體脂秤2」（有下拉清單）；App 沒有的數值（內臟脂肪面積、肌肉均衡、不認得的 fatControl）存進「其他數值」並提示「把這段訊息給 Claude 更新 App」，壞資料丟掉',
+      s0.dev === '小米體脂秤2' && s0.opts === '小米體脂秤2' && /App 還沒有專屬欄位/.test(s1) && /內臟脂肪面積、肌肉均衡、fatControl/.test(s1) && /給 Claude 更新 App/.test(s1)
+        && s2.rec === JSON.stringify({ dev: '小米體脂秤2', ex: [{ name: '內臟脂肪面積', value: 85, unit: 'cm²' }, { name: '肌肉均衡', value: '標準', unit: '' }, { name: 'fatControl', value: -1.2, unit: '' }] }), JSON.stringify({ s0, s1, rec: s2.rec }));
+    check('其他數值會顯示在體脂詳情、也帶進問 AI（含體脂機品牌）；體脂提示詞不再有「警戒」範例、要求畫面沒寫判定就不要列，App 沒有的數值放 other；設備判定和 App 標準不同時講清楚',
+      /其他數值（App 還沒有專屬欄位）/.test(s2.det) && /內臟脂肪面積85 cm²/.test(s2.det) && /【體脂計 [\d-]+・小米體脂秤2】/.test(s2.ai) && /其他數值（App 沒有專屬欄位，請一併參考）：內臟脂肪面積 85 cm²、肌肉均衡 標準、fatControl -1\.2/.test(s2.ai)
+        && !/"visceral":"警戒"/.test(s2.ps) && /畫面沒寫判定的項目不要列，也不要自己判斷或照抄這裡的例子/.test(s2.ps) && /放進 other/.test(s2.ps) && /"other":\[\]\}/.test(s2.ps) && /放進 other/.test(s2.pw) && /"other":\[\]\}/.test(s2.pw)
+        && /設備判定「警戒」；App 的內建標準判定正常/.test(s2.dv), JSON.stringify({ dv: s2.dv, ai: (s2.ai.match(/【體脂計[^\n]*/) || [''])[0] }));
+    // 手錶：裝置自動帶上次的；其他數值
+    await page.evaluate(() => openWatchSheet()); await page.waitForTimeout(300);
+    const w0 = await page.evaluate(() => ({ dev: $('#w-device').value, opts: [...document.querySelectorAll('#dl-wdev option')].map(o => o.value).join() }));
+    await page.click('details.box.ai > summary');
+    await page.fill('#ai-in', JSON.stringify({ type: 'nutricore.watch', v: 1, date: T(0), device: null, rhr: 60, steps: 6000, other: [{ name: '體能分數', value: 42 }], bodyTemp: 36.5 }));
+    await page.click('#ai-go'); await page.waitForTimeout(200);
+    const w1 = await page.evaluate(() => $('#ai-msg').textContent);
+    await page.click('#wSave'); await page.waitForTimeout(400);
+    const w2 = await page.evaluate(() => { const m = me(), r = watchOf(m)[0]; openWatchDetail(r.id); const det = $('#sheetBody').textContent; closeSheet(); return { rec: JSON.stringify({ dev: r.device, ex: r.extra }), det, ai: aiPrompt(m, { topic: 'fit', watch: true }) } });
+    const cb = await page.evaluate(() => { const o = cleanBackup({ members: [{ id: 'w', name: '測' }], scale: { w: [{ id: 'a1', t: '2026-01-01T07:00', weight: 70, extra: [null, { name: '壞', value: {} }, { name: '內臟脂肪面積', value: 85, unit: 'cm²', x: '<b>' }] }] },
+      watch: { w: [{ id: 'b1', t: '2026-01-01', rhr: 60, extra: [{ name: '體能分數', value: 42 }, 5] }] } }); return JSON.stringify([o.scale.w[0].extra, o.watch.w[0].extra]) });
+    check('手錶匯入：裝置自動帶上次的「小米手環 9」；體能分數、bodyTemp 存進其他數值並提示；詳情與問 AI 都看得到；還原備份時其他數值只留名稱／數值／單位',
+      w0.dev === '小米手環 9' && w0.opts === '小米手環 9' && /App 還沒有專屬欄位/.test(w1) && /體能分數、bodyTemp/.test(w1) && w2.rec === JSON.stringify({ dev: '小米手環 9', ex: [{ name: '體能分數', value: 42, unit: '' }, { name: 'bodyTemp', value: 36.5, unit: '' }] })
+        && /其他數值（App 還沒有專屬欄位）/.test(w2.det) && /體能分數 42、bodyTemp 36\.5/.test(w2.ai) && cb === JSON.stringify([[{ name: '內臟脂肪面積', value: 85, unit: 'cm²' }], [{ name: '體能分數', value: 42, unit: '' }]]), JSON.stringify({ w0, w1, rec: w2.rec, cb }));
+    // 體檢：醫院記住；App 對不到的項目講清楚
+    await page.evaluate(() => openLabSheet()); await page.waitForTimeout(300);
+    const l0 = await page.evaluate(() => [...document.querySelectorAll('#dl-hosp option')].map(o => o.value).join());
+    await page.click('details.box.ai > summary');
+    await page.fill('#ai-in', JSON.stringify({ type: 'nutricore.lab', v: 1, date: T(0), items: { ldl: { value: 130, unit: 'mg/dL' }, 'XYZ 新指標': { value: 5, unit: 'mg/L' } }, extra: [{ name: '其他附註', value: '無' }] }));
+    await page.click('#ai-go'); await page.waitForTimeout(200);
+    const l1 = await page.evaluate(() => { const t = $('#ai-msg').textContent; closeSheet(); return t });
+    check('體檢匯入：醫院名稱有下拉清單（填過的）；App 對不到的項目寫「App 還沒有專屬欄位」並放進其他項目（AI 本來就放在其他項目的不重複提醒）',
+      l0 === '測試醫院' && /App 還沒有專屬欄位：XYZ 新指標，已放進「其他項目」/.test(l1) && !/其他附註，已放進/.test(l1), JSON.stringify({ l0, l1 }));
+    // 病史：滑囊炎＋醫師交代（以醫師為準）
+    await page.click('#gearBtn'); await page.waitForTimeout(300); await page.click('#sheetBody [data-setsec="cond"]'); await page.waitForTimeout(300);
+    await page.fill('#m-cq', '滑囊'); await page.waitForTimeout(100);
+    const c0 = await page.evaluate(() => ({ hit: [...document.querySelectorAll('#m-cgrp [data-ck]')].filter(b => !b.hidden).map(b => b.dataset.ck).join(), bph: !!$('#m-cgrp [data-ck="bph"]'), ent: [...document.querySelectorAll('#m-cgrp [data-cgw="ent"] [data-ck]')].map(b => b.dataset.ck).join() }));
+    await page.fill('#m-cq', ''); await page.click('#m-cgrp [data-ck="bursitis"]'); await page.click('#m-cgrp [data-ck="septum"]');
+    await page.fill('#m-cdet [data-cid="bursitis"] [data-f="dr"]', '溫水泡腳、熱敷要泡到小腿；先放鬆小腿。沒受傷不用照 X 光，組織沒問題不用超音波');
+    await page.click('#m-save'); await page.waitForTimeout(400);
+    const c1 = await page.evaluate(() => { const m = me(), F = fitPlan(m), h = healthComment(m); closeSheet(); go('body', 'cond');
+      return { cond: JSON.stringify(m.cond.items), card: $('#condBody').textContent, ai: aiPrompt(m, { topic: 'cond', cond: true }), sum: summaryText(m), hc: h.cond.join('｜'), cardio: F.cardio.join(), W: F.W.map(x => x.t).join('／') } });
+    await page.click('#condBody [data-cond="bursitis"]'); await page.waitForTimeout(300);
+    const c2 = await page.evaluate(() => { const t = $('#sheetBody').textContent; closeSheet(); return t });
+    check('病史：搜尋「滑囊」找到滑囊炎；男性才有攝護腺肥大；鼻中隔彎曲在「耳鼻喉眼」；「醫師交代」存檔後，病史頁最上面顯示（以醫師為準），也帶進問 AI、看診摘要、健康評語；滑囊炎課表避開跑跳、提醒先放鬆小腿',
+      c0.hit === 'bursitis' && c0.bph && /septum/.test(c0.ent) && /rhinitis/.test(c0.ent) && /"k":"bursitis"/.test(c1.cond) && /"dr":"溫水泡腳、熱敷要泡到小腿；先放鬆小腿。沒受傷不用照 X 光，組織沒問題不用超音波"/.test(c1.cond)
+        && /足底／腳跟滑囊炎醫師交代：溫水泡腳/.test(c1.card) && /醫師交代：溫水泡腳、熱敷要泡到小腿/.test(c1.ai) && /Bursitis of the foot \(heel\)［ICD-10 M71\.57］/.test(c1.ai) && /醫師交代：溫水泡腳/.test(c1.sum) && /Deviated nasal septum/.test(c1.sum)
+        && /足底／腳跟滑囊炎：醫師交代：溫水泡腳/.test(c1.hc) && !/run|slowjog|hiit/.test(c1.cardio) && /滑囊炎：先放鬆小腿/.test(c1.W)
+        && /🩺 醫師交代（以醫師為準）溫水泡腳、熱敷要泡到小腿/.test(c2) && /水位到小腿/.test(c2) && /先把小腿放鬆/.test(c2) && /通常不需要 X 光或超音波/.test(c2), JSON.stringify({ c0, cond: c1.cond, hc: c1.hc, cardio: c1.cardio }));
+    const fx = await page.evaluate(() => { const f = MEM.find(x => x.id === 'f'), K = k => SYM.find(x => x.k === k), now = k => K(k).rf.filter(x => x[1] === 'now').length;
+      return { fbph: /data-ck="bph"/.test(condTabHTML(f)), syms: ['stuffy', 'throat', 'skin', 'neck', 'heel'].map(k => `${k}:${now(k)}`).join(), heel: symCtx(me(), 'heel').join('｜'), stuffy: symCtx(me(), 'stuffy').join('｜'), sbar: getComputedStyle($('#sbar')).position,
+        icd: ['bursitis', 'achilles', 'septum', 'turbinate', 'sinusitis', 'tinnitus', 'dryeye', 'urticaria', 'atopic', 'hemorrhoid', 'bph'].map(k => CONDK[k]?.icd || '?').join() } });
+    check('新病名 11 個都有 ICD-10；女性看不到攝護腺肥大；新症狀（鼻塞躺下更塞、喉嚨沙啞、皮膚紅疹、頸肩痛、腳底腳跟痛）都有立即就醫紅旗；腳跟痛帶入病史、鼻塞帶入鼻中隔彎曲；狀態列有底色',
+      fx.icd === 'M71.57,M76.6,J34.2,J34.3,J32.9,H93.1,H04.12,L50.8,L20.9,K64.9,N40' && !fx.fbph && fx.syms === 'stuffy:1,throat:1,skin:2,neck:2,heel:1' && /你的病史：足底／腳跟滑囊炎/.test(fx.heel) && /你的病史：鼻中隔彎曲/.test(fx.stuffy) && fx.sbar === 'fixed', JSON.stringify(fx));
     await page.close();
   }
 
