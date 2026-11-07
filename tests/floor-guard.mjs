@@ -90,7 +90,9 @@ if (process.argv.includes('--selftest')) {
 // ⑤ 整個檔案掃一次（不只新增的行）：舊程式裡被註解吃掉的程式碼也要抓出來
 const scanFile = f => (existsSync(f) ? readFileSync(f, 'utf8') : '').split('\n').map((t, n) => [n + 1, t]).filter(([, t]) => swallowed(t));
 if (process.argv.includes('--scan')) {
-  const f = process.argv[process.argv.indexOf('--scan') + 1] || 'index.html', hit = scanFile(f);
+  const f = process.argv[process.argv.indexOf('--scan') + 1] || 'index.html';
+  if (!existsSync(f)) { console.error(`floor-guard --scan：找不到 ${f}（路徑以目前目錄為準）`); process.exit(2) }
+  const hit = scanFile(f);
   for (const [n, t] of hit) console.log(`✗ 註解吃掉程式碼：${f}:${n}：${t.trim().slice(0, 140)}`);
   console.log(`floor-guard --scan：${f} 有 ${hit.length} 處註解吃掉程式碼`); process.exit(hit.length ? 1 : 0);
 }

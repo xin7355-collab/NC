@@ -444,7 +444,7 @@ table.imap td.er{color:var(--red);font-weight:800}table.imap td.gp1{color:var(--
   <button data-v="ins"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6l7-3Z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg>保險</button>
 </nav>
 
-<div class="sheet" id="sheet"><div class="sheet-bg" data-close></div><div class="sheet-panel" role="dialog" aria-modal="true" tabindex="-1"><div class="grab"></div><div id="sheetBody"></div></div></div>
+<div class="sheet" id="sheet"><div class="sheet-bg" data-close></div><div class="sheet-panel" role="dialog" tabindex="-1"><div class="grab"></div><div id="sheetBody"></div></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="importFile" accept="application/json,.json" hidden>
 <button id="updBar" hidden onclick="location.reload()">有新版本，點這裡更新</button>
@@ -1796,8 +1796,8 @@ function cpapBind(m){const add=$('#cp-add');if(!add)return;
     if(n==null||!Number.isInteger(n)||n<0||n>7)return toast('7 晚用了幾晚：填 0–7 的整數');
     if(a&&(ahi==null||ahi<0||ahi>150))return toast('AHI：填 0–150（看機器或 App 顯示的數字），不知道就空白');
     const old=m.cpap;m.cpap=[{id:uid(),d,h:Math.round(h*10)/10,n,...(ahi!=null?{ahi:Math.round(ahi*10)/10}:{})},...cpapOf(m).filter(x=>x.d!==d)].slice(0,200);
-    if(!S.set('members',MEM)){m.cpap=old;return}renderTodo();openCond('osa');toast('已記下：回診時可以給醫師看')};
-  $$('#sheetBody [data-cpdel]').forEach(b=>b.onclick=()=>{if(!confirm('刪除這筆紀錄？'))return;const old=m.cpap;m.cpap=cpapOf(m).filter(x=>x.id!==b.dataset.cpdel);if(!S.set('members',MEM)){m.cpap=old;return}renderTodo();openCond('osa')})}
+    if(!S.set('members',MEM)){m.cpap=old;return}renderTodo();openCond('osa');$('#cp-add')?.scrollIntoView({block:'center'});toast('已記下：回診時可以給醫師看')};
+  $$('#sheetBody [data-cpdel]').forEach(b=>b.onclick=()=>{if(!confirm('刪除這筆紀錄？'))return;const old=m.cpap;m.cpap=cpapOf(m).filter(x=>x.id!==b.dataset.cpdel);if(!S.set('members',MEM)){m.cpap=old;return}renderTodo();openCond('osa');$('#cp-add')?.scrollIntoView({block:'center'})})}
 // 身體頁「我的病史」卡片
 function condCardHTML(m){const c=condOf(m),sg=condSuggest(m);
   return (sg.length?sg.map(s=>`<div class="hl" style="margin-bottom:10px">📋 ${esc(s.why)}：要加入病史「${esc(CONDK[s.k].n)}」嗎？<div style="margin-top:8px"><button class="btn sm" data-condadd="${s.k}">＋ 加入病史</button></div></div>`).join(''):'')+
@@ -2777,18 +2777,22 @@ function memRows(){return MEM.map(m=>`<div class="rec"><button class="mrow" data
 /* ================= 底部面板 ================= */
 let onSheetClose=null;const sheetCleanup=()=>{if(onSheetClose){const f=onSheetClose;onSheetClose=null;try{f()}catch(e){}}};
 // 彈出視窗開著時，背後的畫面（頂端列、各頁、底部選單）設成 inert：Tab 不會跑到被遮住的按鈕、螢幕閱讀器只念視窗內容；關掉後焦點回到原本的按鈕。
-// 「有新版本」按鈕、提示訊息、選檔案的 input 不設：表單開著時也要能按更新、能選備份檔
-let sheetInert=[],sheetRet=null,sheetLN=0;
+// 「有新版本」按鈕、提示訊息、選檔案的 input 不設：表單開著時也要能按更新、能選備份檔。不用 aria-modal（iOS 的 VoiceOver 可能因此不念視窗外的提示訊息；背後已經 inert）。
+// 原本的按鈕被重畫掉了（例如存檔後清單重畫），就找同一個 id 或 data-* 的按鈕
+let sheetInert=[],sheetRet=null,sheetRetSel='',sheetLN=0;
+const retSel=el=>{if(!el||el===document.body)return'';if(el.id)return'#'+CSS.escape(el.id);const a=[...el.attributes].find(x=>x.name.startsWith('data-'));return a?`[${a.name}="${CSS.escape(a.value)}"]`:''};
 function sheetModal(on){const pn=$('.sheet-panel');
-  if(on){if(!sheetInert.length){sheetRet=document.activeElement;sheetInert=[...document.querySelectorAll('body>header,body>section.view,body>nav')].filter(el=>!el.inert);sheetInert.forEach(el=>el.inert=true)}
+  if(on){if(!sheetInert.length){sheetRet=document.activeElement;sheetRetSel=retSel(sheetRet);sheetInert=[...document.querySelectorAll('body>header,body>section.view,body>nav')].filter(el=>!el.inert);sheetInert.forEach(el=>el.inert=true)}
     if(!pn.contains(document.activeElement))pn.focus({preventScroll:true});const h=$('#sheetBody h3');pn.setAttribute('aria-label',h?h.textContent.replace(/✕/g,'').trim().slice(0,60):'視窗');return}
-  if(!sheetInert.length)return;sheetInert.forEach(el=>el.inert=false);sheetInert=[];const r=sheetRet;sheetRet=null;if(r&&r.isConnected&&r!==document.body&&typeof r.focus==='function')r.focus({preventScroll:true})}
+  if(!sheetInert.length)return;sheetInert.forEach(el=>el.inert=false);sheetInert=[];let r=sheetRet;sheetRet=null;
+  if(!(r&&r.isConnected)&&sheetRetSel)try{r=[...document.querySelectorAll(sheetRetSel)].find(el=>el.offsetParent!==null)||null}catch(e){r=null}
+  if(r&&r.isConnected&&r!==document.body&&typeof r.focus==='function')r.focus({preventScroll:true})}
 // 標籤配對：<label> 後面緊接著輸入框就互相連起來（螢幕閱讀器念得出欄位名稱，點標籤會跳到輸入框）；視窗內容重畫時也會重新配對
 function sheetLabels(root){for(const l of root.querySelectorAll('label:not([for])')){const c=l.nextElementSibling;if(!c||!/^(INPUT|SELECT|TEXTAREA)$/.test(c.tagName)||c.labels?.length||c.hasAttribute('aria-label'))continue;if(!c.id)c.id='sf'+(++sheetLN);l.htmlFor=c.id}}
 function openSheet(html){sheetCleanup();$('#sheetBody').innerHTML=html;sheetLabels($('#sheetBody'));$('#sheet').classList.add('on');document.body.style.overflow='hidden';$('.sheet-panel').scrollTop=0;sheetModal(true)}
 function closeSheet(){sheetCleanup();$('#sheet').classList.remove('on');document.body.style.overflow='';sheetModal(false)}
 new MutationObserver(()=>sheetLabels($('#sheetBody'))).observe($('#sheetBody'),{childList:true,subtree:true});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#sheet').classList.contains('on'))closeSheet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!e.isComposing&&e.keyCode!==229&&$('#sheet').classList.contains('on'))closeSheet()});
 const sheetHead=(t,sub)=>`<h3>${t}<button class="x" data-close aria-label="關閉">✕</button></h3>${sub?`<div class="sub">${sub}</div>`:''}`;
 function openMemberPicker(){openSheet(sheetHead('切換成員','點名字切換，✎ 編輯資料')+`<div style="margin-top:10px">${memRows()}</div><button class="btn ghost" data-addmem>＋ 新增成員</button>`)}
 
@@ -3213,8 +3217,10 @@ const SELF={
      const cp=cpapEval(m),cpLow=!!cp&&!cp.old&&(cp.low||cp.ahiHi),cpT=cpLow?`最近一筆呼吸器紀錄（${cpapTxt(cp.x)}）${cp.low?'低於每晚 4 小時、一週 5 晚':'AHI 還在 10 以上'}。`:'';
      return sym?{lv:sym>=2?2:1,sc:`${sc}/8`,head:'已確診睡眠呼吸中止：症狀還在，回診確認治療',txt:'這份問卷是給還沒檢查過的人篩檢用的；你已經確診，要看的是治療有沒有效。還在大聲打鼾、白天很睏、被看到呼吸停止，可能是正壓呼吸器的壓力或面罩不合、每晚戴的時間不夠，或體重增加了。'+(cpT?' '+cpT:''),
        todo:['正壓呼吸器每晚戴 4 小時以上、一週至少 5 晚','回診帶呼吸器的使用紀錄（每晚時數、AHI、漏氣）','白天很想睡時先不要開車'],dept:'原本看睡眠呼吸中止的科（胸腔內科、耳鼻喉科或睡眠中心）',exams:['看正壓呼吸器的使用紀錄；必要時重新做睡眠檢查調整壓力']}
-     :cpLow?{lv:1,sc:`${sc}/8`,head:`已確診睡眠呼吸中止：症狀不多，但${cp.low?'呼吸器戴的時間不夠':'呼吸器顯示的 AHI 偏高'}`,txt:`${cpT}症狀不多不代表治療夠：每晚 4 小時以上、一週至少 5 晚，降血壓、保護心血管的效果才確定。戴不住常見是面罩不合、漏氣、鼻塞或壓力不舒服，回診時請醫師或呼吸治療師調整。`,
-       todo:['正壓呼吸器每晚戴 4 小時以上、一週至少 5 晚','回診帶呼吸器的使用紀錄（每晚時數、AHI、漏氣）'],dept:'原本看睡眠呼吸中止的科（胸腔內科、耳鼻喉科或睡眠中心）',exams:['看正壓呼吸器的使用紀錄；必要時調整壓力或換面罩']}
+     :cpLow?{lv:1,sc:`${sc}/8`,head:`已確診睡眠呼吸中止：症狀不多，但${cp.low?'呼吸器戴的時間不夠':'呼吸器顯示的 AHI 偏高'}`,txt:cp.low?`${cpT}症狀不多不代表治療夠：每晚 4 小時以上、一週至少 5 晚，白天精神和血壓的改善才比較明顯。戴不住常見是面罩不合、漏氣、鼻塞或壓力不舒服，回診時請醫師或呼吸治療師調整。${cp.ahiHi?'機器顯示的 AHI 也偏高（10 以上），一起請醫師看。':''}`
+         :`${cpT}呼吸器戴得夠，但機器顯示的 AHI 還在 10 以上：可能是壓力不夠、面罩漏氣，或體重、睡姿有變化。回診時帶使用紀錄，請醫師看壓力設定和面罩。`,
+       todo:cp.low?['正壓呼吸器每晚戴 4 小時以上、一週至少 5 晚','回診帶呼吸器的使用紀錄（每晚時數、AHI、漏氣）']:['回診帶呼吸器的使用紀錄（AHI、漏氣），請醫師看壓力設定和面罩'],dept:'原本看睡眠呼吸中止的科（胸腔內科、耳鼻喉科或睡眠中心）',
+       exams:[cp.low?'看正壓呼吸器的使用紀錄；必要時調整壓力或換面罩':'看正壓呼吸器的 AHI 與漏氣紀錄；必要時調整壓力、換面罩或重新做睡眠檢查']}
      :{lv:0,sc:`${sc}/8`,head:'已確診睡眠呼吸中止：目前症狀不多',txt:'打鼾、白天很睏、呼吸停止都沒有，表示治療可能有效。持續使用正壓呼吸器（或醫師建議的治療），照原本的時間回診。',todo:['正壓呼吸器每晚 4 小時以上','體重維持或再減一些'],dept:'照原本的回診安排',exams:[]}}
    const ex=['睡眠多項生理檢查（PSG），或居家睡眠呼吸檢測'];
    if(hi)return{lv:2,sc:`${sc}/8`,head:'睡眠呼吸中止：高風險',txt:'睡覺時呼吸一直中斷，會讓血壓、血糖變差，增加心房顫動、心臟病、中風，以及開車打瞌睡出車禍的風險。治療（正壓呼吸器、口腔止鼾器、減重）後，白天精神和血壓通常都會改善。',
@@ -4184,11 +4190,14 @@ let INS=obj(S.get('ins',{})),CLM=obj(S.get('clm',{}));   // {成員 id: [保單]
 const INSCAT=[['life','壽險（身故）'],['accident','意外身故／失能'],['acc_med','意外醫療'],['hosp_day','住院日額'],['hosp_real','住院醫療費用（實支實付）'],['surgery','手術'],['cancer','癌症'],['critical','重大疾病／重大傷病'],['disability','失能扶助'],['ltc','長期照顧'],['waiver','豁免保費'],['other','其他']];
 const INSCATK=Object.fromEntries(INSCAT);
 const INSMAP=[['life','壽險',['life']],['accident','意外',['accident','acc_med']],['med','醫療',['hosp_day','hosp_real','surgery']],['cancer','癌症',['cancer']],['critical','重大',['critical']],['disability','失能',['disability']],['ltc','長照',['ltc']]];
-// 狀態：減額繳清、展期定期＝不用再繳、保障還在（保額變小／只剩身故）；停效、已解約、滿期、已終止＝不算進保障。第 3 欄是清單上的短名稱
-const POL_ST=[['active','有效'],['paidup','繳費期滿（保障還在）'],['reduced','減額繳清（不用再繳、保額變小）','減額繳清'],['extended','展期定期（不用再繳、只保身故）','展期定期'],['lapsed','停效'],['surr','已解約'],['matured','滿期（保險期間結束）','滿期'],['ended','已終止'],['quote','候選（建議書，還沒買）']];
-const OFF_ST=['lapsed','surr','matured','ended'],stS=v=>{const x=POL_ST.find(z=>z[0]===v);return x?x[2]||x[1]:''};
-// 保單健診表的寫法 → 狀態代號：「減額繳清」要比「繳清」先比；保險／契約期滿＝滿期，繳費期滿＝繳費期滿；每一項（險種）沒寫就是 ''（同整張保單）
-const stParse=(v,dflt)=>{const s=String(v??'').trim();return POL_ST.some(x=>x[0]===s)?s:!s?dflt:/減額/.test(s)?'reduced':/展期/.test(s)?'extended':/解約|退保/.test(s)?'surr':/(保險|契約|保障)期滿|滿期/.test(s)?'matured':/停效/.test(s)?'lapsed':/終止|失效/.test(s)?'ended':/繳清|期滿|繳費完/.test(s)?'paidup':/有效|正常|繳費中|生效/.test(s)?'active':dflt};
+// 狀態：減額繳清、展期定期、豁免保費＝不用再繳、保障還在（保額變小／只剩身故／保費由保險公司豁免）；停效、已解約、滿期、已終止＝不算進保障。第 3 欄是清單上的短名稱
+const POL_ST=[['active','有效'],['paidup','繳費期滿（保障還在）'],['reduced','減額繳清（不用再繳、保額變小）','減額繳清'],['extended','展期定期（不用再繳、只保身故）','展期定期'],['waived','豁免保費（不用再繳、保障還在）','豁免保費'],['lapsed','停效'],['surr','已解約'],['matured','滿期（保險期間結束）','滿期'],['ended','已終止'],['quote','候選（建議書，還沒買）']];
+const OFF_ST=['lapsed','surr','matured','ended'],NOPAY_ST=['paidup','reduced','extended','waived'],stS=v=>{const x=POL_ST.find(z=>z[0]===v);return x?x[2]||x[1]:''};
+// 這一項算不算保障：狀態是停效、解約、滿期、終止的不算；減額繳清的附約、展期定期的非身故項目沒寫狀態時也先不算（附約條款常寫「主契約辦理減額繳清或展期定期時，本附約效力終止」）
+const itemOff=(p,c)=>OFF_ST.includes(c.st)||!c.st&&(p.status==='reduced'&&c.kind==='rider'||p.status==='extended'&&c.cat!=='life');
+// 保單健診表的寫法 → 狀態代號：「減額繳清」要比「繳清」先比；保險／契約期滿（屆滿）＝滿期，繳費期滿＝繳費期滿；括號裡的補充說明（例如「有效（附約已終止）」）不看；每一項（險種）沒寫就是 ''（同整張保單）
+const stParse=(v,dflt)=>{const s0=String(v??'').trim(),s=s0.replace(/[（(][^）)]*[）)]/g,'').trim()||s0;
+  return POL_ST.some(x=>x[0]===s0)?s0:!s0?dflt:/減額/.test(s)?'reduced':/展期/.test(s)?'extended':/豁免/.test(s)?'waived':/解約|退保/.test(s)?'surr':/(保險|契約|保障)(期間)?(期滿|屆滿)|滿期/.test(s)?'matured':/停效|效力停止|停止效力/.test(s)?'lapsed':/終止|失效|撤銷|撤回/.test(s)?'ended':/繳清|期滿|屆滿|繳費完/.test(s)?'paidup':/有效|正常|繳費中|生效/.test(s)?'active':dflt};
 const POL_TYPE=[['','一般'],['inv','投資型'],['grp','團體保險'],['trav','旅行平安險']];
 const UW_RES=[['','不確定'],['std','標準承保'],['extra','加費承保'],['excl','除外承保（有批註）'],['other','其他（延期、條件承保等）']];
 const PAYF=[['年',1],['半年',2],['季',4],['月',12],['躉繳',0]];
@@ -4196,15 +4205,15 @@ const RENEW=[['','不確定'],['guar','保證續保'],['yes','可續保（不保
 const insOf=m=>Array.isArray(INS[m.id])?INS[m.id]:[];
 const clmOf=m=>Array.isArray(CLM[m.id])?CLM[m.id]:[];
 const insFind=(m,id)=>insOf(m).find(p=>p.id===id);
-const polLive=(p,d=todayS())=>['active','paidup','reduced','extended'].includes(p.status)&&(!p.start||p.start<=d)&&(!p.endDate||p.endDate>=d);
-// 每期保費：整張沒寫時加總各項（保單健診表常常每個險種各列保費）；已終止、已經繳完的項目不算
-const polPrem=p=>{if(p.prem!=null)return p.prem;const d=todayS(),L=(p.items||[]).filter(c=>c.prem!=null&&!OFF_ST.includes(c.st)&&!(c.payEnd&&c.payEnd<d));return L.length?L.reduce((a,c)=>a+c.prem,0):null};
+const polLive=(p,d=todayS())=>['active',...NOPAY_ST].includes(p.status)&&(!p.start||p.start<=d)&&(!p.endDate||p.endDate>=d);
+// 每期保費：整張沒寫時加總各項（保單健診表常常每個險種各列保費）；已終止、已經繳完（繳費期滿、減額繳清…或繳費終期已過）的項目不算
+const polPrem=p=>{if(p.prem!=null)return p.prem;const d=todayS(),L=(p.items||[]).filter(c=>c.prem!=null&&!itemOff(p,c)&&!NOPAY_ST.includes(c.st)&&!(c.payEnd&&c.payEnd<d));return L.length?L.reduce((a,c)=>a+c.prem,0):null};
 const polAnnual=p=>{const k=(PAYF.find(x=>x[0]===p.payFreq)||[])[1],v=polPrem(p);return v!=null&&k?v*k:0};
 // 最後一期保費的日期（年繳＝生效日＋年期−1 年；月繳＝再晚 11 個月）。沒寫年期 → 各項的繳費終期取最晚的 → 「繳到幾歲」用出生年推算（by；沒給就找保單在哪位家人底下）；躉繳 → ''
 const polOwnerBY=p=>{const z=MEM.find(z=>insOf(z).includes(p));return z?birthY(z):null};
 const payEnd=(p,by)=>{if(p.payFreq==='躉繳')return'';if(p.start&&p.payYears){const k=(PAYF.find(x=>x[0]===p.payFreq)||[0,1])[1]||1,x=new Date(p.start+'T00:00');x.setMonth(x.getMonth()+Math.round(p.payYears*12-12/k));return ymd(x)}
-  const ie=(p.items||[]).filter(c=>c.payEnd&&!OFF_ST.includes(c.st)).map(c=>c.payEnd).sort().pop();if(ie)return ie;
-  if(p.payAge){const y=by??polOwnerBY(p);if(y)return `${y+p.payAge-1}-${/^\d{4}-\d{2}-\d{2}$/.test(p.start||'')?p.start.slice(5):'12-31'}`}return''};
+  const ie=(p.items||[]).filter(c=>c.payEnd&&!itemOff(p,c)).map(c=>c.payEnd).sort().pop();if(ie)return ie;
+  if(p.payAge){const y=by??polOwnerBY(p);if(y){const d=`${y+p.payAge-1}-${/^\d{4}-\d{2}-\d{2}$/.test(p.start||'')?p.start.slice(5):'12-31'}`;return p.start&&d<p.start?'':d}}return''};
 // 還在繳費：繳費期滿、躉繳、已經過了最後一期的，不算進每年保費
 const polPaying=(p,d=todayS())=>p.status==='active'&&polLive(p,d)&&p.payFreq!=='躉繳'&&!(payEnd(p)&&d>payEnd(p));
 const isLifeC=(p,c)=>/終身/.test(c.name||'')||(c.kind!=='rider'&&/終身/.test(p.product||''));   // 「終身」：保障名稱有寫，或主約的商品名稱有寫
@@ -4284,13 +4293,13 @@ function polDiff(a,b){const D=[],f=(k,t,fm=v=>v==null||v===''?'—':v)=>{if(Stri
   for(const[k,c]of A)if(!B.has(k)&&!mv.has(k))D.push(`移除「${c.name}」`);
   if(JSON.stringify(a.uw||null)!==JSON.stringify(b.uw||null))D.push('核保／批註改了');return D}
 function polRestore(p,i){const h=(p.hist||[])[i];if(!h)return;const cur={t:todayS(),why:'restore',d:polSnap(p)},rest=p.hist.filter((_,j)=>j!==i);for(const k of POLK)delete p[k];Object.assign(p,JSON.parse(JSON.stringify(h.d)));p.hist=[cur,...rest].slice(0,5)}
-function polLine(p){const pe=payEnd(p),a=polAnnual(p),np=p.status==='reduced'||p.status==='extended',done=p.status==='paidup'||np||pe&&todayS()>pe,x=POL_ST.find(z=>z[0]===p.status)||POL_ST[0];
+function polLine(p,by){const pe=payEnd(p,by),a=polAnnual(p),np=['reduced','extended','waived'].includes(p.status),done=p.status==='paidup'||np||pe&&todayS()>pe,x=POL_ST.find(z=>z[0]===p.status)||POL_ST[0];
   return[x[2]||x[1],p.start&&'生效 '+p.start,p.payFreq==='躉繳'?'躉繳':a&&!done&&!OFF_ST.includes(p.status)?`年繳 ${ntd(a)}`:'',np?'不用再繳':pe&&(done?'已繳完':`繳到 ${pe.slice(0,4)} 年`),`${(p.items||[]).length} 項保障`].filter(Boolean).join('・')}
 const covAmt=c=>c.amt==null?'—':`${c.amt.toLocaleString()} ${c.unit||''}`.trim();
 // 保障加總：有效保單、還沒到期的保障；不同給付單位（每日、每次、一次給付）分開加；不是金額的（單位／計畫、倍數、豁免保費、沒寫金額）只算項數
 function covSum(m,d=todayS(),extra=[]){const R={},age=ageOf(m);
   for(const p of[...insOf(m).filter(p=>polLive(p,d)),...extra]){const lv=polLv(p,m);
-    for(const c of p.items||[]){if(OFF_ST.includes(c.st)||(c.endDate&&c.endDate<d)||(c.maxAge!=null&&age>=c.maxAge))continue;const u=covUnit(c),nm=!!u.nm||c.amt==null,k=c.cat+'|'+(nm?'nm':u.per);
+    for(const c of p.items||[]){if(itemOff(p,c)||(c.endDate&&c.endDate<d)||(c.maxAge!=null&&age>=c.maxAge))continue;const u=covUnit(c),nm=!!u.nm||c.amt==null,k=c.cat+'|'+(nm?'nm':u.per);
       const o=R[k]||(R[k]={cat:c.cat,per:nm?'':u.per,nm,v:0,n:0,un:0,er:0});if(!nm)o.v+=c.amt*u.mul;o.n++;if(lv==='err')o.er++;else if(lv!=='ok')o.un++}}
   return Object.values(R)}
 const covTxt=(s,long)=>s.nm?(s.cat==='waiver'?`${s.n} 項（不算金額）`:long?`${s.n} 項金額算不出來（以單位／計畫／倍數計，或沒寫金額）`:`${s.n} 項不是金額（看條款）`):`${money(s.v)}${PERT[s.per]}`;
@@ -4305,10 +4314,12 @@ function polAudit(p,m){const F=[],add=(lv,k,t,fix,ci)=>F.push({lv,k,t,fix,ci}),Y
   if(p.start&&/^\d{4}-\d{2}-\d{2}$/.test(b)&&p.start<b){const dd=dSign(b,p.start);
     if(dd>280)add('err','x',`生效日 ${p.start} 早於被保險人（${m.name}）出生日 ${b}`,'常見原因：① 匯入到錯的家人（例如父母的保單放到小孩名下）→ 刪除後重新匯入，選對被保險人；② 民國年換算錯（民國年＋1911＝西元年）→ 按「編輯」改生效日。');
     else add('chk','x',`生效日 ${p.start} 在 ${m.name} 出生前 ${dd} 天`,'懷孕時投保的新生兒保單是正常的；不是的話請按「編輯」改生效日。')}
+  if(p.payAge!=null&&p.start&&/^\d{4}-\d{2}-\d{2}$/.test(b)){const a0=Math.floor(dSign(p.start,b)/365.25);if(a0>=0&&p.payAge<=a0)add('err','x',`繳到 ${p.payAge} 歲，但 ${p.start} 生效時已經 ${a0} 歲`,`多半是把「繳 ${p.payAge} 年」讀成「繳到 ${p.payAge} 歲」：按下面的按鈕改成繳費年期；不是的話按「編輯」修正。`)}
   const pe=payEnd(p,birthY(m));
-  if(p.status==='paidup'&&pe&&Y<pe)add('err','x',`狀態是「繳費期滿」，但 ${p.start} 生效、繳 ${p.payYears} 年，最後一期在 ${pe.slice(0,7)}`,'看最近一次繳費通知、保單健診或保險公司 App：還在繳 → 改成「有效」；辦了減額繳清（不用再繳、保額變小）→ 改成「減額繳清」，再把金額改成減額後的保額；提前繳清 → 按「編輯」把繳費年期改成實際繳了幾年。');
+  if(p.status==='paidup'&&pe&&Y<pe)add('err','x',p.start&&p.payYears?`狀態是「繳費期滿」，但 ${p.start} 生效、繳 ${p.payYears} 年，最後一期在 ${pe.slice(0,7)}`:`狀態是「繳費期滿」，但最後一期在 ${pe.slice(0,7)}（${(p.items||[]).some(c=>c.payEnd===pe)?'看各項的繳費終期':`繳到 ${p.payAge} 歲`}）`,'看最近一次繳費通知、保單健診或保險公司 App：還在繳 → 改成「有效」；辦了減額繳清（不用再繳、保額變小）→ 改成「減額繳清」，再把金額改成減額後的保額；提前繳清 → 按「編輯」把繳費年期改成實際繳了幾年。');
   if(p.status==='active'&&pe&&Y>pe)add('info','d',`繳費年期已滿（最後一期 ${pe.slice(0,7)}）`,'確認已經繳完，可以按「編輯」把狀態改成「繳費期滿」；每年保費已經不算這張。');
   if(p.status==='reduced')add('chk','v','減額繳清：不用再繳保費，保額比原本小','保單健診、保險存摺或保險公司 App 上的「減額後保額」才是現在的保障：對照後按「編輯」把金額改成減額後的保額。附約通常在辦減額繳清時就終止了（看附約條款）。');
+  if(p.status==='waived')add('info','d','豁免保費：不用再繳，保障照常','發生條款寫的狀況（例如失能、重大傷病）後，之後的保費由保險公司豁免、保障照常；每年保費不算這張。');
   if(p.status==='extended')add('chk','v','展期定期：不用再繳保費，只保身故、保到展期期滿日','看批註書的「展期期滿日」，按「編輯」填到期日；醫療、附約和生存給付通常已經終止。');
   if(p.type==='inv')add('info','d','投資型保單：保費有一部分是投資','保障看身故保險金或保額；保費包含投資和費用，不全是保障。帳戶價值會漲跌，看保險公司的對帳單。');
   if(p.type==='grp')add('info','d','團體保險：離職、退休或公司不續保後就沒有','不要當成長期保障：離職或退休前，先評估要不要自己買（有些團體保險離職時可以轉成個人保單，問人資或保險公司）。');
@@ -4317,9 +4328,9 @@ function polAudit(p,m){const F=[],add=(lv,k,t,fix,ci)=>F.push({lv,k,t,fix,ci}),Y
   if(polPrem(p)==null&&p.payFreq!=='躉繳'&&p.status==='active'&&!(pe&&Y>pe))add('chk','d','沒有保費','看保單首頁或繳費通知的「每期保費」，按「編輯」填上，每年保費和保費負擔才算得準。');
   else if(polPrem(p)!=null&&!p.payFreq)add('chk','d','繳別不明：每年保費先不算','看繳費通知是年繳、半年繳、季繳還是月繳，按「編輯」選繳別。');
   if(polPrem(p)===0&&p.status==='active'&&p.payFreq!=='躉繳'&&!(pe&&Y>pe))add('chk','d','每期保費是 0','還在繳費的保單保費不會是 0：多半是 AI 沒讀到（保費常在另一頁）。看繳費通知或保險公司 App，按「編輯」填上實際保費；已經繳完就把狀態改成「繳費期滿」。');
-  (p.items||[]).forEach((c,i)=>{if(OFF_ST.includes(c.st))return;const u=covUnit(c),n=`「${c.name}」`,amt=c.amt;
-    if(p.status==='reduced'&&c.kind==='rider'&&!c.st)add('chk','v',`${n}是附約：主約減額繳清後通常已經終止`,'看保單健診或保險公司 App：已經終止就按下面的按鈕；還有效就不用改（按「我已核對」）。',i);
-    if(p.status==='extended'&&c.cat!=='life'&&!c.st)add('chk','v',`${n}：展期定期只保身故，這項通常已經沒有`,'看批註書：已經沒有就按下面的按鈕；還有效就不用改（按「我已核對」）。',i);
+  (p.items||[]).forEach((c,i)=>{const n=`「${c.name}」`;
+    if(!c.st&&itemOff(p,c)){add('chk','x',p.status==='reduced'?`${n}是附約：主約減額繳清後通常已經終止（App 先不算）`:`${n}：展期定期只保身故，這項通常已經沒有（App 先不算）`,'看保單健診、保險存摺或保險公司 App：還有效就按「還有效」，這項會算回保障；已經終止就按「確定已終止」。按「我已核對」不會讓這個提醒消失。',i);return}
+    if(itemOff(p,c))return;const u=covUnit(c),amt=c.amt;
     if(['hosp_day','hosp_real','surgery'].includes(c.cat)&&/傷害/.test(c.name)&&!/疾病/.test(c.name))add('chk','v',`${n}名稱有「傷害」：可能只賠意外受傷`,'看條款：只有意外受傷才賠的，改成「意外醫療」，生病住院的保障才不會看起來比實際多；生病也賠就不用改（按「我已核對」）。',i);
     if(/一年期/.test(c.name)&&!c.renew)add('info','d',`${n}是一年期：每年續保`,'一年期的保費會隨年齡調整；不保證續保的，保險公司可以不續保。看條款有沒有寫「保證續保」，按「編輯」選續保方式。',i);
     if(u.nm==='waiver')add('info','d',`${n}是豁免保費：不算保障金額`,'不用改。發生條款寫的狀況（例如失能、重大疾病）後，之後的保費不用再繳。',i);
@@ -4341,10 +4352,12 @@ function polLv(p,m){if(p.status==='quote')return'quote';if(OFF_ST.includes(p.sta
 const PLV={err:['🔴','錯誤','bad'],chk:['🟠','待核對','warn'],ok:['🟢','已核對','ok'],quote:['🔵','候選',''],off:['⚪','不計入','mute'],info:['⚪','參考','mute']};
 // 有明確修法的檢查結果，直接給按鈕（改之前存進變更紀錄，可以復原）
 const PFIX=[[/^停效中/,'st_active','已經復效：改成「有效」'],[/早於被保險人/,'move','👥 移到其他家人'],[/^狀態是「繳費期滿」/,'st_active','還在繳：改成「有效」'],[/^狀態是「繳費期滿」/,'st_reduced','辦了減額繳清：改成「減額繳清」'],[/^繳費年期已滿/,'st_paidup','已經繳完：改成「繳費期滿」'],[/^(沒有保費|每期保費是 0)$/,'prem','填每期保費'],[/^繳別不明/,'freq','選繳別'],
-  [/可能只賠意外受傷/,'c_accmed','只賠意外：改成「意外醫療」',1],[/通常已經終止|這項通常已經沒有/,'c_end','已經終止：這項不算保障',1]];
+  [/^繳到 \d+ 歲，但/,'pay_yrs','其實是繳費年期：改成「繳幾年」'],
+  [/可能只賠意外受傷/,'c_accmed','只賠意外：改成「意外醫療」',1],[/通常已經終止|這項通常已經沒有/,'c_act','還有效：算回保障',1],[/通常已經終止|這項通常已經沒有/,'c_end','確定已終止',1]];
 function polFix(m,p,a,ci){const before=polSnap(p);
   if(a==='st_active')p.status='active';else if(a==='st_paidup')p.status='paidup';else if(a==='st_reduced')p.status='reduced';
-  else if(a==='c_accmed'||a==='c_end'){const c=ci==null||ci===''?null:(p.items||[])[+ci];if(!c)return false;if(a==='c_accmed')c.cat='acc_med';else c.st='ended'}
+  else if(a==='c_accmed'||a==='c_end'||a==='c_act'){const c=ci==null||ci===''?null:(p.items||[])[+ci];if(!c)return false;if(a==='c_accmed')c.cat='acc_med';else c.st=a==='c_act'?'active':'ended'}
+  else if(a==='pay_yrs'){if(p.payAge==null)return false;if(p.payYears==null)p.payYears=p.payAge;p.payAge=null}
   else if(a==='prem'){const raw=prompt(`${p.insurer} ${p.product}\n每期保費（元，可寫 2.4萬）：看繳費通知或保單首頁`,p.prem||'');if(raw==null)return false;const t=String(raw).replace(/[,，\s元]/g,''),mt=t.match(/^(\d+(?:\.\d+)?)(萬|千|仟)?$/),v=mt?+mt[1]*(mt[2]==='萬'?1e4:mt[2]?1e3:1):null;
     if(v==null||v<100||v>1e7){toast('請輸入每期保費的金額，例如 24000 或 2.4萬（太低或看不懂的不會存）');return false}p.prem=Math.round(v)}
   else if(a==='freq'){const raw=prompt('繳別：年、半年、季、月或躉繳',p.payFreq||'年');if(raw==null)return false;const f=/躉/.test(raw)?'躉繳':/半年/.test(raw)?'半年':/季/.test(raw)?'季':/月/.test(raw)?'月':/年/.test(raw)?'年':'';if(!f){toast('請輸入：年、半年、季、月或躉繳');return false}p.payFreq=f}
@@ -4394,7 +4407,7 @@ const premGauge=(r,lab)=>r==null?'':`<div class="row" style="margin:12px 0 0"><s
 function covTimelineSVG(m){const a0=Math.floor(ageOf(m)),by=birthY(m),A1=Math.max(100,a0+10),X0=58,X1=292,x=a=>X0+(Math.min(A1,Math.max(a0,a))-a0)/(A1-a0)*(X1-X0),R=[];
   const COL={life:'#22e4ff',accident:'#ffb547',med:'#b6ff3c',cancer:'#ff4fa3',critical:'#ff5d6c',disability:'#a78bfa',ltc:'#60a5fa'};
   for(const[g,t,cats]of INSMAP){const E=[];let life=0;
-    for(const p of insOf(m).filter(p=>polLive(p)))for(const c of p.items||[]){if(!cats.includes(c.cat)||OFF_ST.includes(c.st)||(c.maxAge!=null&&a0>=c.maxAge))continue;const e=covEndAge(p,c,by);
+    for(const p of insOf(m).filter(p=>polLive(p)))for(const c of p.items||[]){if(!cats.includes(c.cat)||itemOff(p,c)||(c.maxAge!=null&&a0>=c.maxAge))continue;const e=covEndAge(p,c,by);
       if(e==null){if(isLifeC(p,c))life++;E.push(A1)}else if(e>=100){life++;E.push(A1)}else if(e>a0)E.push(e)}
     if(E.length)R.push({g,t,E:E.sort((a,b)=>a-b),life})}
   if(!R.length)return'';
@@ -4422,7 +4435,7 @@ function openGapEdit(){const m=me(),D=gapDef(m),T=obj(m.covT);
 function insEnding(m,yrs=15){const out=[],Y=new Date().getFullYear(),by=birthY(m);
   for(const p of insOf(m)){if(!polLive(p))continue;const pd=payEnd(p),pe=pd?+pd.slice(0,4):null;if(pe&&p.status==='active'&&pd>=todayS()&&pe-Y<yrs)out.push({y:pe,t:`${p.insurer} ${p.product}：繳費到 ${pe} 年`,when:pe===Y?'今年最後一期':`還有 ${pe-Y} 年`});
     const pend=p.endDate?+p.endDate.slice(0,4):p.endAge?by+p.endAge:null;
-    for(const c of p.items||[]){if(OFF_ST.includes(c.st))continue;const y=c.endDate?+c.endDate.slice(0,4):c.maxAge?by+c.maxAge:pend;if(!y||y<Y||y-Y>=yrs)continue;
+    for(const c of p.items||[]){if(itemOff(p,c))continue;const y=c.endDate?+c.endDate.slice(0,4):c.maxAge?by+c.maxAge:pend;if(!y||y<Y||y-Y>=yrs)continue;
       out.push({y,t:`${p.insurer} ${c.name}：保到 ${c.maxAge?c.maxAge+' 歲':y+' 年'}${c.renew==='no'?'（不保證續保）':''}`,when:y===Y?'今年到期':`${y} 年，還有 ${y-Y} 年`})}}
   return out.sort((a,b)=>a.y-b.y)}
 function renderIns(){renderPol();renderCov();renderClm();renderTool()}
@@ -4442,7 +4455,7 @@ function renderCov(){const m=me(),el=$('#covBody');if(!el)return;const L=insOf(m
   const rows=INSCAT.filter(([k])=>k!=='other'||sum.some(s=>s.cat==='other')).map(([k,t])=>{const s=sum.filter(x=>x.cat===k);
     return `<span>${t}</span><span>${s.length?s.map(x=>x.nm?`<span class="sub">${covTxt(x)}</span>`:`<b>${money(x.v)}${PERT[x.per]}</b>${x.er?' <em class="dev bad">含錯誤</em>':x.un?' <em class="dev">含待核對</em>':''}`).join('<br>'):'<span class="sub">目前沒有</span>'}</span>`}).join('');
   const end=insEnding(m),pay=p=>polPaying(p)?polAnnual(p):0,tot=L.reduce((a,p)=>a+pay(p),0),fam=MEM.reduce((a,z)=>a+insOf(z).reduce((b,p)=>b+pay(p),0),0),famInc=MEM.reduce((a,z)=>a+(num(z.inc)||0),0),inc=num(m.inc)||0;
-  const cell=(z,cats)=>{const P=insOf(z).filter(p=>polLive(p)&&(p.items||[]).some(c=>cats.includes(c.cat)&&!OFF_ST.includes(c.st)&&!(c.maxAge!=null&&ageOf(z)>=c.maxAge)));if(!P.length)return'—';const V=P.map(p=>polLv(p,z));return V.includes('err')?'✕':V.includes('ok')?'✔':'待'};
+  const cell=(z,cats)=>{const P=insOf(z).filter(p=>polLive(p)&&(p.items||[]).some(c=>cats.includes(c.cat)&&!itemOff(p,c)&&!(c.maxAge!=null&&ageOf(z)>=c.maxAge)));if(!P.length)return'—';const V=P.map(p=>polLv(p,z));return V.includes('err')?'✕':V.includes('ok')?'✔':'待'};
   const G=covGap(m),decl=healthDecl(m),tl=covTimelineSVG(m),paid=L.filter(p=>polLive(p)&&!polPaying(p)&&polAnnual(p));
   el.innerHTML=`${PL.length?`<div class="card"><h2>${esc(m.name)} 的保障缺口</h2>${G.map(gapRow).join('')}
       <button class="btn ghost" data-gapedit style="margin-top:10px">🎯 調整目標、年收入、負債</button>
@@ -4462,7 +4475,7 @@ function renderCov(){const m=me(),el=$('#covBody');if(!el)return;const L=insOf(m
       ${premGauge(inc?tot/(inc*1e4):null,`${m.name} 保費占年收入`)}${MEM.length>1?premGauge(famInc?fam/(famInc*1e4):null,'全家保費占全家年收入'):''}
       <p class="note">${inc||famInc?'常見建議：保費不超過年收入 10%（綠）；超過 20%（紅）要檢查有沒有重複，或儲蓄型保單太多。':'填年收入（「保障缺口」→ 調整目標）就能看保費負擔：常見建議不超過年收入 10%。'}繳費期滿、躉繳的不算進每年保費。</p>
       ${L.filter(p=>polPaying(p)&&polAnnual(p)).map(p=>`<div class="row sub" style="padding:6px 0">${esc(p.insurer)} ${esc(p.product)}<span>${ntd(polAnnual(p))}</span></div>`).join('')}
-      ${paid.length?`<div class="sub" style="margin-top:6px">已經繳完、保障還在：${paid.map(p=>esc(p.insurer+' '+p.product+(p.status==='reduced'||p.status==='extended'?'（'+stS(p.status)+'）':''))).join('、')}</div>`:''}</div>
+      ${paid.length?`<div class="sub" style="margin-top:6px">已經繳完、保障還在：${paid.map(p=>esc(p.insurer+' '+p.product+(['reduced','extended','waived'].includes(p.status)?'（'+stS(p.status)+'）':''))).join('、')}</div>`:''}</div>
     <div class="card"><h2>全家保障地圖</h2><div style="overflow-x:auto"><table class="imap"><tr><th></th>${INSMAP.map(([,t])=>`<th>${t}</th>`).join('')}<th>缺口</th></tr>
       ${MEM.map(z=>{const gc=covGap(z).filter(g=>['none','low','other'].includes(g.st)),red=gc.some(g=>g.core&&g.st==='none');return `<tr><th>${esc(z.name)}</th>${INSMAP.map(([,,cats])=>{const v=cell(z,cats);return `<td class="${v==='✔'?'ok':v==='待'?'wt':v==='✕'?'er':''}">${v}</td>`}).join('')}<td class="${gc.length?(red?'gp1':'gp2'):'ok'}">${gc.length||'✔'}</td></tr>`}).join('')}</table></div>
       <p class="note"><b style="color:var(--lime)">✔</b> 已核對　<b style="color:var(--amber)">待</b> 還沒核對　<b style="color:var(--red)">✕</b> 資料有錯　— 沒有。「缺口」＝App 粗算低於目標或沒有的項目數（紅色＝壽險、意外、實支實付這些基本保障沒有）。依保單內容分類，不是看商品名稱。</p></div>
@@ -4482,12 +4495,12 @@ function openPol(id){const m=me(),p=insFind(m,id);if(!p)return;const pe=payEnd(p
   openSheet(sheetHead(`📑 ${esc(p.insurer)}`,esc(p.product))+`
     <div class="plvbar plv-${lv}"><b>${PLV[lv][0]} ${PLV[lv][1]}</b><span>${lvTxt}</span></div>
     <div class="kv" style="margin:12px 0">${[['狀態',(POL_ST.find(x=>x[0]===p.status)||POL_ST[0])[1]],['生效日',p.start||'—'],['保單號碼末 4 碼',p.no4||'—'],['繳費',[p.payFreq&&p.payFreq+(p.payFreq==='躉繳'?'':'繳'),(v=>v!=null&&v.toLocaleString()+' 元'+(p.prem==null?'（各項加總）':''))(polPrem(p)),p.payYears&&p.payYears+' 年期',p.payAge&&'繳到 '+p.payAge+' 歲'].filter(Boolean).join('・')||'—'],
-      ['年繳保費',polAnnual(p)?ntd(polAnnual(p))+(p.status==='paidup'&&pe&&todayS()<pe?'（狀態寫繳費期滿，但還沒繳完：看下面）':p.status==='reduced'||p.status==='extended'?`（${stS(p.status)}：不用再繳）`:p.status==='paidup'||pe&&todayS()>pe?'（已繳完）':''):'—'],['繳到',pe?pe.slice(0,4)+' 年'+(!(p.start&&p.payYears)&&!(p.items||[]).some(c=>c.payEnd&&!OFF_ST.includes(c.st))&&p.payAge?'（依生日推算）':''):'—'],['保障到',p.endDate||(p.endAge?p.endAge+' 歲':/終身/.test(p.product||'')?'終身（依名稱判斷）':'—')],['受益人',p.bene||'—'],['要保人',p.holder||'—'],...(p.type?[['類型',(POL_TYPE.find(x=>x[0]===p.type)||POL_TYPE[0])[1]]]:[]),['核保',p.uw?(UW_RES.find(x=>x[0]===p.uw.res)||UW_RES[0])[1]+(p.uw.excl?'：'+p.uw.excl:''):'—'],['來源',p.src==='ai'?`AI 讀取（${p.t}${p.ver?'，App '+p.ver:''}）`:'手動輸入']].map(([a,b])=>`<span>${a}</span><span>${esc(b)}</span>`).join('')}</div>
+      ['年繳保費',polAnnual(p)?ntd(polAnnual(p))+(p.status==='paidup'&&pe&&todayS()<pe?'（狀態寫繳費期滿，但還沒繳完：看下面）':['reduced','extended','waived'].includes(p.status)?`（${stS(p.status)}：不用再繳）`:p.status==='paidup'||pe&&todayS()>pe?'（已繳完）':''):'—'],['繳到',pe?pe.slice(0,4)+' 年'+(!(p.start&&p.payYears)&&!(p.items||[]).some(c=>c.payEnd&&!OFF_ST.includes(c.st))&&p.payAge?'（依生日推算）':''):'—'],['保障到',p.endDate||(p.endAge?p.endAge+' 歲':/終身/.test(p.product||'')?'終身（依名稱判斷）':'—')],['受益人',p.bene||'—'],['要保人',p.holder||'—'],...(p.type?[['類型',(POL_TYPE.find(x=>x[0]===p.type)||POL_TYPE[0])[1]]]:[]),['核保',p.uw?(UW_RES.find(x=>x[0]===p.uw.res)||UW_RES[0])[1]+(p.uw.excl?'：'+p.uw.excl:''):'—'],['來源',p.src==='ai'?`AI 讀取（${p.t}${p.ver?'，App '+p.ver:''}）`:'手動輸入']].map(([a,b])=>`<span>${a}</span><span>${esc(b)}</span>`).join('')}</div>
     ${flagsHTML(F,p.id)}
-    <div class="h4">保障項目</div>${(p.items||[]).map((c,i)=>`<div class="cdet${iw(i)}"><div class="row" style="margin:0"><b>${esc(c.name)}</b><span class="tg${OFF_ST.includes(c.st)?' mute':''}">${esc(INSCATK[c.cat]||'其他')}</span></div>
+    <div class="h4">保障項目</div>${(p.items||[]).map((c,i)=>`<div class="cdet${iw(i)}"><div class="row" style="margin:0"><b>${esc(c.name)}</b><span class="tg${itemOff(p,c)?' mute':''}">${esc(INSCATK[c.cat]||'其他')}</span></div>
       <div style="margin-top:4px"><b>${esc(covAmt(c))}</b>${c.kind==='rider'?' <span class="sub">附約</span>':''}${c.limit?` <span class="sub">${esc(c.limit)}</span>`:''}</div>
       <div class="sub">${esc([c.wait!=null&&`等待期 ${c.wait} 天`,c.renew&&(RENEW.find(x=>x[0]===c.renew)||[])[1],endTxt(c)].filter(Boolean).join('・'))}</div>
-      ${(t=>t?`<div class="sub">${esc(t)}</div>`:'')([c.st&&(OFF_ST.includes(c.st)?stS(c.st)+'（不算保障）':stS(c.st)),c.code&&'代碼 '+c.code,c.start&&'始期 '+c.start,c.payEnd&&'繳費到 '+c.payEnd,c.prem!=null&&'保費 '+c.prem.toLocaleString()+' 元'].filter(Boolean).join('・'))}
+      ${(t=>t?`<div class="sub">${esc(t)}</div>`:'')([c.st?(OFF_ST.includes(c.st)?stS(c.st)+'（不算保障）':stS(c.st)):itemOff(p,c)?`主約${stS(p.status)}：App 先不算`:'',c.code&&'代碼 '+c.code,c.start&&'始期 '+c.start,c.payEnd&&'繳費到 '+c.payEnd,c.prem!=null&&'保費 '+c.prem.toLocaleString()+' 元'].filter(Boolean).join('・'))}
       ${c.excl?`<div class="sub">除外：${esc(c.excl)}</div>`:''}${c.quote?`<div class="sub" style="margin-top:4px;border-left:2px solid var(--line);padding-left:8px">原文${c.page?`（第 ${esc(c.page)} 頁）`:''}：${esc(c.quote)}</div>`:''}</div>`).join('')||'<div class="sub">沒有保障項目</div>'}
     ${p.uw?.decl?`<div class="sub" style="margin:8px 0">投保時告知：${esc(p.uw.decl)}</div>`:''}
     ${p.status==='quote'?'<button class="btn ai" id="pd-buy" style="margin:10px 0 0">✅ 已經投保了（轉成正式保單）</button>':''}
@@ -4569,7 +4582,7 @@ function openPolImport(){const m=me();openSheet(sheetHead('📷 用 AI 匯入保
       const XF=polAudit(x.p,mm).filter(f=>f.k==='x'&&f.lv!=='info'),on=!x.err.length&&!(dup&&!x.diff.length)&&!XF.some(f=>f.lv==='err');
       return `<div class="cdet">
       <div class="row" style="margin:0;gap:10px"><b style="min-width:0">${esc(x.p.insurer||'？')}・${esc(x.p.product||'？')}</b><label style="margin:0;display:flex;gap:6px;align-items:center;flex:0 0 auto"><input type="checkbox" data-pi="${i}" style="width:auto"${on?' checked':''}${x.err.length?' disabled':''}>匯入</label></div>
-      <div class="sub">${esc(polLine(x.p))}${x.p.hint?'・AI 判斷被保險人：'+esc(x.p.hint):''}</div>
+      <div class="sub">${esc(polLine(x.p,birthY(MEM.find(z=>z.id===x.mid)||m)))}${x.p.hint?'・AI 判斷被保險人：'+esc(x.p.hint):''}</div>
       <label>被保險人</label><select data-pim="${i}">${MEM.map(z=>`<option value="${esc(z.id)}"${z.id===x.mid?' selected':''}>${esc(z.name)}</option>`).join('')}</select>
       <div class="kv" style="margin:8px 0">${x.p.items.map(c=>`<span>${esc(c.name)}</span><span><b>${esc(covAmt(c))}</b></span>`).join('')}</div>
       ${x.err.length?`<div class="hl bad">❌ ${esc(x.err.join('；'))}：不能匯入，請 AI 重讀這張</div>`:''}
@@ -4596,7 +4609,7 @@ function promptPolicy(){return `你是「保單資料擷取器」。我會附上
 4. amount 只填數字（不含逗號）；unit 照文件寫法另外填（例如「萬元」「元/日」「元」「倍」「萬元/次」）。
 5. 日期一律西元 YYYY-MM-DD；文件是民國年請加 1911（例如 110/03/05 → 2021-03-05）。
 6. premium 填文件上整張保單的「每期保費」，payFreq 填繳別（年繳、半年繳、季繳、月繳、躉繳）；不要換算成年繳。payYears 填繳費年期（例如 20 年期填 20）；文件寫「繳至 X 歲」就把 X 填在 payToAge，payYears 填 null，不要自己換算。
-7. status 照文件寫（例如 有效、正常繳費、繳費期滿、減額繳清、展期定期、停效、解約、滿期、終止）。
+7. status 照文件寫（例如 有效、正常繳費、繳費期滿、減額繳清、展期定期、豁免保費、停效、解約、滿期、終止）。
 8. 保單健診表或明細表上，每一項險種（主約、附約）各有一列時：險種代碼填 code、這一項自己的狀態填 coverages 的 status、投保始期填 start、繳費終期填 payEnd、這一項的每期保費填 coverages 的 premium。
 9. cat 只能用下面的代號；判斷不出來就填 "other"，不要硬分類。名稱有「傷害」的醫療給付（例如傷害醫療保險金、傷害住院日額；名稱同時有「疾病」的不算）用 acc_med，不要用 hosp_day、hosp_real、surgery；燒燙傷保險金用 other。主約 kind 填 "main"，附約填 "rider"。
 10. 保險公司欄位空白、但商品名稱裡有公司名（例如「○○人壽△△終身壽險」）：insurer 填商品名稱裡的公司名。
@@ -4626,6 +4639,7 @@ function evtMatch(m,e){const cats=new Set([...(EVT_CAT[e.type]||[]),...(/癌/.te
       pw.push(`既往症提醒：「${c.name}」${c.y} 年確診，早於這張保單生效（${p.start.slice(0,4)} 年）：投保時有據實告知、也沒有被除外，通常照條款理賠；沒告知可能有爭議（保險法第 64 條）`)}
     out.push({p,live,pw,its:its.map(c=>{const w=[];if(!live)w.push(p.start&&p.start>e.d?'事故時保單還沒生效':'事故時保單不是有效狀態');const cs=c.start||p.start;if(c.start&&e.d&&c.start>e.d)w.push('事故時這項還沒生效');else if(c.wait&&cs&&e.d&&dSign(e.d,cs)<c.wait)w.push(`等待期內（生效 ${Math.max(0,dSign(e.d,cs))} 天，等待期 ${c.wait} 天）：可能不賠`);
       if(OFF_ST.includes(c.st)){const x={lapsed:'停效',surr:'解約',matured:'滿期',ended:'終止'}[c.st];w.push(`這項保障已經${x}：事故發生在${x}之前才能申請`)}
+      else if(itemOff(p,c))w.push(`主約${stS(p.status)}後這項通常已經終止：確認還有效才能申請`);
       if(c.maxAge!=null&&age>=c.maxAge)w.push(`事故時已超過 ${c.maxAge} 歲`);if(!p.chk)w.push('保單還沒核對');
       const u=unitInfo(c.unit),days=e.type==='ad'||e.type==='sx'||e.end?Math.max(0,dSign(e.end||e.d,e.d)):0;
       const est=c.cat==='hosp_day'&&u.per==='day'&&c.amt&&days?`粗估 ${money(c.amt*u.mul*days)}（${c.amt.toLocaleString()} ${c.unit} × ${days} 天）`:'';return{c,w,est}})})}return out}
@@ -4680,8 +4694,8 @@ const JOB_SI={mil:'軍人保險、全民健保；退撫依軍職人員規定',ci
 const EVID='【證據分級】A＝原始保單條款、正式醫療文件、官方法規；B＝保險公司正式文件、政府公開資料；C＝醫療指引、專業機構資料；D＝使用者自述或未核對資料；E＝AI 推論。每個重要結論都標出等級與依據（文件名稱、頁碼或條號）。';
 const INS_RULE='【共同規則】①只根據我提供的資料與可查證的官方來源 ②不得自行創造條款、金額、診斷或法規 ③找不到資料就寫「尚未確認」，不要硬下結論 ④不保證理賠結果、不鼓勵誇大或隱瞞病情 ⑤推論和事實分開寫 ⑥這是輔助整理，不取代保險公司核定、醫師或法律專業意見。';
 const memTag=(z,i)=>{const rl=(ROLES.find(r=>r[0]&&r[0]===z.role)||[])[1],jb=(JOBS.find(j=>j[0]&&j[0]===z.job)||[])[1];return `成員${i+1}（${[rl,sexT(z.sex),Math.floor(ageOf(z))+' 歲',jb,z.earner&&'家庭主要收入者',num(z.inc)&&`年收入約 ${num(z.inc)} 萬`,num(z.debt)&&`負債約 ${num(z.debt)} 萬`].filter(Boolean).join('、')}）`};
-const polPack=p=>({insurer:p.insurer,product:p.product,start:p.start||null,payFreq:p.payFreq||null,premium:p.prem??null,payYears:p.payYears??null,status:(POL_ST.find(x=>x[0]===p.status)||POL_ST[0])[1],checked:!!p.chk,
-  coverages:(p.items||[]).map(c=>({name:c.name,cat:INSCATK[c.cat]||c.cat,amount:c.amt,unit:c.unit||null,waitingDays:c.wait??null,renewable:(RENEW.find(x=>x[0]===c.renew)||[])[1]||null,maxAge:c.maxAge??null,quote:c.quote||null,page:c.page??null}))});
+const polPack=p=>({insurer:p.insurer,product:p.product,type:p.type?(POL_TYPE.find(x=>x[0]===p.type)||[0,null])[1]:null,start:p.start||null,payFreq:p.payFreq||null,premium:polPrem(p)??null,payYears:p.payYears??null,payToAge:p.payAge??null,status:(POL_ST.find(x=>x[0]===p.status)||POL_ST[0])[1],checked:!!p.chk,
+  coverages:(p.items||[]).map(c=>({name:c.name,code:c.code||null,status:c.st?stS(c.st):null,counted:!itemOff(p,c),cat:INSCATK[c.cat]||c.cat,amount:c.amt,unit:c.unit||null,waitingDays:c.wait??null,renewable:(RENEW.find(x=>x[0]===c.renew)||[])[1]||null,maxAge:c.maxAge??null,quote:c.quote||null,page:c.page??null}))});
 function promptPolReview(p){return `請逐條審查下面這張保單（資料由 App 整理，原文 quote 是 AI 從保單抄下來的，可能有錯）。我會另外附上保單條款 PDF 或照片；${INS_RULE}
 ${EVID}
 
@@ -4932,7 +4946,7 @@ function importPicked(d){let c;try{c=cleanBackup(d)}catch(e){return toast('匯�
 function applyImport(c,d,mode){
   if(mode==='replace'){MEM=c.mem;SCALE=c.scale;LABS=c.labs;WATCH=c.watch;EXLOG=c.exlog;SELFR=c.self;FU=c.fu;INS=c.ins;CLM=c.clm;IMG={...IMG,...c.img};GAS=c.gas??GAS;ACT=MEM.some(m=>m.id===d.active)?d.active:MEM[0].id}
   else{const idMap={};if(mode==='new'){const x=c.mem[0],nid=uid();idMap[x.id]=nid;c.mem=[{...x,id:nid,name:(x.name+'（匯入）').slice(0,20)}]}
-    for(const x of c.mem){const i=MEM.findIndex(z=>z.id===x.id);if(i<0)MEM.push(x);else MEM[i]=mode==='replace1'?x:{...x,...MEM[i]}}
+    for(const x of c.mem){const i=MEM.findIndex(z=>z.id===x.id);if(i<0)MEM.push(x);else MEM[i]=mode==='replace1'?x:(z=>{const have=new Set(cpapOf(z).map(r=>r.d)),cp=[...cpapOf(z),...cpapOf(x).filter(r=>!have.has(r.d))];if(cp.length)z.cpap=cp.sort((a,b)=>b.d.localeCompare(a.d)).slice(0,200);return z})({...x,...MEM[i]})}
     for(const k of STORE_K){const src=obj(c[k]),dst=storeOf(k);
       if(mode==='replace1'){for(const x of c.mem)dst[x.id]=Array.isArray(src[x.id])?src[x.id]:[];continue}
       for(const[mid,arr]of Object.entries(src)){if(!Array.isArray(arr))continue;const tid=idMap[mid]||mid,cur=Array.isArray(dst[tid])?dst[tid]:(dst[tid]=[]),have=new Set(cur.map(r=>r.id));for(const r of arr)if(!have.has(r.id))cur.push(r)}}

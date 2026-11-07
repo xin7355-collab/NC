@@ -1403,7 +1403,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     const f1 = await page.evaluate(() => { const m = me(), st = s => polCheck({ insurer: '甲', product: '乙', status: s, coverages: [{ name: '身故', cat: 'life', amount: 1, unit: '萬元', quote: '身故 1 萬元' }] }, m).p.status;
       return ['減額繳清', '展期定期', '已解約', '契約滿期', '滿期', '正常繳費件', '繳費期滿', '停效', '終止', ''].map(st).join() + '|' + POL_ST.map(x => x[0]).join() });
     check('保單狀態看得懂保單健診表的寫法：減額繳清、展期定期、已解約、契約滿期／滿期、正常繳費件、繳費期滿、停效、終止；狀態選單多了「減額繳清」「展期定期」「已解約」「滿期」',
-      f1 === 'reduced,extended,surr,matured,matured,active,paidup,lapsed,ended,active|active,paidup,reduced,extended,lapsed,surr,matured,ended,quote', f1);
+      f1 === 'reduced,extended,surr,matured,matured,active,paidup,lapsed,ended,active|active,paidup,reduced,extended,waived,lapsed,surr,matured,ended,quote', f1);
     const f2 = await page.evaluate(() => { const m = me(), p = id => insFind(m, id), F = id => polFlags(p(id), m);
       const sum = covSum(m), hd = sum.find(s => s.cat === 'hosp_day' && s.per === 'day'), lf = sum.find(s => s.cat === 'life' && !s.nm);
       openPol('r1'); const t1 = $('#sheetBody').textContent, b1 = [...document.querySelectorAll('#sheetBody [data-pfix]')].map(b => b.dataset.pfix + (b.dataset.pci ?? '')).join();
@@ -1411,7 +1411,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       return { live: ['r1', 'r2', 'r6'].map(id => polLive(p(id)) + ':' + polPaying(p(id)) + ':' + polLv(p(id), m)).join(), err1: F('r1').filter(f => f.lv === 'err').length, life: lf ? lf.v : 0, hd: hd ? hd.v : 0,
         t1: /減額繳清/.test(t1) && /減額後的保額/.test(t1) && /主約減額繳清後通常已經終止/.test(t1), b1, t6: /展期定期/.test(t6) && /只保身故/.test(t6), cov } });
     check('減額繳清、展期定期：保障還在、不用再繳（不算每年保費）、提醒確認金額是減額後的保額、附約通常已經終止（一鍵「這項已終止」）；展期只保身故；已解約灰色不算保障；壽險加總 200 萬（不含解約的那張）',
-      f2.live === 'true:false:chk,false:false:off,true:false:chk' && f2.err1 === 0 && f2.life === 2e6 && f2.hd === 4500 && f2.t1 && f2.b1 === 'c_end1,move' && f2.t6 && /王小明 每年7,500 元/.test(f2.cov), JSON.stringify({ ...f2, cov: f2.cov.slice(0, 80) }));
+      f2.live === 'true:false:chk,false:false:off,true:false:chk' && f2.err1 === 0 && f2.life === 2e6 && f2.hd === 2500 && f2.t1 && f2.b1 === 'c_act1,c_end1,move' && f2.t6 && /王小明 每年7,500 元/.test(f2.cov), JSON.stringify({ ...f2, cov: f2.cov.slice(0, 80) }));
     const f3 = await page.evaluate(() => { const m = me(); openPol('r3'); const b = [...document.querySelectorAll('#sheetBody [data-pfix]')].map(x => x.dataset.pfix).join(); document.querySelector('#sheetBody [data-pfix="st_reduced"]')?.click();
       const p = insFind(m, 'r3'); return { b, st: p.status, err: polFlags(p, m).filter(f => f.lv === 'err').length, hist: (p.hist || []).map(h => h.why + ':' + h.d.status).join(), txt: /減額繳清/.test($('#sheetBody').textContent) } });
     check('「繳費期滿」但還沒繳完：除了「還在繳：改成有效」，也可以一鍵改成「減額繳清」（不用再繳、保額變小）；改完紅色錯誤消失、舊的存進變更紀錄',
@@ -1422,7 +1422,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       return { ann: polAnnual(p), pe, noPrem: F.some(f => /沒有保費/.test(f.t)), acc: F.filter(f => /可能只賠意外受傷/.test(f.t)).map(f => f.ci + f.lv).join(), one: F.filter(f => /每年續保/.test(f.t)).map(f => f.ci + f.lv).join(),
         t: /HIR/.test(t) && /已終止/.test(t) && /1,200 元/.test(t) && /2040-06-01/.test(t), btn, cat: p.items[0].cat, hd: hd ? hd.v : 0, am: am ? am.v + am.per : '', hist: (p.hist || []).length } });
     check('保單健診表的每一項：保費（整張沒寫時加總各項）、繳費終期、險種代碼、狀態（已終止的不算保障也不算保費）；名稱有「傷害」的住院日額 → 待核對＋一鍵「改成意外醫療」（改完住院日額不再多算）；一年期附約提醒每年續保',
-      f4.ann === 2500 && f4.pe === '2040-06-01' && !f4.noPrem && f4.acc === '0chk' && f4.one === '3info' && f4.t && f4.btn === 'c_accmed0' && f4.cat === 'acc_med' && f4.hd === 3500 && f4.am === '1000day' && f4.hist === 1, JSON.stringify(f4));
+      f4.ann === 2500 && f4.pe === '2040-06-01' && !f4.noPrem && f4.acc === '0chk' && f4.one === '3info' && f4.t && f4.btn === 'c_accmed0' && f4.cat === 'acc_med' && f4.hd === 1500 && f4.am === '1000day' && f4.hist === 1, JSON.stringify(f4));
     const f5 = await page.evaluate(() => { const m = me(), p = insFind(m, 'r5'), F = polFlags(p, m); openPol('r5'); const t = $('#sheetBody').textContent; closeSheet(); go('ins', 'cov'); const cov = $('#covBody').textContent;
       return { pe: payEnd(p), line: polLine(p), grp: F.some(f => f.lv === 'info' && /團體保險/.test(f.t)), t: /要保人公司/.test(t) && /團體保險/.test(t) && /繳到 65 歲/.test(t), cov: /團體保險/.test(cov) && /離職/.test(cov) } });
     check('要保人、類型（團體保險：離職後就沒有，保障缺口也提醒）、「繳到 65 歲」用生日推算繳費到哪一年',
@@ -1465,6 +1465,53 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.evaluate(() => openPolEdit('r1')); const m3 = await page.evaluate(() => { const L = [...document.querySelectorAll('#sheetBody label')].filter(l => { const c = l.nextElementSibling; return c && /^(INPUT|SELECT|TEXTAREA)$/.test(c.tagName) }), un = L.filter(l => !l.control).length; closeSheet(); return un + '/' + L.length });
     check('彈出視窗：背後畫面不能操作（Tab 不會跑到被遮住的按鈕）、「有新版本」和選檔案不受影響；設定裡按「匯入」照樣跳出選檔；Esc 關閉後焦點回到原本的按鈕；表單的標籤都連到輸入框（螢幕閱讀器念得出欄位名稱）',
       m1.inert === 'true,true,true' && m1.upd === false && m1.file === false && m1.inSheet && !tabOut && !!fc && !m2.open && m2.back === 'gearBtn' && m2.inert === false && /^0\/[1-9]/.test(m3), JSON.stringify({ m1, tabOut, fc: !!fc, m2, m3 }));
+    await page.close();
+  }
+
+  // =============== 6zg. 第三輪審查：減額繳清／展期的附約預設不算（核對後提醒也不消失）、已繳完的項目保費不算、保單健診更多寫法、錯誤訊息不出現 null、繳到幾歲比生效時年紀小、合併匯入保留兩邊的呼吸器紀錄、保單條款審查帶各項狀態、AHI 偏高的說明、記一筆後畫面停在紀錄、Esc 與輸入法、焦點回到重畫後的保單 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    const P = (id, o) => ({ id, insurer: '甲人壽', product: '終身壽險', start: '2010-03-01', payYears: 20, payFreq: '年', prem: 30000, status: 'active', src: 'ai', chk: true, warn: [], t: T(0), ...o });
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', cond: { items: [{ k: 'osa', y: 2024 }], meds: '', allergy: '無', surg: '' },
+          cpap: [{ id: 'c1', d: T(3), h: 6, n: 6, ahi: 12.3 }] }, { id: 'k', name: '小孩', sex: 'm', birth: '2015-01-01', h: 140, w: 35, act: '1.375', goal: 'keep', role: 'child' }], active: 'a',
+      ins: { a: [P('x1', { status: 'extended', items: [{ name: '身故保險金', kind: 'main', cat: 'life', amt: 50, unit: '萬元', quote: '身故保險金 50 萬元' }, { name: '實支實付附約', kind: 'rider', cat: 'hosp_real', amt: 20, unit: '萬元', quote: '每次 20 萬元' }] }),
+          P('x2', { status: 'paidup', start: '2015-03-01', payYears: null, payAge: 70, items: [{ name: '身故', kind: 'main', cat: 'life', amt: 10, unit: '萬元', quote: '身故 10 萬元' }] }),
+          P('x3', { start: '2015-03-01', payYears: null, payAge: 20, items: [{ name: '身故', kind: 'main', cat: 'life', amt: 10, unit: '萬元', quote: '身故 10 萬元' }] })] },
+      clm: { a: [{ id: 'e1', type: 'ad', d: T(5), end: T(3), hosp: '乙醫院', dx: '肺炎', claims: [] }] } });
+    const g1 = await page.evaluate(() => { const m = me(), p = insFind(m, 'x1'), F = polFlags(p, m), real0 = covSum(m).some(s => s.cat === 'hosp_real'), ev0 = evtMatch(m, clmOf(m)[0]).flatMap(x => x.its.map(i => i.c.name + ':' + i.w.join('/'))).join('｜');
+      const lv = polLv(p, m); openPol('x1'); const btn = [...document.querySelectorAll('#sheetBody [data-pfix][data-pci]')].map(b => b.dataset.pfix + b.dataset.pci).join(); document.querySelector('#sheetBody [data-pfix="c_act"]')?.click();
+      const real1 = covSum(m).some(s => s.cat === 'hosp_real'), F1 = polFlags(p, m); closeSheet();
+      return { flag: F.filter(f => /通常已經沒有|通常已經終止/.test(f.t)).map(f => f.ci + f.lv).join(), lv, real0, ev0, btn, st: p.items[1].st, real1, gone: !F1.some(f => /通常已經沒有|通常已經終止/.test(f.t)) } });
+    check('展期定期（減額繳清的附約也一樣）：沒寫狀態的非身故項目預設不算保障、理賠時提醒；按過「我已核對」提醒也不會消失，要按「還有效」或「確定已終止」才結束；按「還有效」就算回保障',
+      g1.flag === '1chk' && g1.lv === 'chk' && !g1.real0 && /實支實付附約:[^｜]*通常已經終止/.test(g1.ev0) && g1.btn === 'c_act1,c_end1' && g1.st === 'active' && g1.real1 && g1.gone, JSON.stringify(g1));
+    const g2 = await page.evaluate(() => { const m = me(), r = polCheck({ insurer: '丙人壽', product: '醫療', status: '有效', payFreq: '年', coverages: [{ name: '主約', cat: 'life', amount: 10, unit: '萬元', quote: '身故 10 萬元', status: '繳費期滿', premium: 20000 },
+        { name: '附約', cat: 'hosp_day', amount: 1000, unit: '元/日', quote: '每日 1,000 元', premium: 3000 }] }, m).p, st = s => { try { return stParse(s, 'active') } catch (e) { return 'ERR' } };
+      return polAnnual(r) + '|' + ['效力停止', '停止效力', '保險期間屆滿', '撤銷件', '豁免保費件', '有效（附約已終止）', '正常（部分解約）', '繳費期間屆滿', '期滿'].map(st).join() });
+    check('保費：已經繳完的那一項不算（只算還在繳的附約 3,000）；保單健診更多寫法：效力停止／停止效力＝停效、保險期間屆滿＝滿期、撤銷件＝終止、豁免保費件＝豁免（不用再繳）、括號裡的補充說明不影響整張的狀態',
+      g2 === '3000|lapsed,lapsed,matured,ended,waived,active,active,paidup,paidup', g2);
+    const g3 = await page.evaluate(() => { const m = me(), F2 = polFlags(insFind(m, 'x2'), m), p3 = insFind(m, 'x3'), F3 = polFlags(p3, m), pe3 = payEnd(p3);
+      openPol('x3'); const b = [...document.querySelectorAll('#sheetBody [data-pfix]')].map(x => x.dataset.pfix).join(); document.querySelector('#sheetBody [data-pfix="pay_yrs"]')?.click(); closeSheet();
+      return { e2: F2.filter(f => f.lv === 'err').map(f => f.t).join('｜'), e3: F3.filter(f => f.lv === 'err').map(f => f.t).join('｜'), pe3, b, yrs: p3.payYears + ':' + (p3.payAge ?? 'null'), pe3b: payEnd(p3) } });
+    check('「繳費期滿」錯誤訊息在沒寫年期時也通順（不出現 null）；繳到 20 歲但生效時已經 30 歲 → 錯誤（多半是繳 20 年）＋一鍵改成繳費年期，不會算出早於生效日的最後一期',
+      !/null|但 +生效/.test(g3.e2) && /最後一期在 2053-03/.test(g3.e2) && /繳到 20 歲，但 2015-03-01 生效時已經 30 歲/.test(g3.e3) && g3.pe3 === '' && /pay_yrs/.test(g3.b) && g3.yrs === '20:null' && g3.pe3b === '2034-03-01', JSON.stringify(g3));
+    const g5 = await page.evaluate(() => { const m = me(), F = selfF(m), r = selfRate('sleep', [0, 0, 0, 0, 0, 1, 0, 1], m, F), r2 = selfRate('sleep', [1, 1, 0, 0, 0, 1, 0, 1], m, F);
+      return { h: r.lv + '|' + r.head, t: r.txt + r.todo.join(), t2: r2.txt + r2.todo.join() } });
+    check('呼吸器戴得夠（每晚 6 小時、6 晚）但 AHI 12.3：說明改成請醫師看壓力和面罩，不再說「戴不住」「每晚戴 4 小時以上」；也不誇大成保護心血管',
+      g5.h === '1|已確診睡眠呼吸中止：症狀不多，但呼吸器顯示的 AHI 偏高' && !/戴不住|每晚戴 4 小時/.test(g5.t) && /壓力|面罩/.test(g5.t) && !/保護心血管/.test(g5.t + g5.t2) && /AHI 還在 10 以上/.test(g5.t2), JSON.stringify(g5));
+    const g4 = await page.evaluate(() => { const y = addDays(todayS(), -1), d = { app: 'Kinwell', v: 1, members: [{ ...JSON.parse(JSON.stringify(MEM[0])), cpap: [{ id: 'n1', d: y, h: 7, n: 7 }, { id: 'n2', d: MEM[0].cpap[0].d, h: 1, n: 1 }] }] };
+      applyImport(cleanBackup(d), d, 'merge'); const m = me(), cp = cpapOf(m).map(x => x.d + ':' + x.h).join();
+      const pk = polPack({ insurer: '甲', product: '乙', payFreq: '年', prem: null, status: 'active', items: [{ name: 'A', cat: 'life', amt: 1, unit: '萬元', prem: 100 }, { name: 'B', cat: 'hosp_day', amt: 1, unit: '元/日', prem: 50, st: 'ended' }] });
+      return { cp, pk: pk.premium + '|' + pk.coverages.map(c => c.name + ':' + (c.status || '') + ':' + c.counted).join() } });
+    check('合併匯入：兩邊的呼吸器紀錄都保留（同一天以手機上的為準）；「保單條款審查」提示詞帶上各項狀態、已終止的標「不算」、整張沒寫保費時用各項加總',
+      /^\d{4}-\d{2}-\d{2}:7,\d{4}-\d{2}-\d{2}:6$/.test(g4.cp) && g4.pk === '100|A::true,B:已終止:false', JSON.stringify(g4));
+    const g6 = await page.evaluate(() => { openCond('osa'); $('#cp-h').value = '5'; $('#cp-n').value = '5'; $('#cp-add').click(); const r = $('#cp-add').getBoundingClientRect(), pr = $('.sheet-panel').getBoundingClientRect(), vis = r.top >= pr.top && r.bottom <= pr.bottom;
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', isComposing: true, bubbles: true })); const still = $('#sheet').classList.contains('on'); closeSheet(); return { vis, still } });
+    await page.evaluate(() => go('ins', 'pol')); await page.focus('#polBody [data-pol="x1"]'); await page.keyboard.press('Enter'); await page.waitForTimeout(300);
+    await page.evaluate(() => renderIns()); await page.keyboard.press('Escape'); await page.waitForTimeout(200);
+    const g7 = await page.evaluate(() => document.activeElement?.dataset?.pol || document.activeElement?.tagName);
+    const fg2 = require('child_process').spawnSync(process.execPath, [path.join(ROOT, 'tests', 'floor-guard.mjs'), '--scan', 'no-such-file.html'], { cwd: ROOT, encoding: 'utf8' });
+    check('記一筆呼吸器紀錄後畫面停在紀錄那裡（不跳回最上面）；輸入法選字時按 Esc 不會關掉視窗；保單清單重畫後按 Esc，焦點回到同一張保單；地板守衛找不到檔案時直接報錯（不會假裝 0 處）',
+      g6.vis && g6.still && g7 === 'x1' && fg2.status === 2, JSON.stringify({ g6, g7, fg: fg2.status }));
     await page.close();
   }
 
