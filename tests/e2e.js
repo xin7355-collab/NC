@@ -1670,6 +1670,33 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zk. 和保險存摺對帳：「金額算不出來」的項目在缺口直接填金額、匯入條款後缺口也用條款換算、單位寫「萬元（B型）」照算、意外身故連同壽險、已解約不寫已繳完 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    const P = (id, o) => ({ id, insurer: '甲人壽', product: '醫療', start: '2015-01-01', payYears: 20, payFreq: '年', prem: 20000, status: 'active', src: 'ai', chk: false, warn: [], t: T(0), ...o });
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', inc: 80 }, { id: 'k', name: '小孩', sex: 'm', birth: '2015-01-01', h: 140, w: 35, act: '1.375', goal: 'keep', role: 'child' }], active: 'a',
+      ins: { a: [P('v1', { insurer: '丙人壽', product: '變額萬能壽險', items: [{ name: '身故保險金', kind: 'main', cat: 'life', amt: 500, unit: '萬元（B型）', quote: '保險金額 500 萬元' }] }),
+          P('v2', { product: '甲人壽住院醫療', items: [{ name: '住院醫療附約', kind: 'rider', cat: 'hosp_real', amt: 2, unit: '計畫', quote: '計畫二' }, { name: '住院日額附約', kind: 'rider', cat: 'hosp_day', amt: 3, unit: '單位', quote: '3 單位' }] }),
+          P('v3', { insurer: '乙人壽', product: '定期壽險', items: [{ name: '壽險', kind: 'main', cat: 'life', amt: 10, unit: '萬元', quote: '10 萬元' }, { name: '意外身故', kind: 'rider', cat: 'accident', amt: 110, unit: '萬元', quote: '110 萬元' }] }),
+          P('v4', { insurer: '丁人壽', product: '舊壽險', status: 'surr', start: '1982-11-05', items: [{ name: '身故', kind: 'main', cat: 'life', amt: 20, unit: '萬元', quote: '20 萬元' }] }),
+          P('v5', { insurer: '戊人壽', product: '實支實付', items: [{ name: '醫療附約', kind: 'rider', cat: 'hosp_real', amt: 1, unit: '計畫', quote: '計畫一' }, { name: '日額附約', kind: 'rider', cat: 'hosp_day', amt: 2, unit: '單位', quote: '2 單位' }],
+            terms: { ver: 'v1', t: T(0), rules: [{ name: '醫療附約', pay: 'expense', limit: 300000, quote: '每次限額 30 萬', clause: '第九條', sub: [], excl: [] }, { name: '日額附約', pay: 'daily', perUnit: { amt: 1000, unit: '元/日' }, quote: '每單位每日 1,000 元', clause: '第八條', sub: [], excl: [] }], warn: [] } })] } });
+    const k1 = await page.evaluate(() => { const m = me(), S0 = covSum(m), f = (c, per) => { const s = S0.find(x => x.cat === c && !x.nm && x.per === per); return s ? s.v : 0 };
+      return { life: f('life', ''), real: f('hosp_real', ''), day: f('hosp_day', 'day'), bType: covUnit({ unit: '萬元（B型）', cat: 'life' }).nm || '', onlyB: covUnit({ unit: 'B型', cat: 'life' }).nm || '' } });
+    check('保障加總：單位寫「萬元（B型）」照算 500 萬（只寫「B型」才當成算不出來）；匯入條款的附約，缺口也用條款換算（實支實付每次 30 萬、2 單位 × 每單位 1,000 元/日 → 2,000 元/日）',
+      k1.life === 5100000 && k1.real === 300000 && k1.day === 2000 && k1.bType === '' && k1.onlyB === 'unit', JSON.stringify(k1));
+    const k2 = await page.evaluate(() => { go('ins', 'cov'); const t = $('#covBody').textContent, btn = [...document.querySelectorAll('#covBody [data-gapfix]')].map(b => b.dataset.gapfix).join();
+      const pr = window.prompt; window.prompt = () => '20萬/次'; document.querySelector('#covBody [data-gapfix="v2:0"]')?.click(); window.prompt = () => '4200/日'; document.querySelector('#covBody [data-gapfix="v2:1"]')?.click(); window.prompt = pr;
+      const m = me(), p = insFind(m, 'v2'), t2 = $('#covBody').textContent;
+      return { t, btn, it: p.items.map(c => c.amt + ' ' + c.unit).join('|'), hist: (p.hist || []).length, err: polFlags(p, m).filter(f => f.lv === 'err').length, t2 } });
+    check('保障缺口直接「✏️ 填金額」：算不出來的項目各有按鈕 → 照保險存摺填「20萬/次」「4200/日」→ 存成 20 萬元/次、4,200 元/日、記進變更紀錄、不會變成「金額在原文找不到」的錯誤；缺口馬上重算（實支實付 50 萬、日額 6,200 元）；意外身故列寫出連同壽險共多少（和保險存摺「含一般身故」對得上）',
+      k2.btn === 'v2:0,v2:1' && /✏️ 填「住院醫療附約」的金額/.test(k2.t) && k2.it === '20 萬元/次|4200 元/日' && k2.hist === 2 && k2.err === 0
+        && /有 50 萬/.test(k2.t2) && /有 6,200 元/.test(k2.t2) && /意外身故時連同壽險共 620 萬/.test(k2.t2), JSON.stringify({ btn: k2.btn, it: k2.it, hist: k2.hist, err: k2.err, t2: k2.t2.slice(0, 400) }));
+    const k3 = await page.evaluate(() => { const m = me(); return polLine(insFind(m, 'v4')) });
+    check('已解約的保單清單上不再寫「已繳完」', !/已繳完/.test(k3) && /已解約/.test(k3), k3);
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
