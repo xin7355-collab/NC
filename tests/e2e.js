@@ -973,11 +973,11 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.fill('#pi-in', '```json\n' + JSON.stringify(polJSON) + '\n```'); await page.click('#pi-go'); await page.waitForTimeout(300);
     const i0 = await page.evaluate(() => ({ out: $('#pi-out').textContent, checks: [...document.querySelectorAll('#pi-out [data-pi]')].map(c => c.checked ? 1 : 0).join(''), mids: [...document.querySelectorAll('#pi-out [data-pim]')].map(s => s.value).join() }));
     await page.click('#pi-save'); await page.waitForTimeout(400);
-    const i1 = await page.evaluate(() => ({ a: JSON.stringify(insOf(MEM[0]).map(p => ({ s: p.start, a: polAnnual(p), no: p.no4, chk: p.chk, n: p.items.length, note: p.note }))), b: insOf(MEM[1]).map(p => polAnnual(p) + ':' + p.warn.length).join(), view: $('.view.on').id, badge: $('#v-ins .subnav [data-sub="pol"] .bd')?.textContent }));
-    check('保單 AI 匯入：提示詞要逐字原文＋頁碼、民國年換算、不輸出身分證；貼上（含 ``` 也可以）→ 防錯：保單號碼只留末 4 碼、身分證自動刪除、列出 AI 看不清楚的、金額在原文找不到會警告、沒附原文會提醒；依稱謂分給配偶；月繳 500 → 年繳 6,000；匯入後「待核對」',
+    const i1 = await page.evaluate(() => ({ a: JSON.stringify(insOf(MEM[0]).map(p => ({ s: p.start, a: polAnnual(p), no: p.no4, chk: p.chk, n: p.items.length, note: p.note }))), b: insOf(MEM[1]).map(p => polAnnual(p) + ':' + p.warn.length).join(), view: $('.view.on').id, badge: $('#v-ins .subnav [data-sub="pol"] .bd')?.textContent, lv: insOf(MEM[0]).map(p => polLv(p, MEM[0])).join() }));
+    check('保單 AI 匯入：提示詞要逐字原文＋頁碼、民國年換算、不輸出身分證；貼上（含 ``` 也可以）→ 防錯：保單號碼只留末 4 碼、身分證自動刪除、列出 AI 看不清楚的、金額在原文找不到會警告、沒附原文會提醒；依稱謂分給配偶；月繳 500 → 年繳 6,000；匯入後有要核對的才是「待核對」（金額都在原文找得到、沒有要補的，App 自動核對）',
       /民國年請加 1911/.test(pp) && /quote/.test(pp) && /身分證字號/.test(pp) && /"type":"kinwell.policy"/.test(pp) && /保單號碼只保留末 4 碼/.test(i0.out) && /偵測到身分證字號，已自動刪除/.test(i0.out) && /AI 說看不清楚：第 4 頁右下角被手指擋住/.test(i0.out)
         && /「意外身故」的金額 500 在原文裡找不到：可能讀錯/.test(i0.out) && /「意外醫療」沒有附原文/.test(i0.out) && /防錯檢查通過/.test(i0.out) && i0.checks === '111' && i0.mids === 'a,b,a'
-        && i1.a === JSON.stringify([{ s: '2021-03-05', a: 24000, no: '5678', chk: false, n: 2, note: '要保人身分證 ＊＊＊' }, { s: '2023-05-01', a: 3000, no: '', chk: false, n: 1, note: '' }]) && /^6000:[2-9]/.test(i1.b) && i1.view === 'v-ins' && i1.badge === '2', JSON.stringify({ i0: { ...i0, out: i0.out.slice(0, 160) }, i1 }));
+        && i1.a === JSON.stringify([{ s: '2021-03-05', a: 24000, no: '5678', chk: false, n: 2, note: '要保人身分證 ＊＊＊' }, { s: '2023-05-01', a: 3000, no: '', chk: false, n: 1, note: '' }]) && /^6000:[2-9]/.test(i1.b) && i1.view === 'v-ins' && !i1.badge && i1.lv === 'ok,ok', JSON.stringify({ i0: { ...i0, out: i0.out.slice(0, 160) }, i1 }));
     const pid = await page.evaluate(() => insOf(MEM[0])[0].id);
     await page.evaluate(id => openPol(id), pid); await page.waitForTimeout(200); await page.click('#pd-chk'); await page.waitForTimeout(200);
     await page.evaluate(() => { closeSheet(); go('ins', 'cov') }); await page.waitForTimeout(200);
@@ -985,8 +985,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.evaluate(() => openPolImport()); await page.waitForTimeout(200); await page.fill('#pi-in', JSON.stringify(polJSON)); await page.click('#pi-go'); await page.waitForTimeout(300);
     const dup = await page.evaluate(() => ({ checks: [...document.querySelectorAll('#pi-out [data-pi]')].map(c => c.checked ? 1 : 0).join(''), out: $('#pi-out').textContent }));
     const man = await page.evaluate(() => { closeSheet(); const { p, err } = polCheck({ insurer: '丁人壽', product: '定期壽險', start: '2030-01-01', payFreq: '年', premium: 2000000, payYears: 99, coverages: [{ name: '身故', cat: 'life', amount: 500, unit: '萬元', maxAge: 30 }] }, me(), true); return { err: err.length, warn: p.warn.join('｜'), py: p.payYears } });
-    check('核對後才打 ✔：住院日額 2 張加總 3,000 元/日（含待核對）、癌症 30 萬；全家保障地圖（本人醫療、癌症 ✔；配偶意外 ✕：AI 讀的 500 萬和原文 300 萬對不上）；繳費期滿倒數；同一張再匯入預設不勾；手動輸入也檢查（未來生效日、年期、年繳 200 萬、超過續保年齡）',
-      c0.chk && /住院日額3,000 元\/日 含待核對/.test(c0.cov) && /癌症30 萬/.test(c0.cov) && /王小明\/—\/—\/✔\/✔\/—\/—\/—/.test(c0.map) && /小美\/—\/✕\/—\/—\/—\/—\/—/.test(c0.map) && /繳費到 2040 年/.test(c0.end)
+    check('打 ✔ 的是核對過的（App 自動核對或自己按）：住院日額 2 張加總 3,000 元/日、癌症 30 萬；全家保障地圖（本人醫療、癌症 ✔；配偶意外 ✕：AI 讀的 500 萬和原文 300 萬對不上）；繳費期滿倒數；同一張再匯入預設不勾；手動輸入也檢查（未來生效日、年期、年繳 200 萬、超過續保年齡）',
+      c0.chk && /住院日額3,000 元\/日/.test(c0.cov) && /癌症30 萬/.test(c0.cov) && /王小明\/—\/—\/✔\/✔\/—\/—\/—/.test(c0.map) && /小美\/—\/✕\/—\/—\/—\/—\/—/.test(c0.map) && /繳費到 2040 年/.test(c0.end)
         && dup.checks === '000' && /已經有同一張保單/.test(dup.out) && man.err === 0 && /在未來/.test(man.warn) && /繳費年期 99 不合理/.test(man.warn) && /年繳保費約 200 萬/.test(man.warn) && /最高到 30 歲/.test(man.warn) && !/沒有附原文/.test(man.warn) && man.py === null,
       JSON.stringify({ map: c0.map, end: c0.end, dup: dup.checks, man }));
     // 理賠
@@ -1712,8 +1712,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       return { r1: F('r1'), r2: F('r2'), a: { f: a.payFreq, by: a.payBy, st: a.status, h: a.holder, bene: a.bene, q: a.items[0].quote, w: a.warn.join('|') }, b: { f: b.payFreq, by: b.payBy, w: b.warn.join('|') } } });
     check('減額繳清（不用再繳、保費 0）不再出現「繳別不明」；還在繳的保單沒寫繳別照樣提醒；AI 把「銀行轉帳」寫在繳別 → 存成繳費方式、不當繳別；「年繳（信用卡）」→ 年繳＋信用卡',
       !/繳別不明/.test(k1.r1) && /繳別不明/.test(k1.r2) && k1.a.f === '' && k1.a.by === '銀行轉帳' && k1.a.st === 'reduced' && !/繳別不明/.test(k1.a.w) && k1.b.f === '年' && k1.b.by === '信用卡', JSON.stringify(k1));
-    check('要保人寫成被保險人的姓名 → 存成「本人」；受益人寫姓名 → 提醒只寫關係；原文裡的家人姓名改成「被保險人」「家人」（AI 照抄時的防線）',
-      k1.a.h === '本人' && k1.a.bene === '法定繼承人' && !/王小明|林美華/.test(k1.a.q) && /被保險人/.test(k1.a.q) && /家人/.test(k1.a.q) && /受益人只要寫關係/.test(k1.b.w) && !/受益人只要寫關係/.test(k1.a.w), JSON.stringify(k1.a) + JSON.stringify(k1.b));
+    check('要保人、受益人可以存姓名（只在手機裡）：要保人寫姓名照存、不再提醒；原文裡的家人姓名改成「被保險人」「家人」（AI 照抄時的防線）',
+      k1.a.h === '王小明' && k1.a.bene === '法定繼承人' && !/王小明|林美華/.test(k1.a.q) && /被保險人/.test(k1.a.q) && /家人/.test(k1.a.q) && !/受益人只要寫關係|要保人只要寫稱謂/.test(k1.b.w + k1.a.w), JSON.stringify(k1.a) + JSON.stringify(k1.b));
     const k2 = await page.evaluate(() => { const m = me(), L = INS[m.id];
       const { p } = polCheck({ insurer: '丙人壽', product: '丙人壽美元利率變動型終身壽險', currency: 'TWD', status: '有效', payFreq: '年繳', premium: 3000, start: '2022-01-01', coverages: [{ name: '身故保險金', kind: 'main', cat: 'life', amount: 10, unit: '萬元', quote: '保險金額 10 萬元' }] }, m);
       p.id = 'u1'; L.push(p); S.set('ins', INS); renderIns();
@@ -1725,8 +1725,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('外幣保單：商品名稱有「美元」就當美元保單（AI 照舊範本寫 TWD 也一樣）→ 沒填匯率前保障和保費不加總、缺口寫出「沒填匯率」並有「💱 填匯率」按鈕；填匯率 31 → 10 萬美元算成 310 萬、年繳 3,000 美元算成 93,000 元',
       k2.before.cur === 'USD' && /美元/.test(k2.before.w) && k2.before.life === 38270 && k2.before.ann === 0 && /美元保單：沒有匯率/.test(k2.before.fl) && k2.gap && k2.fxBtn && k2.ok && k2.fx === 31 && k2.life === 38270 + 3100000 && k2.ann === 93000, JSON.stringify(k2));
     const k3 = await page.evaluate(() => { const m = me(), r1 = insFind(m, 'r1'), pp = promptPolicy(), ck = promptPolCheck(m, [r1]), rv = promptPolReview(r1), ex = polExport(r1);
-      return { pp: ['"payMethod"', '"uwDeclared"', '"currency":null', '同一人', '法定繼承人', '不是繳費方式'].filter(k => !pp.includes(k)).join(), ck: ['appId', '不是繳費方式', '貼回'].filter(k => !ck.includes(k)).join(), nm: /王小明/.test(ck + rv), rv: /"type":"kinwell\.terms"/.test(rv), ex: [ex.appId, ex.payMethod, ex.currency, 'beneficiary' in ex].join() } });
-    check('匯入提示詞補齊：繳費方式、幣別（不預設台幣）、投保時告知、要保人同一人寫「本人」、受益人寫關係、繳別不是繳費方式；核對提示詞帶 appId 對回同一張、寫出貼回哪裡；條款審查最後附條款規則 JSON；提示詞不帶家人姓名',
+      return { pp: ['"payMethod"', '"uwDeclared"', '"currency":null', '可以寫姓名', '法定繼承人', '不是繳費方式'].filter(k => !pp.includes(k)).join(), ck: ['appId', '不是繳費方式', '貼回'].filter(k => !ck.includes(k)).join(), nm: /王小明/.test(ck + rv), rv: /"type":"kinwell\.terms"/.test(rv), ex: [ex.appId, ex.payMethod, ex.currency, 'beneficiary' in ex].join() } });
+    check('匯入提示詞補齊：繳費方式、幣別（不預設台幣）、投保時告知、要保人和受益人照文件寫、繳別不是繳費方式；核對提示詞帶 appId 對回同一張、寫出貼回哪裡；條款審查最後附條款規則 JSON；提示詞不帶家人姓名',
       k3.pp === '' && k3.ck === '' && !k3.nm && k3.rv && k3.ex === 'r1,,TWD,true', JSON.stringify(k3));
     const reply = 'A. 問題清單\n保單 1｜繳別不明｜繳費通知｜銀行轉帳｜銀行轉帳\n\nD. JSON：\n```json\n' + JSON.stringify({ type: 'kinwell.policy', v: 1, policies: [{ appId: 'r1', insurer: '甲人壽', product: '甲人壽終身壽險', start: '2013-06-19', payFreq: '銀行轉帳', premium: 0, status: '減額繳清', holderHint: null, beneficiary: '法定繼承人', coverages: [{ name: '身故保險金', kind: 'main', cat: 'life', amount: 38270, unit: '元', quote: '被保險人王小明 減額繳清 保險金額 38,270 元' }] }] }) + '\n```\n以上 JSON 可以貼回 App。';
     const k4 = await page.evaluate(async (reply) => { const m = me(); openPol('r1'); const btn = $('#sheetBody [data-polchkin="r1"]'), lab = btn?.textContent || ''; if (!btn) return { lab }; btn.click(); await new Promise(r => setTimeout(r, 400));
@@ -1787,6 +1787,39 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       return { sel, note: /AI 判斷被保險人是「子女」：預設放到 小寶/.test(note), b: insOf(MEM[1]).length, k: insOf(MEM[2]).length, a: insOf(MEM[0]).length, toast: $('#toast').textContent, list: /甲人壽醫療/.test($('#polBody').textContent), w } }, J);
     check('在配偶名下匯入、AI 寫被保險人「本人」→ 預設留在目前這位（清單馬上看得到），寫「子女」的才預設放到小孩並標出來；匯入後的提示寫出有幾張在別人名下、怎麼切換；AI 寫出的完整保單號碼只留末 4 碼',
       n1.sel === 'b,k' && n1.note && n1.b === 1 && n1.k === 1 && n1.a === 0 && n1.list && /1 張在「小寶」名下/.test(n1.toast) && /右上角/.test(n1.toast) && !/1234509876/.test(n1.w) && /9876/.test(n1.w), JSON.stringify(n1));
+    await page.close();
+  }
+
+  // =============== 6zo. 繳費終期其實是保障到期日（繳到 100 歲以上、和保障到期日同一天）→ 不再誤報「繳費期滿但還沒繳完」、一鍵清掉；要保人／受益人存姓名、提示詞只給關係；受益人與遺產、稅的提醒；App 驗證過的自動核對、一次全部確認 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    const P = (id, o) => ({ id, insurer: '甲人壽', product: '終身壽險', start: '2015-03-01', payYears: 20, payFreq: '年', prem: 10000, status: 'active', src: 'ai', chk: false, warn: [], t: T(0), holder: '王小明', bene: '王大同', ...o });
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me', inc: 80 }, { id: 'b', name: '林美華', sex: 'f', birth: '1986-02-02', h: 160, w: 52, act: '1.375', goal: 'keep', role: 'spouse' }], active: 'a',
+      ins: { a: [P('t1', { insurer: '乙人壽', status: 'paidup', payYears: null, prem: null, endDate: '2094-03-01', items: [{ name: '身故保險金', kind: 'main', cat: 'life', amt: 100, unit: '萬元', quote: '保險金額 100 萬元', payEnd: '2094-03-01' }] }),
+          P('t2', { insurer: '丙人壽', product: '醫療終身', payYears: null, prem: null, start: '2018-01-01', items: [{ name: '住院日額', kind: 'main', cat: 'hosp_day', amt: 1000, unit: '元/日', quote: '每日 1,000 元', prem: 5000, payEnd: '2090-01-01' }] }),
+          P('t3', { insurer: '丁人壽' }, ),
+          P('t4', { insurer: '戊人壽', holder: '林美華', bene: '' }),
+          P('t5', { insurer: '己人壽', bene: '法定繼承人' }),
+          P('t6', { insurer: '庚人壽', bene: '本人' })].map(p => p.items ? p : { ...p, items: [{ name: '身故保險金', kind: 'main', cat: 'life', amt: 50, unit: '萬元', quote: '身故保險金 50 萬元' }] }) } });
+    const o1 = await page.evaluate(() => { const m = me(), F = id => polFlags(insFind(m, id), m), t = id => F(id).map(f => f.lv + ':' + f.t).join('|');
+      const t1 = insFind(m, 't1'), before = { pe: payEnd(t1), f1: t(1 && 't1'), f2: t('t2'), lv: polLv(t1, m) };
+      openPol('t1'); const btn = !!$('#sheetBody [data-pfix="pe_clr"]'); const ok = polFix(m, t1, 'pe_clr'); const after = { pe: t1.items[0].payEnd, f1: t('t1') };
+      return { before, btn, ok, after } });
+    check('繳費終期其實是保障到期日：和保障到期日同一天、或繳到 100 歲以上 → 不再誤報「繳費期滿，但最後一期在 2094」，改成提醒「繳費終期不合理」＋一鍵清掉；繳到幾年不再顯示 2094',
+      o1.before.pe === '' && !/狀態是「繳費期滿」/.test(o1.before.f1) && /chk:繳費終期 2094-03 不合理：和保障到期日一樣/.test(o1.before.f1) && /繳費終期 2090-01 不合理：等於繳到 105 歲/.test(o1.before.f2) && o1.btn && o1.ok && o1.after.pe === '' && !/繳費終期/.test(o1.after.f1), JSON.stringify(o1));
+    const o2 = await page.evaluate(() => { const m = me(), t = id => polFlags(insFind(m, id), m).map(f => f.lv + ':' + f.t).join('|'), t3 = insFind(m, 't3');
+      const imp = polCheck({ insurer: '甲人壽', product: '醫療', holderHint: '王小明', beneficiary: '身故：王大同 50%、林美華 50%', start: '2020-01-01', coverages: [{ name: '住院日額', cat: 'hosp_day', amount: 1000, unit: '元/日', quote: '每日 1,000 元' }] }, m).p;
+      const ex = polExport(t3), ck = promptPolCheck(m, insOf(m)); openPol('t3'); const s3 = $('#sheetBody').textContent;
+      return { lv3: polLv(t3, m), auto: /App 自動核對/.test(s3), holder: /要保人王小明/.test(s3), ih: imp.holder, ib: imp.bene, iw: imp.warn.join('|'), exh: ex.holderHint, exb: ex.beneficiary, leak: /王大同|王小明|林美華/.test(ck),
+        f4: t('t4'), f5: t('t5'), f6: t('t6') } });
+    check('要保人、受益人存姓名（匯入時照存、不再提醒）；給 AI 的提示詞只給關係（要保人是被保險人 → 本人，受益人寫姓名的不給），整段提示詞沒有家人和受益人姓名',
+      o2.ih === '王小明' && o2.ib === '身故：王大同 50%、林美華 50%' && !/姓名/.test(o2.iw) && o2.exh === '本人' && o2.exb === null && !o2.leak && o2.holder, JSON.stringify(o2));
+    check('受益人與遺產、稅的提醒（參考）：要保人不是被保險人本人（要保人過世時保單價值算要保人的遺產、生存金可能算贈與）；受益人沒填；寫「法定繼承人」；身故受益人寫「本人」等於沒指定、算遺產',
+      /info:要保人是「林美華」，不是被保險人本人/.test(o2.f4) && /info:身故受益人還沒填/.test(o2.f4) && /info:身故受益人是「法定繼承人」/.test(o2.f5) && /info:身故受益人寫「本人」/.test(o2.f6) , JSON.stringify({ f4: o2.f4, f5: o2.f5, f6: o2.f6 }));
+    check('App 驗證過的保單自動核對：沒有錯誤、沒有待核對項目（金額都在原文找得到）→ 🟢 已核對，寫「App 自動核對」', o2.lv3 === 'ok' && o2.auto, JSON.stringify({ lv3: o2.lv3, auto: o2.auto }));
+    const o3 = await page.evaluate(() => { const m = me(); renderIns(); go('ins', 'pol'); const b = $('#polBody [data-polall]'), lab = b?.textContent || ''; b?.click(); const L = insOf(m).map(p => polLv(p, m)).join();
+      return { lab, L, chk: insOf(m).filter(p => p.chk).length } });
+    check('保單清單「✅ 我都對照過了」：一次把待核對的保單標成已核對（有錯誤的不會）', /我都對照過了：把 1 張待核對標成已核對/.test(o3.lab) && !/chk/.test(o3.L) && o3.chk === 1, JSON.stringify(o3));
     await page.close();
   }
 
