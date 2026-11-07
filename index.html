@@ -4240,7 +4240,8 @@ const money=v=>v>=1e4&&v%1e3===0?`${+(v/1e4).toFixed(1)} 萬`:`${Math.round(v).t
 const birthY=m=>+String(m.birth||'').slice(0,4)||new Date().getFullYear()-Math.floor(ageOf(m));
 // 個資：身分證字號、手機號碼一律刪掉（AI 照抄時的第二道防線）
 const TWID=/[A-Z][12]\d{8}/g,TWPH=/09\d{2}-?\d{3}-?\d{3}/g;
-function insScrub(v,W){let s=String(v??'');if(new RegExp(TWID.source).test(s)){s=s.replace(TWID,'＊＊＊');W.add('偵測到身分證字號，已自動刪除')}if(new RegExp(TWPH.source).test(s)){s=s.replace(TWPH,'＊＊＊');W.add('偵測到電話號碼，已自動刪除')}return s}
+function insScrub(v,W){let s=String(v??'');if(new RegExp(TWID.source).test(s)){s=s.replace(TWID,'＊＊＊');W.add('偵測到身分證字號，已自動刪除')}if(new RegExp(TWPH.source).test(s)){s=s.replace(TWPH,'＊＊＊');W.add('偵測到電話號碼，已自動刪除')}
+  if(/\d{10,}/.test(s)){s=s.replace(/\d{10,}/g,d=>'＊＊＊'+d.slice(-4));W.add('偵測到完整保單號碼，只留末 4 碼')}return s}   // 10 碼以上的連續數字（保單號碼）；金額不會這麼長
 // 防 AI 讀錯：金額一定要出現在 AI 抄的原文裡（萬元換算、千分位、全形數字都接受）；原文是國字數字時請人工核對
 function numInQuote(a,u,q){q=String(q||'').replace(/[０-９]/g,d=>String.fromCharCode(d.charCodeAt(0)-65248)).replace(/[,，\s]/g,'');if(!q||a==null)return null;
   const A=String(+a);if(q.includes(A))return true;const mul=unitInfo(u).mul;if(mul>1&&q.includes(String(a*mul)))return true;if(a>=1e4&&a%1e4===0&&q.includes(String(a/1e4)+'萬'))return true;
@@ -4653,18 +4654,19 @@ function openPolImport(o={}){const m=me(),cp=o.chk&&o.chk!=='all'?insFind(m,o.ch
     <button class="btn" id="pi-go" style="margin-top:10px">解析並核對</button><div id="pi-out"></div>
     <p class="note">🔒 照片給 AI 前先塗掉身分證字號、完整保單號碼、地址電話。App 會再檢查一次，偵測到就刪掉。</p>`);
   let kind='pol';$$('#pi-kind button').forEach(b=>b.onclick=()=>{kind=b.dataset.v;$$('#pi-kind button').forEach(x=>x.classList.toggle('on',x===b))});
-  $('#pi-go').onclick=()=>{let d;try{d=parseAIJSON($('#pi-in').value)}catch(e){$('#pi-out').innerHTML=`<div class="hl bad" style="margin-top:10px">${esc(e.message)}</div>`;return}
+  $('#pi-go').onclick=()=>{setTimeout(()=>$('#pi-out')?.scrollIntoView({block:'start',behavior:'smooth'}),0);let d;try{d=parseAIJSON($('#pi-in').value)}catch(e){$('#pi-out').innerHTML=`<div class="hl bad" style="margin-top:10px">${esc(e.message)}</div>`;return}
     if(/scale|lab|watch/i.test(d.type||'')&&!/policy/i.test(d.type||''))return void($('#pi-out').innerHTML='<div class="hl bad" style="margin-top:10px">這是健康資料的 JSON，請到「健康」匯入</div>');
     const arr=Array.isArray(d.policies)?d.policies:Array.isArray(d)?d:d.insurer||d.product?[d]:[];if(!arr.length)return void($('#pi-out').innerHTML='<div class="hl bad" style="margin-top:10px">JSON 裡沒有保單（policies 是空的）</div>');
     const top=Array.isArray(d.unreadable)?d.unreadable:[];
     const res=arr.slice(0,30).map((r,i)=>{const x=polCheck({...r,unreadable:i===0?top:r.unreadable},m);x.raw=r;const h=String(r.insuredHint||'');
-      const role=/配偶|太太|先生|老婆|老公/.test(h)?'spouse':/子|女|兒/.test(h)?'child':/父|母|爸|媽/.test(h)?'parent':/本人|自己/.test(h)?'me':'';x.mid=(role&&MEM.find(z=>z.role===role)||m).id;{const own=typeof r.appId==='string'&&MEM.find(z=>insOf(z).some(q=>q.id===r.appId));if(own)x.mid=own.id}return x});
+      const role=/配偶|太太|先生|老婆|老公/.test(h)?'spouse':/子|女|兒/.test(h)?'child':/父|母|爸|媽/.test(h)?'parent':'';   // 「本人」是相對於文件上的要保人，App 不知道是誰：留在目前這位
+      const to=role&&MEM.find(z=>z.role===role&&z.id!==m.id);x.mid=(to||m).id;if(to)x.mv=`AI 判斷被保險人是「${insScrub(h,new Set()).slice(0,10)}」：預設放到 ${to.name}，不對請在下面改`;{const own=typeof r.appId==='string'&&MEM.find(z=>insOf(z).some(q=>q.id===r.appId));if(own)x.mid=own.id}return x});
     const draw=()=>{$('#pi-out').innerHTML=`<div class="h4">核對結果（${res.length} 張）</div>`+res.map((x,i)=>{const mm=MEM.find(z=>z.id===x.mid)||m,dup=(typeof x.raw?.appId==='string'&&insOf(mm).find(z=>z.id===x.raw.appId))||polDup(mm,x.p);x.dup=dup||null;x.mg=dup?polMerge(dup,x.p,x.raw):null;x.diff=dup?polDiff(dup,x.mg):[];
       const XF=polAudit(x.p,mm).filter(f=>f.k==='x'&&f.lv!=='info'),on=!x.err.length&&!(dup&&!x.diff.length)&&!XF.some(f=>f.lv==='err');
       return `<div class="cdet">
       <div class="row" style="margin:0;gap:10px"><b style="min-width:0">${esc(x.p.insurer||'？')}・${esc(x.p.product||'？')}</b><label style="margin:0;display:flex;gap:6px;align-items:center;flex:0 0 auto"><input type="checkbox" data-pi="${i}" style="width:auto"${on?' checked':''}${x.err.length?' disabled':''}>匯入</label></div>
       <div class="sub">${esc(polLine(x.p,birthY(MEM.find(z=>z.id===x.mid)||m)))}${x.p.hint?'・AI 判斷被保險人：'+esc(x.p.hint):''}</div>
-      <label>被保險人</label><select data-pim="${i}">${MEM.map(z=>`<option value="${esc(z.id)}"${z.id===x.mid?' selected':''}>${esc(z.name)}</option>`).join('')}</select>
+      ${x.mv&&x.mid!==m.id?`<div class="hl warn" style="margin-top:6px">👥 ${esc(x.mv)}</div>`:''}<label>被保險人</label><select data-pim="${i}">${MEM.map(z=>`<option value="${esc(z.id)}"${z.id===x.mid?' selected':''}>${esc(z.name)}</option>`).join('')}</select>
       <div class="kv" style="margin:8px 0">${x.p.items.map(c=>`<span>${esc(c.name)}</span><span><b>${esc(covAmtP(x.p,c))}</b></span>`).join('')}</div>
       ${x.err.length?`<div class="hl bad">❌ ${esc(x.err.join('；'))}：不能匯入，請 AI 重讀這張</div>`:''}
       ${XF.map(f=>`<div class="flag f-${f.lv}"><b>${PLV[f.lv][0]} ${esc(f.t)}</b><div class="fix">${esc(f.fix)}</div></div>`).join('')}
@@ -4675,11 +4677,11 @@ function openPolImport(o={}){const m=me(),cp=o.chk&&o.chk!=='all'?insFind(m,o.ch
       `<button class="btn" id="pi-save" style="margin-top:12px">匯入勾選的保單</button><p class="note">匯入或更新後是「待核對」：請逐張打開，對照原本的保單按「我已核對」。</p>`;
       $$('#pi-out [data-pim]').forEach(s=>s.onchange=()=>{res[+s.dataset.pim].mid=s.value;draw()});
       $$('#pi-out [data-pimode]').forEach(s=>s.onchange=()=>{res[+s.dataset.pimode].mode=s.value});
-      $('#pi-save').onclick=()=>{let n=0,u=0;$$('#pi-out [data-pi]').forEach(cb=>{if(!cb.checked)return;const x=res[+cb.dataset.pi];if(x.err.length)return;const L=INS[x.mid]||(INS[x.mid]=[]);
+      $('#pi-save').onclick=()=>{let n=0,u=0;const oth={};$$('#pi-out [data-pi]').forEach(cb=>{if(!cb.checked)return;const x=res[+cb.dataset.pi];if(x.err.length)return;const L=INS[x.mid]||(INS[x.mid]=[]);
           if(x.dup&&x.mode!=='new'&&L.includes(x.dup)){const np={...x.mg,hist:[{t:todayS(),why:'import',d:polSnap(x.dup)},...(x.dup.hist||[])].slice(0,5)};if(kind==='quote')np.status='quote';L[L.indexOf(x.dup)]=np;u++}
-          else{if(kind==='quote')x.p.status='quote';L.push(x.p);n++}});
+          else{if(kind==='quote')x.p.status='quote';L.push(x.p);n++}if(x.mid!==m.id)oth[x.mid]=(oth[x.mid]||0)+1});
         if(!n&&!u)return toast('沒有勾選要匯入的保單');S.set('ins',INS);renderIns();renderTodo();closeSheet();go('ins',kind==='quote'?'cov':'pol');if(cp&&u&&insFind(me(),cp.id))openPol(cp.id);
-        toast(kind==='quote'?`已存 ${n+u} 份建議書：在「保障」看加買會補到哪些缺口`:[n&&`已匯入 ${n} 張`,u&&`已更新 ${u} 張（舊版存在變更紀錄）`].filter(Boolean).join('、')+'：請逐張打開核對')}};
+        toast(kind==='quote'?`已存 ${n+u} 份建議書：在「保障」看加買會補到哪些缺口`:[n&&`已匯入 ${n} 張`,u&&`已更新 ${u} 張（舊版存在變更紀錄）`].filter(Boolean).join('、')+(Object.keys(oth).length?`；其中 ${Object.entries(oth).map(([id,k])=>`${k} 張在「${(MEM.find(z=>z.id===id)||{}).name||'其他家人'}」名下`).join('、')}，按右上角切換家人就看得到`:'：請逐張打開核對'))}};
     draw()}}
 function promptPolicy(){return `你是「保單資料擷取器」。我會附上保單、保單條款、保險明細表或保單健診表的照片、截圖或 PDF 文字（可能多張、可能有多張保單）。你的任務只有「把文件上寫的內容抄成 JSON」，不要分析、不要給建議、不要用一般保險常識補資料。
 

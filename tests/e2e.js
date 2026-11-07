@@ -1776,6 +1776,20 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zn. 在配偶名下匯入、AI 寫被保險人「本人」→ 預設留在目前這位（不再跑到另一位家人）；放到別人名下時提示寫出是誰；完整保單號碼只留末 4 碼 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me' }, { id: 'b', name: '林美華', sex: 'f', birth: '1986-02-02', h: 160, w: 52, act: '1.375', goal: 'keep', role: 'spouse' }, { id: 'k', name: '小寶', sex: 'm', birth: '2016-01-01', h: 130, w: 28, act: '1.375', goal: 'keep', role: 'child' }], active: 'b' });
+    const J = { type: 'kinwell.policy', v: 1, policies: [{ insurer: '甲人壽', product: '甲人壽醫療', insuredHint: '本人', start: '2020-01-01', payFreq: '年繳', premium: 8000, coverages: [{ name: '住院日額', cat: 'hosp_day', amount: 1000, unit: '元/日', quote: '每日 1,000 元' }] },
+      { insurer: '乙人壽', product: '乙人壽兒童醫療', insuredHint: '子女', start: '2017-01-01', payFreq: '年繳', premium: 3000, coverages: [{ name: '住院日額', cat: 'hosp_day', amount: 1000, unit: '元/日', quote: '每日 1,000 元' }] }], unreadable: ['丙人壽 1234509876：保費看不清楚'] };
+    const n1 = await page.evaluate((J) => { go('ins', 'pol'); openPolImport(); $('#pi-in').value = JSON.stringify(J); $('#pi-go').click();
+      const sel = [...document.querySelectorAll('#pi-out [data-pim]')].map(s => s.value).join(), note = $('#pi-out').textContent; $('#pi-save').click();
+      const w = [...insOf(MEM[1]), ...insOf(MEM[2])].flatMap(p => p.warn).join('|');
+      return { sel, note: /AI 判斷被保險人是「子女」：預設放到 小寶/.test(note), b: insOf(MEM[1]).length, k: insOf(MEM[2]).length, a: insOf(MEM[0]).length, toast: $('#toast').textContent, list: /甲人壽醫療/.test($('#polBody').textContent), w } }, J);
+    check('在配偶名下匯入、AI 寫被保險人「本人」→ 預設留在目前這位（清單馬上看得到），寫「子女」的才預設放到小孩並標出來；匯入後的提示寫出有幾張在別人名下、怎麼切換；AI 寫出的完整保單號碼只留末 4 碼',
+      n1.sel === 'b,k' && n1.note && n1.b === 1 && n1.k === 1 && n1.a === 0 && n1.list && /1 張在「小寶」名下/.test(n1.toast) && /右上角/.test(n1.toast) && !/1234509876/.test(n1.w) && /9876/.test(n1.w), JSON.stringify(n1));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
