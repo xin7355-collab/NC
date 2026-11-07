@@ -1150,7 +1150,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('保單明細：顏色條＋逐項「怎麼修正」（生效日早於出生 → 選錯家人或民國年；繳費期滿矛盾；「計畫」不是金額要換算；日額只寫「元」當每日；豁免保費不算金額）；有問題的保障項目標顏色；未核對時展開匯入紀錄；「終身」顯示；保險公司更新的處理步驟',
       /plv-err/.test(z1.bar) && /生效日 1978-03-01 早於被保險人（王小明）出生日 1984-05-05/.test(z1.a) && /匯入到錯的家人/.test(z1.a) && /民國年＋1911/.test(z1.a) && /保障到終身（依名稱判斷）/.test(z1.a)
         && /狀態是「繳費期滿」，但 2020-01-01 生效、繳 20 年，最後一期在 2039-01/.test(z1.b) && /「住院醫療計畫」以「計畫」計，不是金額/.test(z1.b) && /2 單位 × 每單位 1,000 元\/日 → 2,000 元\/日/.test(z1.b)
-        && /「住院日額」單位寫「元」，App 當成每日給付/.test(z1.b) && /「豁免保費」是豁免保費：不算保障金額/.test(z1.b) && /年繳保費20,000 元（已繳完）/.test(z1.b) && /第 3 頁模糊/.test(z1.log) && z1.ci === '-,chk,-'
+        && /「住院日額」單位寫「元」，App 當成每日給付/.test(z1.b) && /「豁免保費」是豁免保費：不算保障金額/.test(z1.b) && /年繳保費20,000 元（狀態寫繳費期滿，但還沒繳完/.test(z1.b) && /第 3 頁模糊/.test(z1.log) && z1.ci === '-,chk,-'
         && /保險公司更新了條款、保費或保額，怎麼改/.test(z1.b) && /保險存摺/.test(z1.b) && /用新資料更新這張/.test(z1.b), JSON.stringify({ bar: z1.bar, ci: z1.ci, b: z1.b.slice(0, 200) }));
     // 我已核對：還有錯誤要先確認；金額對不上原文的錯誤核對後消失，資料矛盾的不會
     const z2 = await page.evaluate(() => { const m = me(); let msg = ''; const c0 = window.confirm; window.confirm = t => { msg = t; return true }; openPol('p4'); $('#pd-chk').click(); openPol('p2'); $('#pd-chk').click(); window.confirm = c0; closeSheet();
@@ -1299,6 +1299,48 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('X 光原文寫肺部正常但另外有「主動脈弓鈣化」時，AI 選「輕微變化（如主動脈鈣化）」是對的，不叫你改正常；電腦版抽屜避開 iPad 狀態列（safe-area）；地板守衛自我測試全過（刪過期例外、同一列新增門檻、單位換算、千分位、「以下」、/* */ 註解）；沒有自我檢測結果時待辦不白算',
       w3.a === '' && /原文寫無明顯異常/.test(w3.b) && /\.sheet-panel\{[^}]*padding-top:calc\(env\(safe-area-inset-top\) \+ 8px\)/.test(css) && fg.status === 0 && /自我測試全部通過/.test(fg.stdout) && w3.n === 0,
       JSON.stringify({ a: w3.a, n: w3.n, fg: (fg.stdout || '').trim().split('\n').slice(-2).join(' ') }));
+    await page.close();
+  }
+
+  // =============== 6zd. 一鍵修正：保單（改狀態、填保費、移到其他家人）、體檢（握力移到其他項目、影像改正常）；已確診睡眠呼吸中止的 STOP-Bang；保單「已繳完」字樣；體重趨勢圖 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    const SC = Array.from({ length: 30 }, (_, i) => ({ id: 'w' + i, t: T(i * 2) + 'T07:30', weight: 76 - i * 0.05 + (i % 3) * 0.3, fat: 22 + (i % 4) * 0.2, bmi: 25.1 }));
+    page = await newPage({ members: [{ id: 'a', name: '爸爸', sex: 'm', birth: '1975-01-01', h: 172, w: 75, act: '1.375', goal: 'keep', cond: { items: [{ k: 'osa', y: 2024 }], meds: '', allergy: '無', surg: '' } },
+        { id: 'k', name: '小孩', sex: 'm', birth: '2018-01-01', h: 120, w: 22, act: '1.375', goal: 'keep', role: 'child' }], active: 'a', scale: { a: SC },
+      labs: { a: [{ id: 'l1', t: T(40), hospital: '甲醫院', items: { grip_r: { v: 36, lo: 36, hi: 44, ref: '36~44 kgf' }, grip_l: { v: 34, lo: 34, hi: 41, ref: '34~41 kgf' },
+        cxr: { v: '輕微變化（如主動脈鈣化、陳舊病灶）', ref: '原文：胸部X光檢查：肺部無明顯異常(疑輕度脊椎側彎)' } }, extra: [], chk: ['握力剛好等於參考範圍下限（右 36、左 34 kg）：可能把 InBody 的「推估握力」範圍當成測量值；報告沒有實際測握力就刪掉這兩項'] }] },
+      ins: { a: [{ id: 'p1', insurer: '甲人壽', product: '終身壽險', start: '2014-10-25', payYears: 20, payFreq: '年', prem: 24000, status: 'paidup', items: [{ name: '身故', kind: 'main', cat: 'life', amt: 100, unit: '萬元', quote: '身故保險金 100 萬元' }], src: 'ai', chk: false, warn: [], t: T(0) },
+          { id: 'p2', insurer: '乙人壽', product: '醫療險', start: '2020-01-01', payFreq: '年', prem: 0, status: 'active', items: [{ name: '住院日額', cat: 'hosp_day', amt: 1000, unit: '元/日', quote: '每日 1,000 元' }], src: 'ai', chk: false, warn: [], t: T(0) }],
+        k: [{ id: 'p3', insurer: '丙人壽', product: '定期壽險', start: '1980-02-02', payYears: 20, payFreq: '年', prem: 12000, status: 'active', items: [{ name: '身故', cat: 'life', amt: 100, unit: '萬元', quote: '身故保險金 100 萬元' }], src: 'ai', chk: false, warn: [], t: T(0) }] } });
+    const v1 = await page.evaluate(() => { const m = me(); openPol('p1'); const before = $('#sheetBody').textContent, btn = [...document.querySelectorAll('#sheetBody [data-pfix]')].map(b => b.dataset.pfix).join();
+      document.querySelector('#sheetBody [data-pfix="st_active"]')?.click(); const p = insFind(m, 'p1'); const after = { st: p.status, hist: (p.hist || []).map(h => h.why + ':' + h.d.status).join(), err: polFlags(p, m).some(f => f.lv === 'err') };
+      const pr = window.prompt; window.prompt = () => '24,000'; openPol('p2'); const btn2 = [...document.querySelectorAll('#sheetBody [data-pfix]')].map(b => b.dataset.pfix).join(); document.querySelector('#sheetBody [data-pfix="prem"]')?.click(); window.prompt = pr;
+      return { before, btn: btn + '|' + btn2, after, prem: insFind(m, 'p2').prem, phist: (insFind(m, 'p2').hist || []).length } });
+    check('一鍵修正保單：「繳費期滿卻還在繳」直接按「還在繳：改成有效」、保費 0 直接填（輸入 24,000）；改之前存進變更紀錄可以復原；修正前「年繳保費」標「狀態寫繳費期滿，但還沒繳完」，不再寫「已繳完」',
+      /^st_active\|prem$/.test(v1.btn) && v1.after.st === 'active' && v1.after.hist === 'edit:paidup' && !v1.after.err && v1.prem === 24000 && v1.phist === 1 && /狀態寫繳費期滿，但還沒繳完/.test(v1.before) && !/24,000 元（已繳完）|0 元（已繳完）/.test(v1.before),
+      JSON.stringify({ btn: v1.btn, after: v1.after, prem: v1.prem }));
+    const v2 = await page.evaluate(() => { ACT = 'k'; renderAll(); openPol('p3'); const btn = !!document.querySelector('#sheetBody [data-pfix="move"]'); document.querySelector('#sheetBody [data-pfix="move"]')?.click();
+      const sheet = $('#sheetBody').textContent; document.querySelector('#sheetBody [data-pmv="a"]')?.click(); const r = { btn, sheet: /移到其他家人/.test(sheet), kid: insOf(MEM.find(x => x.id === 'k')).length, dad: insOf(MEM.find(x => x.id === 'a')).map(p => p.id).join(), toast: $('#toast').textContent };
+      ACT = 'a'; renderAll(); const p3 = insFind(me(), 'p3'); r.err = p3 ? polFlags(p3, me()).some(f => f.lv === 'err') : 'missing'; return r });
+    check('一鍵修正保單：生效日早於被保險人出生（爸爸的保單放到小孩名下）→「移到其他家人」選爸爸，保單搬過去、錯誤消失',
+      v2.btn && v2.sheet && v2.kid === 0 && /p3/.test(v2.dad) && !v2.err && /已移到 爸爸/.test(v2.toast), JSON.stringify(v2));
+    const v3 = await page.evaluate(() => { const m = me(); openLabDetail('l1'); const btn = [...document.querySelectorAll('#sheetBody [data-lfix]')].map(b => b.dataset.lfix).join();
+      document.querySelector('#sheetBody [data-lfix="grip"]')?.click(); document.querySelector('#sheetBody [data-lfix="opt:cxr"]')?.click();
+      const r = labsOf(m)[0], ex = r.extra.find(e => /推估握力範圍（右手/.test(e.name));
+      return { btn, grip: 'grip_r' in r.items || 'grip_l' in r.items, ex: ex ? ex.name + '=' + ex.value : '', rk: ex ? resolveKey(ex.name) : 'none', cxr: r.items.cxr.v + '|' + /肺部無明顯異常/.test(r.items.cxr.ref), W: labCheck(r.items, m).join('｜'), chk: (r.chk || []).length,
+        promoted: (promoteExtras(r), 'grip_r' in r.items) } });
+    check('一鍵修正體檢：握力（推估範圍）移到「其他項目」並保留範圍、開 App 時不會又被搬回握力；X 光改成「正常」並保留原文；修好的疑點不再顯示',
+      /grip/.test(v3.btn) && /opt:cxr/.test(v3.btn) && !v3.grip && /36~44/.test(v3.ex) && v3.rk === null && v3.cxr === '正常|true' && v3.W === '' && v3.chk === 0 && !v3.promoted, JSON.stringify(v3));
+    const v4 = await page.evaluate(() => { const m = me(), F = selfF(m), noOsa = { ...m, cond: { items: [] } };
+      const a = selfRate('sleep', [1, 1, 1, 0, 0, 0, 0, 1], m, F), b = selfRate('sleep', [0, 0, 0, 0, 0, 1, 0, 1], m, F), c = selfRate('sleep', [1, 1, 1, 0, 0, 0, 0, 1], noOsa, selfF(noOsa));
+      return { a: a.lv + '|' + a.head, b: b.lv + '|' + b.head, c: c.lv + '|' + c.head } });
+    check('STOP-Bang：已確診睡眠呼吸中止時不再當成「篩檢高風險 → 門診」，改看治療有沒有效（還在打鼾、白天很睏 → 回診確認治療；症狀不多 → 照原本回診）；沒確診的人照原本判斷',
+      /^1\|已確診睡眠呼吸中止：症狀還在/.test(v4.a) && /^0\|已確診睡眠呼吸中止：目前症狀不多/.test(v4.b) && /^2\|睡眠呼吸中止：高風險/.test(v4.c), JSON.stringify(v4));
+    const v5 = await page.evaluate(() => { recTab = 'scale'; go('body', 'rec'); renderRecs(); const g = $('#recList svg.trend');
+      return { has: !!g, band: !!g?.querySelector('rect.band'), avg: !!g?.querySelector('polyline.avg'), dots: g ? g.querySelectorAll('circle').length : 0, label: g?.getAttribute('aria-label') || '', fat: !!$('#recList svg.trend.fat') } });
+    check('體重趨勢圖：近 90 天每一筆的點＋7 天平均線、健康體重範圍色帶、體脂率另一張；讀螢幕的說明寫出最新平均與變化',
+      v5.has && v5.band && v5.avg && v5.dots >= 25 && /近 90 天/.test(v5.label) && /kg/.test(v5.label) && v5.fat, JSON.stringify(v5));
     await page.close();
   }
 
