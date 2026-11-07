@@ -1752,6 +1752,30 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zm. 保障缺口「🧮 怎麼算的」：點一列 → 目標怎麼來、算進去的每一項（保單、原本寫多少、算成多少）、沒算進去的與原因、不算保障的與原因；明細加總＝缺口上的數字 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    const P = (id, o) => ({ id, insurer: '甲人壽', product: '醫療', start: '2015-01-01', payYears: 20, payFreq: '年', prem: 20000, status: 'active', src: 'ai', chk: false, warn: [], t: T(0), ...o });
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', inc: 80 }], active: 'a',
+      ins: { a: [P('g1', { insurer: '丙人壽', product: '變額萬能壽險', items: [{ name: '身故保險金', kind: 'main', cat: 'life', amt: 500, unit: '萬元（B型）', quote: '500 萬元' }] }),
+          P('g2', { insurer: '乙人壽', product: '定期壽險', items: [{ name: '壽險', kind: 'main', cat: 'life', amt: 10, unit: '萬元', quote: '10 萬元' }, { name: '意外身故', kind: 'rider', cat: 'accident', amt: 110, unit: '萬元', quote: '110 萬元' }, { name: '<img src=x onerror="window.__gdx=1">', kind: 'rider', cat: 'life', amt: 1, unit: '萬元', maxAge: 30, quote: '1 萬元' }] }),
+          P('g3', { insurer: '丁人壽', product: '終身壽險', status: 'reduced', prem: 0, items: [{ name: '身故', kind: 'main', cat: 'life', amt: 5, unit: '萬元', quote: '5 萬元' }, { name: '住院日額附約', kind: 'rider', cat: 'hosp_day', amt: 1000, unit: '元/日', quote: '每日 1,000 元' }] }),
+          P('g4', { insurer: '戊人壽', product: '舊壽險', status: 'surr', items: [{ name: '身故', kind: 'main', cat: 'life', amt: 20, unit: '萬元', quote: '20 萬元' }] }),
+          P('g5', { insurer: '己人壽', product: '住院醫療', items: [{ name: '住院醫療附約', kind: 'rider', cat: 'hosp_real', amt: 2, unit: '計畫', quote: '計畫二' }, { name: '病房費', kind: 'rider', cat: 'hosp_real', amt: 2000, unit: '元/日', quote: '每日 2,000 元' }, { name: '住院日額', kind: 'main', cat: 'hosp_day', amt: 1000, unit: '元/日', quote: '每日 1,000 元' }] })] } });
+    const z = await page.evaluate(async () => { try { const m = me(); go('ins', 'cov'); const rowBtn = !!$('#covBody [data-gapk="life"]');
+      const G = covGap(m), bad = G.filter(g => g.pers && Math.abs(g.inL.reduce((a, x) => a + x.v, 0) / (g.u === '萬' ? 1e4 : 1) - g.have) > 1e-6).map(g => g.k).join();
+      document.querySelector('#covBody .gap .sub')?.click(); await new Promise(r => setTimeout(r, 300)); const life = $('#sheetBody').textContent, img = !!$('#sheetBody img'), polgo = $$('#sheetBody [data-polgo]').length;
+      openGapDetail('hosp_real'); const real = $('#sheetBody').textContent, fixBtn = !!$('#sheetBody [data-gapfix="g5:0"]');
+      const pr = window.prompt; window.prompt = () => '20萬/次'; $('#sheetBody [data-gapfix="g5:0"]')?.click(); window.prompt = pr; await new Promise(r => setTimeout(r, 200)); const real2 = $('#sheetBody').textContent;
+      openGapDetail('hosp_day'); const day = $('#sheetBody').textContent;
+      return { rowBtn, bad, life, img, polgo, real, fixBtn, real2, day, xss: !!window.__gdx } } catch (e) { return { err: e.message } } });
+    check('點保障缺口一列 →「怎麼算的」：目標寫出年收入 80 萬 × 10；算進去的逐項列出保單、保單寫多少、算成多少（500 萬元（B型）→ 500 萬、10 萬元 → 10 萬），合計 515 萬（含減額繳清後的 5 萬）；已解約的、超過最高年齡的列在「不算保障」並寫原因；每一項點了打開保單；名稱不會被當成 HTML',
+      z.rowBtn && /年收入 80 萬 × 10/.test(z.life || '') && /算進去的（3 項，合計 515 萬）/.test(z.life) && /保單寫 500 萬元（B型） → 算 500 萬/.test(z.life) && /變額萬能壽險/.test(z.life) && /保單已解約/.test(z.life) && /最高到 30 歲/.test(z.life) && z.polgo >= 5 && !z.img && !z.xss, JSON.stringify({ ...z, life: (z.life || '').slice(0, 700), real: '', real2: '', day: '' }));
+    check('「怎麼算的」也寫出沒算進去的原因：實支實付的「計畫二」以計畫計（有 ✏️ 填金額，填 20萬/次 後明細馬上重算、算進去）、病房費是每日給付不算進每次限額；減額繳清的附約通常已終止、不算住院日額；每一類明細加總都等於缺口上的數字',
+      /以「計畫」計，不是金額/.test(z.real || '') && /給付方式是每日/.test(z.real) && z.fixBtn && /算進去的（1 項，合計 20 萬）/.test(z.real2 || '') && /主約減額繳清後，附約通常已經終止/.test(z.day || '') && /算進去的（1 項，合計 1,000 元）/.test(z.day) && z.bad === '', JSON.stringify({ bad: z.bad, err: z.err, real: (z.real || '').slice(0, 500), real2: (z.real2 || '').slice(0, 300), day: (z.day || '').slice(0, 400) }));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
