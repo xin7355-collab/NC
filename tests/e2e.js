@@ -1558,14 +1558,58 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.waitForTimeout(150);
     const k6 = await page.evaluate(() => { const clip = window.__clip || ''; $('#sc-evt')?.click(); const ty = $('#ev-type')?.value, dx = $('#ev-dx')?.value, note = $('#ev-note')?.value; $('#ev-save')?.click(); const e = clmOf(me())[0];
       return { clip, ty, dx, note, ev: e ? e.type + ':' + e.dx : '' } });
-    check('理賠「突發狀況」：8 種情況可以選；住院 → 先做的事、問醫師的話（入院出院日、ICD 碼、手術名稱、醫囑）、要拿的文件、你的保單裡用得到的（新保單還在等待期會標出來）、容易漏申請的、常見少賠的原因',
-      k5.chips === 'er,ad,sx,acc,ca,crit,dis,death' && /先做的事/.test(k5.t) && /問醫師的話/.test(k5.t) && /入院日、出院日/.test(k5.t) && /ICD-10/.test(k5.t) && /要拿的文件/.test(k5.t) && /你的保單裡可能用得到的/.test(k5.t)
-        && /甲人壽安心醫療/.test(k5.t) && /還在等待期（生效 10 天，等待期 30 天）/.test(k5.t) && /容易漏申請的/.test(k5.t) && /副本理賠/.test(k5.t) && /常見少賠或拒賠的原因/.test(k5.t) && /照實/.test(k5.t) && k5.pressed === 'true',
+    check('理賠「突發狀況」：8 種情況可以選；住院 → 先做的事、問醫師的話（入院出院日、ICD 碼、手術名稱、醫囑）、要拿的文件、保險會不會賠的試算（新保單還在等待期會標出來）、容易漏申請的、常見少賠的原因',
+      k5.chips === 'er,ad,sx,acc,ca,crit,dis,death' && /先做的事/.test(k5.t) && /問醫師的話/.test(k5.t) && /入院日、出院日/.test(k5.t) && /ICD-10/.test(k5.t) && /要拿的文件/.test(k5.t) && /試算結果/.test(k5.t)
+        && /甲人壽安心醫療/.test(k5.t) && /等待期內（生效 10 天，等待期 30 天）/.test(k5.t) && /容易漏申請的/.test(k5.t) && /副本理賠/.test(k5.t) && /常見少賠或拒賠的原因/.test(k5.t) && /照實/.test(k5.t) && k5.pressed === 'true',
       JSON.stringify({ chips: k5.chips, pressed: k5.pressed, t: k5.t.slice(0, 160) }));
     check('勾補充項目、填診斷後「複製提示詞，問 AI」：帶上狀況（住院；有手術、用到自費藥物或醫材；診斷：肺炎）、可能用得到的保障與等待期、所有有效保單；明寫只依實際病情、不建議為了理賠去住院（保險詐欺是刑法詐欺罪）；不附受益人；可以直接記成理賠事件',
-      /熟悉台灣保險理賠實務/.test(k6.clip) && /【狀況】住院；有手術、用到自費藥物或醫材；診斷：肺炎；補充：預計住院 5 天/.test(k6.clip) && /刑法詐欺罪/.test(k6.clip) && /不要建議為了理賠去住院/.test(k6.clip)
-        && /甲人壽安心醫療（生效/.test(k6.clip) && /還在等待期/.test(k6.clip) && /"coverages"/.test(k6.clip) && !/王大明|secret-note/.test(k6.clip) && k6.ty === 'ad' && k6.dx === '肺炎' && /有手術/.test(k6.note || '') && k6.ev === 'ad:肺炎',
+      /熟悉台灣保險理賠實務/.test(k6.clip) && /【狀況】住院、不是意外（疾病）、有手術、用到自費藥物或醫材；發生日 \d{4}-\d{2}-\d{2}；診斷：肺炎；補充：預計住院 5 天/.test(k6.clip) && /刑法詐欺罪/.test(k6.clip) && /不要建議為了理賠去住院/.test(k6.clip)
+        && /甲人壽安心醫療（生效/.test(k6.clip) && /等待期內/.test(k6.clip) && /"coverages"/.test(k6.clip) && !/王大明|secret-note/.test(k6.clip) && k6.ty === 'ad' && k6.dx === '肺炎' && /有手術/.test(k6.note || '') && k6.ev === 'ad:肺炎',
       JSON.stringify({ ...k6, clip: k6.clip.slice(0, 200) }));
+    await page.close();
+  }
+
+  // =============== 6zi. 理賠試算：發生事情時 App 直接用保單算「會不會賠、大約賠多少」（逐項：會賠／可能會賠／不賠＋原因）；問 AI 的提示詞第一題就是會不會賠；記下的理賠事件也顯示試算 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    const P = (id, o) => ({ id, insurer: '甲人壽', product: '醫療', start: '2015-01-01', payYears: 20, payFreq: '年', prem: 20000, status: 'active', src: 'ai', chk: true, warn: [], t: T(0), ...o });
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep' }, { id: 'k', name: '小孩', sex: 'm', birth: '2015-01-01', h: 140, w: 35, act: '1.375', goal: 'keep', role: 'child' }], active: 'a',
+      ins: { a: [P('e1', { product: '甲人壽住院醫療', items: [{ name: '住院日額', kind: 'main', cat: 'hosp_day', amt: 2000, unit: '元/日', quote: '每日 2,000 元' }, { name: '實支實付', kind: 'rider', cat: 'hosp_real', amt: 10, unit: '萬元', quote: '限額 10 萬元' },
+            { name: '手術', kind: 'rider', cat: 'surgery', amt: 10, unit: '倍', quote: '10 倍' }, { name: '傷害醫療', kind: 'rider', cat: 'acc_med', amt: 5, unit: '萬元', quote: '傷害醫療 5 萬元' }] }),
+          P('e2', { insurer: '乙人壽', product: '防癌險', start: T(30), items: [{ name: '初次罹癌', kind: 'main', cat: 'cancer', amt: 30, unit: '萬元', wait: 90, quote: '30 萬元' }, { name: '癌症住院日額', kind: 'rider', cat: 'cancer', amt: 2000, unit: '元/日', wait: 90, quote: '每日 2,000 元' }] }),
+          P('e3', { insurer: '丙人壽', product: '定期壽險', start: '2010-01-01', items: [{ name: '身故保險金', kind: 'main', cat: 'life', amt: 300, unit: '萬元', quote: '300 萬元' }, { name: '意外身故', kind: 'rider', cat: 'accident', amt: 500, unit: '萬元', quote: '500 萬元' }] }),
+          P('e4', { insurer: '丁人壽', product: '舊醫療', status: 'surr', items: [{ name: '住院日額', kind: 'main', cat: 'hosp_day', amt: 1000, unit: '元/日', quote: '每日 1,000 元' }] }),
+          P('e5', { insurer: '戊人壽', product: '終身壽險', status: 'reduced', items: [{ name: '身故', kind: 'main', cat: 'life', amt: 20, unit: '萬元', quote: '20 萬元' }, { name: '住院附約', kind: 'rider', cat: 'hosp_day', amt: 1500, unit: '元/日', quote: '每日 1,500 元' }] })] },
+      clm: { a: [{ id: 'v1', type: 'ad', d: T(10), end: T(5), hosp: '乙醫院', dx: '肺炎', cost: 8000, claims: [] }] } });
+    const i1 = await page.evaluate(() => { try { const m = me(), R = claimEst(m, { k: 'ad', d: todayS(), days: '5', icu: '1', cost: '8000', self: '20000', sx: true, acc: false });
+      const f = n => { for (const o of R.out) for (const r of o.its) if (polName(o.p) + '/' + r.c.name === n) return r.v + ':' + (r.amt ?? '') + ':' + r.txt + (r.why.length ? '〔' + r.why.join('；') + '〕' : ''); return '-' };
+      return { sum: R.sum, n: [R.nY, R.nM, R.nN].join(), day: f('甲人壽住院醫療/住院日額'), real: f('甲人壽住院醫療/實支實付'), sx: f('甲人壽住院醫療/手術'), acc: f('甲人壽住院醫療/傷害醫療'), surr: f('丁人壽 舊醫療/住院日額'), red: f('戊人壽 終身壽險/住院附約'), life: f('丙人壽 定期壽險/身故保險金') } } catch (e) { return { err: e.message } } });
+    check('理賠試算（住院 5 天、加護病房 1 天、有手術、收據 2.8 萬、不是意外）：住院日額會賠 2,000 × 5 ≈ 10,000 元（提醒加護病房可能加倍）、實支實付依收據 ≈ 28,000 元（上限 10 萬）、手術是日額 × 倍數要看條款、傷害醫療不是意外不列、已解約的不賠、減額繳清的附約可能會賠；合計會賠 2 項約 38,000 元',
+      i1.sum === 38000 && i1.n === '2,2,1' && i1.day === 'yes:10000:每日 2,000 元 × 5 天 ≈ 10,000 元〔住加護病房：有些保單另外加倍（看條款）〕' && /^yes:28000:依收據實支：收據 28,000 元，上限 10 萬 → ≈ 28,000 元/.test(i1.real)
+        && i1.sx === 'maybe::10 倍：日額 × 倍數，看條款的倍數表' && i1.acc === '-' && i1.surr === 'no::事故時保單是「已解約」' && /^maybe:7500:/.test(i1.red) && /通常已經終止/.test(i1.red) && i1.life === '-', JSON.stringify(i1));
+    const i2 = await page.evaluate(() => { try { const m = me(), R = claimEst(m, { k: 'ca', d: todayS(), days: '3' }); return R.out.flatMap(o => o.its.map(r => polName(o.p) + '/' + r.c.name + ':' + r.v + ':' + r.txt)).join('｜') } catch (e) { return 'ERR ' + e.message } });
+    check('確診癌症但防癌險才生效 30 天（等待期 90 天）→ 初次罹癌、癌症住院都標「不賠：等待期內」；住院日額照樣會賠 2,000 × 3 天',
+      /乙人壽 防癌險\/初次罹癌:no:等待期內（生效 30 天，等待期 90 天）/.test(i2) && /乙人壽 防癌險\/癌症住院日額:no:等待期內/.test(i2) && /甲人壽住院醫療\/住院日額:yes:每日 2,000 元 × 3 天 ≈ 6,000 元/.test(i2), i2);
+    const i3 = await page.evaluate(() => { try { const m = me(), a = claimEst(m, { k: 'death', d: todayS(), acc: true }), b = claimEst(m, { k: 'death', d: todayS(), acc: false });
+      return [a.sum, b.sum, a.out.flatMap(o => o.its.map(r => r.c.name + ':' + r.v)).join()].join('|') } catch (e) { return 'ERR ' + e.message } });
+    check('家人過世：意外身故時壽險 300 萬＋意外身故 500 萬都會賠（約 800 萬）、疾病身故只有壽險 300 萬；減額繳清的壽險標「可能」（以減額後的保額為準）',
+      i3 === '8000000|3000000|身故保險金:yes,意外身故:yes,身故:maybe', i3);
+    const i4 = await page.evaluate(() => { Object.defineProperty(navigator, 'clipboard', { value: { writeText: t => { window.__clip = t; return Promise.resolve() } }, configurable: true });
+      go('ins', 'clm'); const card = $('#scnBody')?.closest('.card')?.querySelector('h2')?.textContent || ''; document.querySelector('#scnBody [data-cscn="ad"]')?.click();
+      const set = (id, v) => { const e = $('#ce-' + id); if (e) { e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })) } };
+      set('days', '5'); set('icu', '1'); set('cost', '8000'); set('self', '20000'); document.querySelector('#sheetBody [data-cech="sx"]')?.click();
+      const out = $('#ce-out')?.textContent || ''; window.__clip = ''; $('#sc-ai')?.click(); return { card, head: $('#sheetBody h3')?.textContent || '', out } });
+    await page.waitForTimeout(150);
+    const i5 = await page.evaluate(() => window.__clip || '');
+    check('理賠頁「發生事情了：保險會不會賠？」→ 選住院、填天數和收據金額、按「有手術」→ 馬上顯示：會賠 2 項約 38,000 元、可能會賠 2 項、不賠 1 項，逐項寫算式和原因；註明是 App 粗估、不是保險公司核定',
+      /保險會不會賠/.test(i4.card) && /住院：保險會不會賠/.test(i4.head) && /✅ 會賠 2 項，App 估算約 38,000 元/.test(i4.out) && /🟠 可能會賠 2 項/.test(i4.out) && /⛔ 不賠 1 項/.test(i4.out)
+        && /每日 2,000 元 × 5 天 ≈ 10,000 元/.test(i4.out) && /收據 28,000 元/.test(i4.out) && /日額 × 倍數/.test(i4.out) && /事故時保單是「已解約」/.test(i4.out) && /主約減額繳清後這項通常已經終止/.test(i4.out) && /不是保險公司的核定/.test(i4.out),
+      JSON.stringify({ card: i4.card, head: i4.head, out: i4.out.slice(0, 300) }));
+    check('問 AI 的提示詞第一題就是「會不會賠、大約賠多少」：附上狀況（住院 5 天、加護病房 1 天、不是意外、有手術、收據金額）和 App 的逐項試算，請 AI 對照條款確認或更正；不附姓名生日',
+      /最想知道：我的保險會不會賠、大約賠多少/.test(i5) && /A\. 會不會賠、大約賠多少/.test(i5) && /【App 的試算/.test(i5) && /住院日額【會賠】每日 2,000 元 × 5 天 ≈ 10,000 元/.test(i5)
+        && /住院、住院 5 天、加護病房 1 天、不是意外（疾病）、有手術、健保自付 8000 元、自費 20000 元/.test(i5) && !/王小明|1984-05-05/.test(i5), i5.slice(0, 400));
+    const i6 = await page.evaluate(() => { closeSheet(); openEvt('v1'); const t = $('#sheetBody').textContent; closeSheet(); return t });
+    check('已經記下的理賠事件（住院 5 天、自付 8,000 元）打開時，最上面也有「App 試算：保險會不會賠」', /App 試算：保險會不會賠/.test(i6) && /每日 2,000 元 × 5 天 ≈ 10,000 元/.test(i6) && /收據 8,000 元/.test(i6), i6.slice(0, 300));
     await page.close();
   }
 
