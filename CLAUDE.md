@@ -1,4 +1,4 @@
-# NutriCore：Claude 工作規則
+# 家安康（原 NutriCore）：Claude 工作規則
 
 - 回覆一律繁體中文（台灣用語），精簡、行動導向；使用者用 iPhone 操作，介面 Mobile-first。
 - `index.html` 的 `const APP_VER='dev'` 不要手改：部署時 workflow 會換成 commit 編號，App 回到前景時用它自動更新。

@@ -1,4 +1,4 @@
-// NutriCore 端對端測試：用 iPhone 尺寸的無頭 Chromium 操作 index.html（不連外網，外部 API 全部模擬）
+// 家安康（原 NutriCore）端對端測試：用 iPhone 尺寸的無頭 Chromium 操作 index.html（不連外網，外部 API 全部模擬）
 // 用法：node tests/e2e.js            跑全部測試
 //       node tests/e2e.js --update-prompts   依 App 內提示詞重寫 PROMPTS.md
 const path = require('path'), fs = require('fs');
@@ -31,7 +31,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   const newPage = async (seed, o = {}) => { const p = await ctx.newPage(); if (o.clock) await p.clock.install(); p.on('pageerror', e => errs.push(`[pageerror] ${e.message}`)); p.on('dialog', d => d.accept());
     p.on('console', m => { if (m.type() === 'error' && !/ERR_FAILED/.test(m.text())) errs.push(`[console] ${m.text()}`) });
     // 每個分頁第一次載入時清空並寫入自己的測試資料（同一分頁重新整理時保留）
-    if (seed) await p.addInitScript(([s]) => { if (!sessionStorage.getItem('seeded')) { localStorage.clear(); for (const [k, v] of Object.entries({ tour: 1, ...s })) localStorage.setItem('nc_' + k, JSON.stringify(v)); sessionStorage.setItem('seeded', '1') } }, [seed]);
+    if (seed) await p.addInitScript(([s]) => { if (!sessionStorage.getItem('seeded')) { localStorage.clear(); for (const [k, v] of Object.entries({ tour: 2, ...s })) localStorage.setItem('nc_' + k, JSON.stringify(v)); sessionStorage.setItem('seeded', '1') } }, [seed]);
     await p.goto(o.url || PAGE); await p.waitForTimeout(500); return p };
 
   // 圖片工坊入口在「飲食」頁底部
@@ -98,7 +98,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   const plans = await page.evaluate(() => MEM.map(m => yearPlan(m).items.map(o => `${o.pr}|${o.sec}|${o.t}`)));
   const has = (i, re) => plans[i].some(x => re.test(x));
   check('42 歲＋一等親大腸癌 → 優先公費糞便潛血', has(0, /^1\|公費.*糞便潛血/), plans[0].filter(x => /糞便/.test(x)).join(' / '));
-  check('早發心血管家族史 → Lp(a)；吸菸已戒 → 口腔癌篩檢', has(0, /Lp\(a\)/) && has(0, /口腔黏膜/), '');
+  check('早發心血管家族史 → Lp(a)；吸菸已戒 → 口腔癌篩檢（提醒向院所確認資格）', has(0, /Lp\(a\)/) && has(0, /口腔黏膜/), '');
   check('血糖 94→104、GPT 38→52 列入趨勢', has(0, /數值趨勢\|空腹血糖/) && has(0, /數值趨勢\|GPT/), '');
   check('45 歲女性 → 乳房攝影、抹片、HPV、幽門桿菌', has(1, /乳房 X 光/) && has(1, /子宮頸抹片/) && has(1, /HPV/) && has(1, /幽門桿菌/), plans[1].join(' / ').slice(0, 160));
   check('57 歲 30 包年吸菸 → LDCT、戒菸門診', has(2, /LDCT/) && has(2, /戒菸門診/), '');
@@ -154,32 +154,33 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       { id: 'ok1', name: '<b>好人</b>', sex: 'f', birth: '115/01/02', fh: { ca: ['crc', '<script>'], chr: 'x', early: 1 }, life: { smoke: 'x', ppd: 99 } }],
     active: 'ok1', scale: { ok1: [{ id: 'a1', t: '<img src=x onerror=window.__pwn=2>', weight: 60 }, { id: 'a2', t: '2026-01-01T07:00', weight: 60 }] }, labs: {}, img: { b1: 'javascript:alert(1)' }, gas: 'https://evil.example.com/' };
   const ep = path.join(require('os').tmpdir(), 'nc-evil.json'); fs.writeFileSync(ep, JSON.stringify(evil));
-  await page.setInputFiles('#importFile', ep); await page.waitForTimeout(500);
+  await page.setInputFiles('#importFile', ep); await page.waitForTimeout(500); await page.click('#sheetBody [data-imp="replace"]'); await page.waitForTimeout(300);
   await page.click('#nav button[data-v="body"]'); await page.waitForTimeout(300);
   const after = await page.evaluate(() => ({ pwn: window.__pwn || 0, mem: MEM.map(m => m.id + ':' + m.birth).join(','), fh: MEM[0].fh, life: MEM[0].life, scale: (SCALE.ok1 || []).length, gas: GAS }));
   check('惡意備份檔被清洗、沒有執行', after.pwn === 0 && after.mem === 'ok1:2026-01-02' && after.fh.ca.join() === 'crc' && after.life.smoke === 'never' && after.life.ppd === 10 && after.scale === 1 && !/evil/.test(after.gas), JSON.stringify(after));
   const big = path.join(require('os').tmpdir(), 'nc-big.json'); fs.writeFileSync(big, '{"app":"NutriCore","pad":"' + 'x'.repeat(6 * 1048576) + '"}');
   await page.setInputFiles('#importFile', big); await page.waitForTimeout(400);
   const bigRes = await page.evaluate(() => ({ t: document.querySelector('#toast').textContent, mem: MEM.map(m => m.id).join() }));
-  check('超過 5MB 的檔案直接拒絕（不讀進記憶體）', /不是 NutriCore 備份/.test(bigRes.t) && bigRes.mem === 'ok1', bigRes.t.slice(0, 40)); fs.unlinkSync(big);
+  check('超過 5MB 的檔案直接拒絕（不讀進記憶體）', /不是家安康（NutriCore）備份/.test(bigRes.t) && bigRes.mem === 'ok1', bigRes.t.slice(0, 40)); fs.unlinkSync(big);
   check('輸入框字級 ≥16px（iOS 不自動放大）', await page.evaluate(() => { const t = document.createElement('textarea'); document.body.appendChild(t); const v = parseFloat(getComputedStyle(t).fontSize); t.remove(); return v >= 16 }));
 
   // =============== 6. 文件一致性 ===============
-  const prompts = await page.evaluate(() => ({ scale: promptScale(), lab: promptLab(), watch: promptWatch() }));
+  const prompts = await page.evaluate(() => ({ scale: promptScale(), lab: promptLab(), watch: promptWatch(), policy: promptPolicy(), law: PROMPT_LAW, lawdiff: PROMPT_LAWDIFF, insrule: INS_RULE + '\n' + EVID }));
   const md = p => '```text\n' + p + '\n```';
   const pfile = path.join(ROOT, 'PROMPTS.md');
   if (process.argv.includes('--update-prompts')) {
-    const doc = fs.readFileSync(pfile, 'utf8').replace(/(## 一、體脂機截圖\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.scale)).replace(/(## 二、體檢報告\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.lab)).replace(/(## 四、手錶／健康 App 截圖\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.watch));
+    const doc = fs.readFileSync(pfile, 'utf8').replace(/(## 一、體脂機截圖\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.scale)).replace(/(## 二、體檢報告\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.lab)).replace(/(## 四、手錶／健康 App 截圖\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.watch))
+      .replace(/(## 六、保單匯入（照片／PDF → JSON）\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.policy)).replace(/(### 法令／條例更新審查\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.law)).replace(/(### 法規新舊條文比對\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.lawdiff)).replace(/(### 共同規則與證據分級\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.insrule));
     fs.writeFileSync(pfile, doc); console.log('已更新 PROMPTS.md');
   }
   const doc = fs.readFileSync(pfile, 'utf8');
-  check('PROMPTS.md 與 App 內提示詞一致（體脂機、體檢、手錶）', doc.includes(md(prompts.scale)) && doc.includes(md(prompts.lab)) && doc.includes(md(prompts.watch)), '不一致時執行 node tests/e2e.js --update-prompts');
+  check('PROMPTS.md 與 App 內提示詞一致（體脂機、體檢、手錶、保單、法令審查、法規比對）', doc.includes(md(prompts.scale)) && doc.includes(md(prompts.lab)) && doc.includes(md(prompts.watch)) && doc.includes(md(prompts.policy)) && doc.includes(md(prompts.law)) && doc.includes(md(prompts.lawdiff)) && doc.includes(md(prompts.insrule)), '不一致時執行 node tests/e2e.js --update-prompts');
   const selfHead = await page.evaluate(() => selfPrompt(me(), []).split('\n').slice(0, 2).join('\n'));
   check('PROMPTS.md 第五節（自我檢測給 AI）的開頭規則和 App 一致', doc.includes('```text\n' + selfHead + '\n'), '改了 selfPrompt 開頭要同步 PROMPTS.md 第五節');
   await page.close();
 
   // =============== 6b. 儀表、營養師、健身教練、疫苗 ===============
-  const ZM = { id: 'z', name: '宗鑫', sex: 'm', birth: '1984-03-15', h: 170, w: 71.4, waist: 88, act: '1.375', goal: 'keep', fit: { lim: ['knee'], lvl: 'new', days: 4, min: 30, like: ['walk', 'slowjog', 'swim'] },
+  const ZM = { id: 'z', name: '王小明', sex: 'm', birth: '1984-03-15', h: 170, w: 71.4, waist: 88, act: '1.375', goal: 'keep', fit: { lim: ['knee'], lvl: 'new', days: 4, min: 30, like: ['walk', 'slowjog', 'swim'] },
     life: { smoke: 'never', betel: 'never', alc: 'some', colono: 2014 }, fh: { ca: ['crc'], chr: ['dm'], early: false } };
   page = await newPage({ members: [ZM, { id: 'g', name: '阿嬤', sex: 'f', birth: '1958-02-01', h: 155, w: 52, act: '1.2', goal: 'auto', life: { colono: 2022 } }], active: 'z',
     labs: { z: [{ id: 'l', t: '2026-09-14', items: { glu: { v: 106 }, hba1c: { v: 5.9 }, tg: { v: 182 }, ldl: { v: 142 }, ua: { v: 7.6 }, sbp: { v: 134 }, dbp: { v: 86 } }, extra: [] }] } });
@@ -219,7 +220,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   check('成員表單可存疫苗紀錄與運動限制；打過流感就不再列', sv.vax.flu === (new Date().getMonth() >= 9 ? new Date().getFullYear() : new Date().getFullYear() - 1) && sv.lim.includes('back') && !sv.flu, JSON.stringify(sv));
   const cb = await page.evaluate(() => { const c = cleanBackup({ members: [{ id: 'q', name: 'x', sex: 'm', birth: '1990-01-01', goal: '<x>', fit: { lim: ['knee', '<img>'], lvl: 'zzz', days: 99, like: ['run', 'evil'] }, vax: { flu: 'abc', zzz: 2020, pneu: 2020 } }] }).mem[0]; return { g: c.goal, lim: c.fit.lim, lvl: c.fit.lvl, days: c.fit.days, like: c.fit.like, vax: c.vax } });
   check('備份檔的運動、疫苗、目標欄位會被清洗', cb.g === 'auto' && cb.lim.join() === 'knee' && cb.lvl === 'new' && cb.days === 6 && cb.like.join() === 'run' && JSON.stringify(cb.vax) === '{"pneu":2020}', JSON.stringify(cb));
-  const ovf = []; for (const [v, k] of [['dash'], ['body', 'now'], ['body', 'rec'], ['body', 'plan'], ['body', 'cond'], ['menu', 'menu'], ['menu', 'nutri'], ['menu', 'kcal'], ['fit', 'today'], ['fit', 'week'], ['fit', 'tips'], ['self'], ['lab']]) {
+  const ovf = []; for (const [v, k] of [['dash'], ['body', 'now'], ['body', 'rec'], ['body', 'plan'], ['body', 'cond'], ['menu', 'menu'], ['menu', 'nutri'], ['menu', 'kcal'], ['fit', 'today'], ['fit', 'week'], ['fit', 'tips'], ['body', 'self'], ['ins', 'pol'], ['ins', 'cov'], ['ins', 'clm'], ['ins', 'tool'], ['lab']]) {
     await page.evaluate(([v, k]) => go(v, k), [v, k]); await page.waitForTimeout(250); if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1 || [...document.querySelectorAll('.view.on .card')].some(e => e.offsetParent && e.getBoundingClientRect().right > innerWidth + 1))) ovf.push(v + (k ? '/' + k : '')) }
   check('所有頁面與分頁在 iPhone 寬度都沒有橫向捲動、卡片沒超出螢幕', !ovf.length, ovf.join(','));
   await page.close();
@@ -261,7 +262,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
 
   // =============== 6d. 報告項目對應、體脂計 vs 醫院、設定分頁、自動補圖 ===============
   const X = (name, value, unit, ref, flag, lo, hi) => ({ name, value, unit, ref, flag, lo, hi });
-  page = await newPage({ members: [{ id: 'z', name: '宗鑫', sex: 'm', birth: '1984-03-15', h: 172, w: 73.1, act: '1.375', goal: 'auto', life: { smoke: 'never', betel: 'never', alc: 'none' } }], active: 'z',
+  page = await newPage({ members: [{ id: 'z', name: '王小明', sex: 'm', birth: '1984-03-15', h: 172, w: 73.1, act: '1.375', goal: 'auto', life: { smoke: 'never', betel: 'never', alc: 'none' } }], active: 'z',
     labs: { z: [{ id: 'l', t: `${new Date().getFullYear()}-09-14`, hospital: '台安', items: { us_liver: { v: '輕度脂肪肝' }, cxr: { v: '輕微變化（如主動脈鈣化、陳舊病灶）' } }, extra: [
       X('身體質量指數BMI', '24.8', '', '18.5~24', '*', 18.5, 24), X('右眼壓', '9', 'mmHg', '0~20', '', 0, 20), X('糞便潛血檢驗值(免疫法)', '50', 'ng/mL', '<100', '', null, 100), X('超壞膽固醇(sdLDL)', '30.2', 'mg/dL', '<30', '*', null, 30),
       X('骨質密度攝影檢查', '-0.2', '', '>-1.0', '', -1, null), X('骨質密度攝影檢查(右股骨頭)', '-0.4', '', '>-1.0', '', -1, null), X('體脂肪質量', '16.8', 'kg', '7.3~14.5', '', 7.3, 14.5), X('腰臀圍比', '0.87'), X('體脂肪率', '23.2', '%'), X('體重', '73.1', 'kg'),
@@ -285,9 +286,9 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   await page.click('#sheetBody [data-setsec="basic"]'); await page.waitForTimeout(300);
   const st1 = await page.evaluate(() => ({ title: document.querySelector('#sheetBody h3').textContent, back: !!document.querySelector('#sheetBody [data-settings]'), vis: [...document.querySelectorAll('#sheetBody .tabp')].filter(p => !p.hidden).map(p => p.dataset.t).join(), smoke: $('#m-smokebox').offsetParent === null, app: !!document.querySelector('#m-tabs [data-t="app"]') }));
   await page.click('#sheetBody [data-settings]'); await page.waitForTimeout(300);
-  const st2 = await page.evaluate(() => !!document.querySelector('#sheetBody #set-fz') && !document.querySelector('#v-me') && !!document.querySelector('#nav [data-v="self"]'));
-  check('右上角 ⚙️ 設定中心（原「我的」）：個人資料、家庭成員、顯示、備份、圖片、關於分組；點「基本資料」進到那一頁、有「‹ 設定」返回；沒吸菸時不顯示包數；底部導覽「我的」改成「自我檢測」',
-    /設定/.test(hub.title) && /個人資料｜家庭成員.*｜顯示｜資料備份｜菜色圖片｜關於/.test(hub.grp) && hub.exp && hub.fz === 3 && hub.mem >= 1 && /宗鑫 的資料/.test(st1.title) && st1.back && st1.vis === 'basic' && st1.smoke && !st1.app && st2, JSON.stringify([hub, st1, st2]));
+  const st2 = await page.evaluate(() => !!document.querySelector('#sheetBody #set-fz') && !document.querySelector('#v-me') && !!document.querySelector('#nav [data-v="ins"]') && !document.querySelector('#nav [data-v="self"]'));
+  check('右上角 ⚙️ 設定中心（原「我的」）：個人資料、家庭成員、顯示、備份、圖片、關於分組；點「基本資料」進到那一頁、有「‹ 設定」返回；沒吸菸時不顯示包數；底部導覽有「保險」（自我檢測搬進健康頁）',
+    /設定/.test(hub.title) && /個人資料｜家庭成員.*｜顯示｜資料匯出匯入｜菜色圖片｜關於/.test(hub.grp) && hub.exp && hub.fz === 3 && hub.mem >= 1 && /王小明 的資料/.test(st1.title) && st1.back && st1.vis === 'basic' && st1.smoke && !st1.app && st2, JSON.stringify([hub, st1, st2]));
   await page.close();
   // 自動補齊全部菜色圖片：一次只跑一張、做完自動接下一張；連續失敗 3 次暫停（假時鐘快轉）
   horde.mode = 'ok'; let jobs = 0, maxOpen = 0, open = 0;
@@ -308,10 +309,10 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
 
   // =============== 6e. AI 醫生（整理問題、複製後打開 AI） ===============
   await ctx.route(/^https:\/\/(chatgpt\.com|claude\.ai|gemini\.google\.com)\//, r => r.fulfill({ contentType: 'text/html', body: '<title>AI</title>ok' }));
-  page = await newPage({ members: [{ id: 'z', name: '宗鑫', sex: 'm', birth: '1984-03-15', h: 172, w: 73.1, waist: 88, act: '1.375', goal: 'auto', fh: { ca: ['breast'], chr: ['htn'], early: false }, life: { smoke: 'never', betel: 'never', alc: 'some' }, fit: { lim: ['knee'] } }], active: 'z',
+  page = await newPage({ members: [{ id: 'z', name: '王小明', sex: 'm', birth: '1984-03-15', h: 172, w: 73.1, waist: 88, act: '1.375', goal: 'auto', fh: { ca: ['breast'], chr: ['htn'], early: false }, life: { smoke: 'never', betel: 'never', alc: 'some' }, fit: { lim: ['knee'] } }], active: 'z',
     labs: { z: [{ id: 'l', t: '2026-09-14', hospital: '台安醫院', items: { glu: { v: 106 }, ldl: { v: 142 }, sdldl: { v: 30.2, hi: 30 }, alt: { v: 30 } }, extra: [] }] } });
   const ap0 = await page.evaluate(() => { const o = { topic: 'all', fh: true, scale: true, normals: false, q: '' }; return { a: aiPrompt(me(), o), n: aiPrompt(me(), { ...o, normals: true }), it: aiPrompt(me(), { ...o, topic: 'item', item: 'sdldl' }) } });
-  check('AI 醫生的問題：不含姓名、生日、醫院；有年齡性別、異常數值、家族史、身體限制、正常的關鍵數值', !/宗鑫|1984|台安/.test(ap0.a + ap0.n) && /男性、42 歲/.test(ap0.a) && /空腹血糖：106/.test(ap0.a) && /乳癌/.test(ap0.a) && /膝蓋/.test(ap0.a) && /【關鍵數值（有驗、正常）】.*GPT 30/.test(ap0.a), ap0.a.split('\n').slice(3, 5).join(' / '));
+  check('AI 醫生的問題：不含姓名、生日、醫院；有年齡性別、異常數值、家族史、身體限制、正常的關鍵數值', !/王小明|1984|台安/.test(ap0.a + ap0.n) && /男性、42 歲/.test(ap0.a) && /空腹血糖：106/.test(ap0.a) && /乳癌/.test(ap0.a) && /膝蓋/.test(ap0.a) && /【關鍵數值（有驗、正常）】.*GPT 30/.test(ap0.a), ap0.a.split('\n').slice(3, 5).join(' / '));
   check('單項提問帶入該項數值與報告自己的參考值', /請解釋我的「小而密低密度膽固醇 sdLDL 30\.2 mg\/dL」（參考 ≤30）/.test(ap0.it), (ap0.it.match(/【我的問題】.*/) || [''])[0].slice(0, 60));
   await page.click('#nav button[data-v="body"]'); await page.waitForTimeout(300);
   await page.click('#issueList [data-ask="sdldl"]'); await page.waitForTimeout(400);
@@ -327,7 +328,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   await page.close();
 
   // =============== 6f. 不用問 AI 就能算的：FIB-4、代謝症候群、略高、X 光原文、身高不一致 ===============
-  page = await newPage({ members: [{ id: 'z', name: '宗鑫', sex: 'm', birth: '1984-03-15', h: 173, w: 74.6, act: '1.375', goal: 'auto', fh: { ca: ['breast'], chr: ['htn'], early: true }, life: { smoke: 'never', betel: 'never', alc: 'some' } },
+  page = await newPage({ members: [{ id: 'z', name: '王小明', sex: 'm', birth: '1984-03-15', h: 173, w: 74.6, act: '1.375', goal: 'auto', fh: { ca: ['breast'], chr: ['htn'], early: true }, life: { smoke: 'never', betel: 'never', alc: 'some' } },
       { id: 'q', name: '阿伯', sex: 'm', birth: '1966-01-01', h: 168, w: 82, waist: 96, act: '1.2', goal: 'auto' }], active: 'z',
     labs: { z: [{ id: 'l', t: '2026-09-14', items: { ht: { v: '172' }, bmi: { v: '24.8' }, glu: { v: 92 }, ldl: { v: 118 }, hdl: { v: 48 }, tg: { v: 110 }, ast: { v: 24 }, alt: { v: 30 }, plt: { v: 240 }, sdldl: { v: 30.2, hi: 30 }, us_liver: { v: '輕度脂肪肝' },
       cxr: { v: '輕微變化（如主動脈鈣化、陳舊病灶）', ref: '原文：肺部無明顯異常（疑輕度脊椎側彎）' } }, extra: [] }],
@@ -581,12 +582,12 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   {
     page = await newPage({ members: [{ id: 'q', name: '測', sex: 'm', birth: '1984-03-15', h: 172, w: 70, act: '1.375', goal: 'cut' }], active: 'q' });
     const r = await page.evaluate(() => { const m = me(), d = ymd(new Date()), c = calc(m), add = rs => { EXLOG[m.id] = rs.map((x, i) => ({ id: 'x' + i, d, ...x })); S.set('exlog', EXLOG); return exBonus(m, d) };
-      const b0 = plan(d, m).tgt, cut = add([{ k: 'swim', min: 60, int: 'mod' }]), p1 = plan(d, m), K = s => s.slots.reduce((t, sl) => t + sl.t.reduce((a, x) => a + x.k, 0) * sl.x, 0);
+      const K = s => s.slots.reduce((t, sl) => t + sl.t.reduce((a, x) => a + x.k, 0) * sl.x, 0), p0 = plan(d, m), b0 = p0.tgt, k0 = K(p0), cut = add([{ k: 'swim', min: 60, int: 'mod' }]), p1 = plan(d, m);   // 同一天、同菜色比較（份量以 1/4 份為單位，加的不多時只用文字提醒）
       renderAll(); const menu = $('#menuSum').textContent, dash = $('#energyCard').textContent;
       const small = add([{ k: 'walk', min: 15, int: 'easy' }]); m.goal = 'keep'; const keep = add([{ k: 'swim', min: 60, int: 'mod' }]); m.act = '1.2'; const sit = add([{ k: 'swim', min: 60, int: 'mod' }]); m.act = '1.375'; m.goal = 'cut';
       const other = exBonus(m, addDays(d, -1));
-      return { target: Math.round(c.target), b0: Math.round(b0), cut, tgt: Math.round(p1.tgt), kMore: K(p1) >= K(plan(addDays(d, 1), m)), menu: /可多吃約 150 kcal/.test(menu) && /減脂只補回一半/.test(menu), dash: /今天運動後可多吃約 150 kcal/.test(dash), small: `${small.add}|${exBonusTxt(small, c).includes('不用多吃')}`, keep: keep.add, sit: sit.add, other: other.add } });
-    check('游泳 60 分（中等，MET 6）：淨消耗 368、扣掉輕度活動量已算的 61 → 減脂補一半 = 今天可多吃 150 kcal，菜單目標與份量跟著加，總覽和飲食頁都有說明', r.cut.net === 368 && r.cut.base === 61 && r.cut.add === 150 && r.tgt === r.target + 150 && r.b0 === r.target && r.kMore && r.menu && r.dash, JSON.stringify({ ...r, cut: [r.cut.net, r.cut.base, r.cut.add] }));
+      return { target: Math.round(c.target), b0: Math.round(b0), cut, tgt: Math.round(p1.tgt), kMore: K(p1) >= k0, menu: /可多吃約 150 kcal/.test(menu) && /減脂只補回一半/.test(menu), dash: /今天運動後可多吃約 150 kcal/.test(dash), small: `${small.add}|${exBonusTxt(small, c).includes('不用多吃')}`, keep: keep.add, sit: sit.add, other: other.add } });
+    check('游泳 60 分（中等，MET 6）：淨消耗 368、扣掉輕度活動量已算的 61 → 減脂補一半 = 今天可多吃 150 kcal，菜單目標跟著加（份量以 1/4 份為單位、不會變少），總覽和飲食頁都有說明', r.cut.net === 368 && r.cut.base === 61 && r.cut.add === 150 && r.tgt === r.target + 150 && r.b0 === r.target && r.kMore && r.menu && r.dash, JSON.stringify({ ...r, cut: [r.cut.net, r.cut.base, r.cut.add] }));
     check('散步 15 分（輕鬆）在活動量內 → 不用多吃；維持目標補 75%（230）、久坐活動量全部算超出（280）；只影響當天', r.small === '0|true' && r.keep === 230 && r.sit === 280 && r.other === 0, JSON.stringify(r));
     await page.close();
   }
@@ -658,8 +659,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('憂鬱 PHQ-9：第 9 題只要不是「完全沒有」→ 至少「儘快」並顯示 1925 安心專線；全 0 沒有求助框；焦慮 GAD-7 10 分 → 中度', r.ph === '3|5/27|true' && r.ph0 === '0|' && r.ga === '2|10/21|焦慮症狀：中度', `${r.ph}｜${r.ph0}｜${r.ga}`);
     check('肌少症：SARC-F 4 分 → 疑似肌少症；椅子起立 13 秒（≥12）列出；都正常 → 低風險', r.mu === '2|4/10|true' && r.mu0 === 0, `${r.mu}｜${r.mu0}`);
     // 實際點畫面：底部「自我檢測」→ 記憶力 → 沒答就送出會提醒 → 作答 → 結果、存檔、整理給 AI
-    await page.click('#nav button[data-v="self"]'); await page.waitForTimeout(300);
-    const pg = await page.evaluate(() => ({ on: $('#v-self').classList.contains('on'), rows: document.querySelectorAll('#selfBody [data-self]').length, sym: !!$('#selfBody [data-sym]') }));
+    await page.click('#nav button[data-v="body"]'); await page.click('#v-body .subnav [data-sub="self"]'); await page.waitForTimeout(300);
+    const pg = await page.evaluate(() => ({ on: $('#v-body').classList.contains('on') && !$('#v-body .subp[data-sub="self"]').hidden, rows: document.querySelectorAll('#selfBody [data-self]').length, sym: !!$('#selfBody [data-sym]') }));
     await page.click('#selfBody [data-self="memory"]'); await page.waitForTimeout(300); await page.click('#sf-go'); await page.waitForTimeout(150);
     const t0 = await page.evaluate(() => $('#toast').textContent);
     for (let i = 0; i < 8; i++) await page.click(`#sf-qs [data-qi="${i}"][data-oj="${i < 3 ? 0 : 1}"]`);
@@ -693,11 +694,11 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.click('#tour-next');
     const t4 = await page.evaluate(() => $('#tour').hidden);
     check('功能導覽：舊使用者第一次打開自動出現、聚光框住目前那一顆按鈕；Esc 關閉並記住；最後一步是「設定（原本的我的）」→「開始使用」關閉',
-      t1.vis && t1.n === '1 / 7' && t1.role === 'dialog' && t1.hole && t2.hid && t2.saved === '1' && t3.n === '7 / 7' && t3.last === '開始使用' && t3.t === '設定' && t4, JSON.stringify([t1, t2, t3, t4]));
+      t1.vis && t1.n === '1 / 7' && t1.role === 'dialog' && t1.hole && t2.hid && t2.saved === '2' && t3.n === '7 / 7' && t3.last === '開始使用' && t3.t === '設定' && t4, JSON.stringify([t1, t2, t3, t4]));
     await page.click('#gearBtn'); await page.waitForTimeout(300); await page.click('#set-fz [data-fz="1.25"]'); await page.waitForTimeout(200);
     const f1 = await page.evaluate(() => ({ body: getComputedStyle(document.body).fontSize, h2: getComputedStyle(document.querySelector('.card h2')).fontSize, saved: localStorage.getItem('nc_fz') }));
     await page.evaluate(() => closeSheet()); const fit = [];
-    for (const v of ['dash', 'body', 'menu', 'fit', 'self']) { await page.click(`#nav button[data-v="${v}"]`); await page.waitForTimeout(250);
+    for (const v of ['dash', 'body', 'menu', 'fit', 'ins']) { await page.click(`#nav button[data-v="${v}"]`); await page.waitForTimeout(250);
       fit.push(await page.evaluate(v => { const W = innerWidth, bad = [...document.querySelectorAll(`#v-${v} .card, #nav button`)].filter(e => e.offsetParent && e.getBoundingClientRect().right > W + 1).length; return bad }, v)) }
     await page.reload(); await page.waitForTimeout(500);
     const f2 = await page.evaluate(() => getComputedStyle(document.body).fontSize);
@@ -810,7 +811,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.click('#v-body .subnav [data-sub="cond"]'); await page.waitForTimeout(150);
     const d3 = await page.evaluate(() => ({ cond: !$('#v-body .subp[data-sub="cond"]').hidden, sel: $('#v-body .subnav [aria-selected="true"]')?.dataset.sub }));
     check('版面：身體頁 4 個分頁（預設「狀況」）、病史分頁有數字；總覽最上面是健康總覽（分數環＋一句總結＋4 個數字）＋今天要做；點 BMI 跳到「飲食 → 熱量計算」、點今年健檢跳到「身體 → 健檢規劃」',
-      d0.subs === 'now:1,rec:0,plan:0,cond:0' && d0.kpi === 4 && d0.ring && /健康總覽/.test(d0.head) && /體檢 \d+ 分/.test(d0.head) && /吃約 \d+ kcal/.test(d0.today) && /訓練日|恢復日/.test(d0.today) && d0.badge === '1'
+      d0.subs === 'now:1,rec:0,plan:0,cond:0,self:0' && d0.kpi === 4 && d0.ring && /健康總覽/.test(d0.head) && /體檢 \d+ 分/.test(d0.head) && /吃約 \d+ kcal/.test(d0.today) && /訓練日|恢復日/.test(d0.today) && d0.badge === '1'
         && d1.view === 'v-menu' && d1.kcal && d1.gauge && d2.view === 'v-body' && d2.plan && d2.now && d3.cond && d3.sel === 'cond', JSON.stringify({ d0: { ...d0, head: '', today: '' }, d1, d2, d3 }));
     const a = await page.evaluate(() => { const m = me(), cd = cmpData(m), bp = cd.rows.find(r => r.k === 'sbp'), F = fat => scaleEval({ fat }, m).filter(i => i.k === 'fat').map(i => i.lv).join() || '0', y = { ...m, birth: `${new Date().getFullYear() - 25}-01-01` };
       const dp = deptPlan(labEval(labsOf(m)[0], m)), tx = summaryText(m);
@@ -919,6 +920,133 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
         icd: ['bursitis', 'achilles', 'septum', 'turbinate', 'sinusitis', 'tinnitus', 'dryeye', 'urticaria', 'atopic', 'hemorrhoid', 'bph'].map(k => CONDK[k]?.icd || '?').join() } });
     check('新病名 11 個都有 ICD-10；女性看不到攝護腺肥大；新症狀（鼻塞躺下更塞、喉嚨沙啞、皮膚紅疹、頸肩痛、腳底腳跟痛）都有立即就醫紅旗；腳跟痛帶入病史、鼻塞帶入鼻中隔彎曲；狀態列有底色',
       fx.icd === 'M71.57,M76.6,J34.2,J34.3,J32.9,H93.1,H04.12,L50.8,L20.9,K64.9,N40' && !fx.fbph && fx.syms === 'stuffy:1,throat:1,skin:2,neck:2,heel:1' && /你的病史：足底／腳跟滑囊炎/.test(fx.heel) && /你的病史：鼻中隔彎曲/.test(fx.stuffy) && fx.sbar === 'fixed', JSON.stringify(fx));
+    await page.close();
+  }
+
+  // =============== 6x. 家安康：改名與版面、回診追蹤（App vs 醫師）、保險（AI 匯入＋防錯）、理賠、匯出匯入（單一成員／加密）、防 AI 讀錯、牙齒口腔、家族史、職業身分 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    const seedA = { id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 70, act: '1.375', goal: 'keep', job: 'civ', role: 'me', earner: true, life: { smoke: 'former', ppd: 1, yrs: 6, quit: 10, betel: 'never', alc: 'some' },
+      cond: { items: [{ k: 'cac', y: 2025 }, { k: 'osa', score: 22 }, { k: 'dm' }], meds: 'Aspirin 100 mg', allergy: '無', surg: '' } };
+    page = await newPage({ members: [seedA, { id: 'b', name: '小美', sex: 'f', birth: '1986-02-02', h: 160, w: 55, act: '1.375', goal: 'keep', role: 'spouse', job: 'lab' }], active: 'a',
+      labs: { a: [{ id: 'l1', t: '2026-09-14', hospital: '甲醫院', items: { ldl: { v: 165 }, tc: { v: 230 }, alt: { v: 80 } }, extra: [] }] } });
+    const ia = await page.evaluate(() => ({ title: document.title, logo: $('.logo').textContent, nav: [...document.querySelectorAll('#nav button')].map(b => b.textContent.trim()).join('|'),
+      sub: [...document.querySelectorAll('#v-body .subnav [data-sub]')].map(b => b.dataset.sub + ':' + b.firstChild.textContent).join(','), ins: [...document.querySelectorAll('#v-ins .subnav [data-sub]')].map(b => b.firstChild.textContent).join('|'),
+      self: (go('self'), $('.view.on').id + ':' + !$('#v-body .subp[data-sub="self"]').hidden), todo: (go('dash'), $('#todoCard').textContent), ldlMsg: labEval(labsOf(me())[0], me()).find(i => i.k === 'ldl').msg, tools: (renderTool(), document.querySelectorAll('#toolBody .card').length) }));
+    check('改名「家安康」；底部 總覽｜健康｜飲食｜運動｜保險；健康頁 狀況｜紀錄｜追蹤｜病史｜自測（舊「自我檢測」連結導到這裡）；保險頁 保單｜保障｜理賠｜AI 工具（7 種提示詞）；總覽有待辦與急症入口；LDL 165 不再說「對一般人可能正常」',
+      /^家安康/.test(ia.title) && ia.logo === '家安康' && ia.nav === '總覽|健康|飲食|運動|保險' && ia.sub === 'now:狀況,rec:紀錄,plan:追蹤,cond:病史,self:自測' && ia.ins === '保單|保障|理賠|AI 工具' && ia.self === 'v-body:true' && ia.tools === 7
+        && /待辦/.test(ia.todo) && /急症自我檢測/.test(ia.todo) && /項異常還沒記下醫師怎麼說/.test(ia.todo) && !/對一般人可能正常/.test(ia.ldlMsg) && /冠狀動脈鈣化/.test(ia.ldlMsg), JSON.stringify(ia));
+    // 回診追蹤：實際點畫面
+    await page.evaluate(() => go('body', 'plan')); await page.waitForTimeout(200);
+    const f0 = await page.evaluate(() => [...document.querySelectorAll('#fuBody [data-fuadd]')].map(b => b.dataset.fuadd).join());
+    await page.click('#fuBody [data-fuadd="ldl"]'); await page.waitForTimeout(300);
+    const f1 = await page.evaluate(() => ({ app: $('#sheetBody .hl').textContent, open: $('#sheetBody details.box.ai').open }));
+    await page.fill('#fv-hosp', '乙醫院'); await page.fill('#fv-dept', '心臟內科'); await page.fill('#fv-dx', '冠狀動脈鈣化，LDL 目標 <70，開始用藥'); await page.fill('#fv-plan', 'Rosuvastatin 10 mg；3 個月後抽血');
+    await page.selectOption('#fv-rel', 'match'); await page.selectOption('#fv-st', 'treat'); await page.fill('#fv-next', T(-90)); await page.click('#fv-save'); await page.waitForTimeout(300);
+    const f2 = await page.evaluate(() => { const x = fuOf(me()).find(z => z.k === 'ldl'); return { st: x.st, next: x.next, log: x.log.length, rel: x.log[0].rel, sheet: $('#sheetBody').textContent } });
+    const f3 = await page.evaluate(() => { const m = me(), sg = fuSuggest(m), alt = fuAdd(m, sg.find(s => s.k === 'alt')); alt.log.push({ id: 'x1', d: '2026-10-01', dept: '腸胃肝膽科', dx: '超音波正常，運動後暫時升高', rel: 'over', st: 'ruled', next: '' }); alt.st = 'ruled';
+      const dc = fuAdd(m, { k: 'doc:1', name: '牙周病', src: 'doc', app: null }); dc.log.push({ id: 'x2', d: '2026-10-05', dept: '牙科', dx: '中度牙周病', rel: 'missed', st: 'treat', next: '' }); dc.st = 'treat';
+      const cd = fuAdd(m, sg.find(s => s.k === 'cond:cac')); cd.next = '2026-01-01'; cd.st = 'watch'; fuSave();
+      return { stats: fuStats(m), todo: (renderTodo(), $('#todoCard').textContent), sum: summaryText(m), ai: aiPrompt(m, { topic: 'visit', cond: true }), body: $('#fuBody').textContent } });
+    check('回診追蹤：App 建議追蹤 LDL、GPT（異常）；點「＋ 追蹤」保存 App 當時的判斷（數值、等級、版本）；填回診紀錄（醫師診斷、處置、和 App 判斷相符、治療中、下次回診）',
+      /ldl/.test(f0) && /alt/.test(f0) && /App 當時的判斷/.test(f1.app) && /165/.test(f1.app) && /判讀版本/.test(f1.app) && f1.open && f2.st === 'treat' && f2.log === 1 && f2.rel === 'match' && f2.next === T(-90) && /冠狀動脈鈣化，LDL 目標 <70/.test(f2.sheet) && /和 App：相符/.test(f2.sheet),
+      JSON.stringify({ f0, app: f1.app.slice(0, 80), st: f2.st, next: f2.next, rel: f2.rel }));
+    check('App vs 醫師統計：相符 1、App 提醒過度 1（醫師排除）、App 漏判 1（醫師發現）；逾期的追蹤上總覽待辦；看診摘要與 AI 都帶入醫師的判斷',
+      f3.stats.match === 1 && f3.stats.over === 1 && f3.stats.missed === 1 && /回診逾期：冠狀動脈鈣化/.test(f3.todo) && /■ 回診追蹤 Follow-up（醫師的判斷）/.test(f3.sum) && /低密度膽固醇 LDL：治療中；.*乙醫院 心臟內科：冠狀動脈鈣化，LDL 目標 <70/.test(f3.sum)
+        && /【回診追蹤（醫師的判斷，以醫師為準）】/.test(f3.ai) && /牙周病（醫師發現，App 原本沒提醒）：治療中/.test(f3.ai) && /App 提醒過度 1/.test(f3.body) && /App 漏判（醫師發現） 1/.test(f3.body), JSON.stringify({ stats: f3.stats, todo: f3.todo.slice(0, 120) }));
+    // 保險：AI 匯入（含防錯檢查）
+    const polJSON = { type: 'jiaankang.policy', v: 1, policies: [
+      { insurer: '甲人壽', product: '安心醫療終身保險', policyNoLast4: '12345678', insuredHint: '本人', start: '110/03/05', payYears: 20, payFreq: '年繳', premium: 24000, status: '有效',
+        coverages: [{ name: '住院醫療日額', kind: 'main', cat: 'hosp_day', amount: 2000, unit: '元/日', waitingDays: 30, renewable: '保證續保', quote: '住院醫療保險金：每日 2,000 元', page: 3 },
+          { name: '癌症初次罹患保險金', kind: 'rider', cat: 'cancer', amount: 30, unit: '萬元', maxAge: 75, quote: '初次罹患癌症保險金 30 萬元', page: 5 }], notes: '要保人身分證 A123456789' },
+      { insurer: '乙產險', product: '傷害保險', insuredHint: '配偶', start: '2024-01-10', payFreq: '月繳', premium: 500,
+        coverages: [{ name: '意外身故', cat: 'accident', amount: 500, unit: '萬元', quote: '意外身故保險金 300 萬元' }, { name: '意外醫療', cat: 'acc_med', amount: 3, unit: '萬元' }] },
+      { insurer: '丙人壽', product: '住院日額附約', start: '2023-05-01', payFreq: '年繳', premium: 3000, coverages: [{ name: '住院日額', cat: 'hosp_day', amount: 1000, unit: '元/日', quote: '每日給付 1,000 元', waitingDays: 30 }] }], unreadable: ['第 4 頁右下角被手指擋住'] };
+    await page.evaluate(() => { closeSheet(); go('ins', 'pol') }); await page.waitForTimeout(200);
+    await page.click('#polBody [data-poladd]'); await page.waitForTimeout(300);
+    const pp = await page.evaluate(() => promptPolicy());
+    await page.fill('#pi-in', '```json\n' + JSON.stringify(polJSON) + '\n```'); await page.click('#pi-go'); await page.waitForTimeout(300);
+    const i0 = await page.evaluate(() => ({ out: $('#pi-out').textContent, checks: [...document.querySelectorAll('#pi-out [data-pi]')].map(c => c.checked ? 1 : 0).join(''), mids: [...document.querySelectorAll('#pi-out [data-pim]')].map(s => s.value).join() }));
+    await page.click('#pi-save'); await page.waitForTimeout(400);
+    const i1 = await page.evaluate(() => ({ a: JSON.stringify(insOf(MEM[0]).map(p => ({ s: p.start, a: polAnnual(p), no: p.no4, chk: p.chk, n: p.items.length, note: p.note }))), b: insOf(MEM[1]).map(p => polAnnual(p) + ':' + p.warn.length).join(), view: $('.view.on').id, badge: $('#v-ins .subnav [data-sub="pol"] .bd')?.textContent }));
+    check('保單 AI 匯入：提示詞要逐字原文＋頁碼、民國年換算、不輸出身分證；貼上（含 ``` 也可以）→ 防錯：保單號碼只留末 4 碼、身分證自動刪除、列出 AI 看不清楚的、金額在原文找不到會警告、沒附原文會提醒；依稱謂分給配偶；月繳 500 → 年繳 6,000；匯入後「待核對」',
+      /民國年請加 1911/.test(pp) && /quote/.test(pp) && /身分證字號/.test(pp) && /"type":"jiaankang.policy"/.test(pp) && /保單號碼只保留末 4 碼/.test(i0.out) && /偵測到身分證字號，已自動刪除/.test(i0.out) && /AI 說看不清楚：第 4 頁右下角被手指擋住/.test(i0.out)
+        && /「意外身故」的金額 500 在原文裡找不到：可能讀錯/.test(i0.out) && /「意外醫療」沒有附原文/.test(i0.out) && /防錯檢查通過/.test(i0.out) && i0.checks === '111' && i0.mids === 'a,b,a'
+        && i1.a === JSON.stringify([{ s: '2021-03-05', a: 24000, no: '5678', chk: false, n: 2, note: '要保人身分證 ＊＊＊' }, { s: '2023-05-01', a: 3000, no: '', chk: false, n: 1, note: '' }]) && /^6000:[2-9]/.test(i1.b) && i1.view === 'v-ins' && i1.badge === '2', JSON.stringify({ i0: { ...i0, out: i0.out.slice(0, 160) }, i1 }));
+    const pid = await page.evaluate(() => insOf(MEM[0])[0].id);
+    await page.evaluate(id => openPol(id), pid); await page.waitForTimeout(200); await page.click('#pd-chk'); await page.waitForTimeout(200);
+    await page.evaluate(() => { closeSheet(); go('ins', 'cov') }); await page.waitForTimeout(200);
+    const c0 = await page.evaluate(() => ({ cov: $('#covBody').textContent, map: [...document.querySelectorAll('#covBody table.imap tr')].map(r => [...r.children].map(c => c.textContent).join('/')).join('|'), end: insEnding(me()).map(r => r.t).join('｜'), chk: insOf(me())[0].chk }));
+    await page.evaluate(() => openPolImport()); await page.waitForTimeout(200); await page.fill('#pi-in', JSON.stringify(polJSON)); await page.click('#pi-go'); await page.waitForTimeout(300);
+    const dup = await page.evaluate(() => ({ checks: [...document.querySelectorAll('#pi-out [data-pi]')].map(c => c.checked ? 1 : 0).join(''), out: $('#pi-out').textContent }));
+    const man = await page.evaluate(() => { closeSheet(); const { p, err } = polCheck({ insurer: '丁人壽', product: '定期壽險', start: '2030-01-01', payFreq: '年', premium: 2000000, payYears: 99, coverages: [{ name: '身故', cat: 'life', amount: 500, unit: '萬元', maxAge: 30 }] }, me(), true); return { err: err.length, warn: p.warn.join('｜'), py: p.payYears } });
+    check('核對後才打 ✔：住院日額 2 張加總 3,000 元/日（含待核對）、癌症 30 萬；全家保障地圖（本人醫療、癌症 ✔，配偶意外「待」）；繳費期滿倒數；同一張再匯入預設不勾；手動輸入也檢查（未來生效日、年期、年繳 200 萬、超過續保年齡）',
+      c0.chk && /住院日額3,000 元\/日 含待核對/.test(c0.cov) && /癌症30 萬/.test(c0.cov) && /王小明\/—\/—\/✔\/✔\/—\/—\/—/.test(c0.map) && /小美\/—\/待\/—\/—\/—\/—\/—/.test(c0.map) && /繳費到 2040 年/.test(c0.end)
+        && dup.checks === '000' && /已經有同一張保單/.test(dup.out) && man.err === 0 && /在未來/.test(man.warn) && /繳費年期 99 不合理/.test(man.warn) && /年繳保費約 200 萬/.test(man.warn) && /最高到 30 歲/.test(man.warn) && !/沒有附原文/.test(man.warn) && man.py === null,
+      JSON.stringify({ map: c0.map, end: c0.end, dup: dup.checks, man }));
+    // 理賠
+    const cl = await page.evaluate(() => { const m = me(), p1 = insOf(m)[0], p3 = insOf(m)[1], e = { id: 'e1', type: 'ad', d: '2026-10-01', end: '2026-10-04', hosp: '乙醫院', dx: '肺炎', cost: 12000, claims: [] };
+      CLM[m.id] = [e]; p3.start = '2026-09-20'; S.set('ins', INS); const M = evtMatch(m, e); e.claims.push({ pid: p1.id, st: 'docs' }); S.set('clm', CLM); renderClm(); renderTodo();
+      return { m: M.map(x => x.p.insurer + ':' + x.its.map(i => (i.est || '') + '|' + i.w.join('/')).join(';')).join('｜'), todo: $('#todoCard').textContent, pr: promptClaim(m, e), pd: promptClaim(m, e, true) } });
+    check('理賠：住院 3 天 → 找到 2 張有住院日額的保單，粗估 2,000 × 3 = 6,000；剛生效 11 天的保單標「等待期內」「還沒核對」；補件上總覽待辦；理賠分析與拒賠申訴提示詞帶入事件與 App 的檢查',
+      /甲人壽:粗估 6,000 元（2,000 元\/日 × 3 天）\|/.test(cl.m) && /丙人壽:粗估 3,000 元（1,000 元\/日 × 3 天）\|等待期內（生效 11 天，等待期 30 天）：可能不賠\/保單還沒核對/.test(cl.m) && /理賠補件：肺炎/.test(cl.todo)
+        && /【事件】2026-10-01 到 2026-10-04 住院；診斷：肺炎；自付 12000 元/.test(cl.pr) && /A\. 被保險人角度/.test(cl.pr) && /App 提醒：等待期內/.test(cl.pr) && /拒賠理由/.test(cl.pd) && /60 天內/.test(cl.pd), JSON.stringify({ m: cl.m, todo: cl.todo.slice(0, 100) }));
+    // 匯出匯入：單一成員、加密
+    const ex = await page.evaluate(async () => { const d = packData('b'), enc = await encPack(packData(null), 'secret12'); let bad = ''; try { await decPack(enc, 'wrong-pw') } catch (e) { bad = 'fail' } const dec = await decPack(enc, 'secret12');
+      return { kind: d.kind, mem: d.members.map(m => m.id).join(), ins: Object.keys(d.ins).join(), labs: Object.keys(d.labs).join(), enc: !!enc.data && !/王小明|甲人壽/.test(JSON.stringify(enc)), bad, dec: dec.members.length + ':' + Object.keys(dec.ins).length, name: fileName('b', true) } });
+    const memFile = path.join(require('os').tmpdir(), 'jak-member.json'), encFile = path.join(require('os').tmpdir(), 'jak-enc.json');
+    fs.writeFileSync(memFile, await page.evaluate(() => JSON.stringify(packData('b'))));
+    fs.writeFileSync(encFile, await page.evaluate(async () => JSON.stringify(await encPack(packData(null), 'secret12'))));
+    await page.close();
+    page = await newPage({ members: [{ id: 'z9', name: '別人', sex: 'f', birth: '1990-01-01', h: 160, w: 50, act: '1.375', goal: 'keep' }], active: 'z9' });
+    await page.setInputFiles('#importFile', memFile); await page.waitForTimeout(400);
+    const im0 = await page.evaluate(() => $('#sheetBody').textContent);
+    await page.click('#sheetBody [data-imp="merge"]'); await page.waitForTimeout(300);
+    const im1 = await page.evaluate(() => ({ mem: MEM.map(m => m.name).join(), act: me().name, ins: insOf(MEM.find(m => m.id === 'b')).length }));
+    await page.setInputFiles('#importFile', memFile); await page.waitForTimeout(400);
+    const im2 = await page.evaluate(() => [...document.querySelectorAll('#sheetBody [data-imp]')].map(b => b.dataset.imp).join());
+    await page.click('#sheetBody [data-imp="new"]'); await page.waitForTimeout(300);
+    const im3 = await page.evaluate(() => { const n = MEM.find(m => m.name === '小美（匯入）'); return { n: MEM.length, ins: n ? insOf(n).length : -1, act: me().name } });
+    await page.setInputFiles('#importFile', encFile); await page.waitForTimeout(400);
+    const im4 = await page.evaluate(() => !!$('#dp-pw'));
+    await page.fill('#dp-pw', 'wrong'); await page.click('#dp-go'); await page.waitForTimeout(900);
+    const im5 = await page.evaluate(() => $('#toast').textContent);
+    await page.fill('#dp-pw', 'secret12'); await page.click('#dp-go'); await page.waitForTimeout(1000);
+    const im6 = await page.evaluate(() => [...document.querySelectorAll('#sheetBody [data-imp]')].map(b => b.dataset.imp).join());
+    await page.click('#sheetBody [data-imp="merge"]'); await page.waitForTimeout(300);
+    const im7 = await page.evaluate(() => ({ n: MEM.length, names: MEM.map(m => m.name).join(), fu: fuOf(MEM.find(m => m.id === 'a')).length, labs: labsOf(MEM.find(m => m.id === 'a')).length }));
+    fs.unlinkSync(memFile); fs.unlinkSync(encFile);
+    check('匯出匯入：單一成員檔（只含她的保單）匯入到別人手機 → 新增成員；再匯入同一人 → 可合併／取代／另存新成員；加密備份看不到明文、密碼錯打不開、正確密碼解開後可合併',
+      ex.kind === 'member' && ex.mem === 'b' && ex.ins === 'b' && ex.labs === '' && ex.enc && ex.bad === 'fail' && ex.dec === '2:2' && /^jiaankang-小美-\d{4}-\d{2}-\d{2}-enc\.json$/.test(ex.name)
+        && /新增成員「小美」/.test(im0) && im1.mem === '別人,小美' && im1.act === '小美' && im1.ins === 1 && im2 === 'merge,replace1,new' && im3.n === 3 && im3.ins === 1 && im3.act === '小美（匯入）'
+        && im4 && /密碼錯誤/.test(im5) && im6 === 'merge,replace' && im7.n === 4 && /王小明/.test(im7.names) && im7.fu === 4 && im7.labs === 1, JSON.stringify({ ex, im1, im2, im3, im5, im6, im7 }));
+    // 防 AI 讀錯
+    const ck = await page.evaluate(() => { const m = MEM.find(x => x.id === 'a');
+      return { s: scaleCheck({ weight: 70, bmi: 26.5, fat: 20, fatMass: 18, muscle: 72, skeletal: 30, lean: 52 }, m).join('｜'), l: labCheck({ tc: { v: 150 }, ldl: { v: 170 }, sbp: { v: 80 }, dbp: { v: 120 }, cr: { v: 1.0 }, egfr: { v: 30 } }, m, '2031-01-01').join('｜'),
+        ok: labCheck({ tc: { v: 200 }, ldl: { v: 120 }, sbp: { v: 120 }, dbp: { v: 80 }, cr: { v: 1.0 }, egfr: { v: 90 } }, m, '2026-01-01').length, w: watchCheck({ rhr: 95, walkhr: 80 }).join() } });
+    await page.evaluate(() => { ACT = 'a'; renderAll(); openLabSheet() }); await page.waitForTimeout(300); await page.click('details.box.ai > summary');
+    await page.fill('#ai-in', JSON.stringify({ type: 'jiaankang.lab', v: 1, date: '2026-09-14', items: { tc: { value: 150 }, ldl: { value: 170 }, sbp: { value: 80 }, dbp: { value: 120 } } }));
+    await page.click('#ai-go'); await page.waitForTimeout(200);
+    const lm = await page.evaluate(() => $('#ai-msg').textContent);
+    await page.click('#lSave'); await page.waitForTimeout(400);
+    const ld = await page.evaluate(() => ({ sheet: $('#sheetBody').textContent, chk: (labsOf(me()).find(r => r.chk) || { chk: [] }).chk.length }));
+    check('防 AI 讀錯：BMI 和體重身高對不起來、體脂率和脂肪量對不起來、肌肉量大於體重；LDL 比總膽固醇高、收縮壓比舒張壓低、eGFR 和肌酸酐差很多、日期在未來；靜止心率比步行心率高；正常資料不誤報；匯入訊息提醒同一天已有報告，存檔後詳情顯示疑點',
+      /BMI 26.5 和體重 70 kg、身高 172 cm 算出來的 23.7/.test(ck.s) && /體脂率 20%/.test(ck.s) && /肌肉量 72 kg 不可能/.test(ck.s) && !/去脂體重/.test(ck.s)
+        && /LDL 170 比總膽固醇 150 還高/.test(ck.l) && /收縮壓 80 應該比舒張壓 120 高/.test(ck.l) && /eGFR 30 和肌酸酐 1 算出來的約 96/.test(ck.l) && /在未來/.test(ck.l) && ck.ok === 0 && /靜止心率 95 比步行平均心率 80/.test(ck.w)
+        && /防 AI 讀錯檢查/.test(lm) && /LDL 170 比總膽固醇 150/.test(lm) && /2026-09-14 已經有一份報告/.test(lm) && /存檔時的疑點（2）/.test(ld.sheet) && ld.chk === 2, JSON.stringify({ ck, lm: lm.slice(0, 160), chk: ld.chk }));
+    // 牙齒口腔、家族史、睡眠呼吸中止 AHI、職業身分與最低保障提示詞
+    const dn = await page.evaluate(() => { closeSheet(); const m = MEM.find(x => x.id === 'a'); ACT = 'a'; m.fh = { ca: [], chr: [], early: false, mbc: true, gene: false };
+      const P = yearPlan(m).items.map(o => `${o.pr}|${o.t}|${o.why}|${o.when}`), osa = condOf(m).items.find(c => c.k === 'osa');
+      return { dg: COND.filter(x => x.g === 'dental').map(x => x.k).join(), cg: CONDG.some(g => g[0] === 'dental'), dental: P.find(x => /洗牙＋牙周檢查/.test(x)) || '', oral: P.find(x => /口腔黏膜/.test(x)) || '', brca: P.find(x => /遺傳諮詢（BRCA 評估）/.test(x)) || '',
+        gum: symCtx(m, 'gum').join('｜'), mouthRf: SYM.find(x => x.k === 'mouth').rf.map(r => r[1]).join(), osaLine: condLine(osa), osaDyn: CONDK.osa.dyn(osa, m).join(), ai: aiPrompt(m, { topic: 'all', fh: true }), mp: promptMinProt() } });
+    await page.evaluate(() => openMemberEdit('z9')); await page.waitForTimeout(300);
+    await page.selectOption('#m-job', 'mil'); await page.selectOption('#m-role', 'parent'); await page.click('#m-earner'); await page.click('#m-save'); await page.waitForTimeout(300);
+    const je = await page.evaluate(() => { const z = MEM.find(x => x.id === 'z9'); return `${z.job}|${z.role}|${z.earner}` });
+    check('牙齒口腔：病史「牙周病」「口腔白斑／紅斑」；症狀「嘴破」「牙齦流血」有紅旗，牙齦症狀帶入糖尿病與阿斯匹靈；健檢建議洗牙（糖尿病每 3 個月）；已戒菸的口腔癌篩檢改成「向院所確認」',
+      dn.dg === 'perio,oralpm' && dn.cg && /^3\|洗牙＋牙周檢查\|.*每 3 個月 1 次.*\|每 3 個月$/.test(dn.dental) && /^3\|口腔黏膜檢查（口腔癌篩檢）\|已戒菸.*向院所確認/.test(dn.oral) && /有糖尿病或血糖偏高/.test(dn.gum) && /抗凝血或抗血小板藥/.test(dn.gum) && dn.mouthRf === 'soon,soon', JSON.stringify({ dental: dn.dental, oral: dn.oral, gum: dn.gum }));
+    check('家族史「男性家人乳癌」→ BRCA 遺傳諮詢、AI 也帶入；睡眠呼吸中止填 AHI 22 → 中度；最低保障提示詞：去識別化、有身分與可能的社會保險；設定可填職業身分、家庭角色、主要收入者',
+      /^2\|遺傳諮詢（BRCA 評估）/.test(dn.brca) && /（有男性家人得過乳癌）/.test(dn.ai) && /・AHI 22/.test(dn.osaLine) && /AHI 22（中度 15–29）/.test(dn.osaDyn) && /（本人、男、42 歲、公務人員、家庭主要收入者）/.test(dn.mp) && /公教人員保險（公保）/.test(dn.mp) && /（配偶、女、40 歲、勞工（受僱））/.test(dn.mp) && !/王小明|小美|別人/.test(dn.mp) && je === 'mil|parent|true',
+      JSON.stringify({ brca: dn.brca, osa: dn.osaLine, je, mp: dn.mp.slice(-400) }));
     await page.close();
   }
 

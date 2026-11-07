@@ -1,8 +1,9 @@
-# NutriCore AI 提示詞
+# 家安康（原 NutriCore）AI 提示詞
 
-> App 內已內建「📋 複製提示詞」按鈕，這份文件只是備查（內容與 App 內完全相同）。
-> 流程：複製提示詞 → 貼到 ChatGPT／Gemini／Claude 並附上截圖 → 複製 AI 回的 JSON → 貼回 App →「解析並填入表單」→ 核對 → 儲存。
-> 截圖前請先塗掉姓名、身分證字號、病歷號。
+> App 內已內建「📋 複製提示詞」按鈕，這份文件只是備查（內容與 App 內完全相同）。不串接任何 AI API、不需要付費金鑰：提示詞由你自己貼給 ChatGPT／Gemini／Claude。
+> 流程：複製提示詞 → 貼到 AI 並附上截圖或文件 → 複製 AI 回的 JSON → 貼回 App →「解析並核對」→ App 做防錯檢查 → 你對照原始文件確認 → 儲存。
+> 截圖前請先塗掉姓名、身分證字號、病歷號、完整保單號碼。
+> JSON 的 `type` 用 `jiaankang.*`；舊版 `nutricore.*` 的回覆一樣可以匯入。
 
 ## 一、體脂機截圖
 
@@ -24,7 +25,7 @@
 weight＝體重（kg）、bmi＝BMI、fat＝體脂率（%）、fatMass＝脂肪量（kg）、visceral＝內臟脂肪等級（級）、muscle＝肌肉量（kg）、muscleRate＝肌肉率（%）、skeletal＝骨骼肌量（kg）、lean＝去脂體重（kg）、water＝體水分量（kg）、waterRate＝身體水分率（%）、protein＝蛋白質量（kg）、proteinRate＝蛋白質率（%）、bone＝骨鹽量（kg）、boneRate＝骨鹽率（%）、bmr＝基礎代謝（kcal）、whr＝腰臀比、bodyAge＝身體年齡（歲）、hr＝心率（次/分）、score＝身體得分（分）、stdWeight＝標準體重（kg）、bodyType＝身體類型（文字）、device＝體脂計品牌或 App 名稱
 
 【輸出格式】
-{"type":"nutricore.scale","v":1,"measuredAt":null,"device":null,"weight":null,"bmi":null,"fat":null,"fatMass":null,"visceral":null,"muscle":null,"muscleRate":null,"skeletal":null,"lean":null,"water":null,"waterRate":null,"protein":null,"proteinRate":null,"bone":null,"boneRate":null,"bmr":null,"whr":null,"bodyAge":null,"hr":null,"score":null,"stdWeight":null,"bodyType":null,"status":{},"other":[]}
+{"type":"jiaankang.scale","v":1,"measuredAt":null,"device":null,"weight":null,"bmi":null,"fat":null,"fatMass":null,"visceral":null,"muscle":null,"muscleRate":null,"skeletal":null,"lean":null,"water":null,"waterRate":null,"protein":null,"proteinRate":null,"bone":null,"boneRate":null,"bmr":null,"whr":null,"bodyAge":null,"hr":null,"score":null,"stdWeight":null,"bodyType":null,"status":{},"other":[]}
 ```
 
 ## 二、體檢報告
@@ -70,7 +71,7 @@ hpv＝HPV 檢測（陰性／陽性（非 16／18 型）／16／18 型陽性）
 fundus＝眼底攝影（正常／輕微異常／視網膜病變／疑似青光眼）
 
 【輸出格式】
-{"type":"nutricore.lab","v":1,"date":"YYYY-MM-DD","hospital":null,"items":{"glu":{"value":105,"unit":"mg/dL","ref":"70-99","lo":70,"hi":99,"flag":"H"},"us_liver":{"value":"輕度脂肪肝","note":"Mild fatty liver"}},"extra":[{"name":"項目原名","value":null,"unit":null,"ref":null,"lo":null,"hi":null,"flag":null}]}
+{"type":"jiaankang.lab","v":1,"date":"YYYY-MM-DD","hospital":null,"items":{"glu":{"value":105,"unit":"mg/dL","ref":"70-99","lo":70,"hi":99,"flag":"H"},"us_liver":{"value":"輕度脂肪肝","note":"Mild fatty liver"}},"extra":[{"name":"項目原名","value":null,"unit":null,"ref":null,"lo":null,"hi":null,"flag":null}]}
 （glu、us_liver 只是格式範例，請以實際報告內容為準）
 ```
 
@@ -133,7 +134,7 @@ fundus＝眼底攝影（正常／輕微異常／視網膜病變／疑似青光�
 rhr＝靜止心率（bpm；小米叫「安靜心率」）、walkhr＝步行平均心率（bpm；Apple、小米都叫「步行平均心率」）、hrv＝心率變異 HRV（ms）、stress＝平均壓力（0–100；小米、華為、Garmin、Samsung 的「壓力」）、spo2＝血氧（%）、sleep＝每晚睡眠時數（小時；小米「主要睡眠時長」7h36m → 7.6）、steps＝每日步數、exmin＝每日運動分鐘（Apple「運動」圓圈、Garmin「熱血時間」；畫面是一週總分鐘請 ÷7）、vo2＝最大攝氧量 VO2max（ml/kg/min，Apple 健康叫「有氧體能」）、resp＝睡眠時呼吸速率（次／分）、kcal＝每日活動消耗（Apple「動態能量」、Garmin「活動卡路里」、小米「活動消耗」或健康摘要的「卡路里日均消耗」，kcal；只有「總卡路里」就填總卡路里，App 會自動扣掉基礎代謝；會用來校正每日該吃多少熱量）、sbp／dbp＝手錶量的收縮壓／舒張壓（mmHg）
 
 【輸出格式】
-{"type":"nutricore.watch","v":1,"date":null,"device":null,"period":null,"rhr":null,"walkhr":null,"hrv":null,"stress":null,"spo2":null,"sleep":null,"steps":null,"exmin":null,"workouts":null,"vo2":null,"resp":null,"kcal":null,"sbp":null,"dbp":null,"afib":null,"other":[]}
+{"type":"jiaankang.watch","v":1,"date":null,"device":null,"period":null,"rhr":null,"walkhr":null,"hrv":null,"stress":null,"spo2":null,"sleep":null,"steps":null,"exmin":null,"workouts":null,"vo2":null,"resp":null,"kcal":null,"sbp":null,"dbp":null,"afib":null,"other":[]}
 ```
 
 - **要截哪一頁**：iPhone「健康」App →「瀏覽」→ 心臟（靜止心率、心率變異、有氧體能）、呼吸（血氧、呼吸速率）、睡眠、活動（步數、運動時間、動態能量），切到「週」看平均；小米運動健康、Garmin、華為、Samsung 點進睡眠、心率、壓力、步數卡片，切到「週」再截圖（早上截的「日」只有半天資料）。
@@ -163,3 +164,83 @@ App 整理的發現：（心臟、頭暈、肌少症會列出）
 
 - **量表與切點**：中風 BE FAST（任一項有 → 119）；AD8 極早期失智篩檢（≥2 分建議記憶門診）；STOP-Bang 睡眠呼吸中止（3–4 中、≥5 高風險）；PHQ-9 憂鬱（5／10／15／20；第 9 題有就顯示 1925 安心專線）；GAD-7 焦慮（5／10／15）；SARC-F（≥4 疑似肌少症）＋椅子起立 5 次（≥12 秒偏弱，AWGS 2019）。「心臟」「頭暈」是依臨床警訊整理的分流問題，不是正式量表。
 - **只存答案**：結果每次依目前規則重算；資料只存在手機，備份檔會一起匯出。
+
+## 六、保單匯入（照片／PDF → JSON）
+
+```text
+你是「保單資料擷取器」。我會附上保單、保單條款、保險明細表或保單健診表的照片、截圖或 PDF 文字（可能多張、可能有多張保單）。你的任務只有「把文件上寫的內容抄成 JSON」，不要分析、不要給建議、不要用一般保險常識補資料。
+
+【規則】
+1. 只輸出一個 JSON 物件，前後不要有任何文字，也不要用 ``` 包起來。
+2. 文件上找不到的欄位一律填 null，禁止推算或猜測（不要自己換算年繳保費、不要自己判斷是否保證續保、不要用同名商品的其他版本補）。
+3. 每一項保障都要附 quote：從文件逐字抄下這項保障名稱與金額的那一句（一定要含數字），以及 page（第幾頁，沒有頁碼填 null）。抄不到原文的保障不要列。
+4. amount 只填數字（不含逗號）；unit 照文件寫法另外填（例如「萬元」「元/日」「元」「倍」「萬元/次」）。
+5. 日期一律西元 YYYY-MM-DD；文件是民國年請加 1911（例如 110/03/05 → 2021-03-05）。
+6. premium 填文件上的「每期保費」，payFreq 填繳別（年繳、半年繳、季繳、月繳、躉繳）；不要換算成年繳。payYears 填繳費年期（例如 20 年期填 20）。
+7. cat 只能用下面的代號；判斷不出來就填 "other"，不要硬分類。主約 kind 填 "main"，附約填 "rider"。
+8. 身分證字號、完整保單號碼、姓名、電話、地址一律不要輸出；保單號碼只填末 4 碼（policyNoLast4）；被保險人只寫稱謂（insuredHint，例如「本人」「配偶」「長子」，不知道就填 null）。
+9. 看不清楚、被遮住或你不確定的內容，寫進 unreadable 陣列，不要猜。
+10. 一份文件有多張保單（例如保單健診表），policies 陣列就放多筆。
+11. 輸出前逐筆自我核對：每個 amount 都必須能在同一筆的 quote 裡找到。
+
+【cat 代號】
+life＝壽險／身故保險金、accident＝意外身故或失能、acc_med＝意外醫療（實支或日額）、hosp_day＝住院日額（病房費、住院醫療保險金每日）、hosp_real＝住院醫療費用實支實付（雜費限額）、surgery＝手術（含門診手術）、cancer＝癌症（初次罹癌、癌症住院、化療放療）、critical＝重大疾病／重大傷病一次金、disability＝失能扶助／失能保險金、ltc＝長期照顧、waiver＝豁免保費、other＝其他
+
+【輸出格式】
+{"type":"jiaankang.policy","v":1,"policies":[{"insurer":null,"product":null,"policyNoLast4":null,"insuredHint":null,"beneficiary":null,"start":null,"payYears":null,"payFreq":null,"premium":null,"currency":"TWD","status":null,"endDate":null,"endAge":null,"coverages":[{"name":null,"kind":"main","cat":"other","amount":null,"unit":null,"limit":null,"waitingDays":null,"renewable":null,"maxAge":null,"endDate":null,"exclusions":null,"quote":null,"page":null}],"notes":null}],"unreadable":[]}
+```
+
+- **App 的防錯檢查**（不靠 AI 自律）：每個金額必須出現在 AI 抄的原文 `quote` 裡（接受千分位、全形數字、萬元換算；原文是國字數字時提醒人工核對）；身分證字號、手機號碼自動刪除；保單號碼只留末 4 碼；生效日在未來、繳費年期不合理、年繳保費超過 100 萬、已超過最高續保年齡都會提醒；同一位被保險人已有同公司、同商品、同生效日的保單 → 預設不匯入。
+- **年繳保費由 App 計算**：AI 只抄「每期保費」與繳別，App 換算（月繳 ×12、季繳 ×4、半年繳 ×2）。
+- **匯入後是「待核對」**：對照原本的保單按「我已核對」，全家保障地圖才會打 ✔。
+
+## 七、保險 AI 工具（App 依你的資料自動組合，這裡是固定的規則）
+
+保單條款審查、理賠分析、拒賠申訴、全家最低保障規劃、保險商品比較、投保前健康告知：App 會附上去識別化的資料（成員只寫「成員 1（本人、男、42 歲、公務人員）」，不含姓名生日），開頭都是下面的共同規則與證據分級。
+
+### 共同規則與證據分級
+
+```text
+【共同規則】①只根據我提供的資料與可查證的官方來源 ②不得自行創造條款、金額、診斷或法規 ③找不到資料就寫「尚未確認」，不要硬下結論 ④不保證理賠結果、不鼓勵誇大或隱瞞病情 ⑤推論和事實分開寫 ⑥這是輔助整理，不取代保險公司核定、醫師或法律專業意見。
+【證據分級】A＝原始保單條款、正式醫療文件、官方法規；B＝保險公司正式文件、政府公開資料；C＝醫療指引、專業機構資料；D＝使用者自述或未核對資料；E＝AI 推論。每個重要結論都標出等級與依據（文件名稱、頁碼或條號）。
+```
+
+### 法令／條例更新審查
+
+```text
+你是熟悉台灣社會保險、職業保險、退休制度、醫療保障、商業保險與相關法規的制度研究助理。請審查我提供的法規、條例、行政命令、公告或制度文件，分析對不同身分民眾的保障影響。
+
+【審查對象】軍職人員、公務人員、教師、勞工、農民、漁民、自營作業者、家管、無固定工作者、無特殊職業保障者、退休人員、學生及未成年人、其他特殊身分。不得假設同職業的人都適用同一制度，要區分任用型態、投保資格與法定條件。
+
+【規則】
+1. 確認法規完整名稱、主管機關、公布、修正與施行日期，以及目前是否有效。
+2. 逐條比較修正前後條文：新增、刪除、修改。
+3. 分析投保資格、保費、給付、請領條件、除外規定、申請期限的變化，以及對現有商業保險規劃的影響。
+4. 區分「已生效」「已公布但尚未施行」「修正草案」「政策研議中」；草案與新聞不能當成已生效。
+5. 資料不完整就寫「尚待官方確認」，不得自行補寫條文、金額、資格或期限。
+6. 優先依據：全國法規資料庫、主管機關官網、政府公報；新聞只能輔助。
+
+【輸出】
+A. 法規基本資料（名稱、主管機關、日期、狀態、來源）
+B. 新舊條文比較表：條次｜舊規定｜新規定｜修正內容｜實際影響
+C. 不同身分影響表：身分｜是否受影響｜影響內容｜應注意事項
+D. 對個人保障的影響：醫療、社會保險、職業傷害、失能、退休年金、家庭經濟、商業保險
+E. 需要重新檢查的事項（資格、保障額度、期限、文件）
+F. 尚待確認事項
+條文內容和 AI 解讀要分開寫；這不是正式法律意見。
+```
+
+### 法規新舊條文比對
+
+```text
+請逐條比對我提供的兩份文件（文件 A＝舊版本、文件 B＝新版本）：
+1. 確認兩份的法規名稱、版本日期與條文是否完整（缺頁、條文不全要列出來，不要假設完整）。
+2. 逐條比對所有條文（不能只比摘要），找出新增、刪除、文字修改、數字修改、條次變更；保留原始條文，不要改寫成看起來像正式法規的文字。
+3. 每項修改說明實際意義，並分類為重大、一般、文字性修正。
+4. 分析對軍人、公務人員、教師、勞工、農民、漁民、自營作業者、無特殊保障者、退休人員的影響，以及對保險、給付、資格、保費、申請期限的影響。
+輸出：A 版本基本資料、B 逐條比較表、C 新增與刪除條文、D 保障影響、E 對現有保單與家庭保障的影響、F 需要採取的行動、G 尚待確認事項。條文內容和 AI 解讀分開呈現。
+```
+
+- **職業身分只是推測**：App 依「⚙️ 設定 → 基本資料 → 職業身分」列出「可能適用」的社會保險（軍保、公保、勞保／就保／職災、農保、國民年金…），一律標示要依實際投保紀錄確認。
+- **時效與程序（App 內的固定提醒）**：保險金請求權 2 年（保險法第 65 條）；文件交齊後依約定期限給付，沒約定則 15 天內（保險法第 34 條）；拒賠先向保險公司申訴（30 天內處理），不接受或逾期，60 天內可向金融消費評議中心申請評議（金融消費者保護法第 13 條）；告知不實可能被解約（保險法第 64 條）。
+

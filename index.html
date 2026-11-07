@@ -7,9 +7,9 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="NutriCore">
+<meta name="apple-mobile-web-app-title" content="家安康">
 <link rel="apple-touch-icon" href="icon-180.png">
-<title>NutriCore</title>
+<title>家安康｜家庭健康與保障</title>
 <style>
 :root{--fz:1;
   --bg:#060912;--glass:rgba(255,255,255,.05);--line:rgba(255,255,255,.09);
@@ -247,6 +247,12 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 .tags{display:flex;gap:6px;flex-wrap:wrap}
 .tg{font-size:calc(11px*var(--fz));padding:4px 10px;border-radius:99px;background:rgba(34,228,255,.1);color:var(--cyan);border:1px solid rgba(34,228,255,.25);white-space:nowrap}
 .tg.warn{background:rgba(255,181,71,.1);color:var(--amber);border-color:rgba(255,181,71,.3)}
+.tg.bad{background:rgba(255,93,108,.12);color:var(--red);border-color:rgba(255,93,108,.38)}
+.hl.warn{background:rgba(255,181,71,.07);border-color:rgba(255,181,71,.45)}.hl.bad{background:rgba(255,93,108,.08);border-color:rgba(255,93,108,.5)}
+textarea.ta{min-height:64px;font-family:inherit;font-size:16px}
+input[type=checkbox]{-webkit-appearance:checkbox;appearance:auto;width:22px;height:22px;flex:0 0 22px;padding:0;margin:0;accent-color:var(--cyan)}
+table.imap{width:100%;border-collapse:collapse;font-size:calc(12px*var(--fz));text-align:center}table.imap th,table.imap td{padding:7px 2px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.imap th:first-child{text-align:left;max-width:64px;overflow:hidden;text-overflow:ellipsis}table.imap td.ok{color:var(--lime);font-weight:700}table.imap td.wt{color:var(--amber)}
 .kv{display:grid;grid-template-columns:1fr auto;gap:9px 12px;font-size:calc(13px*var(--fz));align-items:center}
 .kv>span:nth-child(odd){color:var(--mute)}
 .kv>span:nth-child(even){text-align:right}
@@ -282,7 +288,7 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 <body>
 <div id="sbar" aria-hidden="true"></div>
 <header>
-  <div class="logo">Nutri<b>Core</b></div>
+  <div class="logo">家安<b>康</b></div>
   <div style="display:flex;gap:8px;align-items:center;min-width:0"><button class="mchip" id="memChip" aria-label="切換成員" style="max-width:56vw"></button>
     <button class="gear" id="gearBtn" aria-label="設定"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button></div>
 </header>
@@ -290,6 +296,7 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 <!-- 總覽 -->
 <section class="view on" id="v-dash"><div id="critBox"></div>
   <div class="card hero" id="heroCard"></div>
+  <div class="card" id="todoCard" hidden></div>
   <div class="card" id="commentCard" hidden></div>
   <div class="card" id="todayCard"></div>
   <div class="card" id="latestCard"></div>
@@ -297,7 +304,7 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
 
 <!-- 身體 -->
 <section class="view" id="v-body"><div id="critBody"></div>
-  <div class="subnav" data-for="body" role="tablist" aria-label="身體分頁"><button data-sub="now" role="tab">狀況</button><button data-sub="rec" role="tab">紀錄</button><button data-sub="plan" role="tab">健檢規劃</button><button data-sub="cond" role="tab">病史</button></div>
+  <div class="subnav" data-for="body" role="tablist" aria-label="健康分頁"><button data-sub="now" role="tab">狀況</button><button data-sub="rec" role="tab">紀錄</button><button data-sub="plan" role="tab">追蹤</button><button data-sub="cond" role="tab">病史</button><button data-sub="self" role="tab">自測</button></div>
   <div class="subp" data-sub="now">
     <div class="card" style="padding:12px 10px">
       <div class="row" style="margin:0 6px 4px;align-items:flex-start">
@@ -325,11 +332,16 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
     <div class="card" id="derivedCard" hidden><h2>App 自動計算（不用問 AI）</h2><div id="derivedList"></div></div>
   </div>
   <div class="subp" data-sub="plan" hidden>
+    <div class="card" id="fuCard"><h2>回診追蹤（醫師怎麼說）</h2><div id="fuBody"></div></div>
     <div class="card" id="planCard"><h2>今年健檢建議</h2><div id="planBody"></div></div>
     <div class="card" id="rotCard" hidden><h2>檢查輪替（未來 3 年）</h2><div id="rotBody"></div></div>
   </div>
   <div class="subp" data-sub="cond" hidden>
     <div class="card" id="condCard"><h2>我的病史（體檢看不到的）</h2><div id="condBody"></div></div>
+  </div>
+  <div class="subp" data-sub="self" hidden>
+    <div class="card"><h2>自我檢測</h2><div class="sub" style="font-size:calc(13px*var(--fz));line-height:1.7">在家就能做的檢查：做完告訴你要注意什麼、掛哪一科、可以請醫師安排哪些檢查，也能一鍵整理給 AI 再確認。</div></div>
+    <div id="selfBody"></div>
   </div>
 </section>
 
@@ -388,18 +400,21 @@ details.box.ai{border-color:rgba(34,228,255,.45);background:linear-gradient(135d
   </div>
 </section>
 
-<!-- 自我檢測（原「我的」搬到右上角 ⚙️ 設定） -->
-<section class="view" id="v-self">
-  <div class="card"><h2>自我檢測</h2><div class="sub" style="font-size:calc(13px*var(--fz));line-height:1.7">在家就能做的檢查：做完告訴你要注意什麼、掛哪一科、可以請醫師安排哪些檢查，也能一鍵整理給 AI 再確認。</div></div>
-  <div id="selfBody"></div>
+<!-- 保險：保單（AI 半手動匯入＋防錯核對）、保障總覽、理賠、AI 工具 -->
+<section class="view" id="v-ins">
+  <div class="subnav" data-for="ins" role="tablist" aria-label="保險分頁"><button data-sub="pol" role="tab">保單</button><button data-sub="cov" role="tab">保障</button><button data-sub="clm" role="tab">理賠</button><button data-sub="tool" role="tab">AI 工具</button></div>
+  <div class="subp" data-sub="pol"><div class="card"><h2>保單</h2><div id="polBody"></div></div></div>
+  <div class="subp" data-sub="cov" hidden><div id="covBody"></div></div>
+  <div class="subp" data-sub="clm" hidden><div class="card"><h2>理賠紀錄</h2><div id="clmBody"></div></div></div>
+  <div class="subp" data-sub="tool" hidden><div id="toolBody"></div></div>
 </section>
 
 <nav id="nav">
   <button data-v="dash" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>總覽</button>
-  <button data-v="body"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4.5" r="2.5"/><path d="M12 8v7M7 9.5l5-1.5 5 1.5M12 15l-3 6M12 15l3 6"/></svg>身體</button>
+  <button data-v="body"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4.5" r="2.5"/><path d="M12 8v7M7 9.5l5-1.5 5 1.5M12 15l-3 6M12 15l3 6"/></svg>健康</button>
   <button data-v="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18a9 8 0 0 1-18 0Z"/><path d="M9 3.5l2.5 6M15.5 3l-1.5 6.5"/></svg>飲食</button>
   <button data-v="fit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 7v10M3.5 9.5v5M17.5 7v10M20.5 9.5v5M6.5 12h11"/></svg>運動</button>
-  <button data-v="self"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M8.5 12l2.2 2.2 4.8-4.7M8.5 17.5h7"/></svg>自我檢測</button>
+  <button data-v="ins"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6l7-3Z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg>保險</button>
 </nav>
 
 <div class="sheet" id="sheet"><div class="sheet-bg" data-close></div><div class="sheet-panel"><div class="grab"></div><div id="sheetBody"></div></div></div>
@@ -430,11 +445,11 @@ const LVT=['正常','注意','異常','嚴重'];
 const obj=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 // 日期解析：2026-09-05、2026/9/5、2026年9月5日、20260905、民國 115/09/05 → YYYY-MM-DD；不合理回傳 null
-function parseYMD(s){
+function parseYMD(s,fut){   // fut：允許未來日期（保單到期日、生效日）
   s=String(s??'').trim();let m=s.match(/^(\d{4})(\d{2})(\d{2})$/);if(m)s=`${m[1]}-${m[2]}-${m[3]}`;
   m=s.match(/^(?:民國)?\s*(\d{2,4})\s*[-\/.年]\s*(\d{1,2})\s*[-\/.月]\s*(\d{1,2})/);if(!m)return null;
   let y=+m[1];if(y<1911)y+=1911;const mo=+m[2],d=+m[3],dt=new Date(y,mo-1,d);
-  if(y<1900||dt.getMonth()!==mo-1||dt.getDate()!==d||dt>new Date(Date.now()+864e5))return null;
+  if(y<1900||y>2200||dt.getMonth()!==mo-1||dt.getDate()!==d||(!fut&&dt>new Date(Date.now()+864e5)))return null;
   return `${y}-${pad(mo)}-${pad(d)}`}
 // 報告的異常標記 → 'hi' / 'lo' / null（不能用 /[HL]/i，否則 "Normal" 也會被當成異常）
 function flagDir(f){f=String(f??'').trim();if(!f||/^(n|normal|neg|negative|正常|陰性|[-—–]|\(-\))$/i.test(f))return null;
@@ -942,7 +957,7 @@ function labEval(rec,m){
       if(!lv&&L){const l1=it.lo!=null?it.lo:L[0],l2=Math.min(L[1],l1),l3=Math.min(L[2],l2);lv=v<l3?3:v<l2?2:v<l1?1:0;if(lv)dir='lo';if(lv===1&&l1>0&&(l1-v)/l1<.05)bl=Math.round((l1-v)/l1*1000)/10}
       if(!lv){const fd=flagDir(it.flag);if(fd){lv=1;dir=fd}}
       const C=CRIT[k];if(C&&((C[0]!=null&&v<=C[0])||(C[1]!=null&&v>=C[1]))){lv=3;crit=true;dir=C[0]!=null&&v<=C[0]?'lo':'hi';bl=null}
-      if(k==='ldl'&&!crit){const t=ldlTgt(m,v);if(t){lv=Math.max(lv,t.lv);dir='hi';bl=null;om=t.msg;cx=t.short}}}
+      if(k==='ldl'&&!crit){const t=ldlTgt(m,v);if(t){const lv0=lv;lv=Math.max(lv,t.lv);dir='hi';bl=null;om=lv0?`${x.hi||'高於參考值'}；${t.short}。`:t.msg;cx=t.short}}}   // 一般標準已經異常時，不要說「對一般人可能正常」
     if(lv)out.push({src:'體檢',k,name:x.n,short:LSHORT[k]||x.n,val:it.v,unit:x.u||'',lv,dir,bl,crit,cx,msg:crit?`危急值：今天就要處理。${CRITM[k]}`:(bl!=null?`僅略${dir==='lo'?'低':'高'}於參考值 ${bl}%，單次輕微超出意義有限；`:'')+(om||(dir==='lo'?x.lo:x.hi)||(x.t==='opt'?'檢查結果需追蹤':dir==='lo'?'低於參考值':'高於參考值')),organ:x.o,dept:x.d,ref:it.ref||(it.lo!=null&&it.hi!=null?`${it.lo}–${it.hi}`:it.hi!=null?`≤${it.hi}`:it.lo!=null?`≥${it.lo}`:refText(x,sex))});   // 報告有自己的上下限就顯示報告的
   }
   // 衍生判讀：PSA 4–10 看游離比例；空腹血糖＋胰島素算 HOMA-IR
@@ -1128,7 +1143,7 @@ const WF=[{k:'rhr',n:'靜止心率',u:'bpm',min:25,max:200},{k:'walkhr',n:'步�
   {k:'steps',n:'步數',u:'步／天',min:0,max:80000},{k:'exmin',n:'運動時間',u:'分鐘／天',min:0,max:600},{k:'workouts',n:'運動次數',u:'次／週',min:0,max:30},{k:'vo2',n:'最大攝氧量 VO₂max',u:'ml/kg/min',min:10,max:90},{k:'resp',n:'睡眠呼吸速率',u:'次／分',min:5,max:40},
   {k:'kcal',n:'活動消耗',u:'kcal／天',min:0,max:6000},{k:'sbp',n:'收縮壓（手錶）',u:'mmHg',min:60,max:260},{k:'dbp',n:'舒張壓（手錶）',u:'mmHg',min:30,max:160}];
 const WFN=Object.fromEntries(WF.map(f=>[f.k,f]));
-const cleanWatch=r=>{const o={id:r.id,t:r.t};for(const f of WF){const v=num(r[f.k]);if(v!=null&&v>=f.min&&v<=f.max)o[f.k]=v}if(r.afib===true)o.afib=true;if(typeof r.device==='string'&&r.device.trim())o.device=r.device.trim().slice(0,30);if(typeof r.period==='string'&&r.period.trim())o.period=r.period.trim().slice(0,20);const x=normOther(r.extra,new Set());if(x.length)o.extra=x;return o};
+const cleanWatch=r=>{const o={id:r.id,t:r.t};for(const f of WF){const v=num(r[f.k]);if(v!=null&&v>=f.min&&v<=f.max)o[f.k]=v}if(r.afib===true)o.afib=true;if(typeof r.device==='string'&&r.device.trim())o.device=r.device.trim().slice(0,30);if(typeof r.period==='string'&&r.period.trim())o.period=r.period.trim().slice(0,20);const x=normOther(r.extra,new Set());if(x.length)o.extra=x;if(Array.isArray(r.chk))o.chk=r.chk.filter(w=>typeof w==='string').slice(0,10).map(w=>w.slice(0,200));return o};
 // VO₂max 分級（Cooper Institute／ACSM 常用表）：極差／差／普通／良好／優秀／頂尖；手錶是推估值，誤差約 ±10%
 const VO2N={m:[[29,[33,36.5,42.5,46.5,52.5]],[39,[31.5,35.5,41,45,49.5]],[49,[30.2,33.6,39,43.8,48.1]],[59,[26.1,31,35.8,41,45.4]],[200,[20.5,26.1,32.3,36.5,44.3]]],
   f:[[29,[23.6,29,33,37,41.1]],[39,[22.8,27,31.5,35.7,40.1]],[49,[21,24.5,29,32.9,37]],[59,[20.2,22.8,27,31.5,35.8]],[200,[17.5,20.2,24.5,30.3,31.5]]]};
@@ -1288,7 +1303,7 @@ function fitPlan(m){
 /* ================= 病史：醫師診斷過、體檢看不到的疾病（例如蹠筋膜纖維瘤症、CT 看到冠狀動脈鈣化） =================
    使用者點選就好（年份、狀況、備註可不填）。App 依病史：調整運動課表（lim）、飲食模式（diet）、LDL 目標（ldl）、今年健檢建議（fu）、健康評語，
    看診摘要圖附中英文病名與 ICD-10-CM 代碼給醫師看。內容依常見臨床指引整理，不是診斷；「已痊癒」只記錄、不影響建議 */
-const CONDG=[['cv','心臟血管'],['meta','代謝內分泌'],['gi','肝膽腸胃腎'],['msk','骨骼肌肉'],['resp','呼吸睡眠'],['ent','耳鼻喉眼'],['neuro','神經情緒'],['skin','皮膚'],['other','其他']];
+const CONDG=[['cv','心臟血管'],['meta','代謝內分泌'],['gi','肝膽腸胃腎'],['msk','骨骼肌肉'],['resp','呼吸睡眠'],['ent','耳鼻喉眼'],['dental','牙齒口腔'],['neuro','神經情緒'],['skin','皮膚'],['other','其他']];
 const COND_ST=[['tx','治療中'],['fu','追蹤中'],['done','已痊癒（只記錄）']];
 const COND=[
  {k:'htn',g:'cv',n:'高血壓',en:'Hypertension',icd:'I10',tip:'目標 <130/80，在家量血壓',diet:['heart'],lab:['sbp','dbp'],
@@ -1299,7 +1314,7 @@ const COND=[
   q:['我的血壓目標是多少？在家量到多少要回診？','我的藥早上吃還是晚上吃比較好？','需要檢查腎臟、心臟有沒有受到高血壓影響嗎？'],
   fu:[['居家血壓 722：連續 7 天、早晚各量 2 次','高血壓病史：用居家血壓判斷控制得好不好','自行量測','每 3 個月一次',2]]},
  {k:'cac',g:'cv',n:'冠狀動脈鈣化（CT 發現）',en:'Coronary artery calcification (CAC)',icd:'I25.10＋I25.84',tip:'已有動脈硬化斑塊：LDL、血壓、血糖、不抽菸都要控制好',lim:['cvr'],diet:['heart'],
-  num:{n:'鈣化分數（Agatston，報告有寫才填）',min:0,max:10000},ldl:{tiers:[[70,1]],txt:'有冠狀動脈鈣化（已有動脈硬化斑塊）：這個 LDL 對一般人可能正常，但你的目標通常更嚴格，要降到多少、要不要用藥，由心臟內科依鈣化程度決定'},lab:['ldl','hdl','tg','sbp','dbp','glu','hba1c'],
+  num:{n:'鈣化分數（Agatston，報告有寫才填）',s:'鈣化分數',min:0,max:10000},ldl:{tiers:[[70,1]],txt:'有冠狀動脈鈣化（已有動脈硬化斑塊）：這個 LDL 對一般人可能正常，但你的目標通常更嚴格，要降到多少、要不要用藥，由心臟內科依鈣化程度決定'},lab:['ldl','hdl','tg','sbp','dbp','glu','hba1c'],
   w:['冠狀動脈有鈣化＝心臟血管壁已經有動脈硬化斑塊；鈣化不會消失，目標是讓斑塊穩定、不要再長','LDL、血壓、血糖、抽菸要控制得比一般人嚴格，目標由心臟內科依鈣化程度決定'],
   good:['中等強度有氧：快走、騎車、游泳，每週 150 分鐘（微喘、還能說話）','每週 2 次肌力訓練（器械或彈力帶，用力時吐氣）','運動前暖身 5–10 分鐘、結束緩和 5 分鐘'],
   bad:['還沒讓心臟內科評估前，先不做高強度（間歇 HIIT、衝刺、比賽、重訓衝最大重量）','寒冷清晨、剛吃飽、熬夜後做劇烈運動'],
@@ -1512,7 +1527,8 @@ const COND=[
  {k:'osa',g:'resp',n:'睡眠呼吸中止',en:'Obstructive sleep apnea',icd:'G47.33',tip:'正壓呼吸器每晚 4 小時以上',
   w:['沒治療會增加高血壓、心房顫動、中風、心臟病與車禍風險','正壓呼吸器（CPAP）每晚用 4 小時以上才有效'],
   good:['規律有氧與減重（減 10% 體重可明顯改善）'],bad:[],
-  care:['側睡、睡前不喝酒；吃安眠藥前先問醫師','很睏的時候不要開車'],red:[],dept:'胸腔內科、耳鼻喉科或睡眠中心',
+  care:['側睡、睡前不喝酒；吃安眠藥前先問醫師','很睏的時候不要開車'],red:[],dept:'胸腔內科、耳鼻喉科或睡眠中心',num:{n:'AHI（每小時呼吸中止次數，睡眠檢查報告有寫才填）',s:'AHI',min:0,max:200},
+  dyn:c=>{const s=c.score;if(s==null||s==='')return['還不知道 AHI：可以請醫師安排睡眠檢查；AHI 決定嚴重程度與治療方式'];return[s<5?`AHI ${s}（<5）：目前不算睡眠呼吸中止；症狀還在可以和醫師討論`:s<15?`AHI ${s}（輕度 5–14）：減重、側睡、口腔止鼾器都是選項`:s<30?`AHI ${s}（中度 15–29）：建議治療，正壓呼吸器效果最確定`:`AHI ${s}（重度 ≥30）：建議積極治療（正壓呼吸器）；沒治療的心血管與車禍風險高`]},
   q:['我的 AHI（每小時呼吸中止次數）是多少？','適合正壓呼吸器、口腔止鼾器還是手術？']},
  {k:'lungnod',g:'resp',n:'肺結節（追蹤中）',en:'Pulmonary nodule',icd:'R91.1',tip:'照醫師安排回診照 CT',lab:['ldct'],
   w:['大部分肺結節是良性；照醫師安排的時間回診比較大小','不要自己延後追蹤；帶舊片一起比較最準'],good:['規律運動維持肺功能'],bad:[],
@@ -1578,6 +1594,18 @@ const COND=[
   w:['要找出原因：月經量多、腸胃道出血最常見','男性與停經後女性缺鐵，建議做胃鏡、大腸鏡排除腸胃道出血'],good:[],bad:[],
   care:['鐵劑空腹或搭配維生素 C 吸收較好；和茶、咖啡、牛奶隔開'],red:['黑便、血便、頭暈、喘 → 儘快就醫'],dept:'家醫科、血液科或腸胃科',
   q:['我的缺鐵原因找到了嗎？','鐵劑要吃多久？']},
+ {k:'perio',g:'dental',n:'牙周病',en:'Chronic periodontitis',icd:'K05.3',tip:'每天用牙線或牙間刷；照牙醫安排洗牙與牙周治療',
+  w:['刷牙流血、牙齦紅腫或萎縮、牙齒鬆動都是警訊；不治療會掉牙','牙周病和血糖會互相影響：有糖尿病或血糖偏高要兩邊一起控制','牙周病和心血管疾病有關聯，但不代表牙周病一定會造成心臟病'],
+  good:['規律運動'],bad:[],
+  care:['每天刷牙 2 次（含氟牙膏），每天用牙線或牙間刷','健保每半年可以洗牙 1 次；糖尿病等高風險族群每 3 個月 1 次','戒菸：抽菸是牙周病最重要的危險因子之一','可以問牙醫是否適用健保「牙周病統合治療」','有吃抗凝血或抗血小板藥：看牙前告訴牙醫，不要自己停藥'],
+  red:['臉頰腫脹合併發燒 → 儘快看牙科','腫到張口、吞嚥或呼吸困難 → 立刻掛急診'],dept:'牙科（牙周病科）',
+  q:['我的牙周病是第幾期？需要做牙周治療嗎？','多久回診洗牙？','我有吃抗凝血或抗血小板藥，治療前要怎麼做？']},
+ {k:'oralpm',g:'dental',n:'口腔白斑／紅斑（口腔黏膜病變）',en:'Oral potentially malignant disorder (leukoplakia / erythroplakia)',icd:'K13.2',tip:'照醫師安排回診或切片；戒檳榔、戒菸',
+  w:['白斑、紅斑是「口腔癌前病變」：大部分不會變成癌症，但要定期追蹤；紅斑的風險比白斑高','嚼檳榔、抽菸、喝酒會大幅提高風險，三者一起風險更高'],
+  good:['規律運動'],bad:[],
+  care:['戒檳榔、戒菸、少喝酒','每月對著鏡子自我檢查口腔（舌頭兩側、臉頰內側、牙齦、口底）','照醫師安排回診；有變化就提早'],
+  red:['白斑或紅斑變大、變硬、破皮潰瘍超過 2 週、會出血 → 儘快回診（可能要切片）'],dept:'口腔外科或耳鼻喉科',
+  q:['需要切片嗎？','多久追蹤一次？']},
  {k:'bursitis',g:'msk',n:'足底／腳跟滑囊炎',en:'Bursitis of the foot (heel)',icd:'M71.57',tip:'溫水泡腳泡到小腿、先放鬆小腿；減少壓迫與久站',lim:['ankle'],lab:['ua','glu'],
   w:['滑囊是骨頭與肌腱旁減少摩擦的小水囊，反覆壓迫、摩擦或小腿太緊都會讓它發炎腫痛','小腿緊會增加腳跟與足底的拉扯：先把小腿放鬆，腳底才比較會改善','沒有外傷、醫師檢查組織沒問題時，通常不需要 X 光或超音波；有變化再由醫師決定','痛在腳跟「後方」（跟腱和骨頭之間）的滑囊炎：伸展只拉到緊、不要拉到痛，鞋跟可以稍微墊高減少壓迫'],
   good:['溫水泡腳，水位到小腿，10–15 分鐘；泡完做小腿伸展','小腿伸展：雙手扶牆、患側腳在後，膝蓋伸直（拉腓腸肌）和微彎（拉比目魚肌）各停 30 秒 × 3 次，每天 2–3 回','坐著用網球或滾筒放鬆小腿肚（不要壓發炎的痛點）','騎腳踏車、游泳等不壓腳跟的有氧'],
@@ -1672,7 +1700,7 @@ function condCtx(c,m){const L=labsOf(m)[0],o=[];if(!c.T)return o;const iss=L?lab
   if(['ledd','dupuy','cac','cad','copd','lungnod'].includes(c.k)){const lf=lifeOf(m);if(m.life&&lf.smoke==='current')o.push('目前吸菸');if(m.life&&lf.alc==='often')o.push('每週喝酒 3 次以上')}
   if(c.k==='nafld'){const f=derivedOf(m).find(d=>d.k==='fib4');if(f)o.push(`FIB-4 ${f.val}`)}
   return o}
-const condLine=(c,lang)=>`${c.name}${c.T?.en?` ${c.T.en}`:''}${c.T?.icd?`［ICD-10 ${c.T.icd}］`:''}${c.y?`・${c.y} 年`:''}・${(COND_ST.find(x=>x[0]===c.st)||COND_ST[1])[1]}${c.score!==''&&c.score!=null?`・鈣化分數 ${c.score}`:''}${c.note?`・${c.note}`:''}${c.dr?`・醫師交代：${c.dr}`:''}`;
+const condLine=(c,lang)=>`${c.name}${c.T?.en?` ${c.T.en}`:''}${c.T?.icd?`［ICD-10 ${c.T.icd}］`:''}${c.y?`・${c.y} 年`:''}・${(COND_ST.find(x=>x[0]===c.st)||COND_ST[1])[1]}${c.score!==''&&c.score!=null?`・${c.T?.num?.s||'分數'} ${c.score}`:''}${c.note?`・${c.note}`:''}${c.dr?`・醫師交代：${c.dr}`:''}`;
 // 給 AI 的文字（AI 醫生、自我檢測共用）
 function condText(m){const c=condOf(m),o=[];if(c.items.length){o.push('【已知病史（醫師診斷過、體檢看不到的）】');c.items.forEach(x=>o.push(`- ${condLine(x)}`))}
   if(c.meds)o.push(`【目前用藥】${c.meds}`);if(c.allergy)o.push(`【藥物過敏】${c.allergy}`);if(c.surg)o.push(`【手術／住院】${c.surg}`);return o}
@@ -1689,7 +1717,7 @@ function openCond(id){const m=me(),c=condOf(m).items.find(x=>x.id===id);if(!c)re
   if(oL(['cvr','heart']).length&&!mine.some(z=>z==='cvr'||z==='heart'))mix.push(`你也有「${oL(['cvr','heart']).join('、')}」：運動保持中等強度（微喘、還能說話），高強度前先讓醫師評估`);
   const qs=T?T.q:[`我有「${c.name}」，平常要注意什麼？`,`有「${c.name}」，哪些運動適合、哪些要避免？`,`「${c.name}」日常要怎麼保養？什麼情況要回診？`];
   openSheet(sheetHead(`🩺 ${esc(c.name)}`,esc([T?.en,T?.icd?'ICD-10 '+T.icd:''].filter(Boolean).join('・')))+`
-    <div class="sub" style="margin:8px 0">${esc([(COND_ST.find(s=>s[0]===c.st)||COND_ST[1])[1],c.y?c.y+' 年確診':'',c.score!==''&&c.score!=null?'鈣化分數 '+c.score:'',c.note].filter(Boolean).join('・'))} <button class="btn sm ghost" data-setsec="cond" style="margin-left:6px">編輯</button></div>
+    <div class="sub" style="margin:8px 0">${esc([(COND_ST.find(s=>s[0]===c.st)||COND_ST[1])[1],c.y?c.y+' 年確診':'',c.score!==''&&c.score!=null?(T?.num?.s||'分數')+' '+c.score:'',c.note].filter(Boolean).join('・'))} <button class="btn sm ghost" data-setsec="cond" style="margin-left:6px">編輯</button></div>
     ${c.dr?`<div class="hl" style="margin:6px 0 10px;border-color:rgba(182,255,60,.55)"><b style="color:var(--lime)">🩺 醫師交代（以醫師為準）</b><div style="margin-top:4px;font-size:calc(14px*var(--fz))">${esc(c.dr)}</div><div class="sub" style="margin-top:4px">下面是 App 的一般建議；和醫師交代不同時，以醫師交代為準。</div></div>`:''}
     ${T?`<div class="hl" style="margin:6px 0 4px"><b>${esc(T.tip)}</b></div>
     <div class="h4">要注意什麼</div>${li([...(T.dyn?T.dyn(c,m):[]),...T.w])}
@@ -1734,7 +1762,7 @@ function bindCondTab(m){const st=new Map(condOf(m).items.map(x=>[x.id,{k:x.k,n:x
 /* ================= 家族史與生活習慣 ================= */
 const FH_CA=[['crc','大腸癌'],['lung','肺癌'],['breast','乳癌'],['ovary','卵巢癌'],['stomach','胃癌'],['liver','肝癌'],['prostate','攝護腺癌'],['pancreas','胰臟癌'],['npc','鼻咽癌'],['thyroid','甲狀腺癌'],['uterus','子宮內膜癌'],['other','其他癌症']];
 const FH_CHR=[['dm','糖尿病'],['htn','高血壓'],['cvd','早發心血管疾病'],['ckd','腎臟病'],['hbv','B 肝帶原'],['osteo','骨鬆／髖部骨折'],['glaucoma','青光眼'],['gout','痛風']];
-const fhOf=m=>{const f=obj(m.fh);return{ca:Array.isArray(f.ca)?f.ca:[],chr:Array.isArray(f.chr)?f.chr:[],early:!!f.early}};
+const fhOf=m=>{const f=obj(m.fh);return{ca:Array.isArray(f.ca)?f.ca:[],chr:Array.isArray(f.chr)?f.chr:[],early:!!f.early,mbc:!!f.mbc,gene:!!f.gene}};
 const lifeOf=m=>({smoke:'never',ppd:0,yrs:0,quit:0,betel:'never',alc:'none',abo:false,colono:'',gastro:'',ldct:'',...obj(m.life)});
 // 疫苗紀錄：m.vax={流感:季別年, 其他:接種年}；流感、新冠每年 10 月開打，算到隔年 9 月
 const VAX=[['flu','流感（這一季）'],['covid','新冠（這一季）'],['pneu','肺炎鏈球菌'],['zoster','帶狀皰疹（2 劑）'],['tdap','破傷風／百日咳（10 年內）'],['hbv','B 型肝炎（3 劑）'],['hav','A 型肝炎（2 劑）'],['hpv','HPV 疫苗'],['rsv','RSV 呼吸道融合病毒']];
@@ -1836,7 +1864,8 @@ function yearPlan(m){
   if(fem&&a>=40&&a<=74)add(S[2],fh.ca.includes('breast')?1:2,'乳房 X 光攝影（乳癌篩檢）','40–74 歲女性每 2 年 1 次','公費','每 2 年');
   if(fem&&a>=25)add(S[2],2,'子宮頸抹片',a<30?'25–29 歲每 3 年 1 次':'30 歲以上每年 1 次（至少每 3 年做一次）','公費',a<30?'每 3 年':'每年');
   if(fem&&[35,45,65].includes(a))add(S[2],2,'HPV 人類乳突病毒檢測',`${a} 歲公費提供一次`,'公費','今年');
-  if((a>=30&&(smoker||betel))||(lf.abo&&a>=18&&betel))add(S[2],betel?1:2,'口腔黏膜檢查（口腔癌篩檢）',`${betel?'嚼檳榔':'吸菸'}（含已戒）每 2 年 1 次`,'公費','每 2 年');
+  if((a>=30&&(lf.smoke==='current'||betel))||(lf.abo&&a>=18&&betel))add(S[2],betel?1:2,'口腔黏膜檢查（口腔癌篩檢）',`${betel?'嚼檳榔（含已戒）':'吸菸'}：每 2 年 1 次`,'公費','每 2 年');
+  else if(a>=30&&lf.smoke==='former')add(S[2],3,'口腔黏膜檢查（口腔癌篩檢）','已戒菸：官方資格寫「嚼檳榔（含已戒）或吸菸者」，已戒菸是否符合公費請向院所確認；嘴破或白斑超過 2 週不用等篩檢','公費／自費','向院所確認');
   const lungFH=fh.ca.includes('lung');
   if((lungFH&&a<=74&&a>=(fem?40:45))||(a>=50&&a<=74&&heavy))add(S[2],1,'低劑量胸部電腦斷層 LDCT（肺癌篩檢）',lungFH?'一等親有肺癌（男 45、女 40 歲起）':`重度吸菸 ${pk} 包年`,'公費','每 2 年');
 
@@ -1848,6 +1877,8 @@ function yearPlan(m){
   if(!fem&&(fh.ca.includes('breast')||fh.ca.includes('ovary'))&&(fh.early||fh.ca.includes('ovary')||fh.ca.includes('prostate')||fh.ca.includes('pancreas')))
     add(S[3],3,'遺傳諮詢（BRCA）可考慮','家族有早發乳癌／卵巢癌：男性帶 BRCA2 基因會增加攝護腺癌、男性乳癌風險；先確認是哪位家人、幾歲發病','自費','與醫師討論');
   if(fh.ca.includes('uterus')||(crcFH&&fh.early))add(S[3],3,'遺傳諮詢（林奇症候群評估）','家族有早發大腸癌或子宮內膜癌','自費','與醫師討論');
+  if(fh.gene)add(S[3],1,'遺傳諮詢（家族已驗出致病基因）','家人驗出 BRCA、林奇症候群等致病基因：你有一半機會帶到，帶因者的篩檢會更早、更密；先確認是哪個基因','自費／健保','今年');
+  if(fh.mbc&&!fh.gene)add(S[3],2,'遺傳諮詢（BRCA 評估）','男性家人得過乳癌，是 BRCA2 基因的重要線索；男女都會受影響（乳癌、卵巢癌、攝護腺癌、胰臟癌）','自費','與醫師討論');
   if(!fem&&fh.ca.includes('prostate')&&a>=45&&!hasL('psa'))add(S[3],3,'PSA 檢查（與泌尿科討論）','攝護腺癌家族史可從 45 歲開始討論','自費','每 1–2 年');
   if((fh.ca.includes('liver')||fh.chr.includes('hbv'))&&!has('hbsag'))add(S[3],1,'B 型肝炎表面抗原 HBsAg','家族有肝癌或 B 肝帶原，自己有沒有帶原一定要知道','公費／自費','今年');
   if(fh.ca.includes('liver')&&a>=40&&!lvOf('us_liver'))add(S[3],3,'腹部超音波','肝癌家族史','自費','每 1–2 年');
@@ -1875,11 +1906,11 @@ function yearPlan(m){
       if(due<=yr)add(S[4],crcFH||cl>=2?1:2,'大腸鏡（今年該做了）',`上次 ${cy} 年；${why}一次，${due} 年到期`,'健保／自費','今年');
       else add(S[4],3,`大腸鏡：下次 ${due} 年`,`上次 ${cy} 年；${why}${cl>=2?'':'（有瘜肉依醫師建議縮短）'}`,'—',`${due} 年`)}
     else if(a>=(crcFH?40:45))add(S[4],crcFH?1:3,crcFH?'大腸鏡（家族史，今年建議做）':'大腸鏡（可考慮自費）',crcFH?'一等親有大腸癌：40 歲起每 5 年一次大腸鏡，比糞便潛血更早發現':'公費糞便潛血每 2 年是基本；想一次看清楚可做大腸鏡，正常的話 10 年後再做。報告外做過的請在「⚙️ → 家族史」填年份',crcFH?'健保／自費':'自費',crcFH?'今年':'每 10 年')}
+  {const dmx=condHas(m,'dm')||lvOf('hba1c')>=2||lvOf('glu')>=2,pr=condHas(m,'perio');if(a>=13)add(S[4],pr?2:3,'洗牙＋牙周檢查',`健保每半年 1 次${dmx?'；有糖尿病（或血糖偏高）可每 3 個月 1 次':''}；牙周病和血糖、心血管有關聯${pr?'；你有牙周病，照牙醫安排回診':''}`,'健保',dmx?'每 3 個月':'每 6 個月')}
   if(a>=40&&!hasL('iop')&&!out.some(o=>o.t.includes('眼壓')))add(S[4],3,'眼科：眼壓＋眼底（青光眼、黃斑部病變）','40 歲以上每 1–2 年；高度近視、糖尿病更要做','健保／自費','每 1–2 年');
   if(a>=40&&!has('us_liver')&&(calc(m).bmi>=24||any('alt','ast','ggt')||lf.alc!=='none'))add(S[4],3,'腹部超音波（肝、膽、腎）','40 歲以上還沒做過；體重過重或有喝酒，先看有沒有脂肪肝、膽結石','自費','每 1–2 年');
   if(!fem&&a>=50&&a<=70&&!has('psa')&&!out.some(o=>o.t.includes('PSA')))add(S[4],3,'PSA 攝護腺檢查（先和醫師討論利弊）','50 歲以上男性可考慮；單次偏高不等於癌症','自費','每 1–2 年');
   if(a>=65)add(S[4],3,'聽力檢查','65 歲以上聽力退化常被忽略，也和失智風險有關','健保／自費','每年');
-  if(a>=18)add(S[4],3,'洗牙＋牙周檢查','牙周病和糖尿病、心血管疾病互相影響','健保','每 6 個月');
 
   // ⑦ 疫苗（疾管署成人建議；公費資格以當年公告為準）
   const chronic=mx('glu','hba1c')>=2||mx('egfr','cr','uacr')>=2||mx('alt','ast')>=2||mx('ekg','ntprobnp')>=2||lvOf('hbsag')>0||lf.smoke==='current',bmiV=calc(m).bmi,mo=new Date().getMonth(),inSeason=mo>=9||mo<=2;
@@ -1922,7 +1953,7 @@ function planHTML(m){const pl=yearPlan(m),sx=sexT(m.sex);
     html+=`<div class="plan"><span class="pr pr${o.pr}">${PRT[o.pr]}</span><div class="m"><b>${esc(o.t)}</b><div class="s">${esc(o.why)}</div><div class="pt">${o.ch&&o.ch!=='—'?`<i>💰 ${esc(chT(o.ch))}</i>`:''}<i>${esc(o.when)}</i></div></div></div>`}
   return head+html+`<button class="btn ghost" data-copyplan="1">📋 複製清單（給醫師或健檢中心）</button><p class="note">依國健署 2025–2026 公費篩檢資格與常見臨床指引整理，實際檢查項目請與醫師討論。</p>`}
 function planText(m){const pl=yearPlan(m);
-  return [`NutriCore 今年健檢建議：${m.name}（${sexT(m.sex)}・${pl.a} 歲）${ymd(new Date())}`,pl.L?`依據：${pl.L.t} 報告${pl.P?`，與 ${pl.P.t} 比較`:''}`:'尚無體檢報告',
+  return [`家安康 今年健檢建議：${m.name}（${sexT(m.sex)}・${pl.a} 歲）${ymd(new Date())}`,pl.L?`依據：${pl.L.t} 報告${pl.P?`，與 ${pl.P.t} 比較`:''}`:'尚無體檢報告',
     fhText(m)?'家族史：'+fhText(m):'',...SECS.flatMap(s=>{const it=pl.items.filter(o=>o.sec===s);return it.length?['',`【${s}】`,...it.map((o,i)=>`${i+1}. [${PRT[o.pr]}] ${o.t}：${o.why}（${[o.ch!=='—'?chT(o.ch):'',o.when].filter(Boolean).join('・')}）`)]:[]}),
     '','※ 依國健署公費篩檢資格與常見臨床指引整理，實際檢查請與醫師討論'].filter((x,i,a)=>x!==''||a[i-1]!=='').join('\n')}
 
@@ -2525,9 +2556,9 @@ function fitICS(m,P){
     return['BEGIN:VEVENT',`UID:nutricore-${m.id}-${x.d}`,`DTSTAMP:${dt(now)}`,`DTSTART:${dt(st)}`,`DTEND:${dt(en)}`,`RRULE:FREQ=WEEKLY;BYDAY=${BY[x.d]}`,
       `SUMMARY:${tx('🏋️ '+x.b.map(y=>EX[y.k].n).join('＋'))}`,`DESCRIPTION:${tx(x.b.map(y=>`${EX[y.k].n} ${y.min} 分：${EX[y.k].how}`).join('\n')+'\n— NutriCore 教練課表')}`,
       'BEGIN:VALARM','TRIGGER:-PT10M','ACTION:DISPLAY','DESCRIPTION:運動時間到','END:VALARM','END:VEVENT']});
-  return['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//NutriCore//ZH-TW','CALSCALE:GREGORIAN','METHOD:PUBLISH',...ev,'END:VCALENDAR'].map(fold).join('\r\n')+'\r\n';
+  return['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//JiaAnKang//ZH-TW','CALSCALE:GREGORIAN','METHOD:PUBLISH',...ev,'END:VCALENDAR'].map(fold).join('\r\n')+'\r\n';
 }
-async function shareICS(){const m=me(),P=fitPlan(m),ics=fitICS(m,P),name=`nutricore-${ymd(new Date())}.ics`;
+async function shareICS(){const m=me(),P=fitPlan(m),ics=fitICS(m,P),name=`jiaankang-${ymd(new Date())}.ics`;
   try{const file=new File([ics],name,{type:'text/calendar'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return}}catch(e){if(e.name==='AbortError')return}   /* iOS：只帶 files */
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);toast('已產生行事曆檔，打開後選「加入全部」')}
 
@@ -2547,7 +2578,7 @@ function renderBody(){
   if(l)$('#issueList').insertAdjacentHTML('beforeend',`<p class="note">${NORMAL_NOTE}</p>`);
   $('#deptList').innerHTML=deptHTML(deptPlan(all));$('#condBody').innerHTML=condCardHTML(m);
   {const n2=all.filter(i=>i.lv>=2).length,pl=yearPlan(m).items.filter(o=>o.pr===1).length,cn=condOf(m).items.length,sg=condSuggest(m).length;
-   subBadge('body','now',n2||all.length,all.some(i=>i.crit||i.lv>=3)?'r':n2?'':'c');subBadge('body','plan',pl,'');subBadge('body','cond',cn||(sg?'＋':''),'c')}
+   subBadge('body','now',n2||all.length,all.some(i=>i.crit||i.lv>=3)?'r':n2?'':'c');{const fn=fuNeed(m);subBadge('body','plan',(pl+fn)||'',fn?'r':'')}subBadge('body','cond',cn||(sg?'＋':''),'c')}
   const dv=derivedOf(m);$('#derivedCard').hidden=!dv.length;
   $('#derivedList').innerHTML=dv.map(d=>`<div class="issue"><span class="lv lv${d.lv}">${d.lv?LVT[d.lv]:'正常'}</span><div style="flex:1;min-width:0"><div class="t">${esc(d.name)}</div><div class="s">${esc(d.txt)}<br><span style="font-size:calc(11px*var(--fz))">${esc(d.src)}</span></div></div><div class="v">${esc(d.val)}</div></div>`).join('');
   $('#planBody').innerHTML=planHTML(m);
@@ -2622,12 +2653,16 @@ function openMemberEdit(id,focus,back){
     <label>目標</label><div class="seg" id="m-goal"><button data-v="auto">自動</button><button data-v="cut">減脂</button><button data-v="keep">維持</button><button data-v="bulk">增肌</button></div>
     <div class="note" style="margin-top:6px">自動＝營養師依 BMI、體脂、腰圍、肌肉量判斷${ex?`（目前建議：${GOALT[suggestGoal(m).goal]}）`:''}</div>
     <div class="note" id="m-kidnote"></div>
-    <p class="note">有體脂紀錄時，計算會自動改用最新一筆體脂機體重。</p></div>
+    <p class="note">有體脂紀錄時，計算會自動改用最新一筆體脂機體重。</p>
+    <div class="h4">保險與家庭保障分析用（選填）</div><div class="grid2"><div><label style="margin-top:0">職業身分</label><select id="m-job">${JOBS.map(([k,t])=>`<option value="${k}"${(m.job||'')===k?' selected':''}>${t}</option>`).join('')}</select></div>
+      <div><label style="margin-top:0">家庭角色</label><select id="m-role">${ROLES.map(([k,t])=>`<option value="${k}"${(m.role||'')===k?' selected':''}>${t}</option>`).join('')}</select></div></div>
+    <div class="chips" style="margin-top:8px"><button type="button" class="chip${m.earner?' on':''}" id="m-earner">家庭主要收入者</button></div>
+    <p class="note">用來推測可能有哪些社會保險（軍保、公保、勞保、農保、國民年金…）與家庭責任；實際資格以投保紀錄為準。</p></div>
     ${condTabHTML(m)}
     ${(()=>{const fh=fhOf(m),lf=lifeOf(m),chips=(id,list,on)=>`<div class="chips" id="${id}">${list.map(([k,n])=>`<button type="button" class="chip${on.includes(k)?' on':''}" data-k="${k}">${n}</button>`).join('')}</div>`;
       return `<div class="tabp" id="m-fhbox" data-t="fh"><p class="note" style="margin-top:0">影響今年健檢建議（篩檢年齡與項目）</p>
       <label>一等親（父母、兄弟姊妹、子女）罹患過的癌症</label>${chips('m-fhca',FH_CA,fh.ca)}
-      <div class="chips" style="margin-top:8px"><button type="button" class="chip${fh.early?' on':''}" id="m-early">有家人 50 歲前確診，或同一種癌症 2 人以上</button></div>
+      <div class="chips" style="margin-top:8px"><button type="button" class="chip${fh.early?' on':''}" id="m-early">有家人 50 歲前確診，或同一種癌症 2 人以上</button><button type="button" class="chip${fh.mbc?' on':''}" id="m-mbc">有男性家人得過乳癌</button><button type="button" class="chip${fh.gene?' on':''}" id="m-gene">家人驗出 BRCA、林奇症候群等致病基因</button></div>
       <label>一等親的慢性病</label>${chips('m-fhchr',FH_CHR,fh.chr)}
       <p class="note">早發心血管疾病＝男性 55 歲、女性 65 歲前心肌梗塞或中風。</p>
       <label>吸菸</label><div class="seg" id="m-smoke"><button data-v="never">從不</button><button data-v="former">已戒</button><button data-v="current">目前有</button></div>
@@ -2667,7 +2702,7 @@ function openMemberEdit(id,focus,back){
   const lf0=lifeOf(m);let smoke=lf0.smoke,betel=lf0.betel,alc=lf0.alc;
   const smokeUI=()=>{$('#m-smokebox').hidden=smoke==='never';$('#m-quitbox').hidden=smoke!=='former'};
   seg('#m-smoke',smoke,v=>{smoke=v;smokeUI()});seg('#m-betel',betel,v=>betel=v);seg('#m-alc',alc,v=>alc=v);smokeUI();
-  $$('#m-fhbox .chip,#m-fitbox .chip,#m-vaxbox .chip,#m-dietbox .chip').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
+  $$('#m-fhbox .chip,#m-fitbox .chip,#m-vaxbox .chip,#m-dietbox .chip').forEach(b=>b.onclick=()=>b.classList.toggle('on'));$('#m-earner').onclick=()=>$('#m-earner').classList.toggle('on');
   const fp0=fitOf(m);let lvl=fp0.lvl,days=String(fp0.days),mins=String(fp0.min);seg('#m-lvl',lvl,v=>lvl=v);seg('#m-days',days,v=>days=v);seg('#m-min',mins,v=>mins=v);
   tab(TABS.some(x=>x[0]===focus)?focus:'basic');
   $('#m-save').onclick=()=>{
@@ -2678,7 +2713,8 @@ function openMemberEdit(id,focus,back){
     if(!(w>=2&&w<=300))return toast('體重請輸入 2–300 kg');
     Object.assign(m,{name,sex,birth,h,w,waist:num($('#m-waist').value)??'',neck:num($('#m-neck').value)??'',hip:num($('#m-hip').value)??'',act:$('#m-act').value,goal});
     const pick=sel=>$$(sel+' .chip.on').map(b=>b.dataset.k),yr=id=>{const v=num($(id).value);return v>=1950&&v<=new Date().getFullYear()?v:''};
-    m.fh={ca:pick('#m-fhca'),chr:pick('#m-fhchr'),early:$('#m-early').classList.contains('on')};
+    m.fh={ca:pick('#m-fhca'),chr:pick('#m-fhchr'),early:$('#m-early').classList.contains('on'),mbc:$('#m-mbc').classList.contains('on'),gene:$('#m-gene').classList.contains('on')};
+    m.job=$('#m-job').value;m.role=$('#m-role').value;m.earner=$('#m-earner').classList.contains('on');
     m.life={smoke,betel,alc,abo:$('#m-abo').classList.contains('on'),ppd:smoke==='never'?0:Math.min(10,num($('#m-ppd').value)||0),yrs:smoke==='never'?0:Math.min(80,num($('#m-yrs').value)||0),
       quit:smoke==='former'?Math.min(80,num($('#m-quit').value)||0):0,colono:yr('#m-colono'),gastro:yr('#m-gastro'),ldct:yr('#m-ldct')};
     if(seen.has('fit')||m.fit)m.fit={lim:pick('#m-lim'),lvl,days:+days,min:+mins,like:pick('#m-like'),time:/^\d{2}:\d{2}$/.test($('#m-time').value)?$('#m-time').value:'07:00'};
@@ -2687,7 +2723,7 @@ function openMemberEdit(id,focus,back){
     const vx={},on=pick('#m-vax'),y=new Date().getFullYear();for(const k of on)vx[k]=vaxDone(m,k)?+obj(m.vax)[k]:(k==='flu'||k==='covid'?season():y);m.vax=vx;
     const i=MEM.findIndex(x=>x.id===m.id);if(i>=0)MEM[i]=m;else MEM.push(m);
     ACT=m.id;S.set('members',MEM);S.set('active',ACT);renderAll();if(back)openSettings();else closeSheet();toast('已儲存：'+name);
-    if(FRESH){FRESH=false;if(!S.get('tour',0))setTimeout(startTour,600)}};
+    if(FRESH){FRESH=false;if(+S.get('tour',0)<TOUR_V)setTimeout(startTour,600)}};
   if($('#m-del'))$('#m-del').onclick=()=>{
     if(!confirm(`確定刪除「${m.name}」以及這位成員的所有體脂、體檢紀錄？此動作無法復原。`))return;
     MEM=MEM.filter(x=>x.id!==m.id);delete SCALE[m.id];delete LABS[m.id];delete WATCH[m.id];delete EXLOG[m.id];delete SELFR[m.id];if(ACT===m.id)ACT=MEM[0].id;
@@ -2716,11 +2752,12 @@ function aiPrompt(m,o){
     '規則：①只根據下面的資料，不要假設沒提供的數值 ②「關鍵數值」裡列出的都已經驗過，不要再叫我重驗；只能建議補「這份報告沒有驗」的項目 ③判讀用下面的台灣標準 ④有需要儘快就醫的警訊放最前面（沒有就說沒有）⑤分清楚「要看醫生」和「生活調整即可」⑥不要開藥或給劑量 ⑦最後給我 3 個下次看診可以問醫生的問題。',AI_STD,'',
     `【基本資料】${sexT(m.sex)}性、${Math.floor(c.a)} 歲、身高 ${c.h} cm、體重 ${tv(c.w)} kg（BMI ${r1(c.bmi)}）${m.waist?`、腰圍 ${m.waist} cm`:''}${l?.items?.ht||l?.items?.bmi?`；醫院量：${[l.items.ht&&`身高 ${l.items.ht.v} cm`,l.items.wt&&`體重 ${l.items.wt.v} kg`,l.items.bmi&&`BMI ${l.items.bmi.v}`].filter(Boolean).join('、')}`:''}`,
     `【目標】${GOALT[c.goal]}；活動量：${(ACTS.find(x=>x[0]===String(m.act))||ACTS[1])[1]}`);
-  if(o.fh){if(fhText(m))out.push(`【一等親家族史】${fhText(m)}${fh.early?'（有 50 歲前發病，或同一種癌症 2 人以上）':''}`);
+  if(o.fh){const fx=[fh.early&&'有 50 歲前發病，或同一種癌症 2 人以上',fh.mbc&&'有男性家人得過乳癌',fh.gene&&'家人驗出致病基因（BRCA、林奇症候群等）'].filter(Boolean);if(fhText(m)||fx.length)out.push(`【一等親家族史】${fhText(m)||'（癌症、慢性病沒有勾選）'}${fx.length?'（'+fx.join('；')+'）':''}`);
     if(m.life)out.push(`【生活習慣】吸菸：${{never:'從不',former:'已戒',current:'目前有'}[lf.smoke]}${lf.smoke!=='never'&&packYears(lf)?`（約 ${packYears(lf)} 包年）`:''}；喝酒：${{none:'不喝',some:'偶爾',often:'每週 3 次以上'}[lf.alc]}；檳榔：${{never:'從不',former:'已戒',current:'目前有'}[lf.betel]}`);
     if(fp.lim.length)out.push(`【身體限制】${fp.lim.map(k=>(LIM.find(z=>z[0]===k)||[,k])[1]).join('、')}`);
     if(dt.no.length)out.push(`【不吃的食物】${dt.no.map(k=>(EXG.find(z=>z[0]===k)||[,k])[1]).join('、')}`)}
   if(o.cond){const ct=condText(m);if(ct.length)out.push(...ct)}
+  {const ft=fuText(m);if(ft.length)out.push('',...ft)}
   if(l){out.push('',`【體檢報告 ${l.t}】App 判讀異常 ${lab.length} 項：`);
     lab.slice().sort((a,b)=>b.lv-a.lv).forEach(i=>{const pv=P?.items?.[i.k]?.v;out.push(`- ${iss(i)}${pv!=null&&pv!==''?`；前一次（${P.t}）${pv}`:''}`)});
     {const ab=new Set(lab.map(i=>i.k)),has=k=>{const v=l.items?.[k]?.v;return v!=null&&v!==''},core=AI_CORE.filter(k=>has(k)&&!ab.has(k)).map(k=>`${LABK[k].s||LABK[k].n} ${l.items[k].v}${LABK[k].u?' '+LABK[k].u:''}`),miss=AI_CORE.filter(k=>!has(k)&&!(k==='waist'&&m.waist)).map(k=>LABK[k].s||LABK[k].n);
@@ -2775,6 +2812,8 @@ const SYM=[
  {k:'snore',n:'打鼾、白天很想睡',a:'睡眠情緒',u:'clinic',rf:[['開車時打瞌睡','soon']],d:'胸腔內科／耳鼻喉科（睡眠中心）',t:['睡眠多項生理檢查','手錶夜間血氧可先參考'],tip:'睡眠呼吸中止會讓血壓、血糖變差，減重 10% 常常明顯改善'},
  {k:'mood',n:'情緒低落、焦慮、失眠超過 2 週',a:'睡眠情緒',u:'clinic',rf:[['有傷害自己的念頭','now']],d:'身心科／家醫科',t:['甲狀腺 TSH','情緒量表評估'],tip:'有傷害自己的念頭請立刻打 1925 安心專線或 119'},
  {k:'breast',n:'乳房腫塊／乳頭分泌物',a:'女性',sex:'f',u:'clinic',rf:[['乳頭流血、皮膚凹陷或像橘子皮','soon']],d:'乳房外科',t:['乳房超音波','乳房攝影'],tip:''},
+ {k:'mouth',n:'嘴破、口腔白斑紅斑、硬塊',a:'頭頸',u:'clinic',rf:[['破洞、白斑或紅斑超過 2 週沒好、摸到硬塊、會出血','soon'],['嘴巴張不開、吞嚥困難或脖子腫','soon']],d:'牙科、口腔外科或耳鼻喉科',t:['口腔黏膜檢查','必要時切片'],tip:'嚼檳榔、抽菸、喝酒的人更要注意；30 歲以上嚼檳榔（含已戒）或吸菸可以公費每 2 年做口腔黏膜檢查'},
+ {k:'gum',n:'牙齦流血、牙齒鬆動、牙痛',a:'頭頸',u:'obs',rf:[['腫到張口、吞嚥或呼吸困難','now'],['臉頰腫脹合併發燒','soon']],d:'牙科',t:['牙周檢查','牙科 X 光'],tip:'刷牙流血、牙齦萎縮多半是牙周病；每天用牙線，健保每半年可以洗牙 1 次'},
  {k:'stuffy',n:'鼻塞（躺下更塞）、流鼻水、打噴嚏',a:'頭頸',u:'obs',rf:[['單側鼻塞合併鼻涕帶血、單側耳悶或脖子硬塊','soon'],['發燒、臉頰或眼睛周圍腫痛','soon'],['眼睛周圍紅腫、視力改變、劇烈頭痛','now']],d:'耳鼻喉科',t:['鼻腔內視鏡','過敏原檢測（抽血）','必要時鼻竇電腦斷層'],tip:'躺下鼻塞常見於過敏性鼻炎、鼻中隔彎曲、下鼻甲肥大；側睡、枕頭墊高、睡前洗鼻；血管收縮型鼻噴劑連續用不要超過 3 天'},
  {k:'throat',n:'喉嚨痛、聲音沙啞',a:'頭頸',u:'obs',rf:[['吞嚥困難、流口水、呼吸有雜音或喘','now'],['沙啞超過 4 週，或咳血、脖子硬塊、體重下降','soon']],d:'耳鼻喉科',t:['喉頭內視鏡','頸部觸診或超音波'],tip:'抽菸、嚼檳榔、喝酒的人聲音沙啞要提早看，不要等 4 週'},
  {k:'skin',n:'皮膚癢、紅疹、蕁麻疹',a:'全身',u:'obs',rf:[['嘴唇舌頭腫、喘或頭暈','now'],['發燒合併大片紅疹、水泡或嘴巴破（嚴重藥物過敏）','now'],['紅腫範圍快速擴大、發熱疼痛','soon']],d:'皮膚科',t:['醫師看診（多數不需要抽血）','必要時過敏原檢測'],tip:'最近 2 個月內開始吃的新藥（例如痛風藥 allopurinol、抗癲癇藥、抗生素、止痛藥），出疹時一定要告訴醫師'},
@@ -2802,6 +2841,8 @@ function symCtx(m,k){const a=Math.floor(ageOf(m)),labs=labsOf(m).slice(0,3),iss=
   if(k==='reflux'&&(has('hp')||has('hpab')))o.push('幽門桿菌陽性紀錄');
   if(k==='joint'&&has('ua'))o.push('你的尿酸偏高：大拇趾、腳踝突然紅腫熱痛要考慮痛風');
   if(k==='heel'){const ns=condNames(m,['ledd','pf','bursitis','achilles']);if(ns.length)o.push(`你的病史：${ns.join('、')}（點「病史」看醫師交代與保養）`);if(condHas(m,'dm')||has('hba1c'))o.push('有糖尿病或血糖偏高：腳痛、傷口要每天檢查，泡腳先試水溫')}
+  if(k==='gum'){if(condHas(m,'dm')||has('hba1c')||has('glu'))o.push('有糖尿病或血糖偏高：牙周病和血糖會互相影響，牙科治療也有助血糖控制');if(condHas(m,'af','cad','stroke')||/warfarin|apixaban|rivaroxaban|edoxaban|dabigatran|clopidogrel|aspirin|阿斯匹靈|保栓通|抗凝血|抗血小板/i.test(condOf(m).meds||''))o.push('有吃抗凝血或抗血小板藥（或有相關病史）：看牙前告訴牙醫，不要自己停藥')}
+  if(k==='mouth'){if(lifeOf(m).betel!=='never')o.push('有嚼檳榔史：口腔癌最主要的危險因子，嘴破超過 2 週一定要看');if(condHas(m,'oralpm'))o.push('你有口腔黏膜病變病史：有變化就提早回診')}
   if(k==='stuffy'){const ns=condNames(m,['septum','turbinate','sinusitis','rhinitis']);if(ns.length)o.push(`你的病史：${ns.join('、')}`);if(condHas(m,'osa'))o.push('有睡眠呼吸中止：鼻塞會讓它更嚴重')}
   if(k==='eye'&&has('iop'))o.push('你的眼壓偏高：眼睛痛、視力模糊要儘快看眼科');
   if(k==='ear'&&has('hearing'))o.push('你的聽力檢查有異常紀錄');
@@ -3124,7 +3165,7 @@ function promptScale(){return `你是「體脂計數據擷取器」。我會附�
 ${SF.map(f=>`${f.k}＝${f.n}${f.u?`（${f.u}）`:''}`).join('、')}、bodyType＝身體類型（文字）、device＝體脂計品牌或 App 名稱
 
 【輸出格式】
-{"type":"nutricore.scale","v":1,"measuredAt":null,"device":null,${SF.map(f=>`"${f.k}":null`).join(',')},"bodyType":null,"status":{},"other":[]}`}
+{"type":"jiaankang.scale","v":1,"measuredAt":null,"device":null,${SF.map(f=>`"${f.k}":null`).join(',')},"bodyType":null,"status":{},"other":[]}`}
 function promptWatch(){return `你是「健康數據擷取器」。我會附上智慧手錶或健康 App（Apple 健康、Garmin Connect、華為運動健康、Samsung Health、小米運動健康、Fitbit 等）的截圖（可能多張）。你的任務只有「讀取畫面上的數字」，不要分析、不要給建議。
 
 【規則】
@@ -3147,7 +3188,7 @@ function promptWatch(){return `你是「健康數據擷取器」。我會附上�
 rhr＝靜止心率（bpm；小米叫「安靜心率」）、walkhr＝步行平均心率（bpm；Apple、小米都叫「步行平均心率」）、hrv＝心率變異 HRV（ms）、stress＝平均壓力（0–100；小米、華為、Garmin、Samsung 的「壓力」）、spo2＝血氧（%）、sleep＝每晚睡眠時數（小時；小米「主要睡眠時長」7h36m → 7.6）、steps＝每日步數、exmin＝每日運動分鐘（Apple「運動」圓圈、Garmin「熱血時間」；畫面是一週總分鐘請 ÷7）、vo2＝最大攝氧量 VO2max（ml/kg/min，Apple 健康叫「有氧體能」）、resp＝睡眠時呼吸速率（次／分）、kcal＝每日活動消耗（Apple「動態能量」、Garmin「活動卡路里」、小米「活動消耗」或健康摘要的「卡路里日均消耗」，kcal；只有「總卡路里」就填總卡路里，App 會自動扣掉基礎代謝；會用來校正每日該吃多少熱量）、sbp／dbp＝手錶量的收縮壓／舒張壓（mmHg）
 
 【輸出格式】
-{"type":"nutricore.watch","v":1,"date":null,"device":null,"period":null,${WF.map(f=>`"${f.k}":null`).join(',')},"afib":null,"other":[]}`}
+{"type":"jiaankang.watch","v":1,"date":null,"device":null,"period":null,${WF.map(f=>`"${f.k}":null`).join(',')},"afib":null,"other":[]}`}
 const PROMPTS={scale:()=>promptScale(),lab:()=>promptLab(),watch:()=>promptWatch()};
 function promptLab(){const OPT=LAB.filter(x=>x.t==='opt'),QI=LAB.filter(x=>x.t==='qi');return `你是「健康檢查報告數據擷取器」。我會附上體檢報告的照片或截圖（可能多張）。你的任務只有「逐字讀取數據」，不要診斷、不要給建議。
 
@@ -3173,7 +3214,7 @@ ${LAB.filter(x=>x.t!=='opt').map(x=>`${x.k}＝${x.n}`).join('、')}
 ${OPT.map(x=>`${x.k}＝${x.n}（${x.O.map(o=>o[0]).join('／')}）`).join('\n')}
 
 【輸出格式】
-{"type":"nutricore.lab","v":1,"date":"YYYY-MM-DD","hospital":null,"items":{"glu":{"value":105,"unit":"mg/dL","ref":"70-99","lo":70,"hi":99,"flag":"H"},"us_liver":{"value":"輕度脂肪肝","note":"Mild fatty liver"}},"extra":[{"name":"項目原名","value":null,"unit":null,"ref":null,"lo":null,"hi":null,"flag":null}]}
+{"type":"jiaankang.lab","v":1,"date":"YYYY-MM-DD","hospital":null,"items":{"glu":{"value":105,"unit":"mg/dL","ref":"70-99","lo":70,"hi":99,"flag":"H"},"us_liver":{"value":"輕度脂肪肝","note":"Mild fatty liver"}},"extra":[{"name":"項目原名","value":null,"unit":null,"ref":null,"lo":null,"hi":null,"flag":null}]}
 （glu、us_liver 只是格式範例，請以實際報告內容為準）`}
 async function copyText(t,msg='已複製提示詞，貼到 AI 對話框並附上截圖'){
   try{await navigator.clipboard.writeText(t);toast(msg);return}catch(e){}
@@ -3218,7 +3259,7 @@ function openWatchSheet(rec){const m=me();wEditId=rec?.id||null;wExtra=(rec?.ext
 function saveWatch(){const m=me(),r={id:wEditId||uid(),t:$('#w-t').value||ymd(new Date())},bad=[];
   for(const f of WF){const el=$('#w-'+f.k),raw=el.value.trim();el.classList.remove('bad');if(!raw)continue;const v=num(raw);if(v==null||v<f.min||v>f.max){bad.push(f.n);el.classList.add('bad');continue}r[f.k]=v}
   if(bad.length)return toast('數值不合理：'+bad.join('、')+'（請核對單位與小數點）');
-  if($('#w-afib').classList.contains('on'))r.afib=true;const dv=$('#w-device').value.trim();if(dv)r.device=dv.slice(0,30);const pd=$('#w-period').value.trim();if(pd)r.period=pd.slice(0,20);if(wExtra.length)r.extra=wExtra.slice();
+  if($('#w-afib').classList.contains('on'))r.afib=true;const dv=$('#w-device').value.trim();if(dv)r.device=dv.slice(0,30);const pd=$('#w-period').value.trim();if(pd)r.period=pd.slice(0,20);if(wExtra.length)r.extra=wExtra.slice();{const W=watchCheck(r);if(W.length)r.chk=W}
   if(!WF.some(f=>r[f.k]!=null)&&!r.afib)return toast('請至少填一個數值');
   const arr=WATCH[m.id]||(WATCH[m.id]=[]),i=arr.findIndex(x=>x.id===r.id);if(i>=0)arr[i]=r;else arr.push(r);
   if(!S.set('watch',WATCH))return;recTab='watch';renderAll();go('body','now');openWatchDetail(r.id)}
@@ -3231,11 +3272,11 @@ function fillWatch(o){
   if(o.afib===true){$('#w-afib').classList.add('on');n++}if(o.device)$('#w-device').value=String(o.device).slice(0,30);if(o.period)$('#w-period').value=String(o.period).slice(0,20);const d=parseYMD(o.date);if(d)$('#w-t').value=d;
   wExtra=normOther(o.other,new Set(['type','v','date','device','period','afib','other',...WF.map(f=>f.k)]),o);
   if(!n&&!wExtra.length)throw new Error('JSON 裡沒有任何手錶數值');
-  return `✅ 已填入 ${n} 項`+(warn.length?`<br><span style="color:var(--red)">⚠️ ${esc(warn.join('、'))} 數值不合理，請核對單位或小數點</span>`:'')+(d?'':'<br><span style="color:var(--amber)">⚠️ 沒有讀到日期，目前是今天，請確認</span>')+extraNote(wExtra,'其他數值')+'<br>請往下核對後按「儲存」。'}
+  return `✅ 已填入 ${n} 項`+(warn.length?`<br><span style="color:var(--red)">⚠️ ${esc(warn.join('、'))} 數值不合理，請核對單位或小數點</span>`:'')+(d?'':'<br><span style="color:var(--amber)">⚠️ 沒有讀到日期，目前是今天，請確認</span>')+chkNote(watchCheck(o))+extraNote(wExtra,'其他數值')+'<br>請往下核對後按「儲存」。'}
 function openWatchDetail(id){const m=me(),list=watchOf(m),r=list.find(x=>x.id===id);if(!r)return;const p=list[list.indexOf(r)+1],iss=watchEval(r,m).sort((a,b)=>b.lv-a.lv),vc=r.vo2!=null?vo2Cat(r.vo2,ageOf(m),m.sex):null;
   openSheet(sheetHead('手錶數據',`${esc(m.name)}・${esc(r.t)}${r.device?'・'+esc(r.device):''}${r.period?'・'+esc(r.period):''}`)+`
     <div class="kv" style="margin:14px 0">${WF.filter(f=>r[f.k]!=null).map(f=>`<span>${f.n}</span><span><b>${fmt(r[f.k])}</b> <span class="sub">${f.u}</span>${f.k==='vo2'?` <em class="dev${vc>=2?' ok':''}">同齡${VO2T[vc]}</em>`:''}${p&&p[f.k]!=null?`<br><span class="sub">上次 ${fmt(p[f.k])}（${esc(p.t)}）</span>`:''}</span>`).join('')}${r.afib?'<span>心律不整提醒</span><span><b style="color:var(--red)">有</b></span>':''}</div>
-    ${extraHTML(r.extra)}<div class="h4">判讀</div>${iss.length?issueHTML(iss,true):'<div class="empty">各項都在建議範圍 👍</div>'}
+    ${chkHTML(r.chk)}${extraHTML(r.extra)}<div class="h4">判讀</div>${iss.length?issueHTML(iss,true):'<div class="empty">各項都在建議範圍 👍</div>'}
     ${r.id===list[0].id?commentHTML(m,true):''}
     <p class="note">手錶是光學感測：靜止心率、睡眠、步數的趨勢可信；血氧、HRV、血壓、VO₂max 受配戴與演算法影響大，<b>和自己比</b>比看單次數字重要。手錶數據只提醒、不列入體檢分數，也不能取代醫師診斷。</p>
     <div class="row2"><button class="btn danger" id="wd-del" style="flex:0 0 30%">刪除</button><button class="btn ghost" id="wd-edit">編輯</button></div>`);
@@ -3276,7 +3317,7 @@ function fillScale(o){
   if(d.bodyType)$('#s-bodyType').value=d.bodyType;if(d.device)$('#s-device').value=d.device;
   sExtra=normOther(d.other,new Set(['type','v','measuredAt','date','time','device','status','bodyType','other','data',...SF.map(f=>f.k)]),d);
   if(!n&&!sExtra.length)throw new Error('JSON 裡沒有任何可用數值');
-  return `✅ 已填入 ${n} 個欄位${bad.length?`，<span style="color:var(--red)">${esc(bad.join('、'))} 超出合理範圍，請核對是否讀錯</span>`:''}。請往下檢查後按「儲存」。${dtNote}${extraNote(sExtra,'其他數值')}`;
+  return `✅ 已填入 ${n} 個欄位${bad.length?`，<span style="color:var(--red)">${esc(bad.join('、'))} 超出合理範圍，請核對是否讀錯</span>`:''}。請往下檢查後按「儲存」。${dtNote}${chkNote(scaleCheck(d,me()))}${extraNote(sExtra,'其他數值')}`;
 }
 function saveScale(){
   const m=me(),r={id:sEditId||uid(),t:$('#s-t').value||dtLocal(new Date())},bad=[];
@@ -3290,7 +3331,7 @@ function saveScale(){
   if(r.bmi==null&&hm){r.bmi=r1(r.weight/(hm*hm));r.derived.push('bmi')}
   if(r.fat==null&&r.fatMass!=null){r.fat=r1(r.fatMass/r.weight*100);r.derived.push('fat')}
   r.status={};for(const[k,v]of Object.entries(sStatus))if(r[k]!=null)r.status[k]=v;
-  const bt=$('#s-bodyType').value.trim(),dv=$('#s-device').value.trim();if(bt)r.bodyType=bt;if(dv)r.device=dv;if(sExtra.length)r.extra=sExtra.slice();
+  const bt=$('#s-bodyType').value.trim(),dv=$('#s-device').value.trim();if(bt)r.bodyType=bt;if(dv)r.device=dv;if(sExtra.length)r.extra=sExtra.slice();{const W=scaleCheck(r,m);if(W.length)r.chk=W}
   const arr=SCALE[m.id]||(SCALE[m.id]=[]),i=arr.findIndex(x=>x.id===r.id);if(i>=0)arr[i]=r;else arr.push(r);
   if(!S.set('scale',SCALE))return;
   closeSheet();recTab='scale';renderAll();go('body','now');toast(r.derived.includes('weight')?`已儲存（體重由其他數值推算為 ${r.weight} kg）`:'已儲存體脂紀錄');
@@ -3300,7 +3341,7 @@ function openScaleDetail(id){
   const m=me(),r=scalesOf(m).find(x=>x.id===id);if(!r)return;const iss=scaleEval(r,m).sort((a,b)=>b.lv-a.lv);
   openSheet(sheetHead('體脂紀錄',`${esc(m.name)}・${fmtDT(r.t)}${r.device?'・'+esc(r.device):''}`)+`
     <div class="kv" style="margin:14px 0">${SF.filter(f=>r[f.k]!=null).map(f=>`<span>${f.n}${(r.derived||[]).includes(f.k)?' <em class="dev">推算</em>':''}</span><span><b>${fmt(r[f.k])}</b> <span class="sub">${f.u}</span>${r.status?.[f.k]?` <em class="dev${devLv(r.status[f.k])?'':' ok'}">${esc(r.status[f.k])}</em>`:''}</span>`).join('')}${r.bodyType?`<span>身體類型</span><span>${esc(r.bodyType)}</span>`:''}</div>
-    ${extraHTML(r.extra)}<div class="h4">判讀</div>${iss.length?issueHTML(iss):'<div class="empty">各項指標正常 👍</div>'}${bodyCompare(r,m)}
+    ${chkHTML(r.chk)}${extraHTML(r.extra)}<div class="h4">判讀</div>${iss.length?issueHTML(iss):'<div class="empty">各項指標正常 👍</div>'}${bodyCompare(r,m)}
     <p class="note">內建判定採國健署成人標準與一般體脂計分級（內臟脂肪 1–9 標準、10–14 偏高、≥15 過高）。各品牌標準不同，設備判定與內建判定並列，取較嚴重者。</p>
     <div class="row2"><button class="btn danger" id="sd-del" style="flex:0 0 30%">刪除</button><button class="btn ghost" id="sd-edit">編輯</button></div>`);
   $('#sd-edit').onclick=()=>openScaleSheet(r);$('#sd-del').onclick=()=>delScale(r.id);
@@ -3434,10 +3475,12 @@ function fillLab(o){
   const dateNote=day?'':`<br><span style="color:var(--amber)">⚠️ ${o.date?`看不懂日期「${esc(o.date)}」`:'JSON 沒有檢查日期'}，目前是今天，請手動改成檢查日期</span>`;
   if(o.hospital)$('#l-hosp').value=o.hospital;
   if(!n&&!lExtra.length)throw new Error('JSON 裡沒有任何檢驗項目');
-  return `✅ 已填入 ${n} 項${lExtra.length?`＋其他 ${lExtra.length} 項`:''}`+(unk.length?`<br>📋 <b>App 還沒有專屬欄位</b>：${esc(unk.slice(0,10).join('、'))}${unk.length>10?` 等 ${unk.length} 項`:''}，已放進「其他項目」（仍會看報告的異常標記）；想正式判讀，把這段訊息給 Claude 更新 App。`:'')+
+  const fv={};for(const k of['tc','ldl','hdl','sbp','dbp','cr','egfr','hb','hct']){const el=$('#l-'+k);if(el&&el.value!=='')fv[k]=el.value}
+  const dupDay=day&&labsOf(m).some(r=>r.t===day&&r.id!==lEditId)?`<br><span style="color:var(--amber)">⚠️ ${day} 已經有一份報告：如果是同一份報告的其他頁，請回到那份按「編輯」再匯入，才不會變成兩份</span>`:'';
+  return chkNote(labCheck(fv,m,day)).replace(/^<br>/,'')+(labCheck(fv,m,day).length?'<br>':'')+`✅ 已填入 ${n} 項${lExtra.length?`＋其他 ${lExtra.length} 項`:''}`+(unk.length?`<br>📋 <b>App 還沒有專屬欄位</b>：${esc(unk.slice(0,10).join('、'))}${unk.length>10?` 等 ${unk.length} 項`:''}，已放進「其他項目」（仍會看報告的異常標記）；想正式判讀，把這段訊息給 Claude 更新 App。`:'')+
     (conv.length?`<br>🔁 已自動換算單位：${esc(conv.join('、'))}`:'')+
     (warn.length?`<br><span style="color:var(--red)">⚠️ ${esc(warn.join('、'))} 數值離譜，請核對是否讀錯小數點</span>`:'')+
-    (skip.length?`<br>略過（與性別不符）：${esc(skip.join('、'))}`:'')+dateNote+'<br>請往下核對後按「儲存並分析」。';
+    (skip.length?`<br>略過（與性別不符）：${esc(skip.join('、'))}`:'')+dateNote+dupDay+'<br>請往下核對後按「儲存並分析」。';
 }
 const cleanMeta=mt=>{const o={};if(!mt)return o;for(const k of['lo','hi','ref','flag','conv'])if(mt[k]!=null&&mt[k]!=='')o[k]=mt[k];return o};
 function saveLab(){
@@ -3448,7 +3491,7 @@ function saveLab(){
       if(PERUL[x.k]&&v>=PERUL[x.k]){v=Math.round(v/10)/100;conv.push(`${x.n} ${raw} → ${v}`)}items[x.k]={v,...cleanMeta(lMeta[x.k])}}}
   if(bad.length)return toast('數值格式錯誤：'+bad.join('、'));
   if(!Object.keys(items).length&&!lExtra.length)return toast('請至少輸入一個檢驗項目');
-  const rec={id:lEditId||uid(),t:$('#l-date').value||ymd(new Date()),hospital:$('#l-hosp').value.trim(),items,extra:lExtra};promoteExtras(rec);
+  const rec={id:lEditId||uid(),t:$('#l-date').value||ymd(new Date()),hospital:$('#l-hosp').value.trim(),items,extra:lExtra};promoteExtras(rec);{const W=labCheck(rec.items,m,rec.t);if(W.length)rec.chk=W}
   const arr=LABS[m.id]||(LABS[m.id]=[]),i=arr.findIndex(x=>x.id===rec.id);if(i>=0)arr[i]=rec;else arr.push(rec);
   if(!S.set('labs',LABS))return;
   recTab='lab';renderAll();go('body','now');openLabDetail(rec.id);if(conv.length)toast('已換算為 10³/µL：'+conv.join('、'));
@@ -3459,7 +3502,7 @@ function openLabDetail(id){
   const iss=annotPrev(m,labEval(rec,m).sort((a,b)=>(b.crit?1:0)-(a.crit?1:0)||b.lv-a.lv),rec),sc=scoreOf(iss),[gt,gc]=grade(sc),dp=deptPlan(iss);
   const orgs=[...new Set(iss.map(i=>i.organ).filter(o=>o&&ORG[o].tip))];
   const normal=Object.entries(rec.items||{}).filter(([k])=>!iss.some(i=>i.k===k));
-  openSheet(sheetHead('體檢分析',`${esc(m.name)}・${esc(rec.t)}${rec.hospital?'・'+esc(rec.hospital):''}`)+`
+  openSheet(sheetHead('體檢分析',`${esc(m.name)}・${esc(rec.t)}${rec.hospital?'・'+esc(rec.hospital):''}`)+chkHTML(rec.chk)+`
     <div style="display:flex;gap:14px;align-items:center;margin:14px 0 4px">${scoreRing(sc,gc)}<div><div style="font-size:calc(22px*var(--fz));font-weight:800;color:${gc}">${gt}</div><div class="sub" style="margin-top:4px">異常 ${iss.length} 項・正常 ${normal.length} 項</div><div class="sub">扣分：每個器官最嚴重一項全扣（注意 −3／異常 −8／嚴重 −15），同器官其他項扣 40%；有「注意」最高 89、「異常」最高 74、「嚴重」最高 59 分</div></div></div>
     ${Object.entries(rec.items||{}).some(([k,it])=>LABK[k]?.t==='opt'&&/^原文：/.test(it?.ref||'')&&[60,63].includes(it.ref.length))?'<div class="hl" style="margin:10px 0;border-color:rgba(255,181,71,.5)">⚠️ 這份報告是舊版匯入，影像報告的原文可能被截斷，附帶發現（例如冠狀動脈鈣化）可能沒判讀到：按下方「編輯數值」，在那一項的「報告原文」貼上完整的醫師總評，或用 AI 只匯入那一頁（不會清掉其他數值）。</div>':''}
     ${iss.some(i=>i.crit)?critHTML(iss,rec.t):iss.some(i=>i.lv===3)?'<div class="banner">⚠️ 有「嚴重」等級的項目，建議 1–2 週內就醫。若有胸痛、呼吸困難、單側無力、意識改變等症狀，請立即掛急診。</div>':''}
@@ -3662,7 +3705,7 @@ async function saveImage(id,src){
 
 // ---- AI Horde（免金鑰）----
 const HORDE='https://aihorde.net/api/v2';
-const HORDE_H={'Content-Type':'application/json',apikey:'0000000000','Client-Agent':'NutriCore:3:github.com/xin7355-collab/NC'};
+const HORDE_H={'Content-Type':'application/json',apikey:'0000000000','Client-Agent':'JiaAnKang:4:github.com/xin7355-collab/NC'};
 const HORDE_MODELS=['AlbedoBase XL (SDXL)','Juggernaut XL','ICBINP - I Can\'t Believe It\'s Not Photography','Deliberate','Realistic Vision','stable_diffusion'];
 // 限流時伺服器指定等多久（秒數或日期），限 1–120 秒；讀不到回傳 0
 const retryAfter=r=>{const v=r.headers.get('Retry-After');if(!v)return 0;const ms=/^\d+$/.test(v)?v*1000:Date.parse(v)-Date.now();return ms>0?Math.min(Math.max(ms,1000),120e3):0};
@@ -3770,22 +3813,23 @@ function openSettings(){const m=me(),c=calc(m),row=(attr,ic,t,sub)=>`<button cla
     <div class="sgrp"><div class="sgh">顯示</div><div class="sub" style="margin-bottom:8px">字體大小（長輩用建議「大」或「特大」）</div>
       <div class="seg" id="set-fz">${FZ.map(([v,t])=>`<button type="button" data-fz="${v}" class="${FZV===v?'on':''}">${t}</button>`).join('')}</div>
       ${row('data-tour','🧭','重看功能導覽','30 秒認識每一頁')}</div>
-    <div class="sgrp"><div class="sgh">資料備份</div><p class="note" style="margin-top:0">所有健康資料只存在這支手機的瀏覽器裡，不會上傳。iPhone 的 Safari 若 7 天沒開這個網站，可能自動清除資料：請<b>加入主畫面</b>（分享 → 加入主畫面），並定期匯出備份。</p>
-      <div class="row2"><button class="btn" data-export>匯出備份</button><button class="btn ghost" data-import>匯入備份</button></div></div>
+    <div class="sgrp"><div class="sgh">資料匯出匯入</div><p class="note" style="margin-top:0">所有健康與保險資料只存在這支手機的瀏覽器裡，不會上傳。iPhone 的 Safari 若 7 天沒開這個網站，可能自動清除資料：請<b>加入主畫面</b>（分享 → 加入主畫面），並定期匯出。</p>
+      <div class="row2"><button class="btn" data-export>⬆️ 匯出</button><button class="btn ghost" data-import>⬇️ 匯入</button></div>
+      <p class="note">可以匯出全部家人或單一成員，也可以加密；匯入時可以合併、取代或另存成新成員。</p></div>
     <div class="sgrp"><div class="sgh">菜色圖片</div><button class="btn ghost" data-autoimg>${AUTO?'⏸ 停止自動補圖':'🖼 自動補齊全部菜色圖片'}</button>
       <div class="sub" style="margin:12px 0 6px">圖片後端（選用）：GAS Web App 網址</div><input id="s-gas" value="${esc(GAS)}" placeholder="https://script.google.com/macros/s/.../exec" inputmode="url">
       <p class="note">留空＝AI Horde 免費社群算力（免金鑰但要排隊）。想 10 秒出圖：用 repo 裡的 gas/Code.gs 架 GAS；金鑰只放在 GAS 的指令碼屬性，絕不放這裡，健康資料也不會傳到這個後端。</p></div>
-    <div class="sgrp"><div class="sgh">關於</div><div class="sub" style="line-height:1.7">NutriCore 版本 ${esc(APP_VER)}<br>健康資料只存在這支手機；判讀依公開指引整理，僅供參考，不能取代醫師診斷。</div></div>`);
+    <div class="sgrp"><div class="sgh">關於</div><div class="sub" style="line-height:1.7">家安康（原 NutriCore）版本 ${esc(APP_VER)}<br>健康資料只存在這支手機；判讀依公開指引整理，僅供參考，不能取代醫師診斷。</div></div>`);
   $('#s-gas').onchange=e=>setGas(e.target.value.trim(),e.target)}
 
 /* ================= 功能導覽：聚光遮罩（box-shadow 挖洞）。捲動、轉向、iOS 鍵盤彈出會重新定位；Esc 或「略過」關閉；看完記住，不再自動出現 ================= */
-const TOUR=[['#nav button[data-v="dash"]','總覽','健康總覽、健康評語、今天要做什麼；有危急值會在最上面用紅色提醒'],
-  ['#nav button[data-v="body"]','身體','四個分頁：狀況（哪裡要注意、掛哪一科、看診摘要）、紀錄（體檢、體脂、手錶、歷年比較）、健檢規劃、病史'],
+const TOUR_V=2,TOUR=[['#nav button[data-v="dash"]','總覽','健康總覽、待辦（回診、保單）、健康評語、今天要做什麼；有危急值會在最上面用紅色提醒'],
+  ['#nav button[data-v="body"]','健康','五個分頁：狀況（哪裡要注意、掛哪一科、看診摘要）、紀錄（體檢、體脂、手錶）、追蹤（回診時醫師怎麼說、今年健檢）、病史、自測（中風、心臟等在家自我檢測）'],
   ['#nav button[data-v="menu"]','飲食','今日菜單、營養建議（依報告調整）、熱量計算（BMI、每天該吃多少）'],
   ['#nav button[data-v="fit"]','運動','今天要練什麼、本週課表、注意事項；依身體限制與病史自動避開不適合的運動'],
-  ['#nav button[data-v="self"]','自我檢測','中風、心臟、頭暈、記憶力、睡眠、情緒、肌力：在家就能測，告訴你掛哪科、做哪些檢查，也能整理給 AI'],
+  ['#nav button[data-v="ins"]','保險','保單拍照給 AI 讀、貼回來 App 自動核對有沒有讀錯；保障總覽、全家保障地圖、續保倒數、理賠追蹤'],
   ['#memChip','切換家人','一支手機可以管全家人的資料'],
-  ['#gearBtn','設定','原本的「我的」搬到這裡：個人資料、家庭成員、字體大小、資料備份']];
+  ['#gearBtn','設定','個人資料、家庭成員、字體大小、資料匯出匯入（全部或單一成員，可加密）']];
 let tourI=-1;
 function startTour(){closeSheet();tourI=0;let el=$('#tour');
   if(!el){el=document.createElement('div');el.id='tour';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','tour-t');
@@ -3799,17 +3843,19 @@ function tourPaint(){const el=$('#tour');if(!el||el.hidden||tourI<0)return;const
   if(r&&r.width){const p=6;Object.assign(h.style,{display:'block',left:r.left-p+'px',top:r.top-p+'px',width:r.width+p*2+'px',height:r.height+p*2+'px'});el.style.background='transparent';
     const low=r.top+r.height/2>vh/2;card.style.top=low?'calc(env(safe-area-inset-top) + 70px)':'auto';card.style.bottom=low?'auto':'calc(env(safe-area-inset-bottom) + 100px)'}
   else{h.style.display='none';el.style.background='rgba(0,0,0,.72)';card.style.top='auto';card.style.bottom='calc(env(safe-area-inset-bottom) + 100px)'}}
-function endTour(){const el=$('#tour');if(el)el.hidden=true;tourI=-1;S.set('tour',1)}
+function endTour(){const el=$('#tour');if(el)el.hidden=true;tourI=-1;S.set('tour',TOUR_V)}
 ['resize','orientationchange'].forEach(ev=>addEventListener(ev,tourPaint));window.visualViewport?.addEventListener('resize',tourPaint);window.visualViewport?.addEventListener('scroll',tourPaint);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&tourI>=0)endTour()});
 
 /* ================= 看診摘要圖：一張 PNG 給醫師看或傳給家人；用 navigator.share 分享（只帶 files，不帶 title：iOS 帶 title 會丟掉檔案） ================= */
 function summaryBlocks(m){const c=calc(m),L=labsOf(m),l=L[0],B=[],a=Math.floor(ageOf(m)),H=(s)=>B.push({t:'h',s}),P=(s,c)=>B.push({t:'p',s,c}),I=(s,c)=>B.push({t:'li',s,c});
-  B.push({t:'h1',s:'看診摘要'});P(`${m.name}・${sexT(m.sex)}性・${a} 歲・身高 ${c.h} cm・體重 ${fmt(c.w)} kg（BMI ${r1(c.bmi)}）`);P(`整理日期 ${ymd(new Date())}・NutriCore`,'#64748b');
+  B.push({t:'h1',s:'看診摘要'});P(`${m.name}・${sexT(m.sex)}性・${a} 歲・身高 ${c.h} cm・體重 ${fmt(c.w)} kg（BMI ${r1(c.bmi)}）`);P(`整理日期 ${ymd(new Date())}・家安康`,'#64748b');
   const lab=l?annotPrev(m,labEval(l,m).sort((x,y)=>(y.crit?1:0)-(x.crit?1:0)||y.lv-x.lv)):[],w=watchOf(m)[0],wi=w?watchEval(w,m).filter(i=>i.lv>=1):[];
   const crit=lab.filter(i=>i.crit);if(crit.length){H('🚨 危急值（今天就要處理）');crit.forEach(i=>I(`${i.name} ${tv(i.val)} ${i.unit}（報告 ${l.t}）`,'#b91c1c'))}
   {const cd=condOf(m);if(cd.items.length||cd.meds||cd.allergy||cd.surg){H('病史 Medical history');if(cd.items.length)cd.items.forEach(x=>I(condLine(x),x.st==='done'?'#64748b':undefined));else P('未填寫');
     H('藥物過敏 Allergies');P(cd.allergy||'未填寫',cd.allergy&&!/^(無|沒有|none|nkda)$/i.test(cd.allergy)?'#b91c1c':undefined);H('目前用藥 Medications');P(cd.meds||'未填寫');if(cd.surg){H('手術／住院 Surgery');P(cd.surg)}}}
+  {const F=fuOf(m).filter(x=>!FU_DONE.includes(x.st)||x.log.some(l=>l.d>=addDays(todayS(),-365)));if(F.length){H('回診追蹤 Follow-up（醫師的判斷）');
+    F.forEach(x=>{const lg=x.log[x.log.length-1];I(`${x.name}${x.src==='doc'?'（醫師發現）':''}：${FU_STT(x.st)}${lg?`；${lg.d}${lg.hosp?' '+lg.hosp:''}${lg.dept?' '+lg.dept:''}：${lg.dx||lg.plan||'已回診'}${lg.plan&&lg.dx?'；'+lg.plan:''}`:'；尚未回診'}${x.next?`；下次 ${x.next}`:''}`)})}}
   if(l){const cd=cmpData(m),tr=k=>{const r=cd?.rows.find(x=>x.k===k);return r&&r.vals.filter(v=>v!=null).length>1?`；歷年 ${r.vals.map(v=>v==null?'—':String(v).split(/[（(]/)[0]).join(' → ')}`:''};
     H(`體檢異常（${l.t}${l.hospital?'・'+l.hospital:''}，共 ${lab.length} 項）`);
     if(!lab.length)P('全部在參考範圍內');
@@ -3846,19 +3892,487 @@ async function openSummary(){const m=me(),cv=drawSummary(m);if(!cv)return toast(
   $('#sum-share').onclick=async()=>{try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return}}catch(e){if(e.name==='AbortError')return}
     const a=document.createElement('a');a.href=sumURL;a.download=name;document.body.appendChild(a);a.click();a.remove();toast('已下載看診摘要圖')}}
 
+/* ================= 回診追蹤：異常 → 看醫師 → 醫師怎麼說 → 追蹤 → 結案（App 判斷和醫師判斷並列、以醫師為準；App 不評斷醫師對錯） ================= */
+let FU=obj(S.get('fu',{}));   // {成員 id: [{id,k,name,src:'lab'|'cond'|'doc',app:{lv,msg,val,unit,t,dept,ver,crit}|null,st,appt,next,log:[{id,d,hosp,dept,dx,plan,dr,rel,st,next}],t0}]}
+const FU_ST=[['todo','待回診'],['booked','已預約'],['tests','要再檢查'],['watch','觀察中'],['treat','治療中'],['stable','控制穩定'],['better','改善'],['worse','惡化'],['ruled','醫師排除'],['closed','已結案']];
+const FU_DONE=['ruled','closed'],FU_STT=k=>(FU_ST.find(x=>x[0]===k)||FU_ST[0])[1];
+const FU_REL=[['','（請選擇）'],['match','相符：醫師也認為有這個問題'],['partial','部分相符'],['differ','不相符：醫師的判斷不同'],['over','App 提醒過度：醫師說沒問題'],['unable','資料不足：醫師也還不能判斷'],['na','這次醫師沒評估這項']];
+const FU_RELT={match:'相符',partial:'部分相符',differ:'不相符',over:'App 提醒過度',unable:'資料不足',na:'未評估',missed:'App 漏判（醫師發現）'};
+const todayS=()=>ymd(new Date()),dSign=(a,b)=>Math.round((new Date(a+'T00:00')-new Date(b+'T00:00'))/864e5);   // a−b 天數（有正負）
+const fuOf=m=>Array.isArray(FU[m.id])?FU[m.id]:[];
+const fuOpen=m=>fuOf(m).filter(x=>!FU_DONE.includes(x.st));
+const fuDue=x=>x.st==='booked'?x.appt||x.next||'':x.next||x.appt||'';
+function fuState(x){if(FU_DONE.includes(x.st))return{c:'',txt:''};const d=fuDue(x);if(!d)return x.st==='todo'?{c:'warn',txt:'還沒看醫師'}:{c:'',txt:''};
+  const n=dSign(d,todayS());return n<0?{c:'bad',txt:`逾期 ${-n} 天（${d}）`}:n===0?{c:'warn',txt:`今天（${d}）`}:{c:n<=14?'warn':'',txt:`${n} 天後（${d}）`}}
+const fuNeed=m=>fuOpen(m).filter(x=>x.st==='todo'||fuState(x).c==='bad').length+fuSuggest(m).filter(s=>s.src==='lab').length;
+// App 建議追蹤：最新報告「異常」以上、危急值、影像發現；病史另外列（多數人病史多，預設收起來）
+function fuSuggest(m){const have=new Set(fuOpen(m).map(x=>x.k)),out=[],l=labsOf(m)[0];
+  if(l)for(const i of labEval(l,m))if((i.lv>=2||i.crit||(/^img_/.test(i.k)&&i.lv>=1))&&!have.has(i.k)&&!out.some(o=>o.k===i.k))
+    out.push({k:i.k,name:i.name,src:'lab',app:{lv:i.crit?3:i.lv,crit:!!i.crit,msg:String(i.msg||'').slice(0,300),val:i.val,unit:i.unit||'',t:l.t,dept:i.dept||'',ver:APP_VER}});
+  for(const c of condActive(m))if(!have.has('cond:'+c.id))out.push({k:'cond:'+c.id,name:c.name,src:'cond',app:{lv:null,msg:String(c.dr?'醫師交代：'+c.dr:c.T?.tip||'').slice(0,300),val:null,unit:'',t:todayS(),dept:c.T?.dept||'',ver:APP_VER}});
+  return out}
+function fuAdd(m,s){const it={id:uid(),k:s.k,name:String(s.name).slice(0,40),src:s.src,app:s.app||null,st:'todo',appt:'',next:'',log:[],t0:todayS()};(FU[m.id]||(FU[m.id]=[])).push(it);S.set('fu',FU);return it}
+const fuSave=()=>{S.set('fu',FU);renderFU();renderTodo();renderBody()};
+// App 判斷 vs 醫師評估：每個項目取最近一次有填的比對結果；醫師發現的新問題算「App 漏判」
+function fuStats(m){const o={match:0,partial:0,differ:0,over:0,unable:0,na:0,missed:0,total:0};
+  for(const x of fuOf(m)){if(x.src==='doc'){o.missed++;o.total++;continue}const lg=[...x.log].reverse().find(l=>l.rel);if(lg&&o[lg.rel]!=null){o[lg.rel]++;o.total++}}return o}
+function fuText(m){const L=fuOf(m).filter(x=>x.log.length||!FU_DONE.includes(x.st));if(!L.length)return[];
+  return['【回診追蹤（醫師的判斷，以醫師為準）】',...L.map(x=>{const lg=x.log[x.log.length-1];return`- ${x.name}${x.src==='doc'?'（醫師發現，App 原本沒提醒）':''}：${FU_STT(x.st)}${lg?`；${lg.d}${lg.dept?' '+lg.dept:''} 醫師：${lg.dx||'—'}${lg.plan?'；處置：'+lg.plan:''}${lg.dr?'；交代：'+lg.dr:''}`:'；還沒看醫師'}${x.next?`；下次 ${x.next}`:''}`})]}
+function renderFU(){const m=me(),el=$('#fuBody');if(!el)return;const L=fuOf(m),open=L.filter(x=>!FU_DONE.includes(x.st)),done=L.filter(x=>FU_DONE.includes(x.st)),sg=fuSuggest(m),sl=sg.filter(s=>s.src==='lab'),sc=sg.filter(s=>s.src==='cond'),st=fuStats(m);
+  const ord=x=>{const s=fuState(x);return s.c==='bad'?0:x.st==='todo'?1:s.c==='warn'?2:3};open.sort((a,b)=>ord(a)-ord(b)||String(fuDue(a)||'9').localeCompare(String(fuDue(b)||'9')));
+  const row=x=>{const s=fuState(x),lg=x.log[x.log.length-1];return `<button class="rec" data-fu="${esc(x.id)}"><div class="m"><b>${esc(x.name)}${x.src==='doc'?' <em class="dev">醫師發現</em>':''}</b><small>${esc([lg?`${lg.d}${lg.dept?' '+lg.dept:''}：${(lg.dx||lg.plan||'已回診').slice(0,36)}`:x.app?.dept?'建議看 '+x.app.dept:'',s.txt].filter(Boolean).join('・'))}</small></div><span class="tg ${s.c}">${FU_STT(x.st)}</span><span class="chev">›</span></button>`};
+  const sgRow=s=>`<div class="row" style="padding:9px 0;border-top:1px solid var(--line);gap:10px"><div style="min-width:0"><b>${esc(s.name)}</b><div class="sub">${esc([s.app.lv!=null?(s.app.crit?'危急值':LVT[s.app.lv]):'病史',s.app.dept,s.src==='lab'?s.app.t+' 報告':''].filter(Boolean).join('・'))}</div></div><button class="btn sm" data-fuadd="${esc(s.k)}" style="flex:0 0 auto">＋ 追蹤</button></div>`;
+  el.innerHTML=`<p class="note" style="margin-top:0">看完醫師就記下<b>醫師怎麼說</b>：App 的判斷和醫師的判斷並列，以醫師為準；下次回診日到了，總覽會提醒。</p>`+
+    (open.length?open.map(row).join(''):'<div class="empty" style="padding:6px 0">目前沒有追蹤中的項目</div>')+
+    (sl.length?`<div class="h4">App 建議追蹤（${sl.length}）</div>${sl.slice(0,10).map(sgRow).join('')}${sl.length>10?`<div class="note">另有 ${sl.length-10} 項</div>`:''}`:'')+
+    (sc.length?`<details class="box"><summary>病史也可以加入追蹤（${sc.length}）</summary>${sc.map(sgRow).join('')}</details>`:'')+
+    `<button class="btn ghost" data-fudoc style="margin-top:12px">＋ 醫師發現的新問題（App 沒提醒）</button>`+
+    (st.total?`<div class="h4">App 判斷 vs 醫師評估（${st.total} 項）</div><div class="tags">${['match','partial','differ','over','unable','missed'].filter(k=>st[k]).map(k=>`<span class="tg${k==='over'||k==='missed'||k==='differ'?' warn':''}">${FU_RELT[k]} ${st[k]}</span>`).join('')}</div>
+      <p class="note">「App 提醒過度」和「App 漏判」是用來改進 App 的規則：差很多時，把這張表給 Claude 檢查判讀規則。醫師和 App 不同時以醫師為準，App 不評斷誰對。</p>`:'')+
+    (done.length?`<details class="box"><summary>已結案（${done.length}）</summary>${done.map(row).join('')}</details>`:'')}
+function openFU(id,addOpen){const m=me(),x=fuOf(m).find(z=>z.id===id);if(!x)return;const A=x.app,lk=x.src==='lab'&&LABK[x.k]?x.k:null,last=x.log[x.log.length-1];
+  const hist=lk?labsOf(m).slice().reverse().map(r=>{const it=r.items?.[lk];if(!it||it.v==null||it.v==='')return null;return{t:r.t,v:it.v,lv:labEval({items:{[lk]:it}},m).reduce((a,i)=>Math.max(a,i.lv),0)}}).filter(Boolean):[];
+  const hosps=[...new Set([...labsOf(m).map(r=>r.hospital),...fuOf(m).flatMap(z=>z.log.map(l=>l.hosp))].filter(Boolean))].slice(0,10);
+  const cd=x.src==='cond'?condOf(m).items.find(c=>'cond:'+c.id===x.k):null,stSel=(id,v)=>`<select id="${id}">${FU_ST.map(([k,t])=>`<option value="${k}"${k===v?' selected':''}>${t}</option>`).join('')}</select>`;
+  openSheet(sheetHead(`🩺 ${esc(x.name)}`,esc([x.src==='lab'?'體檢報告':x.src==='cond'?'病史':'醫師發現（App 沒提醒）',`建立 ${x.t0}`].join('・')))+`
+    <div class="hl" style="margin:10px 0">${A?`<b>App 當時的判斷</b>（保留原樣，之後規則更新也不會改）<br>${esc([A.crit?'危急值':A.lv!=null?LVT[A.lv]:'',A.val!=null&&A.val!==''?`${typeof A.val==='number'?fmt(A.val):A.val}${A.unit?' '+A.unit:''}`:'',A.t&&x.src==='lab'?A.t+' 報告':''].filter(Boolean).join('・'))}${A.msg?`<div class="sub" style="margin-top:4px">${esc(A.msg)}</div>`:''}<div class="sub" style="margin-top:4px">${A.dept?'建議科別：'+esc(A.dept)+'・':''}判讀版本 ${esc(A.ver||'—')}</div>`
+      :'<b>App 當時沒有提醒這項</b>：醫師看診時發現。會算進「App 漏判」，用來改進規則。'}</div>
+    ${cd?.dr?`<div class="sub" style="margin:0 0 10px">病史的醫師交代：${esc(cd.dr)}</div>`:''}
+    ${hist.length?`<div class="h4">數值變化（看醫師處置後有沒有改善）</div><div class="kv" style="margin:6px 0 12px">${hist.map(h=>`<span>${esc(h.t)}${last&&h.t>last.d?' <em class="dev">回診後</em>':''}</span><span><b>${fmt(h.v)}</b> <span class="lv lv${h.lv}">${LVT[h.lv]}</span></span>`).join('')}</div>`:''}
+    <div class="grid2"><div><label>狀況</label>${stSel('fu-st',x.st)}</div><div><label>預約日期</label><input type="date" id="fu-appt" value="${esc(x.appt||'')}"></div></div>
+    <label>下次追蹤／回診</label><input type="date" id="fu-next" value="${esc(x.next||'')}">
+    <div class="h4">回診紀錄（醫師怎麼說）</div>
+    ${x.log.length?[...x.log].reverse().map(l=>`<div class="cdet"><div class="row" style="margin:0"><b>${esc(l.d)}${l.hosp?'・'+esc(l.hosp):''}${l.dept?'・'+esc(l.dept):''}</b><button type="button" class="x" data-fulogrm="${esc(l.id)}" aria-label="刪除這筆">✕</button></div>
+      ${l.dx?`<div style="margin-top:4px">醫師：${esc(l.dx)}</div>`:''}${l.plan?`<div class="sub">處置／檢查：${esc(l.plan)}</div>`:''}${l.dr?`<div class="sub">醫師交代：${esc(l.dr)}</div>`:''}
+      <div class="tags" style="margin-top:6px">${l.rel?`<span class="tg${l.rel==='over'||l.rel==='differ'?' warn':''}">和 App：${FU_RELT[l.rel]}</span>`:''}${l.st?`<span class="tg">${FU_STT(l.st)}</span>`:''}${l.next?`<span class="tg">下次 ${esc(l.next)}</span>`:''}</div></div>`).join(''):'<div class="sub">還沒有回診紀錄</div>'}
+    <details class="box ai" ${addOpen||!x.log.length?'open':''}><summary>＋ 新增回診紀錄</summary>
+      <div class="grid2"><div><label>看診日期</label><input type="date" id="fv-d" value="${todayS()}" max="${todayS()}"></div><div><label>科別</label><input id="fv-dept" value="${esc(last?.dept||A?.dept||'')}" maxlength="20"></div></div>
+      <label>醫院</label><input id="fv-hosp" list="dl-fuh" value="${esc(last?.hosp||'')}" maxlength="30"><datalist id="dl-fuh">${hosps.map(h=>`<option value="${esc(h)}">`).join('')}</datalist>
+      <label>醫師的診斷／說明</label><textarea class="ta" id="fv-dx" maxlength="300" placeholder="例如：冠狀動脈鈣化分數 45，LDL 目標 <70，開始用藥"></textarea>
+      <label>安排的檢查或處置（選填）</label><textarea class="ta" id="fv-plan" maxlength="300" placeholder="例如：Rosuvastatin 10 mg；3 個月後抽血"></textarea>
+      <label>醫師交代（選填）</label><textarea class="ta" id="fv-dr" maxlength="200" placeholder="例如：少油炸、每週有氧 150 分鐘"></textarea>
+      ${x.src==='doc'?'':`<label>醫師的判斷和 App 的判斷</label><select id="fv-rel">${FU_REL.map(([k,t])=>`<option value="${k}">${t}</option>`).join('')}</select>`}
+      <div class="grid2"><div><label>看完後的狀況</label>${stSel('fv-st',x.st==='todo'||x.st==='booked'?'watch':x.st)}</div><div><label>下次回診</label><input type="date" id="fv-next" min="${todayS()}"></div></div>
+      <button class="btn" id="fv-save" style="margin-top:12px">儲存回診紀錄</button></details>
+    <div class="row2" style="margin-top:12px"><button class="btn danger" id="fu-del" style="flex:0 0 30%">刪除</button><button class="btn ai" id="fu-ai">🩺 問 AI：準備這次回診</button></div>
+    <p class="note">App 是依數值規則判斷；醫師看過完整病史與檢查，<b>以醫師判斷為準</b>。這裡只記錄兩者是否一致，用來改進 App，不評斷醫師對錯。</p>`);
+  const up=()=>{x.st=$('#fu-st').value;x.appt=$('#fu-appt').value;x.next=$('#fu-next').value;if(x.appt&&x.st==='todo'){x.st='booked';$('#fu-st').value='booked'}fuSave()};
+  ['#fu-st','#fu-appt','#fu-next'].forEach(s=>$(s).onchange=up);
+  $('#fv-save').onclick=()=>{const d=$('#fv-d').value,dx=$('#fv-dx').value.trim(),plan=$('#fv-plan').value.trim(),dr=$('#fv-dr').value.trim();
+    if(!d||d>todayS())return toast('請選看診日期（不能是未來）');if(!dx&&!plan&&!dr)return toast('至少寫一句醫師怎麼說');
+    const lg={id:uid(),d,hosp:$('#fv-hosp').value.trim().slice(0,30),dept:$('#fv-dept').value.trim().slice(0,20),dx:dx.slice(0,300),plan:plan.slice(0,300),dr:dr.slice(0,200),rel:x.src==='doc'?'missed':$('#fv-rel').value,st:$('#fv-st').value,next:$('#fv-next').value};
+    x.log.push(lg);x.st=lg.st;x.next=lg.next;if(x.appt&&x.appt<=d)x.appt='';
+    if(cd&&lg.dr){const mi=(m.cond?.items||[]).find(c=>(c.k||'u:'+c.n)===cd.id);if(mi){mi.dr=lg.dr;S.set('members',MEM);toast('已存，醫師交代也同步到病史')}}else toast('已存回診紀錄');
+    fuSave();openFU(x.id)};
+  $$('#sheetBody [data-fulogrm]').forEach(b=>b.onclick=()=>{if(!confirm('刪除這筆回診紀錄？'))return;x.log=x.log.filter(l=>l.id!==b.dataset.fulogrm);fuSave();openFU(x.id)});
+  $('#fu-del').onclick=()=>{if(!confirm(`刪除「${x.name}」的追蹤和所有回診紀錄？`))return;FU[m.id]=fuOf(m).filter(z=>z.id!==x.id);fuSave();closeSheet();toast('已刪除')};
+  $('#fu-ai').onclick=()=>{aiO.topic='visit';openAI(null,`我要回診「${x.name}」${A?.dept?'（'+A.dept+'）':''}。請依我的資料和之前的回診紀錄，幫我整理：這次要帶什麼、要問醫師哪些問題、上次醫師交代的事有沒有做到可以怎麼說。`)}}
+function openFUDoc(){openSheet(sheetHead('＋ 醫師發現的新問題','App 沒提醒、醫師看診時發現的')+`
+  <label>疾病或問題名稱</label><input id="fd-n" maxlength="40" placeholder="例如：牙周病、睡眠呼吸中止、頸動脈斑塊">
+  <label>科別（選填）</label><input id="fd-dept" maxlength="20">
+  <button class="btn" id="fd-go" style="margin-top:14px">建立並填回診紀錄</button>
+  <p class="note">會算進「App 漏判」：用來知道 App 的規則還缺什麼。是確診的疾病也可以同時加到「病史」。</p>`);
+  $('#fd-go').onclick=()=>{const n=$('#fd-n').value.trim();if(!n)return toast('請輸入名稱');const it=fuAdd(me(),{k:'doc:'+uid(),name:n,src:'doc',app:null});if($('#fd-dept').value.trim())it.dept0=$('#fd-dept').value.trim().slice(0,20);fuSave();openFU(it.id,true);if(it.dept0)$('#fv-dept').value=it.dept0}}
+
+/* ================= 總覽「待辦」：回診逾期／快到了、還沒看醫師的異常、保單待核對與到期、理賠補件；永遠有急症入口 ================= */
+function renderTodo(){const m=me(),el=$('#todoCard');if(!el)return;const out=[];
+  for(const x of fuOpen(m)){const s=fuState(x);if(s.c==='bad')out.push([0,`⏰ 回診逾期：${x.name}`,s.txt,`data-fu="${esc(x.id)}"`]);else if(s.c==='warn'&&fuDue(x))out.push([1,`📅 ${x.st==='booked'?'回診':'追蹤'}：${x.name}`,s.txt,`data-fu="${esc(x.id)}"`])}
+  const td=fuOpen(m).filter(x=>x.st==='todo').length+fuSuggest(m).filter(s=>s.src==='lab').length;
+  if(td)out.push([2,`🩺 ${td} 項異常還沒記下醫師怎麼說`,'看完醫師在「健康 → 追蹤」記一下，App 會提醒下次回診','data-go="body" data-gosub="plan"']);
+  const un=insOf(m).filter(p=>!p.chk).length;if(un)out.push([2,`📑 ${un} 張保單待核對`,'AI 讀的保單要對照原本的保單確認','data-go="ins" data-gosub="pol"']);
+  for(const r of insEnding(m,1))out.push([1,`⚠️ ${r.t}`,r.when,'data-go="ins" data-gosub="cov"']);
+  for(const e of clmOf(m))for(const c of e.claims||[])if(c.st==='docs'||c.st==='denied')out.push([1,`${c.st==='docs'?'📎 理賠補件':'❗ 理賠被拒'}：${e.dx||EVTT(e.type)}`,`${e.d}・${(insFind(m,c.pid)||{}).insurer||'保單'}`,`data-evt="${esc(e.id)}"`]);
+  out.sort((a,b)=>a[0]-b[0]);
+  el.hidden=false;el.innerHTML=`<h2>待辦</h2>${out.length?out.slice(0,6).map(([,a,b,attr])=>`<button class="rec" ${attr}><div class="m"><b>${esc(a)}</b><small>${esc(b)}</small></div><span class="chev">›</span></button>`).join('')+(out.length>6?`<div class="note">另有 ${out.length-6} 項</div>`:''):'<div class="empty" style="padding:6px 0">目前沒有待辦 👍</div>'}
+    <div class="row2" style="margin-top:10px"><button class="btn ghost" data-go="body" data-gosub="self">🚨 急症自我檢測</button><button class="btn ghost" data-sym>🤒 我有症狀</button></div>`}
+/* ================= 保險：保單（AI 半手動匯入＋防錯核對）、保障總覽、全家保障地圖、續保倒數、理賠、AI 工具 =================
+   不連保險公司、不呼叫任何 AI API：使用者把保單照片和提示詞交給自己的 AI，貼回 JSON；App 逐項核對（金額要在原文裡、身分證遮蔽、日期與年期合理、重複），
+   使用者對照保單按「我已核對」後才算正式資料。保單依「被保險人」放在各成員底下。 */
+let INS=obj(S.get('ins',{})),CLM=obj(S.get('clm',{}));   // {成員 id: [保單]}、{成員 id: [醫療事件]}
+const INSCAT=[['life','壽險（身故）'],['accident','意外身故／失能'],['acc_med','意外醫療'],['hosp_day','住院日額'],['hosp_real','住院醫療費用（實支實付）'],['surgery','手術'],['cancer','癌症'],['critical','重大疾病／重大傷病'],['disability','失能扶助'],['ltc','長期照顧'],['waiver','豁免保費'],['other','其他']];
+const INSCATK=Object.fromEntries(INSCAT);
+const INSMAP=[['life','壽險',['life']],['accident','意外',['accident','acc_med']],['med','醫療',['hosp_day','hosp_real','surgery']],['cancer','癌症',['cancer']],['critical','重大',['critical']],['disability','失能',['disability']],['ltc','長照',['ltc']]];
+const POL_ST=[['active','有效'],['paidup','繳費期滿（保障還在）'],['lapsed','停效'],['ended','已終止']];
+const PAYF=[['年',1],['半年',2],['季',4],['月',12],['躉繳',0]];
+const RENEW=[['','不確定'],['guar','保證續保'],['yes','可續保（不保證）'],['no','不保證續保']];
+const insOf=m=>Array.isArray(INS[m.id])?INS[m.id]:[];
+const clmOf=m=>Array.isArray(CLM[m.id])?CLM[m.id]:[];
+const insFind=(m,id)=>insOf(m).find(p=>p.id===id);
+const polLive=(p,d=todayS())=>(p.status==='active'||p.status==='paidup')&&(!p.start||p.start<=d)&&(!p.endDate||p.endDate>=d);
+const polAnnual=p=>{const k=(PAYF.find(x=>x[0]===p.payFreq)||[])[1];return p.prem!=null&&k?p.prem*k:0};
+const unitInfo=u=>{u=String(u||'');return{mul:/萬/.test(u)?1e4:/千|仟/.test(u)?1e3:1,per:/倍/.test(u)?'x':/日|天/.test(u)?'day':/次/.test(u)?'time':/年/.test(u)?'year':/月/.test(u)?'month':''}};
+const PERT={day:'/日',time:'/次',year:'/年',month:'/月',x:'倍','':''};
+const money=v=>v>=1e4&&v%1e3===0?`${+(v/1e4).toFixed(1)} 萬`:`${Math.round(v).toLocaleString()} 元`,ntd=v=>`${Math.round(v).toLocaleString()} 元`;   // 保障金額用「萬」好讀；保費一律用「元」
+const birthY=m=>+String(m.birth||'').slice(0,4)||new Date().getFullYear()-Math.floor(ageOf(m));
+// 個資：身分證字號、手機號碼一律刪掉（AI 照抄時的第二道防線）
+const TWID=/[A-Z][12]\d{8}/g,TWPH=/09\d{2}-?\d{3}-?\d{3}/g;
+function insScrub(v,W){let s=String(v??'');if(new RegExp(TWID.source).test(s)){s=s.replace(TWID,'＊＊＊');W.add('偵測到身分證字號，已自動刪除')}if(new RegExp(TWPH.source).test(s)){s=s.replace(TWPH,'＊＊＊');W.add('偵測到電話號碼，已自動刪除')}return s}
+// 防 AI 讀錯：金額一定要出現在 AI 抄的原文裡（萬元換算、千分位、全形數字都接受）；原文是國字數字時請人工核對
+function numInQuote(a,u,q){q=String(q||'').replace(/[０-９]/g,d=>String.fromCharCode(d.charCodeAt(0)-65248)).replace(/[,，\s]/g,'');if(!q||a==null)return null;
+  const A=String(+a);if(q.includes(A))return true;const mul=unitInfo(u).mul;if(mul>1&&q.includes(String(a*mul)))return true;if(a>=1e4&&a%1e4===0&&q.includes(String(a/1e4)+'萬'))return true;
+  return /[一二三四五六七八九十零〇壹貳參肆伍陸柒捌玖拾]/.test(q)?'cn':false}   // 「萬」「千」只是單位，要有國字數字才算
+function polCheck(r,m,manual){const W=new Set(),E=[],str=(v,n)=>insScrub(typeof v==='string'?v.trim():typeof v==='number'?String(v):'',W).slice(0,n);
+  const no=String(r.policyNoLast4??r.no4??'').replace(/\D/g,'');if(no.length>4)W.add('保單號碼只保留末 4 碼');
+  const f=String(r.payFreq??''),st=String(r.status??'');
+  const p={id:r.id&&/^[\w-]{1,40}$/.test(r.id)?r.id:uid(),insurer:str(r.insurer,30),product:str(r.product,60),no4:no.slice(-4),bene:str(r.beneficiary??r.bene,40),hint:str(r.insuredHint,20),
+    start:parseYMD(r.start,1)||'',payYears:num(r.payYears),payFreq:/躉/.test(f)?'躉繳':/半年/.test(f)?'半年':/季/.test(f)?'季':/月/.test(f)?'月':/年/.test(f)?'年':'',prem:num(r.premium??r.prem),
+    status:POL_ST.some(x=>x[0]===r.status)?r.status:/終止|解約|失效|滿期/.test(st)?'ended':/停效/.test(st)?'lapsed':/繳清|期滿|繳費完/.test(st)?'paidup':'active',
+    endDate:parseYMD(r.endDate,1)||'',endAge:num(r.endAge),note:str(r.notes??r.note,200),items:[],src:manual?'manual':'ai',ver:APP_VER,chk:!!manual,warn:[],t:todayS()};
+  if(!p.insurer||!p.product)E.push('缺保險公司或商品名稱');
+  if(p.prem!=null&&p.prem<0){W.add('保費是負數，已清空');p.prem=null}
+  if(p.prem!=null&&!p.payFreq)W.add('繳別不明（年繳、月繳…）：年繳保費先不計，請核對');
+  if(p.start){if(p.start>addDays(todayS(),31))W.add(`生效日 ${p.start} 在未來：民國年是否換算錯？`);if(p.start<'1950-01-01')E.push('生效日不合理')}else W.add('沒有生效日：理賠時無法檢查等待期');
+  if(p.payYears!=null&&!(p.payYears>=1&&p.payYears<=40)){W.add(`繳費年期 ${p.payYears} 不合理，已清空`);p.payYears=null}
+  if(p.endAge!=null&&!(p.endAge>=1&&p.endAge<=120)){W.add(`保障到 ${p.endAge} 歲不合理，已清空`);p.endAge=null}
+  if(p.endDate&&p.start&&p.endDate<p.start)E.push('到期日早於生效日');
+  if(polAnnual(p)>1e6)W.add(`年繳保費約 ${money(polAnnual(p))}：是不是把總保費當成每期保費？`);
+  const age=ageOf(m),seen=new Set();
+  for(const c of Array.isArray(r.coverages)?r.coverages:Array.isArray(r.items)?r.items:[]){if(!c||typeof c!=='object')continue;const name=str(c.name,40);if(!name){W.add('有一項保障沒有名稱，已略過');continue}
+    const rn=String(c.renewable??c.renew??''),cat=INSCATK[c.cat]?c.cat:'other';if(c.cat&&!INSCATK[c.cat])W.add(`「${name}」的類別看不懂，先放「其他」`);
+    const it={name,kind:c.kind==='rider'?'rider':'main',cat,amt:num(c.amount??c.amt),unit:str(c.unit,12),limit:str(c.limit,60),wait:num(c.waitingDays??c.wait),
+      renew:RENEW.some(x=>x[0]===rn&&rn)?rn:/不保證|非保證/.test(rn)?'no':/保證/.test(rn)?'guar':/^(yes|true|可)/i.test(rn)?'yes':'',maxAge:num(c.maxAge),endDate:parseYMD(c.endDate,1)||'',excl:str(c.exclusions??c.excl,200),quote:str(c.quote,240),page:num(c.page)};
+    if(it.amt!=null&&it.amt<0){W.add(`「${name}」金額是負數，已清空`);it.amt=null}
+    if(it.wait!=null&&!(it.wait>=0&&it.wait<=730)){W.add(`「${name}」等待期 ${it.wait} 天不合理，已清空`);it.wait=null}
+    if(it.maxAge!=null&&!(it.maxAge>=1&&it.maxAge<=120)){W.add(`「${name}」續保到 ${it.maxAge} 歲不合理，已清空`);it.maxAge=null}
+    if(it.maxAge!=null&&age>=it.maxAge)W.add(`「${name}」最高到 ${it.maxAge} 歲，現在 ${Math.floor(age)} 歲：確認還有沒有效`);
+    if(it.page!=null&&!(it.page>=1&&it.page<=999))it.page=null;
+    if(!manual){if(!it.quote)W.add(`「${name}」沒有附原文：金額請自己對照保單`);
+      else if(it.amt!=null){const q=numInQuote(it.amt,it.unit,it.quote);if(q==='cn')W.add(`「${name}」原文是國字數字：請自己核對金額 ${it.amt}`);else if(!q)W.add(`「${name}」的金額 ${it.amt} 在原文裡找不到：可能讀錯`)}}
+    const sig=it.cat+'|'+it.name+'|'+it.amt;if(seen.has(sig))W.add(`「${name}」重複出現，請確認是不是同一項`);seen.add(sig);
+    p.items.push(it);if(p.items.length>=40)break}
+  if(!p.items.length)W.add('沒有任何保障項目');
+  for(const u of Array.isArray(r.unreadable)?r.unreadable.slice(0,5):[])if(typeof u==='string'&&u.trim())W.add('AI 說看不清楚：'+insScrub(u.trim(),W).slice(0,60));
+  p.warn=[...W];return{p,err:E}}
+const polDup=(m,p)=>insOf(m).find(o=>o.id!==p.id&&o.insurer===p.insurer&&o.product===p.product&&(o.start||'')===(p.start||''));
+function polLine(p){const pe=p.start&&p.payYears?+p.start.slice(0,4)+p.payYears-1:null,a=polAnnual(p);
+  return[(POL_ST.find(x=>x[0]===p.status)||POL_ST[0])[1],p.start&&'生效 '+p.start,a?`年繳 ${ntd(a)}`:p.payFreq==='躉繳'?'躉繳':'',pe&&`繳到 ${pe} 年`,`${(p.items||[]).length} 項保障`].filter(Boolean).join('・')}
+const covAmt=c=>c.amt==null?'—':`${c.amt.toLocaleString()} ${c.unit||''}`.trim();
+// 保障加總：有效保單、還沒到期的保障；不同給付單位（每日、每次、一次給付）分開加；「倍數」不能加
+function covSum(m,d=todayS()){const R={},age=ageOf(m);for(const p of insOf(m))if(polLive(p,d))for(const c of p.items||[]){if(c.amt==null||(c.endDate&&c.endDate<d)||(c.maxAge!=null&&age>=c.maxAge))continue;
+  const u=unitInfo(c.unit);if(u.per==='x')continue;const k=c.cat+'|'+u.per,o=R[k]||(R[k]={cat:c.cat,per:u.per,v:0,n:0,un:0});o.v+=c.amt*u.mul;o.n++;if(!p.chk)o.un++}return Object.values(R)}
+// 到期與續保倒數：每一項保障各自算（附約跟主約不一定同時結束），也列繳費期滿
+function insEnding(m,yrs=15){const out=[],Y=new Date().getFullYear(),by=birthY(m);
+  for(const p of insOf(m)){if(!polLive(p))continue;const pe=p.start&&p.payYears?+p.start.slice(0,4)+p.payYears-1:null;if(pe&&pe>=Y&&pe-Y<yrs)out.push({y:pe,t:`${p.insurer} ${p.product}：繳費到 ${pe} 年`,when:pe===Y?'今年最後一期':`還有 ${pe-Y} 年`});
+    const pend=p.endDate?+p.endDate.slice(0,4):p.endAge?by+p.endAge:null;
+    for(const c of p.items||[]){const y=c.endDate?+c.endDate.slice(0,4):c.maxAge?by+c.maxAge:pend;if(!y||y<Y||y-Y>=yrs)continue;
+      out.push({y,t:`${p.insurer} ${c.name}：保到 ${c.maxAge?c.maxAge+' 歲':y+' 年'}${c.renew==='no'?'（不保證續保）':''}`,when:y===Y?'今年到期':`${y} 年，還有 ${y-Y} 年`})}}
+  return out.sort((a,b)=>a.y-b.y)}
+function renderIns(){renderPol();renderCov();renderClm();renderTool()}
+function renderPol(){const m=me(),L=insOf(m),el=$('#polBody');if(!el)return;
+  el.innerHTML=`<div class="qa" style="margin:0 0 10px"><button class="btn" data-poladd>📷 用 AI 匯入保單</button><button class="btn ghost" data-poledit>＋ 手動新增</button></div>`+
+    (L.length?L.map(p=>`<button class="rec" data-pol="${esc(p.id)}"><div class="m"><b>${esc(p.insurer)}・${esc(p.product)}</b><small>${esc(polLine(p))}</small></div>${!p.chk?'<span class="tg warn">待核對</span>':p.warn?.length?`<span class="tg">⚠️ ${p.warn.length}</span>`:''}<span class="chev">›</span></button>`).join('')
+      :`<div class="empty">還沒有 ${esc(m.name)} 的保單。拍下保單、保單條款或保險公司給的保單明細表，按「用 AI 匯入保單」最快；沒有 AI 也可以手動新增。</div>`)+
+    `<p class="note">保單放在「被保險人」底下（右上角切換家人）。資料只存在這支手機，不會傳給保險公司或任何伺服器。</p>`;
+  subBadge('ins','pol',L.filter(p=>!p.chk).length||'','')}
+function renderCov(){const m=me(),el=$('#covBody');if(!el)return;const L=insOf(m),sum=covSum(m),un=L.filter(p=>!p.chk).length;
+  const rows=INSCAT.filter(([k])=>k!=='other'||sum.some(s=>s.cat==='other')).map(([k,t])=>{const s=sum.filter(x=>x.cat===k);
+    return `<span>${t}</span><span>${s.length?s.map(x=>`<b>${money(x.v)}${PERT[x.per]}</b>${x.un?' <em class="dev">含待核對</em>':''}`).join('<br>'):'<span class="sub">目前沒有</span>'}</span>`}).join('');
+  const end=insEnding(m),tot=L.filter(p=>polLive(p)).reduce((a,p)=>a+polAnnual(p),0),fam=MEM.reduce((a,z)=>a+insOf(z).filter(p=>polLive(p)).reduce((b,p)=>b+polAnnual(p),0),0);
+  const cell=(z,cats)=>{const P=insOf(z).filter(p=>polLive(p)&&(p.items||[]).some(c=>cats.includes(c.cat)&&!(c.maxAge!=null&&ageOf(z)>=c.maxAge)));return P.length?(P.some(p=>p.chk)?'✔':'待'):'—'};
+  const decl=healthDecl(m);
+  el.innerHTML=`<div class="card"><h2>${esc(m.name)} 的保障總覽</h2>${L.length?`<div class="kv">${rows}</div>${un?`<p class="note" style="color:var(--amber)">有 ${un} 張保單還沒核對：數字以核對後為準。</p>`:''}
+      <p class="note">「目前沒有」不等於一定要買：要看家庭責任、社會保險（勞保、公保、軍保、農保等）與預算。到「AI 工具 → 最低保障規劃」可以請 AI 依全家情況排優先順序。</p>`:'<div class="empty">先到「保單」匯入保單，這裡會自動加總每一類保障。</div>'}</div>
+    <div class="card"><h2>到期與續保倒數（15 年內）</h2>${end.length?end.map(r=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);gap:10px"><span style="min-width:0">${esc(r.t)}</span><span class="tg${r.y-new Date().getFullYear()<=1?' warn':''}" style="flex:0 0 auto">${esc(r.when)}</span></div>`).join(''):'<div class="sub">15 年內沒有到期的保障（或保單沒寫到期／續保年齡）</div>'}
+      <p class="note">每一項保障各自計算；附約常在 65、75、80 歲結束，不保證續保的要注意續保時保費會變。以保單條款為準。</p></div>
+    <div class="card"><h2>保費</h2><div class="kv"><span>${esc(m.name)} 每年</span><span><b>${ntd(tot)}</b></span><span>全家每年</span><span><b>${ntd(fam)}</b></span></div>
+      ${L.filter(p=>polLive(p)&&polAnnual(p)).map(p=>`<div class="row sub" style="padding:6px 0">${esc(p.insurer)} ${esc(p.product)}<span>${ntd(polAnnual(p))}</span></div>`).join('')}</div>
+    <div class="card"><h2>全家保障地圖</h2><div style="overflow-x:auto"><table class="imap"><tr><th></th>${INSMAP.map(([,t])=>`<th>${t}</th>`).join('')}</tr>
+      ${MEM.map(z=>`<tr><th>${esc(z.name)}</th>${INSMAP.map(([,,cats])=>{const v=cell(z,cats);return `<td class="${v==='✔'?'ok':v==='待'?'wt':''}">${v}</td>`}).join('')}</tr>`).join('')}</table></div>
+      <p class="note">✔ 有核對過的有效保障；「待」只有還沒核對的；— 沒有。依保單內容分類，不是看商品名稱。</p></div>
+    <div class="card"><h2>投保前的健康告知（參考）</h2>${decl.length?decl.map(x=>`<div class="bl">${esc(x)}</div>`).join(''):'<div class="sub">App 裡沒有需要特別留意的紀錄</div>'}
+      <p class="note">常見的要保書會問：最近 2 個月內有沒有看醫師或用藥、2 年內健檢有沒有異常被建議再檢查、5 年內有沒有特定疾病治療、住院或手術。上面是 App 裡可能相關的紀錄，<b>以要保書實際問題為準，據實告知</b>（隱匿或不實可能被解約、拒賠：保險法第 64 條）。</p></div>`}
+function healthDecl(m){const out=[],y2=addDays(todayS(),-730),y5=addDays(todayS(),-1826);
+  for(const c of condActive(m))out.push(`病史：${c.name}${c.y?`（${c.y} 年）`:''}`);
+  for(const r of labsOf(m).filter(r=>r.t>=y2))for(const i of labEval(r,m).filter(i=>i.lv>=2))out.push(`${r.t} 健檢：${i.name} ${typeof i.val==='number'?fmt(i.val):i.val}（${LVT[i.lv]}）`);
+  for(const x of fuOf(m))for(const l of x.log)if(l.d>=y5)out.push(`${l.d}${l.dept?' '+l.dept:''} 就醫：${x.name}${l.plan?'（'+l.plan.slice(0,30)+'）':''}`);
+  for(const e of clmOf(m))if(e.d>=y5&&['ad','sx','ca'].includes(e.type))out.push(`${e.d} ${EVTT(e.type)}：${e.dx||''}`);
+  return[...new Set(out)].slice(0,30)}
+function openPol(id){const m=me(),p=insFind(m,id);if(!p)return;const pe=p.start&&p.payYears?+p.start.slice(0,4)+p.payYears-1:null;
+  openSheet(sheetHead(`📑 ${esc(p.insurer)}`,esc(p.product))+`
+    <div class="kv" style="margin:12px 0">${[['狀態',(POL_ST.find(x=>x[0]===p.status)||POL_ST[0])[1]],['生效日',p.start||'—'],['保單號碼末 4 碼',p.no4||'—'],['繳費',[p.payFreq&&p.payFreq+(p.payFreq==='躉繳'?'':'繳'),p.prem!=null&&p.prem.toLocaleString()+' 元',p.payYears&&p.payYears+' 年期'].filter(Boolean).join('・')||'—'],
+      ['年繳保費',polAnnual(p)?ntd(polAnnual(p)):'—'],['繳到',pe?pe+' 年':'—'],['保障到',p.endDate||(p.endAge?p.endAge+' 歲':'—')],['受益人',p.bene||'—'],['來源',p.src==='ai'?`AI 讀取（${esc(p.t)}，App ${esc(p.ver||'')}）`:'手動輸入']].map(([a,b])=>`<span>${a}</span><span>${esc(b)}</span>`).join('')}</div>
+    <div class="h4">保障項目</div>${(p.items||[]).map(c=>`<div class="cdet"><div class="row" style="margin:0"><b>${esc(c.name)}</b><span class="tg">${esc(INSCATK[c.cat]||'其他')}</span></div>
+      <div style="margin-top:4px"><b>${esc(covAmt(c))}</b>${c.kind==='rider'?' <span class="sub">附約</span>':''}${c.limit?` <span class="sub">${esc(c.limit)}</span>`:''}</div>
+      <div class="sub">${esc([c.wait!=null&&`等待期 ${c.wait} 天`,c.renew&&(RENEW.find(x=>x[0]===c.renew)||[])[1],c.maxAge&&`最高到 ${c.maxAge} 歲`,c.endDate&&`到 ${c.endDate}`].filter(Boolean).join('・'))}</div>
+      ${c.excl?`<div class="sub">除外：${esc(c.excl)}</div>`:''}${c.quote?`<div class="sub" style="margin-top:4px;border-left:2px solid var(--line);padding-left:8px">原文${c.page?`（第 ${esc(c.page)} 頁）`:''}：${esc(c.quote)}</div>`:''}</div>`).join('')||'<div class="sub">沒有保障項目</div>'}
+    ${p.warn?.length?`<div class="hl warn" style="margin:12px 0"><b>🛡 匯入時的防錯檢查（${p.warn.length}）</b><br>${p.warn.map(esc).join('<br>')}</div>`:''}
+    ${p.chk?'<div class="sub" style="margin:10px 0;color:var(--lime)">✅ 已對照保單核對</div>':'<button class="btn" id="pd-chk" style="margin:12px 0 0">✅ 我已對照保單核對無誤</button>'}
+    <div class="row2" style="margin-top:10px"><button class="btn danger" id="pd-del" style="flex:0 0 30%">刪除</button><button class="btn ghost" id="pd-edit">編輯</button></div>
+    <button class="btn ai" data-polai="${esc(p.id)}" style="margin-top:8px">📋 複製「保單條款審查」提示詞</button>
+    <p class="note">AI 讀的資料一定要對照原本的保單：特別是金額、單位（萬／元）、等待期、續保年齡。核對過的才會在全家保障地圖打 ✔。</p>`);
+  if($('#pd-chk'))$('#pd-chk').onclick=()=>{p.chk=true;S.set('ins',INS);renderIns();renderTodo();openPol(p.id);toast('已標記核對完成')};
+  $('#pd-edit').onclick=()=>openPolEdit(p.id);
+  $('#pd-del').onclick=()=>{if(!confirm(`刪除「${p.insurer} ${p.product}」？`))return;INS[m.id]=insOf(m).filter(z=>z.id!==p.id);S.set('ins',INS);renderIns();renderTodo();closeSheet();toast('已刪除保單')}}
+function openPolEdit(id){const m=me(),p0=id?insFind(m,id):null,p=p0?JSON.parse(JSON.stringify(p0)):{insurer:'',product:'',no4:'',start:'',payYears:'',payFreq:'年',prem:'',status:'active',endAge:'',endDate:'',bene:'',note:'',items:[{name:'',cat:'hosp_day',amt:'',unit:'元/日',kind:'main'}]};
+  const covRow=(c,i)=>`<div class="cdet" data-ci="${i}"><div class="row" style="margin:0 0 6px"><b>保障 ${i+1}</b><button type="button" class="x" data-cirm="${i}" aria-label="移除">✕</button></div>
+    <label style="margin-top:0">名稱（照保單寫）</label><input data-cf="name" value="${esc(c.name||'')}" maxlength="40" placeholder="例如：住院醫療日額">
+    <div class="grid2"><div><label>類別</label><select data-cf="cat">${INSCAT.map(([k,t])=>`<option value="${k}"${c.cat===k?' selected':''}>${t}</option>`).join('')}</select></div>
+      <div><label>主約／附約</label><select data-cf="kind"><option value="main"${c.kind!=='rider'?' selected':''}>主約</option><option value="rider"${c.kind==='rider'?' selected':''}>附約</option></select></div>
+      <div><label>金額</label><input data-cf="amt" inputmode="decimal" value="${esc(c.amt??'')}"></div><div><label>單位</label><input data-cf="unit" list="dl-unit" value="${esc(c.unit||'')}" maxlength="12"></div>
+      <div><label>等待期（天）</label><input data-cf="wait" inputmode="numeric" value="${esc(c.wait??'')}"></div><div><label>最高到幾歲</label><input data-cf="maxAge" inputmode="numeric" value="${esc(c.maxAge??'')}"></div></div>
+    <label>續保</label><select data-cf="renew">${RENEW.map(([k,t])=>`<option value="${k}"${(c.renew||'')===k?' selected':''}>${t}</option>`).join('')}</select>
+    <label>原文（選填）</label><input data-cf="quote" value="${esc(c.quote||'')}" maxlength="240"></div>`;
+  openSheet(sheetHead(p0?'編輯保單':'手動新增保單',`被保險人：${esc(m.name)}`)+`
+    <div class="grid2"><div><label>保險公司</label><input id="pe-ins" value="${esc(p.insurer)}" maxlength="30"></div><div><label>商品名稱</label><input id="pe-prod" value="${esc(p.product)}" maxlength="60"></div>
+      <div><label>生效日</label><input type="date" id="pe-start" value="${esc(p.start||'')}"></div><div><label>保單號碼末 4 碼</label><input id="pe-no4" inputmode="numeric" maxlength="4" value="${esc(p.no4||'')}"></div>
+      <div><label>繳別</label><select id="pe-freq">${PAYF.map(([k])=>`<option${p.payFreq===k?' selected':''}>${k}</option>`).join('')}</select></div><div><label>每期保費（元）</label><input id="pe-prem" inputmode="decimal" value="${esc(p.prem??'')}"></div>
+      <div><label>繳費年期</label><input id="pe-yrs" inputmode="numeric" value="${esc(p.payYears??'')}"></div><div><label>狀態</label><select id="pe-st">${POL_ST.map(([k,t])=>`<option value="${k}"${p.status===k?' selected':''}>${t}</option>`).join('')}</select></div>
+      <div><label>保障到幾歲（選填）</label><input id="pe-age" inputmode="numeric" value="${esc(p.endAge??'')}"></div><div><label>受益人（選填）</label><input id="pe-bene" value="${esc(p.bene||'')}" maxlength="40"></div></div>
+    <datalist id="dl-unit">${['元/日','元','萬元','萬元/次','元/次','倍'].map(u=>`<option value="${u}">`).join('')}</datalist>
+    <div class="h4">保障項目</div><div id="pe-cov"></div><button class="btn ghost sm" id="pe-addc" type="button">＋ 新增保障</button>
+    <button class="btn" id="pe-save" style="margin-top:14px">儲存</button>`);
+  let items=(p.items||[]).map(c=>({...c}));
+  const read=()=>{$$('#pe-cov [data-ci]').forEach(el=>{const i=+el.dataset.ci;el.querySelectorAll('[data-cf]').forEach(inp=>{items[i][inp.dataset.cf]=inp.value})})};
+  const paint=()=>{$('#pe-cov').innerHTML=items.map(covRow).join('');$$('#pe-cov [data-cirm]').forEach(b=>b.onclick=()=>{read();items.splice(+b.dataset.cirm,1);paint()})};paint();
+  $('#pe-addc').onclick=()=>{read();items.push({name:'',cat:'other',amt:'',unit:'',kind:'rider'});paint()};
+  $('#pe-save').onclick=()=>{read();const raw={id:p0?.id,insurer:$('#pe-ins').value,product:$('#pe-prod').value,start:$('#pe-start').value,policyNoLast4:$('#pe-no4').value,payFreq:$('#pe-freq').value,premium:$('#pe-prem').value,payYears:$('#pe-yrs').value,status:$('#pe-st').value,endAge:$('#pe-age').value,beneficiary:$('#pe-bene').value,
+      coverages:items.filter(c=>String(c.name||'').trim()).map(c=>({...c,amount:c.amt,waitingDays:c.wait,renewable:c.renew}))};
+    const{p:np,err}=polCheck(raw,m,true);if(err.length)return toast(err.join('；'));
+    if(p0){np.src=p0.src;np.t=p0.t;np.chk=true;np.warn=np.warn.length?np.warn:[]}
+    const L=INS[m.id]||(INS[m.id]=[]),i=L.findIndex(z=>z.id===np.id);if(i>=0)L[i]=np;else L.push(np);S.set('ins',INS);renderIns();renderTodo();openPol(np.id);toast(np.warn.length?'已儲存（有 '+np.warn.length+' 個提醒，請看下面）':'已儲存保單')}}
+// AI 匯入：解析 → 每張保單跑防錯檢查 → 選被保險人 → 勾選匯入（重複的、有錯的預設不勾）
+function parseAIJSON(t){t=String(t||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'');const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a<0||b<a)throw new Error('找不到 JSON：請把 AI 回覆的整段大括號 { … } 貼上');
+  try{return JSON.parse(t.slice(a,b+1))}catch(e){throw new Error('JSON 格式壞掉（常見是 AI 回覆被截斷）：請 AI「重新輸出完整 JSON」再貼一次')}}
+function openPolImport(){const m=me();openSheet(sheetHead('📷 用 AI 匯入保單',`預設匯入到：${esc(m.name)}（下一步可以改）`)+`
+    <div class="bl">① 按「複製提示詞」</div><div class="bl">② 打開 ChatGPT／Gemini／Claude，貼上提示詞，再附上保單照片、保單條款或保單明細表（可以多張、多張保單）</div><div class="bl">③ 把 AI 回的 JSON 整段貼到下面，按「解析並核對」</div>
+    <div class="row2" style="margin-top:10px"><button class="btn ghost" data-copy="policy">📋 複製提示詞</button><button class="btn ghost" data-show="policy">看提示詞</button></div><pre class="prompt" id="pv-policy" hidden></pre>
+    <label>貼上 AI 回的 JSON</label><textarea id="pi-in" placeholder='{"type":"jiaankang.policy","v":1,"policies":[…]}'></textarea>
+    <button class="btn" id="pi-go" style="margin-top:10px">解析並核對</button><div id="pi-out"></div>
+    <p class="note">🔒 照片給 AI 前先塗掉身分證字號、完整保單號碼、地址電話。App 會再檢查一次，偵測到就刪掉。</p>`);
+  $('#pi-go').onclick=()=>{let d;try{d=parseAIJSON($('#pi-in').value)}catch(e){$('#pi-out').innerHTML=`<div class="hl bad" style="margin-top:10px">${esc(e.message)}</div>`;return}
+    if(/scale|lab|watch/i.test(d.type||'')&&!/policy/i.test(d.type||''))return void($('#pi-out').innerHTML='<div class="hl bad" style="margin-top:10px">這是健康資料的 JSON，請到「健康」匯入</div>');
+    const arr=Array.isArray(d.policies)?d.policies:Array.isArray(d)?d:d.insurer||d.product?[d]:[];if(!arr.length)return void($('#pi-out').innerHTML='<div class="hl bad" style="margin-top:10px">JSON 裡沒有保單（policies 是空的）</div>');
+    const top=Array.isArray(d.unreadable)?d.unreadable:[];
+    const res=arr.slice(0,30).map((r,i)=>{const x=polCheck({...r,unreadable:i===0?top:r.unreadable},m);const h=String(r.insuredHint||'');
+      const role=/配偶|太太|先生|老婆|老公/.test(h)?'spouse':/子|女|兒/.test(h)?'child':/父|母|爸|媽/.test(h)?'parent':/本人|自己/.test(h)?'me':'';x.mid=(role&&MEM.find(z=>z.role===role)||m).id;return x});
+    const draw=()=>{$('#pi-out').innerHTML=`<div class="h4">核對結果（${res.length} 張）</div>`+res.map((x,i)=>{const dup=polDup(MEM.find(z=>z.id===x.mid)||m,x.p);x.dup=!!dup;return `<div class="cdet">
+      <div class="row" style="margin:0;gap:10px"><b style="min-width:0">${esc(x.p.insurer||'？')}・${esc(x.p.product||'？')}</b><label style="margin:0;display:flex;gap:6px;align-items:center;flex:0 0 auto"><input type="checkbox" data-pi="${i}" style="width:auto"${x.err.length||x.dup?'':' checked'}${x.err.length?' disabled':''}>匯入</label></div>
+      <div class="sub">${esc(polLine(x.p))}${x.p.hint?'・AI 判斷被保險人：'+esc(x.p.hint):''}</div>
+      <label>被保險人</label><select data-pim="${i}">${MEM.map(z=>`<option value="${esc(z.id)}"${z.id===x.mid?' selected':''}>${esc(z.name)}</option>`).join('')}</select>
+      <div class="kv" style="margin:8px 0">${x.p.items.map(c=>`<span>${esc(c.name)}</span><span><b>${esc(covAmt(c))}</b></span>`).join('')}</div>
+      ${x.err.length?`<div class="hl bad">❌ ${esc(x.err.join('；'))}：不能匯入，請 AI 重讀這張</div>`:''}${x.dup?'<div class="hl warn">⚠️ 這位成員已經有同一張保單（同公司、商品、生效日），預設不匯入</div>':''}
+      ${x.p.warn.length?`<div class="hl warn" style="margin-top:6px"><b>🛡 防錯檢查：${x.p.warn.length} 個要核對</b><br>${x.p.warn.map(esc).join('<br>')}</div>`:'<div class="sub" style="color:var(--lime);margin-top:6px">🛡 防錯檢查通過：每個金額都在原文裡找得到</div>'}</div>`}).join('')+
+      `<button class="btn" id="pi-save" style="margin-top:12px">匯入勾選的保單</button><p class="note">匯入後是「待核對」：請逐張打開，對照原本的保單按「我已核對」。</p>`;
+      $$('#pi-out [data-pim]').forEach(s=>s.onchange=()=>{res[+s.dataset.pim].mid=s.value;draw()});
+      $('#pi-save').onclick=()=>{let n=0;$$('#pi-out [data-pi]').forEach(cb=>{if(!cb.checked)return;const x=res[+cb.dataset.pi];if(x.err.length)return;(INS[x.mid]||(INS[x.mid]=[])).push(x.p);n++});
+        if(!n)return toast('沒有勾選要匯入的保單');S.set('ins',INS);renderIns();renderTodo();closeSheet();go('ins','pol');toast(`已匯入 ${n} 張保單：請逐張打開核對`)}};
+    draw()}}
+function promptPolicy(){return `你是「保單資料擷取器」。我會附上保單、保單條款、保險明細表或保單健診表的照片、截圖或 PDF 文字（可能多張、可能有多張保單）。你的任務只有「把文件上寫的內容抄成 JSON」，不要分析、不要給建議、不要用一般保險常識補資料。
+
+【規則】
+1. 只輸出一個 JSON 物件，前後不要有任何文字，也不要用 \`\`\` 包起來。
+2. 文件上找不到的欄位一律填 null，禁止推算或猜測（不要自己換算年繳保費、不要自己判斷是否保證續保、不要用同名商品的其他版本補）。
+3. 每一項保障都要附 quote：從文件逐字抄下這項保障名稱與金額的那一句（一定要含數字），以及 page（第幾頁，沒有頁碼填 null）。抄不到原文的保障不要列。
+4. amount 只填數字（不含逗號）；unit 照文件寫法另外填（例如「萬元」「元/日」「元」「倍」「萬元/次」）。
+5. 日期一律西元 YYYY-MM-DD；文件是民國年請加 1911（例如 110/03/05 → 2021-03-05）。
+6. premium 填文件上的「每期保費」，payFreq 填繳別（年繳、半年繳、季繳、月繳、躉繳）；不要換算成年繳。payYears 填繳費年期（例如 20 年期填 20）。
+7. cat 只能用下面的代號；判斷不出來就填 "other"，不要硬分類。主約 kind 填 "main"，附約填 "rider"。
+8. 身分證字號、完整保單號碼、姓名、電話、地址一律不要輸出；保單號碼只填末 4 碼（policyNoLast4）；被保險人只寫稱謂（insuredHint，例如「本人」「配偶」「長子」，不知道就填 null）。
+9. 看不清楚、被遮住或你不確定的內容，寫進 unreadable 陣列，不要猜。
+10. 一份文件有多張保單（例如保單健診表），policies 陣列就放多筆。
+11. 輸出前逐筆自我核對：每個 amount 都必須能在同一筆的 quote 裡找到。
+
+【cat 代號】
+life＝壽險／身故保險金、accident＝意外身故或失能、acc_med＝意外醫療（實支或日額）、hosp_day＝住院日額（病房費、住院醫療保險金每日）、hosp_real＝住院醫療費用實支實付（雜費限額）、surgery＝手術（含門診手術）、cancer＝癌症（初次罹癌、癌症住院、化療放療）、critical＝重大疾病／重大傷病一次金、disability＝失能扶助／失能保險金、ltc＝長期照顧、waiver＝豁免保費、other＝其他
+
+【輸出格式】
+{"type":"jiaankang.policy","v":1,"policies":[{"insurer":null,"product":null,"policyNoLast4":null,"insuredHint":null,"beneficiary":null,"start":null,"payYears":null,"payFreq":null,"premium":null,"currency":"TWD","status":null,"endDate":null,"endAge":null,"coverages":[{"name":null,"kind":"main","cat":"other","amount":null,"unit":null,"limit":null,"waitingDays":null,"renewable":null,"maxAge":null,"endDate":null,"exclusions":null,"quote":null,"page":null}],"notes":null}],"unreadable":[]}`}
+
+/* ---------- 理賠：醫療事件 → 有效保單裡可能適用的保障（等待期、保單狀態、待核對）→ 文件清單 → 每張保單的申請進度；AI 分析只當參考 ---------- */
+const EVT=[['op','門診'],['er','急診'],['ad','住院'],['sx','手術'],['acc','意外受傷'],['ca','癌症確診'],['other','其他']],EVTT=k=>(EVT.find(x=>x[0]===k)||EVT[6])[1];
+const CLM_ST=[['none','還沒申請'],['prep','準備文件'],['sent','已送件'],['docs','補件中'],['paid','已核付'],['part','部分核付'],['denied','拒賠'],['appeal','申訴中'],['done','結案']];
+const EVT_CAT={op:['surgery','acc_med'],er:['acc_med','surgery'],ad:['hosp_day','hosp_real','surgery'],sx:['surgery','hosp_real','hosp_day'],acc:['acc_med','accident','hosp_day','hosp_real'],ca:['cancer','critical','hosp_day','hosp_real'],other:[]};
+function evtMatch(m,e){const cats=new Set([...(EVT_CAT[e.type]||[]),...(/癌/.test(e.dx||'')?['cancer']:[])]),out=[];
+  for(const p of insOf(m)){const live=polLive(p,e.d),its=(p.items||[]).filter(c=>cats.has(c.cat));if(!its.length)continue;const age=e.d?+e.d.slice(0,4)-birthY(m):ageOf(m);
+    out.push({p,live,its:its.map(c=>{const w=[];if(!live)w.push(p.start&&p.start>e.d?'事故時保單還沒生效':'事故時保單不是有效狀態');if(c.wait&&p.start&&e.d&&dSign(e.d,p.start)<c.wait)w.push(`等待期內（生效 ${Math.max(0,dSign(e.d,p.start))} 天，等待期 ${c.wait} 天）：可能不賠`);
+      if(c.maxAge!=null&&age>=c.maxAge)w.push(`事故時已超過 ${c.maxAge} 歲`);if(!p.chk)w.push('保單還沒核對');
+      const u=unitInfo(c.unit),days=e.type==='ad'||e.type==='sx'||e.end?Math.max(0,dSign(e.end||e.d,e.d)):0;
+      const est=c.cat==='hosp_day'&&u.per==='day'&&c.amt&&days?`粗估 ${money(c.amt*u.mul*days)}（${c.amt.toLocaleString()} ${c.unit} × ${days} 天）`:'';return{c,w,est}})})}return out}
+const DOCS={base:['理賠申請書（各公司格式）','被保險人身分證影本、存摺封面影本'],op:['診斷證明書','醫療費用收據'],er:['診斷證明書','醫療費用收據'],ad:['診斷證明書（含住院起訖日）','醫療費用收據與費用明細（實支實付用）','出院病歷摘要（視需要）'],sx:['手術紀錄或手術同意書（視需要）'],acc:['事故證明（例如交通事故證明，視需要）'],ca:['病理檢驗報告']};
+function renderClm(){const m=me(),el=$('#clmBody');if(!el)return;const L=[...clmOf(m)].sort((a,b)=>String(b.d).localeCompare(String(a.d)));
+  el.innerHTML=`<button class="btn" data-evtadd style="margin-bottom:10px">＋ 新增就醫／受傷事件</button>`+(L.length?L.map(e=>{const cs=e.claims||[],st=cs.map(c=>(CLM_ST.find(x=>x[0]===c.st)||CLM_ST[0])[1]);
+    return `<button class="rec" data-evt="${esc(e.id)}"><div class="m"><b>${esc(e.d)} ${esc(EVTT(e.type))}${e.dx?'・'+esc(e.dx):''}</b><small>${esc([e.hosp,cs.length?`${cs.length} 張保單：${[...new Set(st)].join('、')}`:'還沒開始申請'].filter(Boolean).join('・'))}</small></div>${cs.some(c=>c.st==='denied')?'<span class="tg warn">拒賠</span>':cs.some(c=>c.st==='docs')?'<span class="tg warn">補件</span>':''}<span class="chev">›</span></button>`}).join('')
+    :'<div class="empty">還沒有理賠紀錄。看診、住院、手術或受傷後新增一筆，App 會找出可能可以申請的保單、檢查等待期、列出要準備的文件。</div>')+
+    `<p class="note">保險金請求權時效 2 年（保險法第 65 條）；文件交齊後，保險公司應在約定期限內給付，沒約定則 15 天內（保險法第 34 條）。</p>`}
+function openEvtEdit(id){const m=me(),e0=id?clmOf(m).find(x=>x.id===id):null,e=e0||{type:'op',d:todayS(),end:'',hosp:'',dx:'',cost:'',note:''};
+  openSheet(sheetHead(e0?'編輯事件':'＋ 新增就醫／受傷事件',esc(m.name))+`
+    <label>類型</label><select id="ev-type">${EVT.map(([k,t])=>`<option value="${k}"${e.type===k?' selected':''}>${t}</option>`).join('')}</select>
+    <div class="grid2"><div><label>日期（住院＝入院日）</label><input type="date" id="ev-d" value="${esc(e.d)}" max="${todayS()}"></div><div><label>出院日（住院才填）</label><input type="date" id="ev-end" value="${esc(e.end||'')}"></div></div>
+    <label>醫院</label><input id="ev-hosp" value="${esc(e.hosp||'')}" maxlength="30">
+    <label>診斷（照診斷證明寫）</label><input id="ev-dx" value="${esc(e.dx||'')}" maxlength="60" placeholder="例如：急性闌尾炎">
+    <label>自付醫療費用（元，選填）</label><input id="ev-cost" inputmode="numeric" value="${esc(e.cost??'')}">
+    <label>備註（選填）</label><textarea class="ta" id="ev-note" maxlength="300">${esc(e.note||'')}</textarea>
+    <button class="btn" id="ev-save" style="margin-top:12px">儲存</button>`);
+  $('#ev-save').onclick=()=>{const d=$('#ev-d').value,end=$('#ev-end').value;if(!d||d>todayS())return toast('請選日期（不能是未來）');if(end&&end<d)return toast('出院日不能早於入院日');
+    const x=e0||{id:uid(),claims:[]};Object.assign(x,{type:$('#ev-type').value,d,end,hosp:$('#ev-hosp').value.trim().slice(0,30),dx:$('#ev-dx').value.trim().slice(0,60),cost:num($('#ev-cost').value),note:$('#ev-note').value.trim().slice(0,300)});
+    if(!e0)(CLM[m.id]||(CLM[m.id]=[])).push(x);S.set('clm',CLM);renderClm();renderTodo();openEvt(x.id)}}
+function openEvt(id){const m=me(),e=clmOf(m).find(x=>x.id===id);if(!e)return;const M=evtMatch(m,e),docs=[...DOCS.base,...(DOCS[e.type]||[]),...(e.type==='sx'?DOCS.ad.slice(0,2):[])];
+  e.claims=e.claims||[];const clm=pid=>e.claims.find(c=>c.pid===pid)||{pid,st:'none',req:'',paid:'',d:'',note:''};
+  openSheet(sheetHead(`🧾 ${esc(e.d)} ${esc(EVTT(e.type))}`,esc([e.hosp,e.dx,e.end&&`出院 ${e.end}`,e.cost&&`自付 ${e.cost.toLocaleString()} 元`].filter(Boolean).join('・')))+`
+    <div class="h4">可能可以申請的保單</div>${M.length?M.map(({p,its})=>{const c=clm(p.id);return `<div class="cdet"><b>${esc(p.insurer)}・${esc(p.product)}</b>
+      ${its.map(({c:v,w,est})=>`<div style="margin-top:6px">${esc(v.name)}：<b>${esc(covAmt(v))}</b>${est?`<div class="sub" style="color:var(--lime)">${esc(est)}</div>`:''}${w.map(x=>`<div class="sub" style="color:var(--amber)">⚠️ ${esc(x)}</div>`).join('')}</div>`).join('')}
+      <div class="grid2" style="margin-top:8px"><div><label>申請進度</label><select data-cst="${esc(p.id)}">${CLM_ST.map(([k,t])=>`<option value="${k}"${c.st===k?' selected':''}>${t}</option>`).join('')}</select></div><div><label>核付金額（元）</label><input data-cpaid="${esc(p.id)}" inputmode="numeric" value="${esc(c.paid??'')}"></div></div></div>`}).join('')
+      :'<div class="sub">沒有找到可能適用的保單（或保單還沒匯入）。門診通常只有意外醫療或門診手術會賠，以條款為準。</div>'}
+    <div class="h4">要準備的文件</div>${docs.map(x=>`<div class="bl">${esc(x)}</div>`).join('')}
+    <p class="note">各公司要求不同，以理賠申請書為準。實支實付要不要正本、能不能用副本，看保單有沒有「副本理賠」約定。</p>
+    ${e.claims.some(c=>c.st==='denied'||c.st==='appeal')?`<div class="hl warn" style="margin:10px 0"><b>被拒賠時</b><br>先向保險公司申訴（業者 30 天內要處理）；不接受處理結果或逾期沒處理，60 天內可以向金融消費評議中心申請評議（金融消費者保護法第 13 條）。<button class="btn sm ghost" data-evtai="deny:${esc(e.id)}" style="margin-top:8px">📋 複製「拒賠申訴分析」提示詞</button></div>`:''}
+    <label>AI 的分析（選填，貼上存參考；不是保險公司的正式結果）</label><textarea class="ta" id="ev-ai" maxlength="3000">${esc(e.ai||'')}</textarea>
+    <div class="row2" style="margin-top:10px"><button class="btn ai" data-evtai="claim:${esc(e.id)}">📋 複製「理賠分析」提示詞</button><button class="btn ghost" id="ev-edit">編輯事件</button></div>
+    <button class="btn danger sm" id="ev-del" style="margin-top:10px">刪除這個事件</button>`);
+  const save=()=>{S.set('clm',CLM);renderClm();renderTodo()};
+  $$('#sheetBody [data-cst]').forEach(s=>s.onchange=()=>{let c=e.claims.find(z=>z.pid===s.dataset.cst);if(!c){c={pid:s.dataset.cst,st:'none',paid:''};e.claims.push(c)}c.st=s.value;c.d=todayS();save();if(s.value==='denied')openEvt(e.id)});
+  $$('#sheetBody [data-cpaid]').forEach(s=>s.onchange=()=>{let c=e.claims.find(z=>z.pid===s.dataset.cpaid);if(!c){c={pid:s.dataset.cpaid,st:'paid'};e.claims.push(c)}c.paid=num(s.value);save()});
+  $('#ev-ai').onchange=()=>{e.ai=$('#ev-ai').value.trim().slice(0,3000);save();toast('已存 AI 分析（僅供參考）')};
+  $('#ev-edit').onclick=()=>openEvtEdit(e.id);
+  $('#ev-del').onclick=()=>{if(!confirm('刪除這個事件和申請進度？'))return;CLM[m.id]=clmOf(m).filter(x=>x.id!==e.id);save();closeSheet();toast('已刪除')}}
+
+/* ---------- AI 工具：不串任何 AI API，提示詞＋去識別化資料包由使用者自己貼給 AI ---------- */
+const JOBS=[['','未填'],['mil','軍職人員'],['civ','公務人員'],['tea','教師'],['lab','勞工（受僱）'],['farm','農民'],['fish','漁民'],['self','自營作業者／職業工會'],['home','家管'],['none','無固定工作'],['ret','退休人員'],['stu','學生'],['other','其他']];
+const ROLES=[['','未填'],['me','本人'],['spouse','配偶'],['child','子女'],['parent','父母'],['other','其他家人']];
+const JOB_SI={mil:'軍人保險、全民健保；退撫依軍職人員規定',civ:'公教人員保險（公保）、全民健保；退撫依公務人員規定',tea:'依任用身分可能是公保或勞保（要確認）、全民健保',lab:'勞保、就業保險、勞工職業災害保險、勞工退休金、全民健保',
+  farm:'農民健康保險、農民職業災害保險、全民健保；農民退休儲金依意願',fish:'依實際投保單位與身分確認（各人不同）、全民健保',self:'可透過職業工會加保勞保與職災保險、全民健保',home:'國民年金（25–65 歲、沒有參加其他社會保險時）、全民健保',
+  none:'國民年金（25–65 歲、沒有參加其他社會保險時）、全民健保',ret:'依原本的退休制度、全民健保',stu:'全民健保、學生團體保險',other:'請依實際身分確認'};
+const EVID='【證據分級】A＝原始保單條款、正式醫療文件、官方法規；B＝保險公司正式文件、政府公開資料；C＝醫療指引、專業機構資料；D＝使用者自述或未核對資料；E＝AI 推論。每個重要結論都標出等級與依據（文件名稱、頁碼或條號）。';
+const INS_RULE='【共同規則】①只根據我提供的資料與可查證的官方來源 ②不得自行創造條款、金額、診斷或法規 ③找不到資料就寫「尚未確認」，不要硬下結論 ④不保證理賠結果、不鼓勵誇大或隱瞞病情 ⑤推論和事實分開寫 ⑥這是輔助整理，不取代保險公司核定、醫師或法律專業意見。';
+const memTag=(z,i)=>{const rl=(ROLES.find(r=>r[0]&&r[0]===z.role)||[])[1],jb=(JOBS.find(j=>j[0]&&j[0]===z.job)||[])[1];return `成員${i+1}（${[rl,sexT(z.sex),Math.floor(ageOf(z))+' 歲',jb,z.earner&&'家庭主要收入者'].filter(Boolean).join('、')}）`};
+const polPack=p=>({insurer:p.insurer,product:p.product,start:p.start||null,payFreq:p.payFreq||null,premium:p.prem??null,payYears:p.payYears??null,status:(POL_ST.find(x=>x[0]===p.status)||POL_ST[0])[1],checked:!!p.chk,
+  coverages:(p.items||[]).map(c=>({name:c.name,cat:INSCATK[c.cat]||c.cat,amount:c.amt,unit:c.unit||null,waitingDays:c.wait??null,renewable:(RENEW.find(x=>x[0]===c.renew)||[])[1]||null,maxAge:c.maxAge??null,quote:c.quote||null,page:c.page??null}))});
+function promptPolReview(p){return `請逐條審查下面這張保單（資料由 App 整理，原文 quote 是 AI 從保單抄下來的，可能有錯）。我會另外附上保單條款 PDF 或照片；${INS_RULE}
+${EVID}
+
+請依序整理：
+1. 確認保險公司、商品名稱與條款版本（我附的條款版本要和保單一致，不一致要提醒）。
+2. 主約與每個附約：給付條件、給付金額與計算方式、上限。
+3. 等待期、除外責任、續保條件（是否保證續保、最高續保年齡）、終止條件。
+4. 條款中容易有爭議的文字（例如住院定義、手術定義、既往症）。
+5. 下面的資料和條款原文不一致的地方。
+6. 沒有提供或看不清楚、無法確認的部分。
+每項都附條號或頁碼；沒附條款就明確說「無法完成條款比對」。
+
+【保單資料】
+${JSON.stringify(polPack(p),null,1)}`}
+function promptClaim(m,e,deny){const M=evtMatch(m,e);return `${deny?'保險公司拒絕了下面這次理賠，請協助分析拒賠理由並整理申訴資料。我會另外貼上拒賠通知原文、保單條款與醫療文件。':'請分析下面這次就醫／受傷，是否符合我的保單理賠條件。我會另外附上診斷證明、收據、保單條款。'}${INS_RULE}
+${EVID}
+
+${deny?`請分析：
+A. 保險公司的拒賠理由，以及引用的條款是否和我的保單版本一致
+B. 保險公司認定的事實有哪些證據支持
+C. 我可以提出的反證與還缺的證據（例如醫師意見、病歷）
+D. 可以提出的申訴主張與附件清單，並寫一份申訴書草稿
+E. 仍不確定、需要專業意見的地方
+請把「條款明文、醫療事實、保險公司主張、我的主張、AI 分析」分開寫。程序：先向保險公司申訴（30 天內要處理），不接受或逾期可在 60 天內向金融消費評議中心申請評議；不要捏造法條或判決。`
+:`請分成兩個角度：
+A. 被保險人角度：可能適用的保障、已符合與還沒證明的條件、可以提出的文件
+B. 保險公司審查角度：保單效力、等待期、事故與發病時間、健康告知、住院／手術定義、醫療必要性、自費項目、限額與除外責任、文件完整性
+C. 綜合判斷：初步符合／需要補件／有爭議風險／無法判斷（擇一，並說明）
+D. 要準備的文件清單與下一步
+只算得出依條款明確的金額；算不出來就說需要看哪一條。`}
+
+【事件】${e.d}${e.end?' 到 '+e.end:''} ${EVTT(e.type)}${e.dx?'；診斷：'+e.dx:''}${e.cost?'；自付 '+e.cost+' 元':''}${e.note?'；備註：'+e.note:''}
+【被保險人】${sexT(m.sex)}、事故時 ${e.d?+e.d.slice(0,4)-birthY(m):Math.floor(ageOf(m))} 歲
+【App 找到可能適用的保單（App 的初步檢查也一起附上）】
+${M.length?M.map(({p,its})=>`- ${p.insurer} ${p.product}（生效 ${p.start||'?'}${p.chk?'':'，還沒核對'}）：${its.map(({c,w})=>`${c.name} ${covAmt(c)}${c.wait?`，等待期 ${c.wait} 天`:''}${w.length?`〔App 提醒：${w.join('；')}〕`:''}${c.quote?`〔原文：${c.quote}〕`:''}`).join('；')}`).join('\n'):'（App 沒找到；請依我附的保單判斷）'}`}
+function promptMinProt(){return `你是台灣全民保障制度與家庭風險管理的分析助理。你的工作不是推銷保險，而是先盤點我家已經有的保障（社會保險＋商業保險），再找出缺口、排出最低必要保障的優先順序。${INS_RULE}
+${EVID}
+
+【分析順序】
+1. 依每位成員的身分，列出「可能適用」的法定保障（全民健保、勞保／就保／職災、公保、軍保、農保、國民年金、退休制度等）；身分不等於資格，要標出需要確認投保資料的地方。
+2. 盤點下面的商業保險，找出重複的保障與缺口。
+3. 依家庭責任（扶養、房貸負債、主要收入者）評估收入中斷、醫療、失能、長照、退休的風險。
+4. 把保障分級：A 基本保障與重大風險、B 家庭經濟責任、C 重大醫療與長期照護、D 退休與進階。每項說明：為什麼需要、現有制度提供什麼、還缺什麼、有沒有重複、不補的實際風險、有沒有低成本的替代方式。
+5. 我給預算時，提供最低預算、基本完整、進階三個方案；不要為了用完預算推薦不必要的保險。
+6. 列出「不建議重複購買」的項目，以及需要我確認的資格與文件。
+不要假設每個人都需要壽險、癌症險或長照險；政府補助、社會保險、商業保險不要混為一談；金額與資格以現行官方資料為準。
+
+【我家的資料（App 整理、已去識別化）】
+${MEM.map((z,i)=>{const sum=covSum(z),L=insOf(z).filter(p=>polLive(p));return `${memTag(z,i)}
+  可能適用的社會保險（App 依身分推測，需確認）：${JOB_SI[z.job]||'身分未填'}
+  商業保險 ${L.length} 張、每年保費約 ${ntd(L.reduce((a,p)=>a+polAnnual(p),0))}：${sum.length?sum.map(s=>`${INSCATK[s.cat]} ${money(s.v)}${PERT[s.per]}`).join('、'):'沒有'}
+  病史：${condActive(z).map(c=>c.name).join('、')||'無'}`}).join('\n')}
+【每月保費預算】（請我補充）`}
+function promptCompare(m){return `請比較我附上的保險商品資料（DM、條款、建議書或報價），並對照我目前已有的保障，判斷有沒有重複、能不能補到缺口。${INS_RULE}
+${EVID}
+
+請分三塊呈現，不要給單一總分：
+1. 保障差異：增加了哪些保障、哪些和我現有的重複。
+2. 條款差異：等待期、除外責任、自負額、續保（是否保證、最高年齡）、給付方式（日額、實支實付、一次金）。
+3. 成本差異：不同年齡、繳費期間的保費；註明資料來源與日期，沒有正式報價就寫「尚未取得正式報價」。
+最後列出投保前要問業務員的問題，與健康告知要注意的地方。
+
+【我目前的保障（${sexT(m.sex)}、${Math.floor(ageOf(m))} 歲）】
+${covSum(m).map(s=>`${INSCATK[s.cat]} ${money(s.v)}${PERT[s.per]}`).join('、')||'目前沒有商業保險'}`}
+function promptDecl(m){return `我要投保，想整理「健康告知」要怎麼據實回答。下面是我的健康紀錄（App 整理、已去識別化）。請對照我會另外貼上的要保書告知問題，逐題列出：哪些紀錄可能需要告知、為什麼、要準備哪些資料（診斷證明、檢查報告），以及要問業務員或保險公司確認的地方。
+規則：①以要保書實際問題的文字為準，不要擴大或縮小解釋 ②不得建議隱瞞或淡化（告知不實可能被解約或拒賠，保險法第 64 條）③不確定的寫「建議主動告知並附資料」。
+
+【${sexT(m.sex)}、${Math.floor(ageOf(m))} 歲的健康紀錄】
+${healthDecl(m).map(x=>'- '+x).join('\n')||'- App 裡沒有特別的紀錄'}`}
+const PROMPT_LAW=`你是熟悉台灣社會保險、職業保險、退休制度、醫療保障、商業保險與相關法規的制度研究助理。請審查我提供的法規、條例、行政命令、公告或制度文件，分析對不同身分民眾的保障影響。
+
+【審查對象】軍職人員、公務人員、教師、勞工、農民、漁民、自營作業者、家管、無固定工作者、無特殊職業保障者、退休人員、學生及未成年人、其他特殊身分。不得假設同職業的人都適用同一制度，要區分任用型態、投保資格與法定條件。
+
+【規則】
+1. 確認法規完整名稱、主管機關、公布、修正與施行日期，以及目前是否有效。
+2. 逐條比較修正前後條文：新增、刪除、修改。
+3. 分析投保資格、保費、給付、請領條件、除外規定、申請期限的變化，以及對現有商業保險規劃的影響。
+4. 區分「已生效」「已公布但尚未施行」「修正草案」「政策研議中」；草案與新聞不能當成已生效。
+5. 資料不完整就寫「尚待官方確認」，不得自行補寫條文、金額、資格或期限。
+6. 優先依據：全國法規資料庫、主管機關官網、政府公報；新聞只能輔助。
+
+【輸出】
+A. 法規基本資料（名稱、主管機關、日期、狀態、來源）
+B. 新舊條文比較表：條次｜舊規定｜新規定｜修正內容｜實際影響
+C. 不同身分影響表：身分｜是否受影響｜影響內容｜應注意事項
+D. 對個人保障的影響：醫療、社會保險、職業傷害、失能、退休年金、家庭經濟、商業保險
+E. 需要重新檢查的事項（資格、保障額度、期限、文件）
+F. 尚待確認事項
+條文內容和 AI 解讀要分開寫；這不是正式法律意見。`;
+const PROMPT_LAWDIFF=`請逐條比對我提供的兩份文件（文件 A＝舊版本、文件 B＝新版本）：
+1. 確認兩份的法規名稱、版本日期與條文是否完整（缺頁、條文不全要列出來，不要假設完整）。
+2. 逐條比對所有條文（不能只比摘要），找出新增、刪除、文字修改、數字修改、條次變更；保留原始條文，不要改寫成看起來像正式法規的文字。
+3. 每項修改說明實際意義，並分類為重大、一般、文字性修正。
+4. 分析對軍人、公務人員、教師、勞工、農民、漁民、自營作業者、無特殊保障者、退休人員的影響，以及對保險、給付、資格、保費、申請期限的影響。
+輸出：A 版本基本資料、B 逐條比較表、C 新增與刪除條文、D 保障影響、E 對現有保單與家庭保障的影響、F 需要採取的行動、G 尚待確認事項。條文內容和 AI 解讀分開呈現。`;
+Object.assign(PROMPTS,{policy:promptPolicy,minprot:promptMinProt,law:()=>PROMPT_LAW,lawdiff:()=>PROMPT_LAWDIFF,compare:()=>promptCompare(me()),decl:()=>promptDecl(me())});
+function renderTool(){const m=me(),el=$('#toolBody');if(!el)return;const L=insOf(m);
+  const card=(k,t,d,extra='')=>`<div class="card"><h2>${t}</h2><div class="sub" style="line-height:1.7">${d}</div>${extra}<div class="row2" style="margin-top:10px"><button class="btn ghost" data-copy="${k}">📋 複製提示詞</button><button class="btn ghost" data-show="${k}">看內容</button></div><pre class="prompt" id="pv-${k}" hidden></pre></div>`;
+  el.innerHTML=`<p class="note" style="margin:0 0 12px">不串接任何 AI API、不用付費金鑰：複製提示詞（會附上已去識別化的資料）→ 貼給你自己的 ChatGPT／Gemini／Claude。AI 的回答只是參考，金額、資格、條款以正式文件為準。</p>`+
+    card('policy','📷 保單匯入','把保單照片、條款或保單明細表讀成 JSON；貼回「保單 → 用 AI 匯入」，App 會逐項核對金額有沒有在原文裡。')+
+    `<div class="card"><h2>🔍 保單條款審查</h2><div class="sub">選一張保單，複製提示詞後連同條款 PDF 一起給 AI：逐條整理給付條件、等待期、除外責任、續保、爭議文字。</div>${L.length?L.map(p=>`<button class="rec" data-polai="${esc(p.id)}"><div class="m"><b>${esc(p.insurer)}・${esc(p.product)}</b><small>複製這張的審查提示詞</small></div><span class="chev">📋</span></button>`).join(''):'<div class="sub" style="margin-top:8px">先匯入保單</div>'}</div>`+
+    card('minprot','🛡 全家最低保障規劃','依全家每個人的身分（軍、公、教、勞、農、漁、自營、家管、退休、學生…）先盤點社會保險，再看商業保險的缺口、重複與優先順序，給不同預算的方案。',`<div class="sub" style="margin-top:6px">身分、家庭角色在「⚙️ 設定 → 基本資料」填。${MEM.some(z=>!z.job)?'<span style="color:var(--amber)">還有家人沒填身分</span>':''}</div>`)+
+    card('compare','⚖️ 保險商品比較','附上業務給的 DM、建議書或條款：比較保障、條款、保費，並對照你現有的保障找重複與缺口（不給單一總分）。')+
+    card('decl','📝 投保前健康告知','依你的病史、2 年內健檢異常、5 年內就醫，對照要保書的問題逐題整理怎麼據實告知。')+
+    card('law','⚖️ 法令／條例更新審查','貼上法規、條例、公告全文：分析新舊差異與對不同身分的影響（區分已生效、尚未施行、草案）。')+
+    card('lawdiff','📑 法規新舊條文比對','貼上新舊兩個版本：逐條找出新增、刪除、修改，並分類重大／一般／文字修正。')}
+/* ================= 防 AI 讀錯：同一份資料裡的數字要彼此對得起來（不是判讀健康，是抓「讀錯欄位、小數點、單位、民國年」） ================= */
+// CKD-EPI 2021（不分種族）：用肌酸酐反推 eGFR，和報告上的 eGFR 比對
+function egfrCalc(cr,age,fem){if(!(cr>0)||!(age>=18))return null;const k=fem?.7:.9,a=fem?-.241:-.302,x=cr/k;return 142*Math.pow(Math.min(x,1),a)*Math.pow(Math.max(x,1),-1.2)*Math.pow(.9938,age)*(fem?1.012:1)}
+function scaleCheck(v,m){const W=[],h=(+m.h||0)/100,n=k=>num(v[k]);
+  const w=n('weight'),bmi=n('bmi'),fat=n('fat'),fm=n('fatMass'),mu=n('muscle'),sk=n('skeletal'),le=n('lean');
+  if(w!=null&&bmi!=null&&h){const b=w/(h*h);if(Math.abs(b-bmi)>1)W.push(`BMI ${bmi} 和體重 ${w} kg、身高 ${m.h} cm 算出來的 ${r1(b)} 差很多：AI 可能讀錯，或身高設定不同`)}
+  if(w&&fat!=null&&fm!=null){const f=fm/w*100;if(Math.abs(f-fat)>2.5)W.push(`體脂率 ${fat}% 和「脂肪量 ${fm} kg ÷ 體重」算出來的 ${r1(f)}% 對不起來`)}
+  if(w!=null&&mu!=null&&mu>=w)W.push(`肌肉量 ${mu} kg 不可能大於或等於體重 ${w} kg`);
+  if(mu!=null&&sk!=null&&sk>mu)W.push(`骨骼肌 ${sk} kg 比肌肉量 ${mu} kg 還多：可能兩個欄位對調`);
+  if(w!=null&&le!=null&&fm!=null&&Math.abs(le+fm-w)>2)W.push(`去脂體重 ${le} ＋ 脂肪量 ${fm} 應該約等於體重 ${w} kg`);
+  return W}
+function labCheck(items,m,date){const W=[],v=k=>num(items[k]?.v??items[k]),a=ageOf(m);
+  const tc=v('tc'),ldl=v('ldl'),hdl=v('hdl');if(tc&&ldl&&ldl>tc)W.push(`LDL ${ldl} 比總膽固醇 ${tc} 還高：不可能，可能欄位讀錯`);if(tc&&hdl&&hdl>tc)W.push(`HDL ${hdl} 比總膽固醇 ${tc} 還高：不可能`);
+  const sb=v('sbp'),db=v('dbp');if(sb&&db&&sb<=db)W.push(`收縮壓 ${sb} 應該比舒張壓 ${db} 高：可能填反`);
+  const cr=v('cr'),eg=v('egfr');if(cr&&eg){const c=egfrCalc(cr,a,m.sex==='f');if(c&&Math.abs(c-eg)>Math.max(15,c*.3))W.push(`eGFR ${eg} 和肌酸酐 ${cr} 算出來的約 ${Math.round(c)} 差很多：確認單位（mg/dL 或 μmol/L）或是否讀錯`)}
+  const hb=v('hb'),hct=v('hct');if(hb&&hct&&(hct/hb<2.3||hct/hb>3.8))W.push(`血容比 ${hct}% 和血紅素 ${hb} 對不起來（通常約 3 倍）`);
+  if(date){if(date>todayS())W.push(`報告日期 ${date} 在未來：民國年是否換算錯？`);else if(date<addDays(todayS(),-3650))W.push(`報告日期 ${date} 是 10 年以前：民國年是否換算錯？`)}
+  return W}
+function watchCheck(v){const W=[],n=k=>num(v[k]);if(n('rhr')!=null&&n('walkhr')!=null&&n('rhr')>n('walkhr'))W.push(`靜止心率 ${n('rhr')} 比步行平均心率 ${n('walkhr')} 還高：可能兩個欄位對調`);
+  if(n('sbp')!=null&&n('dbp')!=null&&n('sbp')<=n('dbp'))W.push(`手錶血壓 ${n('sbp')}/${n('dbp')}：收縮壓應該比較高，可能填反`);return W}
+const chkNote=W=>W.length?`<br><span style="color:var(--amber)">🛡 <b>防 AI 讀錯檢查</b>：${W.map(esc).join('；')}。請對照截圖再存。</span>`:'';
+const chkHTML=W=>Array.isArray(W)&&W.length?`<div class="hl warn" style="margin:10px 0"><b>🛡 存檔時的疑點（${W.length}）</b><br>${W.map(esc).join('<br>')}<div class="sub" style="margin-top:4px">數字彼此對不起來，常見是 AI 讀錯欄位、小數點或單位：請對照原始截圖，有錯就按「編輯」修正。</div></div>`:'';
 /* ================= 備份 ================= */
-async function exportData(){
-  const data={app:'NutriCore',v:2,exported:new Date().toISOString(),members:MEM,active:ACT,scale:SCALE,labs:LABS,watch:WATCH,exlog:EXLOG,self:SELFR,img:Object.fromEntries(Object.entries(IMG).filter(([,v])=>/^https:/.test(v))),gas:GAS};
-  const name=`nutricore-backup-${ymd(new Date())}.json`,json=JSON.stringify(data);
-  try{const file=new File([json],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return}   /* iOS：同時帶 title 會只送出文字、把檔案丟掉 */}catch(e){if(e.name==='AbortError')return}
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);toast('已下載備份檔');
-}
 // 備份檔可能被改過：id、日期格式不對的資料一律丟掉，避免壞資料或惡意內容進到畫面
 function cleanBackup(d){
   const okId=v=>typeof v==='string'&&/^[\w-]{1,40}$/.test(v);
   const mem=(Array.isArray(d.members)?d.members:[]).filter(m=>m&&okId(m.id)&&typeof m.name==='string'&&m.name.trim())
     .map(m=>{const c={...m,name:m.name.trim().slice(0,20),sex:m.sex==='f'?'f':'m',birth:parseYMD(m.birth)||'1990-01-01'},ok=(a,list)=>(Array.isArray(a)?a:[]).filter(k=>list.some(z=>z[0]===k));
-      if(m.fh)c.fh={ca:ok(m.fh.ca,FH_CA),chr:ok(m.fh.chr,FH_CHR),early:!!m.fh.early};else delete c.fh;
+      if(m.fh)c.fh={ca:ok(m.fh.ca,FH_CA),chr:ok(m.fh.chr,FH_CHR),early:!!m.fh.early,mbc:!!m.fh.mbc,gene:!!m.fh.gene};else delete c.fh;
+      c.job=JOBS.some(j=>j[0]===m.job)?m.job:'';c.role=ROLES.some(r=>r[0]===m.role)?m.role:'';c.earner=!!m.earner;
       if(m.life){const l=obj(m.life),e=(v,a)=>a.includes(v)?v:a[0];c.life={smoke:e(l.smoke,['never','former','current']),betel:e(l.betel,['never','former','current']),alc:e(l.alc,['none','some','often']),
         abo:!!l.abo,ppd:Math.min(10,num(l.ppd)||0),yrs:Math.min(80,num(l.yrs)||0),quit:Math.min(80,num(l.quit)||0),...Object.fromEntries(['colono','gastro','ldct'].map(k=>[k,num(l[k])>=1950&&num(l[k])<=2100?Math.floor(num(l[k])):'']))}}else delete c.life;
       c.goal=GOALT[m.goal]?m.goal:'auto';if(m.diet){const t=dietOf(m);c.diet={no:t.no,ban:t.ban}}else delete c.diet;if(m.fit)c.fit=fitOf(m);else delete c.fit;
@@ -3869,30 +4383,97 @@ function cleanBackup(d){
   const watch=recs(d.watch,/^\d{4}-\d{2}-\d{2}$/);for(const k in watch)watch[k]=watch[k].map(cleanWatch);
   const exlog={};for(const[k,arr]of Object.entries(obj(d.exlog)))if(okId(k)&&Array.isArray(arr))exlog[k]=arr.filter(x=>x&&okId(x.id)&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.d))).map(cleanExLog);   // 手錶只留已知欄位、合理範圍的數字
   const scale=recs(d.scale,/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/);for(const k in scale)scale[k]=scale[k].map(x=>{const o={...x};delete o.extra;const e=normOther(x.extra,new Set());if(e.length)o.extra=e;return o});   // 體脂「其他數值」只留名稱／數值／單位
-  return{mem,self:cleanSelf(d.self,okId),scale,labs:recs(d.labs,/^\d{4}-\d{2}-\d{2}$/),watch,exlog,img,
+  return{mem,self:cleanSelf(d.self,okId),scale,fu:cleanFU(d.fu,okId),ins:cleanINS(d.ins,okId),clm:cleanCLM(d.clm,okId),labs:recs(d.labs,/^\d{4}-\d{2}-\d{2}$/),watch,exlog,img,
     gas:typeof d.gas==='string'&&(!d.gas||/^https:\/\/script\.google(usercontent)?\.com\//.test(d.gas))?d.gas:null};
 }
-const MAX_BACKUP=5*1048576;   // 正常備份只有幾十 KB；超過 5MB 一定不是備份檔，整個讀進記憶體會讓 iPhone 分頁當掉
+
+/* ================= 匯出匯入：全部家人或單一成員；可加密（AES-GCM＋PBKDF2，密碼不存）；匯入可取代、合併或另存新成員 ================= */
+const APP_ID='JiaAnKang',APP_IDS=['JiaAnKang','NutriCore'];   // 舊版 NutriCore 的備份照樣可以匯入
+const STORE_K=['scale','labs','watch','exlog','self','fu','ins','clm'];
+const storeOf=k=>({scale:SCALE,labs:LABS,watch:WATCH,exlog:EXLOG,self:SELFR,fu:FU,ins:INS,clm:CLM})[k];
+function packData(id){const ms=id?MEM.filter(m=>m.id===id):MEM,ids=new Set(ms.map(m=>m.id)),d={app:APP_ID,v:3,kind:id?'member':'all',exported:new Date().toISOString(),members:ms,active:id||ACT};
+  for(const k of STORE_K){const o=obj(storeOf(k));d[k]=id?Object.fromEntries(Object.entries(o).filter(([mid])=>ids.has(mid))):o}
+  if(!id){d.img=Object.fromEntries(Object.entries(IMG).filter(([,v])=>/^https:/.test(v)));d.gas=GAS}return d}
+const b64=u8=>{let s='';for(let i=0;i<u8.length;i+=8192)s+=String.fromCharCode(...u8.subarray(i,i+8192));return btoa(s)},ub64=s=>Uint8Array.from(atob(String(s)),c=>c.charCodeAt(0));
+async function pwKey(pw,salt,iter){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:iter,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+async function encPack(d,pw){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),iter=210000,key=await pwKey(pw,salt,iter);
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(d))));return{app:APP_ID,v:3,enc:'AES-GCM',kdf:'PBKDF2-SHA256',iter,kind:d.kind,salt:b64(salt),iv:b64(iv),data:b64(ct)}}
+async function decPack(e,pw){const iter=Math.min(2e6,Math.max(1e5,num(e.iter)||210000)),key=await pwKey(pw,ub64(e.salt),iter);
+  return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(e.iv)},key,ub64(e.data))))}
+// iPhone 分享檔案只用 navigator.share({files})，不帶 title（iOS 會只送出文字、把檔案丟掉）；不支援就下載
+async function shareJSON(json,name){try{const file=new File([json],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return}}catch(e){if(e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);toast('已下載：'+name)}
+const fileName=(id,enc)=>{const m=id&&MEM.find(z=>z.id===id),safe=String(m?.name||'').replace(/[\\/:*?"<>|\s.]+/g,'').slice(0,12)||'member';return `jiaankang-${id?safe:'all'}-${ymd(new Date())}${enc?'-enc':''}.json`};
+function exportData(id){return shareJSON(JSON.stringify(packData(id||null)),fileName(id,false))}
+function openExport(){const m=me();openSheet(sheetHead('⬆️ 匯出資料','存到「檔案」、傳 LINE 或 Email；換手機時用「匯入」還原')+`
+    <label>範圍</label><div class="seg" id="ex-scope"><button data-v="" class="on">全部家人</button><button data-v="${esc(m.id)}">只有 ${esc(m.name)}</button></div>
+    <div class="chips" style="margin-top:12px"><button type="button" class="chip" id="ex-enc">🔒 加密（要設密碼）</button></div>
+    <div id="ex-pwbox" hidden><label>密碼（至少 6 個字；App 不會記住，忘了就打不開）</label><input type="password" id="ex-pw" autocomplete="new-password"><label>再輸入一次</label><input type="password" id="ex-pw2" autocomplete="new-password"></div>
+    <button class="btn" id="ex-go" style="margin-top:14px">匯出</button><div id="ex-out"></div>
+    <p class="note">內容包含健康紀錄、回診追蹤、保單與理賠。要傳給別人或放雲端，建議加密。單一成員的檔案可以給家人匯入到他的手機（可選合併或新增）。</p>`);
+  let scope='';$$('#ex-scope button').forEach(b=>b.onclick=()=>{scope=b.dataset.v;$$('#ex-scope button').forEach(x=>x.classList.toggle('on',x===b))});
+  $('#ex-enc').onclick=()=>{$('#ex-enc').classList.toggle('on');$('#ex-pwbox').hidden=!$('#ex-enc').classList.contains('on')};
+  $('#ex-go').onclick=async()=>{if(!$('#ex-enc').classList.contains('on'))return exportData(scope);
+    const pw=$('#ex-pw').value;if(pw.length<6)return toast('密碼至少 6 個字');if(pw!==$('#ex-pw2').value)return toast('兩次密碼不一樣');if(!window.crypto?.subtle)return toast('這個瀏覽器不支援加密，請改用一般匯出');
+    $('#ex-go').disabled=true;$('#ex-go').textContent='加密中…';let json;try{json=JSON.stringify(await encPack(packData(scope||null),pw))}catch(e){toast('加密失敗：'+e.message);return}finally{$('#ex-go').disabled=false;$('#ex-go').textContent='匯出'}
+    // 加密要花一點時間，iPhone 的分享必須由「再按一次」觸發
+    const nm=fileName(scope,true);$('#ex-out').innerHTML=`<button class="btn ai" id="ex-share" style="margin-top:10px">📤 分享／儲存加密檔（${esc(nm)}）</button>`;$('#ex-share').onclick=()=>shareJSON(json,nm)}}
+function cleanFU(o,okId){const r={},s=(v,n)=>typeof v==='string'?v.slice(0,n):'',dt=v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v))?String(v):'';
+  for(const[k,arr]of Object.entries(obj(o))){if(!okId(k)||!Array.isArray(arr))continue;
+    r[k]=arr.filter(x=>x&&okId(x.id)).slice(0,300).map(x=>{const a=x.app&&typeof x.app==='object'?x.app:null;
+      return{id:x.id,k:s(x.k,60),name:s(x.name,40)||'未命名',src:['lab','cond','doc'].includes(x.src)?x.src:'doc',
+        app:a?{lv:[0,1,2,3].includes(a.lv)?a.lv:null,crit:!!a.crit,msg:s(a.msg,300),val:typeof a.val==='number'?a.val:s(a.val,40)||null,unit:s(a.unit,20),t:dt(a.t),dept:s(a.dept,30),ver:s(a.ver,20)}:null,
+        st:FU_ST.some(z=>z[0]===x.st)?x.st:'todo',appt:dt(x.appt),next:dt(x.next),t0:dt(x.t0)||todayS(),
+        log:(Array.isArray(x.log)?x.log:[]).filter(l=>l&&dt(l.d)).slice(0,100).map(l=>({id:okId(l.id)?l.id:uid(),d:l.d,hosp:s(l.hosp,30),dept:s(l.dept,20),dx:s(l.dx,300),plan:s(l.plan,300),dr:s(l.dr,200),rel:FU_RELT[l.rel]?l.rel:'',st:FU_ST.some(z=>z[0]===l.st)?l.st:'',next:dt(l.next)}))}})}return r}
+function cleanINS(o,okId){const r={};for(const[k,arr]of Object.entries(obj(o))){if(!okId(k)||!Array.isArray(arr))continue;const m=MEM.find(z=>z.id===k)||{birth:''};
+  r[k]=arr.filter(x=>x&&typeof x==='object').slice(0,100).map(x=>{const{p,err}=polCheck({...x,premium:x.prem,policyNoLast4:x.no4,beneficiary:x.bene,notes:x.note,
+      coverages:(Array.isArray(x.items)?x.items:[]).map(c=>c&&typeof c==='object'?{...c,amount:c.amt,waitingDays:c.wait,renewable:c.renew,exclusions:c.excl}:null)},m,x.src==='manual');
+    if(err.length)return null;p.src=x.src==='manual'?'manual':'ai';p.chk=!!x.chk;p.ver=typeof x.ver==='string'?x.ver.slice(0,20):'';if(/^\d{4}-\d{2}-\d{2}$/.test(String(x.t)))p.t=x.t;
+    if(Array.isArray(x.warn))p.warn=x.warn.filter(w=>typeof w==='string').slice(0,40).map(w=>w.slice(0,160));return p}).filter(Boolean)}return r}
+function cleanCLM(o,okId){const r={},s=(v,n)=>typeof v==='string'?v.slice(0,n):'',dt=v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v))?String(v):'';
+  for(const[k,arr]of Object.entries(obj(o))){if(!okId(k)||!Array.isArray(arr))continue;
+    r[k]=arr.filter(x=>x&&okId(x.id)&&dt(x.d)).slice(0,300).map(x=>({id:x.id,type:EVT.some(z=>z[0]===x.type)?x.type:'other',d:x.d,end:dt(x.end),hosp:s(x.hosp,30),dx:s(x.dx,60),cost:num(x.cost),note:s(x.note,300),ai:s(x.ai,3000),
+      claims:(Array.isArray(x.claims)?x.claims:[]).filter(c=>c&&okId(c.pid)).slice(0,30).map(c=>({pid:c.pid,st:CLM_ST.some(z=>z[0]===c.st)?c.st:'none',paid:num(c.paid),d:dt(c.d)}))}))}return r}
+const MAX_BACKUP=5*1048576;   // 正常備份幾十到幾百 KB；超過 5MB 一定不是備份檔，整個讀進記憶體會讓 iPhone 分頁當掉
 function importData(file){
-  if(file.size>MAX_BACKUP){toast(`這個檔案 ${(file.size/1048576).toFixed(1)} MB，不是 NutriCore 備份（正常只有幾十 KB）。請選 nutricore-backup-日期.json`);return}
-  const rd=new FileReader();rd.onerror=()=>toast('讀不到這個檔案，請重新下載備份後再試');rd.onload=()=>{try{const d=JSON.parse(rd.result);
-    if(d.app!=='NutriCore')throw new Error('不是 NutriCore 備份檔');
-    const c=cleanBackup(d);if(!c.mem.length)throw new Error('備份檔裡沒有有效的成員資料');
-    if(!confirm(`將以備份覆蓋目前資料（${c.mem.length} 位成員）。確定？`))return;
-    MEM=c.mem;SCALE=c.scale;LABS=c.labs;WATCH=c.watch;EXLOG=c.exlog;SELFR=c.self;IMG={...IMG,...c.img};GAS=c.gas??GAS;ACT=MEM.some(m=>m.id===d.active)?d.active:MEM[0].id;
-    S.set('members',MEM);S.set('scale',SCALE);S.set('labs',LABS);S.set('watch',WATCH);S.set('exlog',EXLOG);S.set('self',SELFR);S.set('img',IMG);S.set('gas',GAS);S.set('active',ACT);renderAll();toast('備份已還原')}
-    catch(e){toast('匯入失敗：'+e.message)}};rd.readAsText(file);
-}
+  if(file.size>MAX_BACKUP){toast(`這個檔案 ${(file.size/1048576).toFixed(1)} MB，不是家安康（NutriCore）備份（正常只有幾十到幾百 KB）。請選 jiaankang-…json 或 nutricore-backup-…json`);return}
+  const rd=new FileReader();rd.onerror=()=>toast('讀不到這個檔案，請重新下載備份後再試');
+  rd.onload=()=>{let d;try{d=JSON.parse(rd.result)}catch(e){return toast('匯入失敗：這不是 JSON 檔')}
+    if(!d||!APP_IDS.includes(d.app))return toast('匯入失敗：不是家安康（NutriCore）備份檔');
+    if(d.enc)return openDecrypt(d);importPicked(d)};rd.readAsText(file)}
+function openDecrypt(e){openSheet(sheetHead('🔒 加密的備份','輸入匯出時設的密碼')+`<label>密碼</label><input type="password" id="dp-pw" autocomplete="current-password"><button class="btn" id="dp-go" style="margin-top:12px">解密並匯入</button><p class="note">密碼只在這支手機上用來解密，不會存下來。</p>`);
+  $('#dp-go').onclick=async()=>{if(!window.crypto?.subtle)return toast('這個瀏覽器不支援解密');let d;try{d=await decPack(e,$('#dp-pw').value)}catch(x){return toast('密碼錯誤，或檔案損壞')}
+    if(!d||!APP_IDS.includes(d.app))return toast('解密後不是家安康備份');importPicked(d)}}
+function impSummary(c){const n=k=>Object.values(c[k]||{}).reduce((a,x)=>a+(Array.isArray(x)?x.length:0),0);
+  return[['scale','筆體脂'],['labs','份體檢'],['watch','筆手錶'],['exlog','筆運動'],['fu','項回診追蹤'],['ins','張保單'],['clm','個理賠事件']].map(([k,t])=>n(k)?`${n(k)} ${t}`:'').filter(Boolean).join('、')||'只有基本資料'}
+function importPicked(d){let c;try{c=cleanBackup(d)}catch(e){return toast('匯入失敗：'+e.message)}if(!c.mem.length)return toast('匯入失敗：檔案裡沒有有效的成員資料');
+  const one=d.kind==='member'&&c.mem.length===1,x=c.mem[0],ex=one&&MEM.find(z=>z.id===x.id);
+  openSheet(sheetHead('⬇️ 匯入資料',one?`成員：${esc(x.name)}`:`${c.mem.length} 位成員：${esc(c.mem.map(z=>z.name).join('、'))}`)+`<div class="sub" style="margin:8px 0 12px">檔案內容：${esc(impSummary(c))}</div>`+
+    (one?(ex?`<button class="btn" data-imp="merge">合併到「${esc(ex.name)}」（兩邊的紀錄都保留）</button><button class="btn ghost" data-imp="replace1" style="margin-top:8px">用檔案取代「${esc(ex.name)}」的全部資料</button><button class="btn ghost" data-imp="new" style="margin-top:8px">另存成新成員</button>`
+        :`<button class="btn" data-imp="merge">新增成員「${esc(x.name)}」</button>`)
+      :`<button class="btn" data-imp="merge">合併（加到目前的資料，兩邊都保留）</button><button class="btn danger" data-imp="replace" style="margin-top:8px">取代全部（目前手機上的資料會被覆蓋）</button>`)+
+    `<p class="note">合併：同一筆紀錄（同一個 id）以這支手機的為準，其他都加進來。取代前建議先匯出目前的資料。</p>`);
+  $$('#sheetBody [data-imp]').forEach(b=>b.onclick=()=>{const k=b.dataset.imp;if((k==='replace'||k==='replace1')&&!confirm(k==='replace'?`確定用檔案取代全部資料（${c.mem.length} 位成員）？`:`確定用檔案取代「${x.name}」的資料？`))return;closeSheet();applyImport(c,d,k)})}
+function applyImport(c,d,mode){
+  if(mode==='replace'){MEM=c.mem;SCALE=c.scale;LABS=c.labs;WATCH=c.watch;EXLOG=c.exlog;SELFR=c.self;FU=c.fu;INS=c.ins;CLM=c.clm;IMG={...IMG,...c.img};GAS=c.gas??GAS;ACT=MEM.some(m=>m.id===d.active)?d.active:MEM[0].id}
+  else{const idMap={};if(mode==='new'){const x=c.mem[0],nid=uid();idMap[x.id]=nid;c.mem=[{...x,id:nid,name:(x.name+'（匯入）').slice(0,20)}]}
+    for(const x of c.mem){const i=MEM.findIndex(z=>z.id===x.id);if(i<0)MEM.push(x);else MEM[i]=mode==='replace1'?x:{...x,...MEM[i]}}
+    for(const k of STORE_K){const src=obj(c[k]),dst=storeOf(k);
+      if(mode==='replace1'){for(const x of c.mem)dst[x.id]=Array.isArray(src[x.id])?src[x.id]:[];continue}
+      for(const[mid,arr]of Object.entries(src)){if(!Array.isArray(arr))continue;const tid=idMap[mid]||mid,cur=Array.isArray(dst[tid])?dst[tid]:(dst[tid]=[]),have=new Set(cur.map(r=>r.id));for(const r of arr)if(!have.has(r.id))cur.push(r)}}
+    if(c.img)IMG={...IMG,...c.img};if(c.mem.length===1)ACT=c.mem[0].id}
+  const all={members:MEM,scale:SCALE,labs:LABS,watch:WATCH,exlog:EXLOG,self:SELFR,fu:FU,ins:INS,clm:CLM,img:IMG,gas:GAS,active:ACT};for(const[k,v]of Object.entries(all))S.set(k,v);
+  renderAll();toast(mode==='replace'?'備份已還原':mode==='new'?'已另存成新成員':'匯入完成')}
 
 /* ================= 導覽 / 事件 ================= */
-// 子分頁：身體（狀況／紀錄／健檢規劃／病史）、飲食（今日菜單／營養建議／熱量計算）、運動（今天／本週課表／注意事項）；只記在這次開啟期間，重開 App 回到第一頁
-const SUBS={body:['now','rec','plan','cond'],menu:['menu','nutri','kcal'],fit:['today','week','tips']},SUB={};
+// 子分頁：健康（狀況／紀錄／追蹤／病史／自測）、飲食（今日菜單／營養建議／熱量計算）、運動（今天／本週課表／注意事項）、保險（保單／保障／理賠／AI 工具）；只記在這次開啟期間，重開 App 回到第一頁
+const SUBS={body:['now','rec','plan','cond','self'],menu:['menu','nutri','kcal'],fit:['today','week','tips'],ins:['pol','cov','clm','tool']},SUB={};
 function applySub(v){const k=SUBS[v].includes(SUB[v])?SUB[v]:SUBS[v][0];$$(`#v-${v} .subp`).forEach(p=>p.hidden=p.dataset.sub!==k);$$(`#v-${v} .subnav button`).forEach(b=>{const on=b.dataset.sub===k;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)})}
 function sub(v,k){SUB[v]=k;applySub(v);const n=$(`#v-${v} .subnav`);if(n&&n.getBoundingClientRect().top<0)scrollTo({top:0})}
 // 分頁上的數字徽章（例如：需要注意 3、病史 2）
 function subBadge(v,k,n,cls=''){const b=$(`#v-${v} .subnav [data-sub="${k}"]`);if(!b)return;b.querySelector('.bd')?.remove();if(n)b.insertAdjacentHTML('beforeend',`<span class="bd ${cls}">${n}</span>`)}
-function go(v,k){if(k&&SUBS[v]?.includes(k))SUB[v]=k;const nv=v==='lab'?'menu':v;$$('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));$$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===nv));if(SUBS[v])applySub(v);scrollTo({top:0,behavior:'smooth'})}
-function renderAll(){renderHeader();renderDash();renderBody();renderNutri(me());renderDays();renderMenu();renderFit();renderSelf();renderGallery();Object.keys(SUBS).forEach(applySub)}
+function go(v,k){if(v==='self'){v='body';k='self'}if(k&&SUBS[v]?.includes(k))SUB[v]=k;const nv=v==='lab'?'menu':v;$$('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));$$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===nv));if(SUBS[v])applySub(v);scrollTo({top:0,behavior:'smooth'})}
+function renderAll(){renderHeader();renderDash();renderBody();renderNutri(me());renderDays();renderMenu();renderFit();renderSelf();renderFU();renderIns();renderTodo();renderGallery();Object.keys(SUBS).forEach(applySub)}
 $$('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.v));
 $$('.subnav').forEach(n=>n.querySelectorAll('button').forEach(b=>b.onclick=()=>sub(n.dataset.for,b.dataset.sub)));
 $('#memChip').onclick=openMemberPicker;
@@ -3913,7 +4494,7 @@ document.addEventListener('click',e=>{
   else if('aidoc' in d)openAI();
   else if('cmp' in d)openCompare();
   else if(d.ask)openAI(d.ask);
-  else if('export' in d)exportData();
+  else if('export' in d)openExport();
   else if('import' in d)$('#importFile').click();
   else if('autoimg' in d){$('#genMissing').onclick();t.textContent=AUTO?'⏸ 停止自動補圖':'🖼 自動補齊全部菜色圖片'}
   else if(d.fday!=null){fitDay=+d.fday;renderFit()}
@@ -3951,6 +4532,18 @@ document.addEventListener('click',e=>{
   else if('addlab' in d)openLabSheet();
 });
 $('#importFile').onchange=e=>{const f=e.target.files[0];if(f)importData(f);e.target.value=''};
+document.addEventListener('click',e=>{const t=e.target.closest('[data-fu],[data-fuadd],[data-fudoc],[data-pol],[data-poladd],[data-poledit],[data-polai],[data-evt],[data-evtadd],[data-evtai]');if(!t)return;const d=t.dataset,m=me();
+  if(d.fu)openFU(d.fu);
+  else if(d.fuadd){const sg=fuSuggest(m).find(x=>x.k===d.fuadd);if(sg){const it=fuAdd(m,sg);fuSave();openFU(it.id)}}
+  else if('fudoc' in d)openFUDoc();
+  else if(d.pol)openPol(d.pol);
+  else if('poladd' in d)openPolImport();
+  else if('poledit' in d)openPolEdit();
+  else if(d.polai){const pl=insFind(m,d.polai);if(pl)copyText(promptPolReview(pl),'已複製條款審查提示詞：貼給 AI，並附上保單條款')}
+  else if(d.evt)openEvt(d.evt);
+  else if('evtadd' in d)openEvtEdit();
+  else if(d.evtai){const[k,id]=d.evtai.split(':'),ev=clmOf(m).find(x=>x.id===id);if(ev)copyText(promptClaim(m,ev,k==='deny'),k==='deny'?'已複製：貼給 AI，並附上拒賠通知、保單條款、醫療文件':'已複製：貼給 AI，並附上診斷證明、收據、保單條款')}
+});
 function setGas(v,el){if(v&&!/^https:\/\/script\.google(usercontent)?\.com\//.test(v)){toast('請貼上 https://script.google.com/ 開頭的 GAS 網址');el.value=GAS;return}
   GAS=v;S.set('gas',GAS);renderGallery();toast(v?'已改用 GAS 圖片後端':'已改回 AI Horde 免費社群算力')}
 $('#gearBtn').onclick=openSettings;
@@ -4004,7 +4597,7 @@ function promoteExtras(r){if(!Array.isArray(r.extra)||!r.extra.length)return fal
 function migrateLabs(){let ch=false;for(const arr of Object.values(LABS))for(const r of Array.isArray(arr)?arr:[])if(promoteExtras(r))ch=true;if(ch)S.set('labs',LABS);return ch}
 applyFz();migrateLabs();fillDish();renderAll();loadImages().then(()=>{updAuto();if(AUTO)setTimeout(autoNext,4000)});
 if(FRESH)setTimeout(()=>{openMemberEdit(MEM[0].id);toast('先建立你的資料，30 秒完成')},400);
-else if(!S.get('tour',0))setTimeout(()=>{if(!$('#sheet').classList.contains('on'))startTour()},1200);   // 版面改過（「我的」搬進設定）：舊使用者也看一次導覽
+else if(+S.get('tour',0)<TOUR_V)setTimeout(()=>{if(!$('#sheet').classList.contains('on'))startTour()},1200);   // 版面改過（加入保險、自測搬進健康）：舊使用者也看一次導覽
 </script>
 </body>
 </html>
