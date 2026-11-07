@@ -268,6 +268,7 @@ table.imap td.er{color:var(--red);font-weight:800}table.imap td.gp1{color:var(--
 .plvbar{display:flex;gap:10px;align-items:center;justify-content:space-between;border-radius:12px;padding:9px 12px;margin-top:10px;font-size:calc(13px*var(--fz));background:rgba(138,151,180,.08);box-shadow:inset 3px 0 0 var(--pl,var(--mute))}
 .plvbar span{color:var(--mute);font-size:calc(12px*var(--fz));text-align:right}
 .flag{box-shadow:inset 3px 0 0 var(--mute);background:rgba(138,151,180,.06);border-radius:0 10px 10px 0;padding:8px 10px 8px 12px;margin:6px 0;font-size:calc(13px*var(--fz));line-height:1.55}
+.flag details.fxd summary{font-size:calc(12px*var(--fz));color:var(--mute);cursor:pointer;padding:4px 0;min-height:24px;list-style-position:inside}.flag details.fxd summary:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:6px}
 .flag.f-err{box-shadow:inset 3px 0 0 var(--red);background:rgba(255,93,108,.08)}.flag.f-chk{box-shadow:inset 3px 0 0 var(--amber);background:rgba(255,181,71,.07)}.flag .fix{color:var(--mute);font-size:calc(12px*var(--fz));margin-top:3px}
 .cdet.ci-err,.cdet.ci-chk{padding-left:10px;box-shadow:inset 3px 0 0 var(--red)}.cdet.ci-chk{box-shadow:inset 3px 0 0 var(--amber)}
 .gap{padding:10px 0;border-top:1px solid var(--line);font-size:calc(13px*var(--fz))}.card h2+.gap{border-top:0}
@@ -4226,6 +4227,9 @@ const polAnnual=p=>{const k=(PAYF.find(x=>x[0]===p.payFreq)||[])[1],v=polPrem(p)
 // 最後一期保費的日期（年繳＝生效日＋年期−1 年；月繳＝再晚 11 個月）。沒寫年期 → 各項的繳費終期取最晚的 → 「繳到幾歲」用出生年推算（by；沒給就找保單在哪位家人底下）；躉繳 → ''
 const polOwnerBY=p=>{const z=MEM.find(z=>insOf(z).includes(p));return z?birthY(z):null};
 // 繳費終期是不是其實是保障到期日：和這一項或整張的到期日同一個月、或等於繳到 100 歲以上 → 回傳原因
+// AI 依給付表算的金額（calc）：單位數 × 每單位要對得上、每單位（或金額）要在給付表原文裡找得到，對得上才算進保障
+const calcChk=c=>{const x=c.calc;if(!x||!(x.amount>0))return null;if(x.perUnit!=null&&Math.abs((c.amt||1)*x.perUnit-x.amount)>.5)return{err:'mm'};
+  if(!x.quote||numInQuote(x.perUnit??x.amount,x.unit,x.quote)!==true)return{err:'nq'};return{ok:1,a:x.amount,unit:x.unit}};
 const peBad=(p,c,by)=>{if(!c.payEnd)return'';if(c.endDate&&c.payEnd.slice(0,7)===c.endDate.slice(0,7)||p.endDate&&c.payEnd.slice(0,7)===p.endDate.slice(0,7))return'和保障到期日一樣';
   const z=MEM.find(x=>insOf(x).includes(p)),b=String(z?.birth||'');let a=null;if(/^\d{4}-\d{2}-\d{2}$/.test(b))a=Math.floor(dSign(c.payEnd,b)/365.25);else{const y=by??polOwnerBY(p);if(y)a=+c.payEnd.slice(0,4)-y}
   return a!=null&&a>=100?`等於繳到 ${a} 歲`:''};
@@ -4235,7 +4239,7 @@ const payEnd=(p,by)=>{if(p.payFreq==='躉繳')return'';if(p.start&&p.payYears){c
 // 還在繳費：繳費期滿、躉繳、已經過了最後一期的，不算進每年保費
 const polPaying=(p,d=todayS())=>p.status==='active'&&polLive(p,d)&&p.payFreq!=='躉繳'&&!(payEnd(p)&&d>payEnd(p));
 const isLifeC=(p,c)=>/終身/.test(c.name||'')||(c.kind!=='rider'&&/終身/.test(p.product||''));   // 「終身」：保障名稱有寫，或主約的商品名稱有寫
-const covEndAge=(p,c,by)=>c.maxAge??(c.endDate?+c.endDate.slice(0,4)-by:null)??p.endAge??(p.endDate?+p.endDate.slice(0,4)-by:null);
+const covEndAge=(p,c,by)=>c.maxAge??(c.endDate?+c.endDate.slice(0,4)-by:null)??(c.payEnd&&peBad(p,c,by)?+c.payEnd.slice(0,4)-by:null)??p.endAge??(p.endDate?+p.endDate.slice(0,4)-by:null);
 const unitInfo=u=>{u=String(u||'');return{mul:/萬/.test(u)?1e4:/千|仟/.test(u)?1e3:1,per:/倍|%|％|比例/.test(u)?'x':/日|天/.test(u)?'day':/次/.test(u)?'time':/年/.test(u)?'year':/月/.test(u)?'month':''}};
 // 能不能加進金額：豁免保費、以「單位／計畫／型／份／口」計、倍數或比例都不是金額；住院日額只寫「元」當作每日
 const NOMONEY=/單位|計畫|計劃|份|口|組|方案|plan|unit/i,NOMONEY2=/型|級/;
@@ -4281,7 +4285,10 @@ function polCheck(r,m,manual){const W=new Set(),E=[],str=(v,n)=>insScrub(typeof 
   for(const c of Array.isArray(r.coverages)?r.coverages:Array.isArray(r.items)?r.items:[]){if(!c||typeof c!=='object')continue;const name=str(c.name,40);if(!name){W.add('有一項保障沒有名稱，已略過');continue}
     const rn=String(c.renewable??c.renew??''),cat=INSCATK[c.cat]?c.cat:'other';if(c.cat&&!INSCATK[c.cat])W.add(`「${name}」的類別看不懂，先放「其他」`);
     const it={name,kind:c.kind==='rider'?'rider':'main',cat,amt:num(c.amount??c.amt),unit:str(c.unit,12),limit:nx(c.limit,60),wait:num(c.waitingDays??c.wait),
-      renew:RENEW.some(x=>x[0]===rn&&rn)?rn:/不保證|非保證/.test(rn)?'no':/保證/.test(rn)?'guar':/^(yes|true|可)/i.test(rn)?'yes':'',maxAge:num(c.maxAge),endDate:parseYMD(c.endDate,1)||'',excl:nx(c.exclusions??c.excl,200),quote:nx(c.quote,240),page:num(c.page),code:str(c.code,16),st:stParse(c.status??c.st,''),start:parseYMD(c.start,1)||'',payEnd:parseYMD(c.payEnd,1)||'',prem:num(c.premium??c.prem)};
+      renew:RENEW.some(x=>x[0]===rn&&rn)?rn:/不保證|非保證/.test(rn)?'no':/保證/.test(rn)?'guar':/^(yes|true|可)/i.test(rn)?'yes':'',maxAge:num(c.maxAge),endDate:parseYMD(c.endDate,1)||'',excl:nx(c.exclusions??c.excl,200),quote:nx(c.quote,240),page:num(c.page),code:str(c.code,16),st:stParse(c.status??c.st,''),start:parseYMD(c.start,1)||'',payEnd:parseYMD(c.payEnd,1)||'',prem:num(c.premium??c.prem),
+      calc:(x=>{if(!x||typeof x!=='object')return null;const a=num(x.amount??x.amt);return a>0?{amount:a,unit:str(x.unit,12),perUnit:num(x.perUnit),formula:nx(x.formula,80),quote:nx(x.quote,200),page:num(x.page)}:null})(c.calc)};
+    if(it.payEnd){const b=String(m.birth||''),ag=/^\d{4}-\d{2}-\d{2}$/.test(b)?Math.floor(dSign(it.payEnd,b)/365.25):null;   // 繳費終期其實是保障到期日（和到期日同月、或繳到 100 歲以上）
+      if(it.endDate&&it.payEnd.slice(0,7)===it.endDate.slice(0,7)||p.endDate&&it.payEnd.slice(0,7)===p.endDate.slice(0,7)||ag!=null&&ag>=100){if(!it.endDate)it.endDate=it.payEnd;it.payEnd=''}}
     if(it.amt!=null&&it.amt<0){W.add(`「${name}」金額是負數，已清空`);it.amt=null}
     if(it.prem!=null&&it.prem<0){W.add(`「${name}」保費是負數，已清空`);it.prem=null}
     if(it.wait!=null&&!(it.wait>=0&&it.wait<=730)){W.add(`「${name}」等待期 ${it.wait} 天不合理，已清空`);it.wait=null}
@@ -4330,7 +4337,9 @@ function covSum(m,d=todayS(),extra=[]){const R={},X=[],age=ageOf(m),xi=(p,c,why)
     for(const c of p.items||[]){const ex=itemOff(p,c)?(OFF_ST.includes(c.st)?`這一項${stS(c.st)}`:p.status==='reduced'?'主約減額繳清後，附約通常已經終止（打開保單按「還有效」可以算回）':'展期定期只保身故，這一項通常已經沒有（打開保單按「還有效」可以算回）')
         :c.endDate&&c.endDate<d?`這一項 ${c.endDate} 已到期`:c.maxAge!=null&&age>=c.maxAge?`最高到 ${c.maxAge} 歲，現在 ${Math.floor(age)} 歲`:'';
       if(ex){if(!extra.includes(p))xi(p,c,ex);continue}let u=covUnit(c),a=c.amt;const tr=termsRule(p,c),how=[];
-      if(u.nm==='unit'&&tr?.perUnit){const pi=unitInfo(tr.perUnit.unit);a=(c.amt||1)*tr.perUnit.amt*(pi.mul||1);u={...pi,mul:1};how.push(`依條款：${c.amt||1} × 每單位 ${tr.perUnit.amt.toLocaleString()} ${tr.perUnit.unit}`)}
+      const ck=u.nm==='unit'?calcChk(c):null;
+      if(ck?.ok){a=ck.a;u={...unitInfo(ck.unit)};how.push(`AI 依給付表：${c.calc.formula||ck.a}`)}
+      else if(u.nm==='unit'&&tr?.perUnit){const pi=unitInfo(tr.perUnit.unit);a=(c.amt||1)*tr.perUnit.amt*(pi.mul||1);u={...pi,mul:1};how.push(`依條款：${c.amt||1} × 每單位 ${tr.perUnit.amt.toLocaleString()} ${tr.perUnit.unit}`)}
       else if(c.cat==='hosp_real'&&(u.nm==='unit'||a==null)&&tr){const lim=tr.limit??(tr.sub?.length?tr.sub.filter(x=>unitInfo(x.unit).per!=='day').reduce((t,x)=>t+x.amt*(unitInfo(x.unit).mul||1),0):null);if(lim){a=lim;u={mul:1,per:''};how.push('依條款的每次限額')}}
       if(p.cur&&a!=null&&!u.nm){if(p.fx){a*=p.fx;how.push(`× 匯率 ${p.fx}`)}else u={...u,nm:'cur'}}   // 外幣：填了匯率才換成台幣加總
       if(u.guess)how.push('單位只寫「元」，當成每日');
@@ -4354,20 +4363,20 @@ function polAudit(p,m){const F=[],add=(lv,k,t,fix,ci)=>F.push({lv,k,t,fix,ci}),Y
     else add('chk','x',`生效日 ${p.start} 在 ${m.name} 出生前 ${dd} 天`,'懷孕時投保的新生兒保單是正常的；不是的話請按「編輯」改生效日。')}
   if(p.payAge!=null&&p.start&&/^\d{4}-\d{2}-\d{2}$/.test(b)){const a0=Math.floor(dSign(p.start,b)/365.25);if(a0>=0&&p.payAge<=a0)add('err','x',`繳到 ${p.payAge} 歲，但 ${p.start} 生效時已經 ${a0} 歲`,`多半是把「繳 ${p.payAge} 年」讀成「繳到 ${p.payAge} 歲」：按下面的按鈕改成繳費年期；不是的話按「編輯」修正。`)}
   const pe=payEnd(p,birthY(m));
-  {const bad=(p.items||[]).filter(c=>!itemOff(p,c)&&peBad(p,c));if(bad.length)add('chk','d',`繳費終期 ${bad[0].payEnd.slice(0,7)} 不合理：${peBad(p,bad[0])}`,'多半是 AI 把「保險期間」（保障到哪一天）抄成「繳費期間」。App 先不用它算繳到哪一年；按下面的按鈕清掉，再看保單首頁的「繳費期間」按「編輯」填繳費年期。')}
+
   if(p.status==='paidup'&&pe&&Y<pe)add('err','x',p.start&&p.payYears?`狀態是「繳費期滿」，但 ${p.start} 生效、繳 ${p.payYears} 年，最後一期在 ${pe.slice(0,7)}`:`狀態是「繳費期滿」，但最後一期在 ${pe.slice(0,7)}（${(p.items||[]).some(c=>c.payEnd===pe)?'看各項的繳費終期':`繳到 ${p.payAge} 歲`}）`,'看最近一次繳費通知、保單健診或保險公司 App：還在繳 → 改成「有效」；辦了減額繳清（不用再繳、保額變小）→ 改成「減額繳清」，再把金額改成減額後的保額；提前繳清 → 按「編輯」把繳費年期改成實際繳了幾年。');
   if(p.status==='active'&&pe&&Y>pe)add('info','d',`繳費年期已滿（最後一期 ${pe.slice(0,7)}）`,'確認已經繳完，可以按「編輯」把狀態改成「繳費期滿」；每年保費已經不算這張。');
-  if(p.status==='reduced')add('chk','v','減額繳清：不用再繳保費，保額比原本小','保單健診、保險存摺或保險公司 App 上的「減額後保額」才是現在的保障：對照後按「編輯」把金額改成減額後的保額。附約通常在辦減額繳清時就終止了（看附約條款）。');
+  if(p.status==='reduced')add('info','d','減額繳清：不用再繳保費，保額比原本小','保單健診、保險存摺或保險公司 App 上的「減額後保額」才是現在的保障：對照後按「編輯」把金額改成減額後的保額。附約通常在辦減額繳清時就終止了（看附約條款）。');
   if(p.status==='waived')add('info','d','豁免保費：不用再繳，保障照常','發生條款寫的狀況（例如失能、重大傷病）後，之後的保費由保險公司豁免、保障照常；每年保費不算這張。');
-  if(p.status==='extended')add('chk','v','展期定期：不用再繳保費，只保身故、保到展期期滿日','看批註書的「展期期滿日」，按「編輯」填到期日；醫療、附約和生存給付通常已經終止。');
+  if(p.status==='extended')add('info','d','展期定期：不用再繳保費，只保身故、保到展期期滿日','看批註書的「展期期滿日」，按「編輯」填到期日；醫療、附約和生存給付通常已經終止。');
   if(p.type==='inv')add('info','d','投資型保單：保費有一部分是投資','保障看身故保險金或保額；保費包含投資和費用，不全是保障。帳戶價值會漲跌，看保險公司的對帳單。');
   if(p.type==='grp')add('info','d','團體保險：離職、退休或公司不續保後就沒有','不要當成長期保障：離職或退休前，先評估要不要自己買（有些團體保險離職時可以轉成個人保單，問人資或保險公司）。');
   if(p.type==='trav'&&!p.endDate)add('chk','d','旅平險沒有到期日：旅行結束後就不保了','按「編輯」填到期日（旅行最後一天），或刪掉這張；沒填會一直算進保障。');
   if(p.cur)add(p.fx?'info':'chk','d',p.fx?`${curN(p.cur)}保單：用匯率 ${p.fx} 換成台幣粗估`:`${curN(p.cur)}保單：沒有匯率，保障和保費先不算`,p.fx?'匯率每天在變，保障缺口和每年保費只是粗估；要改匯率按下面的按鈕。':`金額和保費是${curN(p.cur)}。按下面的按鈕填匯率（1 ${curN(p.cur)}大約換多少台幣），保障缺口和每年保費就會換算成台幣。`);
   if(p.start&&p.start>addDays(Y,31))add('chk','d',`生效日 ${p.start} 在未來：還不算進保障`,'如果是民國年換算錯（民國年＋1911），按「編輯」修正；真的還沒生效就不用改。');
-  if(polPrem(p)==null&&p.payFreq!=='躉繳'&&p.status==='active'&&!(pe&&Y>pe))add('chk','d','沒有保費','看保單首頁或繳費通知的「每期保費」，按「編輯」填上，每年保費和保費負擔才算得準。');
-  else if(polPrem(p)>0&&!p.payFreq&&['active','quote'].includes(p.status)&&!(pe&&Y>pe))add('chk','d','繳別不明：每年保費先不算','看繳費通知是年繳、半年繳、季繳還是月繳（銀行轉帳、信用卡是繳費方式，不是繳別），按「編輯」選繳別。');
-  if(polPrem(p)===0&&p.status==='active'&&p.payFreq!=='躉繳'&&!(pe&&Y>pe))add('chk','d','每期保費是 0','還在繳費的保單保費不會是 0：多半是 AI 沒讀到（保費常在另一頁）。看繳費通知或保險公司 App，按「編輯」填上實際保費；已經繳完就把狀態改成「繳費期滿」。');
+  if(polPrem(p)==null&&p.payFreq!=='躉繳'&&p.status==='active'&&!(pe&&Y>pe))add('info','d','沒有保費','不影響保障。想算每年保費，看繳費通知的「每期保費」按下面的按鈕填。');
+  else if(polPrem(p)>0&&!p.payFreq&&['active','quote'].includes(p.status)&&!(pe&&Y>pe))add('info','d','繳別不明：每年保費先不算（不影響保障）','想算每年保費，看繳費通知是年繳、半年繳、季繳還是月繳，按下面的按鈕選。');
+  if(polPrem(p)===0&&p.status==='active'&&p.payFreq!=='躉繳'&&!(pe&&Y>pe))add('info','d','每期保費是 0','不影響保障。還在繳的保單保費不會是 0，多半是 AI 沒讀到：按下面的按鈕填，已經繳完就把狀態改成「繳費期滿」。');
   (p.items||[]).forEach((c,i)=>{const n=`「${c.name}」`;
     if(!c.st&&itemOff(p,c)){add('chk','x',p.status==='reduced'?`${n}是附約：主約減額繳清後通常已經終止（App 先不算）`:`${n}：展期定期只保身故，這項通常已經沒有（App 先不算）`,'看保單健診、保險存摺或保險公司 App：還有效就按「還有效」，這項會算回保障；已經終止就按「確定已終止」。按「我已核對」不會讓這個提醒消失。',i);return}
     if(itemOff(p,c))return;const u=covUnit(c),amt=c.amt;
@@ -4375,6 +4384,10 @@ function polAudit(p,m){const F=[],add=(lv,k,t,fix,ci)=>F.push({lv,k,t,fix,ci}),Y
       else if(tr?.accOnly==null&&/傷害/.test(c.name)&&!/疾病/.test(c.name))add('chk','v',`${n}名稱有「傷害」：可能只賠意外受傷`,'看條款：只有意外受傷才賠的，改成「意外醫療」，生病住院的保障才不會看起來比實際多；生病也賠就不用改（按「我已核對」）。',i)}}
     if(/一年期/.test(c.name)&&!c.renew)add('info','d',`${n}是一年期：每年續保`,'一年期的保費會隨年齡調整；不保證續保的，保險公司可以不續保。看條款有沒有寫「保證續保」，按「編輯」選續保方式。',i);
     if(u.nm==='waiver')add('info','d',`${n}是豁免保費：不算保障金額`,'不用改。發生條款寫的狀況（例如失能、重大疾病）後，之後的保費不用再繳。',i);
+    else if(u.nm==='unit'&&c.calc){const ck=calcChk(c),x=c.calc,ui=unitInfo(x.unit),v=money(x.amount*(ui.mul||1))+PERT[ui.per],tr2=termsRule(p,c);
+      if(ck?.ok){add('info','d',`${n}以「${c.unit}」計：AI 依給付表算成 ${v}`,`${x.formula||''}${x.quote?`（給付表：${x.quote}${x.page?`，第 ${x.page} 頁`:''}）`:''}`,i);
+        if(tr2?.perUnit){const pi=unitInfo(tr2.perUnit.unit),t2=(c.amt||1)*tr2.perUnit.amt*(pi.mul||1);if(Math.abs(t2-x.amount*(ui.mul||1))>.5)add('err','x',`${n}AI 算的 ${v} 和條款規則的 ${money(t2)}${PERT[pi.per]} 不一樣`,'看條款最後面的給付表，按「編輯」改成正確的金額和單位，或重新匯入條款規則。',i)}}
+      else add('chk','v',ck?.err==='mm'?`${n}AI 算的 ${v} 和 ${c.amt||1} × ${(x.perUnit??0).toLocaleString()} 對不起來`:`${n}每單位 ${(x.perUnit??x.amount).toLocaleString()} 在給付表原文裡找不到`,'先不算進保障。看條款最後面的給付表，按「✏️ 填金額」或「編輯」改成實際金額。',i)}
     else if(u.nm==='unit')add('chk','d',`${n}以「${c.unit}」計，不是金額：沒有加進總額`,'看條款的「每單位給付金額」和投保了幾個單位（或計畫幾），算出實際金額後按「編輯」改金額和單位（例：2 單位 × 每單位 1,000 元/日 → 2,000 元/日）。',i);
     else if(u.nm==='x')add('info','d',`${n}以倍數或比例計：沒有加進總額`,'實際金額＝倍數 × 保額或日額，看條款；不用改。',i);
     else if(amt==null)add('chk','d',`${n}沒有金額：沒有加進總額`,'看保單的給付金額，按「編輯」填上；條款沒有固定金額（例如依收據實支）可以不填。',i);
@@ -4435,7 +4448,7 @@ function polMove(id,to){const m=me(),p=insFind(m,id),z=MEM.find(x=>x.id===to);if
   renderIns();renderTodo();closeSheet();toast(`已移到 ${z.name}：右上角切換到 ${z.name} 就看得到`)}
 function flagsHTML(F,pid){if(!F.length)return'';const o={err:0,chk:1,info:2},n=l=>F.filter(f=>f.lv===l).length;
   return `<div class="h4">逐項檢查：${[n('err')&&`🔴 錯誤 ${n('err')}`,n('chk')&&`🟠 待核對 ${n('chk')}`,n('info')&&`⚪ 參考 ${n('info')}`].filter(Boolean).join('・')}</div>`+
-    [...F].sort((a,b)=>o[a.lv]-o[b.lv]).map(f=>{const fx=pid?PFIX.filter(x=>!!x[3]===(f.ci!=null)&&x[0].test(f.t)):[];return `<div class="flag f-${f.lv}"><b>${PLV[f.lv][0]} ${esc(f.t)}</b><div class="fix">${f.lv==='info'?'說明':'怎麼修正'}：${esc(f.fix)}</div>${f.lv!=='info'?`<div class="fix">📍 去哪裡找：${esc(whereOf(f.t))}</div>`:''}${fx.map(x=>`<button class="btn ghost sm" data-pfix="${x[1]}" data-ppol="${esc(pid)}"${f.ci!=null?` data-pci="${f.ci}"`:''} style="width:auto;margin:8px 8px 0 0">${x[2]}</button>`).join('')}</div>`}).join('')}
+    [...F].sort((a,b)=>o[a.lv]-o[b.lv]).map(f=>{const fx=pid?PFIX.filter(x=>!!x[3]===(f.ci!=null)&&x[0].test(f.t)):[];return `<div class="flag f-${f.lv}"><b>${PLV[f.lv][0]} ${esc(f.t)}</b>${fx.map(x=>`<button class="btn ghost sm" data-pfix="${x[1]}" data-ppol="${esc(pid)}"${f.ci!=null?` data-pci="${f.ci}"`:''} style="width:auto;margin:8px 8px 0 0">${x[2]}</button>`).join('')}${f.fix?`<details class="fxd"><summary>${f.lv==='info'?'說明':'怎麼做'}</summary><div class="fix">${f.lv==='info'?'說明':'怎麼修正'}：${esc(f.fix)}</div>${f.lv!=='info'?`<div class="fix">📍 去哪裡找：${esc(whereOf(f.t))}</div>`:''}</details>`:''}</div>`}).join('')}
 /* 保障缺口（App 粗算、參考用）：預設用常見的「雙十原則」（壽險、意外約年收入 10 倍，保費不超過年收入 10%）與醫療險常見建議；目標可以自己改（m.covT，萬元；日額是元）。
    core＝基本保障（壽險、意外、實支實付）：沒有或不足才上總覽待辦 */
 const GAPK=[{k:'life',t:'壽險（身故）',u:'萬',cats:['life'],pers:[''],s:'壽險',core:1},{k:'accident',t:'意外身故／失能',u:'萬',cats:['accident'],pers:[''],s:'意外險',core:1},
@@ -4610,7 +4623,8 @@ function healthDecl(m){const out=[],y2=addDays(todayS(),-730),y5=addDays(todayS(
   return[...new Set(out)].slice(0,30)}
 function openPol(id){const m=me(),p=insFind(m,id);if(!p)return;const pe=payEnd(p),F=polFlags(p,m),lv=polLv(p,m),by=birthY(m);
   const iw=i=>{const f=F.filter(x=>x.ci===i);return f.some(x=>x.lv==='err')?' ci-err':f.some(x=>x.lv==='chk')?' ci-chk':''};
-  const endTxt=c=>c.endDate?`到 ${c.endDate}`:c.maxAge?`最高到 ${c.maxAge} 歲`:covEndAge(p,c,by)==null&&isLifeC(p,c)?'終身（依名稱判斷）':'';
+  const endTxt=c=>{const pb=c.payEnd&&peBad(p,c,by),d=c.endDate||(pb?c.payEnd:'');if(!d)return endTx0(c);const b=String(m.birth||''),ag=/^\d{4}-\d{2}-\d{2}$/.test(b)?Math.floor(dSign(d,b)/365.25):+d.slice(0,4)-by;
+    return pb||ag>=100?`保障到 ${d.slice(0,4)} 年（${ag} 歲，等於終身）`:`到 ${c.endDate}`},endTx0=c=>c.maxAge?`最高到 ${c.maxAge} 歲`:covEndAge(p,c,by)==null&&isLifeC(p,c)?'終身（依名稱判斷）':'';
   const lvTxt={err:'有資料矛盾，看下面「怎麼修正」',chk:p.chk?'有項目要補':'AI 讀的，請對照保單',ok:p.chk?'已對照保單核對':'App 自動核對：每個金額都在原文找得到、沒有要補的',quote:'建議書，還沒買',off:'不算進保障'}[lv];
   openSheet(sheetHead(`📑 ${esc(p.insurer)}`,esc(p.product))+`
     <div class="plvbar plv-${lv}"><b>${PLV[lv][0]} ${PLV[lv][1]}</b><span>${lvTxt}</span></div>
@@ -4620,7 +4634,7 @@ function openPol(id){const m=me(),p=insFind(m,id);if(!p)return;const pe=payEnd(p
     <div class="h4">保障項目</div>${(p.items||[]).map((c,i)=>`<div class="cdet${iw(i)}"><div class="row" style="margin:0"><b>${esc(c.name)}</b><span class="tg${itemOff(p,c)?' mute':''}">${esc(INSCATK[c.cat]||'其他')}</span></div>
       <div style="margin-top:4px"><b>${esc(covAmtP(p,c))}</b>${c.kind==='rider'?' <span class="sub">附約</span>':''}${c.limit?` <span class="sub">${esc(c.limit)}</span>`:''}</div>
       <div class="sub">${esc([c.wait!=null&&`等待期 ${c.wait} 天`,c.renew&&(RENEW.find(x=>x[0]===c.renew)||[])[1],endTxt(c)].filter(Boolean).join('・'))}</div>
-      ${(t=>t?`<div class="sub">${esc(t)}</div>`:'')([c.st?(OFF_ST.includes(c.st)?stS(c.st)+'（不算保障）':stS(c.st)):itemOff(p,c)?`主約${stS(p.status)}：App 先不算`:'',c.code&&'代碼 '+c.code,c.start&&'始期 '+c.start,c.payEnd&&'繳費到 '+c.payEnd,c.prem!=null&&'保費 '+c.prem.toLocaleString()+' 元'].filter(Boolean).join('・'))}
+      ${(t=>t?`<div class="sub">${esc(t)}</div>`:'')([c.st?(OFF_ST.includes(c.st)?stS(c.st)+'（不算保障）':stS(c.st)):itemOff(p,c)?`主約${stS(p.status)}：App 先不算`:'',c.code&&'代碼 '+c.code,c.start&&'始期 '+c.start,c.payEnd&&!peBad(p,c,by)&&'繳費到 '+c.payEnd,c.prem!=null&&'保費 '+c.prem.toLocaleString()+' 元'].filter(Boolean).join('・'))}
       ${c.excl?`<div class="sub">除外：${esc(c.excl)}</div>`:''}${c.quote?`<div class="sub" style="margin-top:4px;border-left:2px solid var(--line);padding-left:8px">原文${c.page?`（第 ${esc(c.page)} 頁）`:''}：${esc(c.quote)}</div>`:''}</div>`).join('')||'<div class="sub">沒有保障項目</div>'}
     <div class="h4">📜 條款規則</div>${termsHTML(p)}
     ${p.review?`<details class="box"><summary>🔍 AI 條款審查結果（${esc(p.review.t)}）</summary><div class="sub" style="white-space:pre-wrap;line-height:1.7;padding-bottom:12px">${esc(p.review.text)}</div></details>`:''}
@@ -4741,7 +4755,7 @@ function promptPolicy(){return `你是「保單資料擷取器」。我會附上
 1. 只輸出一個 JSON 物件，前後不要有任何文字，也不要用 \`\`\` 包起來。
 2. 文件上找不到的欄位一律填 null，禁止推算或猜測（不要自己換算年繳保費、不要自己判斷是否保證續保、不要用同名商品的其他版本補）。
 3. 每一項保障都要附 quote：從文件逐字抄下這項保障名稱與金額的那一句（一定要含數字），以及 page（第幾頁，沒有頁碼填 null）。抄不到原文的保障不要列。
-4. amount 只填數字（不含逗號）；unit 照文件寫法另外填（例如「萬元」「元/日」「元」「倍」「萬元/次」）。
+4. amount 只填數字（不含逗號）；unit 照文件寫法另外填（例如「萬元」「元/日」「元」「倍」「萬元/次」）。以「單位」「計畫」計的（例如 2 單位、計畫二）：amount 填單位數或計畫別的數字（計畫二填 2）、unit 填「單位」或「計畫」，再從條款最後的「給付表」「保險金額表」找出 1 單位（或計畫一）的金額，換算後填 calc：{"amount":換算後的實際金額,"unit":"元/日","perUnit":1 單位或計畫一的金額,"formula":"計畫二 = 2 × 每計畫 1,000 元/日","quote":"給付表上那一列的原文","page":頁碼}；給付表是每個計畫各列金額（不是倍數）時，perUnit 填 null、amount 填這個計畫那一列的金額；文件裡沒有給付表就 calc 填 null，不要用常識猜。
 5. 日期一律西元 YYYY-MM-DD；文件是民國年請加 1911（例如 110/03/05 → 2021-03-05）。
 6. premium 填文件上整張保單的「每期保費」，payFreq 只填繳別（年繳、半年繳、季繳、月繳、躉繳），不是繳費方式：銀行轉帳、信用卡、自行繳費填 payMethod；不要換算成年繳。payYears 填繳費年期（例如 20 年期填 20）；文件寫「繳至 X 歲」就把 X 填在 payToAge，payYears 填 null，不要自己換算。currency 填保單幣別（台幣 TWD、美元 USD、澳幣 AUD、人民幣 CNY、歐元 EUR、日圓 JPY），文件沒寫就填 null；外幣保單的金額、保費照外幣抄，不要換算成台幣。
 7. status 照文件寫（例如 有效、正常繳費、繳費期滿、減額繳清、展期定期、豁免保費、停效、解約、滿期、終止）。減額繳清、展期定期、豁免保費的保單不用再繳：premium 填 0、payFreq 填 null；amount 填減額（或展期）後現在的保額，原本的保額寫進 notes。
@@ -4759,7 +4773,7 @@ function promptPolicy(){return `你是「保單資料擷取器」。我會附上
 life＝壽險／身故保險金、accident＝意外身故或失能、acc_med＝意外醫療（實支或日額）、hosp_day＝住院日額（病房費、住院醫療保險金每日）、hosp_real＝住院醫療費用實支實付（雜費限額）、surgery＝手術（含門診手術）、cancer＝癌症（初次罹癌、癌症住院、化療放療）、critical＝重大疾病／重大傷病一次金、disability＝失能扶助／失能保險金、ltc＝長期照顧、waiver＝豁免保費、other＝其他
 
 【輸出格式】
-{"type":"kinwell.policy","v":1,"policies":[{"insurer":null,"product":null,"policyType":null,"policyNoLast4":null,"insuredHint":null,"holderHint":null,"beneficiary":null,"start":null,"payYears":null,"payToAge":null,"payFreq":null,"payMethod":null,"premium":null,"currency":null,"status":null,"endDate":null,"endAge":null,"uwResult":null,"uwExclusion":null,"uwDeclared":null,"coverages":[{"name":null,"code":null,"kind":"main","cat":"other","status":null,"start":null,"payEnd":null,"premium":null,"amount":null,"unit":null,"limit":null,"waitingDays":null,"renewable":null,"maxAge":null,"endDate":null,"exclusions":null,"quote":null,"page":null}],"notes":null}],"unreadable":[]}`}
+{"type":"kinwell.policy","v":1,"policies":[{"insurer":null,"product":null,"policyType":null,"policyNoLast4":null,"insuredHint":null,"holderHint":null,"beneficiary":null,"start":null,"payYears":null,"payToAge":null,"payFreq":null,"payMethod":null,"premium":null,"currency":null,"status":null,"endDate":null,"endAge":null,"uwResult":null,"uwExclusion":null,"uwDeclared":null,"coverages":[{"name":null,"code":null,"kind":"main","cat":"other","status":null,"start":null,"payEnd":null,"premium":null,"amount":null,"unit":null,"limit":null,"waitingDays":null,"renewable":null,"maxAge":null,"endDate":null,"exclusions":null,"quote":null,"page":null,"calc":null}],"notes":null}],"unreadable":[]}`}
 
 /* ---------- 理賠：醫療事件 → 有效保單裡可能適用的保障（等待期、保單狀態、待核對）→ 文件清單 → 每張保單的申請進度；AI 分析只當參考 ---------- */
 const plusYears=(d,n)=>{const x=new Date(d+'T00:00');x.setFullYear(x.getFullYear()+n);return ymd(x)};
@@ -4917,14 +4931,14 @@ function openTermsImport(pid,o={}){const m=me(),p=insFind(m,pid);if(!p)return;co
 // 匯出成和「保單匯入」相同的格式（AI 改完可以直接貼回來更新，appId 讓 App 認出是哪一張）；備註、投保時告知不附，受益人只附關係（寫姓名的不附）
 const polExport=p=>({appId:p.id,insurer:p.insurer,product:p.product,policyType:p.type?(POL_TYPE.find(x=>x[0]===p.type)||[0,null])[1]:null,policyNoLast4:p.no4||null,insuredHint:p.hint||null,holderHint:relOf(p,p.holder),beneficiary:relOf(p,p.bene),start:p.start||null,payYears:p.payYears??null,payToAge:p.payAge??null,payFreq:p.payFreq||null,payMethod:p.payBy||null,premium:p.prem??null,currency:p.cur||'TWD',
   status:stS(p.status)||null,endDate:p.endDate||null,endAge:p.endAge??null,uwResult:p.uw?.res||null,uwExclusion:p.uw?.excl||null,
-  coverages:(p.items||[]).map(c=>({name:c.name,code:c.code||null,kind:c.kind==='rider'?'rider':'main',cat:c.cat,status:c.st?stS(c.st):null,start:c.start||null,payEnd:c.payEnd||null,premium:c.prem??null,amount:c.amt??null,unit:c.unit||null,limit:c.limit||null,waitingDays:c.wait??null,renewable:c.renew||null,maxAge:c.maxAge??null,endDate:c.endDate||null,exclusions:c.excl||null,quote:c.quote||null,page:c.page??null}))});
+  coverages:(p.items||[]).map(c=>({name:c.name,code:c.code||null,kind:c.kind==='rider'?'rider':'main',cat:c.cat,status:c.st?stS(c.st):null,start:c.start||null,payEnd:c.payEnd||null,premium:c.prem??null,amount:c.amt??null,unit:c.unit||null,limit:c.limit||null,waitingDays:c.wait??null,renewable:c.renew||null,maxAge:c.maxAge??null,endDate:c.endDate||null,exclusions:c.excl||null,quote:c.quote||null,page:c.page??null,calc:c.calc||null}))});
 const POLCHK_HEAD=`你是「保單資料核對助手」。下面是 App 從我的保單文件整理出來的資料，以及 App 自動檢查出的問題（🔴 錯誤＝資料互相矛盾；🟠 待核對＝要對照原本的文件）。我會附上保單首頁、附約明細、保單健診表、繳費通知或保險存摺的照片或 PDF。
 
 【規則】
 1. 只根據我附的文件和下面的資料；文件上看不到的，寫「文件上看不到」，不要用一般保險常識補。
 2. 逐條處理「App 檢查出的問題」：先告訴我要看哪一份文件、哪一頁、哪一個欄位（例如保單首頁的「保險金額」、附約明細的「保額」、條款最後的「給付表」、繳費通知的「應繳保費」）；我有附那份文件的，直接對照，寫出你看到的原文（逐字）和正確的值。
 3. 附約沒有金額的，分成兩種：①本來就沒有固定金額（例如豁免保費、依實際費用給付但有限額、手術是日額乘倍數）→ 說明怎麼算、限額寫在哪裡；②文件上有寫、只是沒抄到 → 抄出金額、單位和原文。
-4. 以「計畫」「單位」計的：從條款的給付表找出每個計畫或每單位的金額，算出實際金額並寫出算式（例如 2 單位 × 每單位 1,000 元/日 = 2,000 元/日）。
+4. 以「計畫」「單位」計的：從條款的給付表找出每個計畫或每單位的金額，算出實際金額並寫出算式（例如 2 單位 × 每單位 1,000 元/日 = 2,000 元/日）；JSON 裡寫在這一項的 calc：{"amount","unit","perUnit","formula","quote"（給付表原文）,"page"}，amount、unit 照保單原本寫的（例如 2、計畫）。
 5. 身分證字號、完整保單號碼、姓名、電話、地址一律不要輸出；quote 裡有姓名的，改成「被保險人」「要保人」。
 6. 欄位寫法：payFreq 只填繳別（年繳、半年繳、季繳、月繳、躉繳），不是繳費方式；銀行轉帳、信用卡、自行繳費填 payMethod。減額繳清、展期定期、豁免保費、繳費期滿的保單已經不用繳：premium 填 0、payFreq 填 null，不用再問繳別；amount 填減額（或展期）後現在的保額。holderHint（要保人）、beneficiary（受益人）照文件寫，可以寫姓名（只存在使用者的手機）：要保人和被保險人是同一人填「本人」；受益人寫姓名或「法定繼承人」，有比例就寫比例。currency 照保單的幣別（TWD、USD…），外幣的金額照外幣抄、不要換算。
 7. 最後輸出一個 JSON（格式和下面相同），只放有改動的保單；appId 原樣保留（App 用它認出是哪一張）；每張保單要列出全部保障項目（沒改的照原樣抄），因為 App 會用它更新整張；沒把握的欄位填 null，每個金額都要附 quote（逐字原文）。renewable 用代號：guar＝保證續保、yes＝可續保但不保證、no＝不保證續保。
@@ -5050,7 +5064,8 @@ const CE_FORM={er:{f:['cost','self'],ch:['acc','sxOut'],chl:{sxOut:'有縫合或
   ca:{f:['days','cost','self'],ch:['sx','inSitu']},crit:{f:['days','icu','cost','self'],ch:['sx']},dis:{f:[],ch:['acc']},death:{f:[],ch:['acc']}};
 const CE_CHIP={acc:'意外造成',sx:'有手術',sxOut:'門診手術（沒住院）',inSitu:'原位癌（零期）'};
 function claimItem(p,c,e){const tr=termsRule(p,c),cl=tr?.clause?`（依條款${tr.clause}）`:tr?'（依條款）':'';let u=covUnit(c),b=c.amt!=null?c.amt*(u.mul||1):null;
-  if(u.nm==='unit'&&tr?.perUnit){const pi=unitInfo(tr.perUnit.unit);b=(c.amt||1)*tr.perUnit.amt*(pi.mul||1);u={...pi,nm:''}}
+  {const ck=u.nm==='unit'?calcChk(c):null;if(ck?.ok){const pi=unitInfo(ck.unit);b=ck.a*(pi.mul||1);u={...pi,nm:''}}
+   else if(u.nm==='unit'&&tr?.perUnit){const pi=unitInfo(tr.perUnit.unit);b=(c.amt||1)*tr.perUnit.amt*(pi.mul||1);u={...pi,nm:''}}}
   if(b!=null&&p.cur)b=p.fx?b*p.fx:null;   // 外幣：填了匯率才換成台幣
   const why=[],cat=c.cat,k=e.k,death=k==='death',dis=k==='dis';
   const rel=cat==='life'?death:cat==='accident'?e.acc&&(death||dis):cat==='acc_med'?e.acc&&!death&&!dis:cat==='hosp_day'?e.hosp:cat==='hosp_real'?e.hosp||(e.sx&&e.sxOut)||(e.acc&&!death&&!dis):cat==='surgery'?e.sx

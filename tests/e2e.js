@@ -1235,8 +1235,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       const rowOf = k => [...document.querySelectorAll('#covBody .gap')][GAPK.findIndex(g => g.k === k)];
       return { life: life.st + '|' + life.why, acc: acc.st, lifeBar: rowOf('life').querySelector('.gbar').className + '|' + rowOf('life').querySelector('.gbar i').style.width, accBar: rowOf('accident').querySelector('.gbar').className + '|' + rowOf('accident').querySelector('.gbar i').style.width,
         flags: polFlags(insFind(m, 'q1'), m).map(f => f.lv + ':' + f.t).join('｜') } });
-    check('保障缺口：成年人沒填年收入、負債時，壽險不能顯示「不急」，要說「填年收入、負債就能算目標」；沒有目標的列不畫滿格進度條（虛線＝還不能判斷）；有效保單每期保費 0 要提醒',
-      !/^na/.test(y1.life) && /填年收入、負債就能算目標/.test(y1.life) && /unk/.test(y1.lifeBar) && /\|0%$/.test(y1.lifeBar) && /unk/.test(y1.accBar) && /\|0%$/.test(y1.accBar) && /chk:每期保費是 0/.test(y1.flags), JSON.stringify(y1));
+    check('保障缺口：成年人沒填年收入、負債時，壽險不能顯示「不急」，要說「填年收入、負債就能算目標」；沒有目標的列不畫滿格進度條（虛線＝還不能判斷）；有效保單每期保費 0 要提醒（參考：不影響保障）',
+      !/^na/.test(y1.life) && /填年收入、負債就能算目標/.test(y1.life) && /unk/.test(y1.lifeBar) && /\|0%$/.test(y1.lifeBar) && /unk/.test(y1.accBar) && /\|0%$/.test(y1.accBar) && /info:每期保費是 0/.test(y1.flags), JSON.stringify(y1));
     const y2 = await page.evaluate(() => { const m = me(); go('dash'); const c = calc(m), sc = scaleEval(scalesOf(m)[0], m).map(i => i.k).join();
       go('menu', 'menu'); return { todo: $('#todoCard').innerHTML, prot: Math.round(c.prot), w: c.w, sc, menu: $('#menuSum').textContent } });
     check('總覽待辦：心臟警訊自測結果是「儘快」→ 上待辦（點了打開結果）；已知脂肪肝（病史或超音波）不再出現「內臟脂肪 → 建議超音波確認脂肪肝」；新手減脂的蛋白質不超過每公斤 1.6 g；補蛋白質不再叫你「加 6 顆蛋」',
@@ -1745,7 +1745,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       /貼回/.test(k5.lab) && k5.out && k5.rules === 1 && /審查結論/.test(k5.rvt) && !/kinwell\.terms/.test(k5.rvt) && k5.shown && /只存審查文字/.test(k5.out2) && /等待期 30 天/.test(k5.r2) && !k5.r2t && !k5.xss, JSON.stringify(k5));
     const k6 = await page.evaluate(() => { const m = me(); openPolEdit('r1'); const fv = $('#pe-freq').value, has = ['#pe-paym', '#pe-cur', '#pe-fx'].filter(s => !$(s)).join(); $('#pe-save').click(); const p = insFind(m, 'r1');
       const c = polClean(JSON.parse(JSON.stringify(insFind(m, 'u1') || {})), m) || {}, c1 = polClean(JSON.parse(JSON.stringify(p)), m) || {};
-      openPol('r1'); const t = $('#sheetBody').textContent; closeSheet(); go('ins', 'pol'); const chkIn = !!$('#polBody [data-polchkin="all"]');
+      openPol('r1'); const t = $('#sheetBody').textContent; closeSheet(); insFind(m, 'r2').items[0].quote = ''; renderIns(); go('ins', 'pol'); const chkIn = !!$('#polBody [data-polchkin="all"]');
       return { fv, has, f: p.payFreq, by: p.payBy, rv: !!p.review, c: [c.cur, c.fx].join(), c1: [c1.payBy, !!c1.review].join(), kv: /減額繳清：不用再繳/.test(t) && /銀行轉帳/.test(t), chkIn } });
     check('編輯保單：繳別空白時選「不明／不用繳」（不再預設成年繳、存檔也不會偷偷變年繳）；有繳費方式、幣別、匯率欄位；存檔保留審查結果；備份還原保留繳費方式、幣別、匯率、審查結果；保單寫「減額繳清：不用再繳」和繳費方式；保單清單的核對清單也有「貼回」',
       k6.fv === '' && k6.has === '' && k6.f === '' && k6.by === '銀行轉帳' && k6.rv && k6.c === 'USD,31' && k6.c1 === '銀行轉帳,true' && k6.kv && k6.chkIn, JSON.stringify(k6));
@@ -1803,10 +1803,10 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
           P('t6', { insurer: '庚人壽', bene: '本人' })].map(p => p.items ? p : { ...p, items: [{ name: '身故保險金', kind: 'main', cat: 'life', amt: 50, unit: '萬元', quote: '身故保險金 50 萬元' }] }) } });
     const o1 = await page.evaluate(() => { const m = me(), F = id => polFlags(insFind(m, id), m), t = id => F(id).map(f => f.lv + ':' + f.t).join('|');
       const t1 = insFind(m, 't1'), before = { pe: payEnd(t1), f1: t(1 && 't1'), f2: t('t2'), lv: polLv(t1, m) };
-      openPol('t1'); const btn = !!$('#sheetBody [data-pfix="pe_clr"]'); const ok = polFix(m, t1, 'pe_clr'); const after = { pe: t1.items[0].payEnd, f1: t('t1') };
-      return { before, btn, ok, after } });
-    check('繳費終期其實是保障到期日：和保障到期日同一天、或繳到 100 歲以上 → 不再誤報「繳費期滿，但最後一期在 2094」，改成提醒「繳費終期不合理」＋一鍵清掉；繳到幾年不再顯示 2094',
-      o1.before.pe === '' && !/狀態是「繳費期滿」/.test(o1.before.f1) && /chk:繳費終期 2094-03 不合理：和保障到期日一樣/.test(o1.before.f1) && /繳費終期 2090-01 不合理：等於繳到 105 歲/.test(o1.before.f2) && o1.btn && o1.ok && o1.after.pe === '' && !/繳費終期/.test(o1.after.f1), JSON.stringify(o1));
+      openPol('t1'); const s1 = $('#sheetBody').textContent; openPol('t2'); const s2 = $('#sheetBody').textContent;
+      return { before, s1: /保障到 2094 年（\d+ 歲，等於終身）/.test(s1) && !/繳費到 2094/.test(s1), s2: /保障到 2090 年（105 歲，等於終身）/.test(s2), lv2: polLv(insFind(me(), 't2'), me()) } });
+    check('繳費終期其實是保障到期日（和保障到期日同一天、或繳到 100 歲以上）：不再誤報「繳費期滿，但最後一期在 2094」、不用處理，直接寫成「保障到 2094 年（等於終身）」，不算繳到哪一年',
+      o1.before.pe === '' && !/狀態是「繳費期滿」|不合理/.test(o1.before.f1 + o1.before.f2) && o1.s1 && o1.s2 && o1.lv2 === 'ok', JSON.stringify(o1));
     const o2 = await page.evaluate(() => { const m = me(), t = id => polFlags(insFind(m, id), m).map(f => f.lv + ':' + f.t).join('|'), t3 = insFind(m, 't3');
       const imp = polCheck({ insurer: '甲人壽', product: '醫療', holderHint: '王小明', beneficiary: '身故：王大同 50%、林美華 50%', start: '2020-01-01', coverages: [{ name: '住院日額', cat: 'hosp_day', amount: 1000, unit: '元/日', quote: '每日 1,000 元' }] }, m).p;
       const ex = polExport(t3), ck = promptPolCheck(m, insOf(m)); openPol('t3'); const s3 = $('#sheetBody').textContent;
@@ -1819,7 +1819,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('App 驗證過的保單自動核對：沒有錯誤、沒有待核對項目（金額都在原文找得到）→ 🟢 已核對，寫「App 自動核對」', o2.lv3 === 'ok' && o2.auto, JSON.stringify({ lv3: o2.lv3, auto: o2.auto }));
     const o3 = await page.evaluate(() => { const m = me(); renderIns(); go('ins', 'pol'); const b = $('#polBody [data-polall]'), lab = b?.textContent || ''; b?.click(); const L = insOf(m).map(p => polLv(p, m)).join();
       return { lab, L, chk: insOf(m).filter(p => p.chk).length } });
-    check('保單清單「✅ 我都對照過了」：一次把待核對的保單標成已核對（有錯誤的不會）', /我都對照過了：把 1 張待核對標成已核對/.test(o3.lab) && !/chk/.test(o3.L) && o3.chk === 1, JSON.stringify(o3));
+    check('保單清單「✅ 我都對照過了」：沒有待核對時不出現（App 驗證過的都自動核對了）', !o3.lab && !/chk/.test(o3.L), JSON.stringify(o3));
     await page.close();
   }
 
@@ -1848,6 +1848,31 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       return { shown: !!pre && !pre.hidden && /保單資料擷取器/.test(pre.textContent), mp: promptMinProt() } });
     check('匯入畫面按「看提示詞」真的顯示在畫面上（AI 工具分頁也有同一份，不會打開到看不見的那份）；最低保障規劃提示詞也請 AI 找保太多的、考慮新生兒、75 歲以上、軍人、榮民、低收入',
       p3.shown && /保太多/.test(p3.mp) && /榮民/.test(p3.mp) && /75 歲以上/.test(p3.mp) && /新生兒/.test(p3.mp) && /低收入/.test(p3.mp), JSON.stringify({ shown: p3.shown }));
+    await page.close();
+  }
+
+  // =============== 6zq. 保障金額不能漏：以「單位／計畫」計的請 AI 依給付表一併算（App 交叉驗算：單位數 × 每單位、原文裡找得到）；只影響保費的（繳別不明、沒有保費）改成參考；檢查說明收起來 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me', inc: 80 }], active: 'a' });
+    const q1 = await page.evaluate(() => { const m = me(), L = INS[m.id] || (INS[m.id] = []);
+      const mk = (id, calc, o = {}) => { const { p } = polCheck({ insurer: '甲人壽', product: '住院醫療' + id, start: '2020-01-01', status: '有效', payFreq: '', premium: 6000, ...o, coverages: [{ name: '住院醫療計畫', kind: 'rider', cat: 'hosp_day', amount: 2, unit: '計畫', quote: '計畫二', calc }] }, m); p.id = id; L.push(p); return p };
+      const ok = mk('u1', { amount: 2000, unit: '元/日', perUnit: 1000, formula: '計畫二 = 2 × 每計畫 1,000 元/日', quote: '計畫一 住院日額每日 1,000 元', page: 12 });
+      const bad = mk('u2', { amount: 4000, unit: '元/日', perUnit: 1000, formula: '?', quote: '計畫一 住院日額每日 1,000 元' });
+      const noq = mk('u3', { amount: 3000, unit: '元/日', perUnit: 1500, formula: '2 × 1,500', quote: '計畫一 住院日額每日 1,000 元' });
+      const pe = polCheck({ insurer: '乙人壽', product: '終身醫療', start: '2018-01-01', coverages: [{ name: '住院日額', cat: 'hosp_day', amount: 1000, unit: '元/日', quote: '每日 1,000 元', payEnd: '2090-01-01' }] }, m).p;
+      S.set('ins', INS); renderIns();
+      const fl = p => polFlags(p, m).map(f => f.lv + ':' + f.t).join('|'), day = covSum(m).filter(x => x.cat === 'hosp_day' && !x.nm && x.per === 'day').reduce((t, x) => t + x.v, 0);
+      openPol('u1'); const s1 = $('#sheetBody'), direct = s1.querySelectorAll('.flag > .fix').length, det = s1.querySelectorAll('.flag details').length, t1 = s1.textContent;
+      return { f1: fl(ok), lv1: polLv(ok, m), f2: fl(bad), f3: fl(noq), day, direct, det, t1: /AI 依給付表算成 2,000 元\/日/.test(t1) && /計畫二 = 2 × 每計畫 1,000 元\/日/.test(t1), pe: [pe.items[0].payEnd, pe.items[0].endDate].join(), pp: promptPolicy(), ck: POLCHK_HEAD } });
+    check('以「計畫」計的保障：AI 依給付表一併算（2 × 每計畫 1,000 元/日 = 2,000 元/日、附給付表原文）→ App 驗算對得上就直接算進保障、不用審查（只留參考說明）',
+      /info:「住院醫療計畫」以「計畫」計：AI 依給付表算成 2,000 元\/日/.test(q1.f1) && q1.lv1 === 'ok' && q1.t1 && q1.day === 2000, JSON.stringify({ f1: q1.f1, lv1: q1.lv1, day: q1.day }));
+    check('交叉驗算：AI 算的金額和「單位數 × 每單位」對不起來 → 待核對、不算進保障；每單位金額在給付表原文裡找不到 → 待核對、不算進保障（保障加總只有對得上的 2,000 元/日）',
+      /chk:「住院醫療計畫」AI 算的 4,000 元\/日 和 2 × 1,000 對不起來/.test(q1.f2) && /chk:「住院醫療計畫」每單位 1,500 在給付表原文裡找不到/.test(q1.f3) && q1.day === 2000, JSON.stringify({ f2: q1.f2, f3: q1.f3, day: q1.day }));
+    check('只影響保費的不用審查：繳別不明改成參考「每年保費先不算（不影響保障）」；匯入時繳費終期是保障到期日（繳到 100 歲以上）→ 直接改成保障到期日；檢查說明收進「怎麼做」（點開才看）',
+      /info:繳別不明：每年保費先不算（不影響保障）/.test(q1.f1) && q1.pe === ',2090-01-01' && q1.direct === 0 && q1.det >= 1, JSON.stringify({ f1: q1.f1, pe: q1.pe, direct: q1.direct, det: q1.det }));
+    check('匯入與核對提示詞：以單位／計畫計的請 AI 依給付表算出 calc（金額、每單位、算式、給付表原文、頁碼），沒有給付表就填 null',
+      /"calc":null/.test(q1.pp) && /給付表/.test(q1.pp) && /perUnit/.test(q1.pp) && /formula/.test(q1.pp) && /calc/.test(q1.ck), '');
     await page.close();
   }
 
