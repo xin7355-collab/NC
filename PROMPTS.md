@@ -176,27 +176,29 @@ App 整理的發現：（心臟、頭暈、肌少症會列出）
 3. 每一項保障都要附 quote：從文件逐字抄下這項保障名稱與金額的那一句（一定要含數字），以及 page（第幾頁，沒有頁碼填 null）。抄不到原文的保障不要列。
 4. amount 只填數字（不含逗號）；unit 照文件寫法另外填（例如「萬元」「元/日」「元」「倍」「萬元/次」）。
 5. 日期一律西元 YYYY-MM-DD；文件是民國年請加 1911（例如 110/03/05 → 2021-03-05）。
-6. premium 填文件上整張保單的「每期保費」，payFreq 填繳別（年繳、半年繳、季繳、月繳、躉繳）；不要換算成年繳。payYears 填繳費年期（例如 20 年期填 20）；文件寫「繳至 X 歲」就把 X 填在 payToAge，payYears 填 null，不要自己換算。
-7. status 照文件寫（例如 有效、正常繳費、繳費期滿、減額繳清、展期定期、豁免保費、停效、解約、滿期、終止）。
+6. premium 填文件上整張保單的「每期保費」，payFreq 只填繳別（年繳、半年繳、季繳、月繳、躉繳），不是繳費方式：銀行轉帳、信用卡、自行繳費填 payMethod；不要換算成年繳。payYears 填繳費年期（例如 20 年期填 20）；文件寫「繳至 X 歲」就把 X 填在 payToAge，payYears 填 null，不要自己換算。currency 填保單幣別（台幣 TWD、美元 USD、澳幣 AUD、人民幣 CNY、歐元 EUR、日圓 JPY），文件沒寫就填 null；外幣保單的金額、保費照外幣抄，不要換算成台幣。
+7. status 照文件寫（例如 有效、正常繳費、繳費期滿、減額繳清、展期定期、豁免保費、停效、解約、滿期、終止）。減額繳清、展期定期、豁免保費的保單不用再繳：premium 填 0、payFreq 填 null；amount 填減額（或展期）後現在的保額，原本的保額寫進 notes。
 8. 保單健診表或明細表上，每一項險種（主約、附約）各有一列時：險種代碼填 code、這一項自己的狀態填 coverages 的 status、投保始期填 start、繳費終期填 payEnd、這一項的每期保費填 coverages 的 premium。
 9. cat 只能用下面的代號；判斷不出來就填 "other"，不要硬分類。名稱有「傷害」的醫療給付（例如傷害醫療保險金、傷害住院日額；名稱同時有「疾病」的不算）用 acc_med，不要用 hosp_day、hosp_real、surgery；燒燙傷保險金用 other。主約 kind 填 "main"，附約填 "rider"。
 10. 保險公司欄位空白、但商品名稱裡有公司名（例如「○○人壽△△終身壽險」）：insurer 填商品名稱裡的公司名。
 11. policyType：文件寫投資型、變額、萬能 → "投資型"；團體保險、團險 → "團體"；旅行平安險 → "旅平"；其他填 null。
-12. 身分證字號、完整保單號碼、姓名、電話、地址一律不要輸出；保單號碼只填末 4 碼（policyNoLast4）；被保險人、要保人只寫稱謂（insuredHint、holderHint，例如「本人」「配偶」「長子」「公司」，不知道就填 null）。
+12. 身分證字號、完整保單號碼、姓名、電話、地址一律不要輸出（quote、notes 也一樣：姓名改成「被保險人」「要保人」）；保單號碼只填末 4 碼（policyNoLast4）。被保險人、要保人只寫稱謂（insuredHint、holderHint，例如「本人」「配偶」「長子」「公司」）：要保人和被保險人是同一人，holderHint 填「本人」；看不出關係才填 null。受益人（beneficiary）只寫關係，例如「法定繼承人」「配偶」「子女」；身故和生存（滿期）受益人不同時寫成「身故：法定繼承人；生存：本人」。
 13. 看不清楚、被遮住或你不確定的內容，寫進 unreadable 陣列，不要猜。
 14. 一份文件有多張保單（例如保單健診表），policies 陣列就放多筆。
-15. 有批註書、除外約定（例如「對某部位或某疾病不負給付責任」）或加費承保：uwResult 填核保結果（標準承保、加費承保、除外承保），除外內容逐字抄到 uwExclusion；文件沒寫就填 null。
+15. 有批註書、除外約定（例如「對某部位或某疾病不負給付責任」）或加費承保：uwResult 填核保結果（標準承保、加費承保、除外承保），除外內容逐字抄到 uwExclusion；文件沒寫就填 null。附了要保書的，健康告知有勾「是」的題目，把題目和說明抄到 uwDeclared（例如「2 年內住院：2024 年膽結石手術」），沒有就填 null。
 16. 輸出前逐筆自我核對：每個 amount 都必須能在同一筆的 quote 裡找到。
 
 【cat 代號】
 life＝壽險／身故保險金、accident＝意外身故或失能、acc_med＝意外醫療（實支或日額）、hosp_day＝住院日額（病房費、住院醫療保險金每日）、hosp_real＝住院醫療費用實支實付（雜費限額）、surgery＝手術（含門診手術）、cancer＝癌症（初次罹癌、癌症住院、化療放療）、critical＝重大疾病／重大傷病一次金、disability＝失能扶助／失能保險金、ltc＝長期照顧、waiver＝豁免保費、other＝其他
 
 【輸出格式】
-{"type":"kinwell.policy","v":1,"policies":[{"insurer":null,"product":null,"policyType":null,"policyNoLast4":null,"insuredHint":null,"holderHint":null,"beneficiary":null,"start":null,"payYears":null,"payToAge":null,"payFreq":null,"premium":null,"currency":"TWD","status":null,"endDate":null,"endAge":null,"uwResult":null,"uwExclusion":null,"coverages":[{"name":null,"code":null,"kind":"main","cat":"other","status":null,"start":null,"payEnd":null,"premium":null,"amount":null,"unit":null,"limit":null,"waitingDays":null,"renewable":null,"maxAge":null,"endDate":null,"exclusions":null,"quote":null,"page":null}],"notes":null}],"unreadable":[]}
+{"type":"kinwell.policy","v":1,"policies":[{"insurer":null,"product":null,"policyType":null,"policyNoLast4":null,"insuredHint":null,"holderHint":null,"beneficiary":null,"start":null,"payYears":null,"payToAge":null,"payFreq":null,"payMethod":null,"premium":null,"currency":null,"status":null,"endDate":null,"endAge":null,"uwResult":null,"uwExclusion":null,"uwDeclared":null,"coverages":[{"name":null,"code":null,"kind":"main","cat":"other","status":null,"start":null,"payEnd":null,"premium":null,"amount":null,"unit":null,"limit":null,"waitingDays":null,"renewable":null,"maxAge":null,"endDate":null,"exclusions":null,"quote":null,"page":null}],"notes":null}],"unreadable":[]}
 ```
 
 - **App 的防錯檢查**（不靠 AI 自律）：每個金額必須出現在 AI 抄的原文 `quote` 裡（接受千分位、全形數字、萬元換算；原文是國字數字時提醒人工核對）；身分證字號、手機號碼自動刪除；保單號碼只留末 4 碼；生效日在未來、繳費年期不合理、年繳保費超過 100 萬、已超過最高續保年齡都會提醒；同一位被保險人已有同公司、同商品、同生效日的保單 → 預設不匯入。
-- **年繳保費由 App 計算**：AI 只抄「每期保費」與繳別，App 換算（月繳 ×12、季繳 ×4、半年繳 ×2）。
+- **年繳保費由 App 計算**：AI 只抄「每期保費」與繳別，App 換算（月繳 ×12、季繳 ×4、半年繳 ×2）。繳費方式（銀行轉帳、信用卡）另存一欄，AI 寫在繳別裡也會自動移過去；減額繳清、展期定期、豁免保費、繳費期滿的保單不用再繳，不會再問繳別。
+- **外幣保單**：幣別照保單抄（範本不預設台幣）；商品名稱或單位有「美元」等字也會當成外幣保單。填匯率（1 外幣換多少台幣）之前，金額和保費不加進保障缺口與每年保費。
+- **姓名不進資料**：要保人和被保險人同一人寫「本人」，受益人只寫關係（法定繼承人、配偶、子女）；AI 照抄到原文裡的家人姓名，App 會換成「被保險人」或「家人」。
 - **匯入後是「待核對」**：對照原本的保單按「我已核對」，全家保障地圖才會打 ✔。
 
 ## 七、保險 AI 工具（App 依你的資料自動組合，這裡是固定的規則）
@@ -248,7 +250,7 @@ F. 尚待確認事項
 
 ### 保單核對（哪裡有錯、去哪裡找）
 
-保單清單上方「🔎 要核對的地方」或保單明細按「📋 複製『核對錯誤』提示詞」：App 附上檢查出的每個問題、建議去看的文件與欄位，以及和匯入格式相同的保單 JSON（受益人、備註、投保時告知不附；檢查文字裡的姓名拿掉、生日只留年份）。
+保單清單上方「🔎 要核對的地方」或保單明細「🤖 請 AI 幫忙」按「📋 複製『核對錯誤』提示詞」：App 附上檢查出的每個問題、建議去看的文件與欄位，以及和匯入格式相同的保單 JSON（每張附 appId 讓 App 認出是哪一張；備註、投保時告知不附，受益人只附「法定繼承人」這類關係；家人姓名換成「被保險人」「家人」、生日只留年份）。AI 回覆後整段複製，按「📥 貼回 AI 的核對結果」：App 只讀最後的 JSON，列出哪裡不同，確認後才更新。
 
 ```text
 你是「保單資料核對助手」。下面是 App 從我的保單文件整理出來的資料，以及 App 自動檢查出的問題（🔴 錯誤＝資料互相矛盾；🟠 待核對＝要對照原本的文件）。我會附上保單首頁、附約明細、保單健診表、繳費通知或保險存摺的照片或 PDF。
@@ -258,14 +260,15 @@ F. 尚待確認事項
 2. 逐條處理「App 檢查出的問題」：先告訴我要看哪一份文件、哪一頁、哪一個欄位（例如保單首頁的「保險金額」、附約明細的「保額」、條款最後的「給付表」、繳費通知的「應繳保費」）；我有附那份文件的，直接對照，寫出你看到的原文（逐字）和正確的值。
 3. 附約沒有金額的，分成兩種：①本來就沒有固定金額（例如豁免保費、依實際費用給付但有限額、手術是日額乘倍數）→ 說明怎麼算、限額寫在哪裡；②文件上有寫、只是沒抄到 → 抄出金額、單位和原文。
 4. 以「計畫」「單位」計的：從條款的給付表找出每個計畫或每單位的金額，算出實際金額並寫出算式（例如 2 單位 × 每單位 1,000 元/日 = 2,000 元/日）。
-5. 身分證字號、完整保單號碼、姓名、電話、地址一律不要輸出。
-6. 最後輸出一個 JSON（格式和下面相同），只放有改動的保單；每張保單要列出全部保障項目（沒改的照原樣抄），因為 App 會用它更新整張；沒把握的欄位填 null，每個金額都要附 quote（逐字原文）。renewable 用代號：guar＝保證續保、yes＝可續保但不保證、no＝不保證續保。
+5. 身分證字號、完整保單號碼、姓名、電話、地址一律不要輸出；quote 裡有姓名的，改成「被保險人」「要保人」。
+6. 欄位寫法：payFreq 只填繳別（年繳、半年繳、季繳、月繳、躉繳），不是繳費方式；銀行轉帳、信用卡、自行繳費填 payMethod。減額繳清、展期定期、豁免保費、繳費期滿的保單已經不用繳：premium 填 0、payFreq 填 null，不用再問繳別；amount 填減額（或展期）後現在的保額。holderHint（要保人）、beneficiary（受益人）只寫稱謂：要保人和被保險人是同一人填「本人」；受益人寫「法定繼承人」「配偶」「子女」這類關係。currency 照保單的幣別（TWD、USD…），外幣的金額照外幣抄、不要換算。
+7. 最後輸出一個 JSON（格式和下面相同），只放有改動的保單；appId 原樣保留（App 用它認出是哪一張）；每張保單要列出全部保障項目（沒改的照原樣抄），因為 App 會用它更新整張；沒把握的欄位填 null，每個金額都要附 quote（逐字原文）。renewable 用代號：guar＝保證續保、yes＝可續保但不保證、no＝不保證續保。
 
 【輸出】
 A. 問題清單：保單｜問題｜去哪裡找（文件、頁、欄位）｜文件上寫的（原文）｜正確的值
 B. 附約金額說明（本來就沒有固定金額的，寫出怎麼算）
 C. 還需要我補的文件
-D. JSON：貼回 App「保單 → 用 AI 匯入保單」，選「用新資料更新這張」
+D. JSON：我會把你的整段回覆貼回 App（打開保單按「📥 貼回 AI 的核對結果」），App 只讀裡面的 JSON，所以 JSON 要完整、放在最後
 ```
 
 ### 條款規則擷取（理賠試算用）
@@ -290,6 +293,16 @@ D. JSON：貼回 App「保單 → 用 AI 匯入保單」，選「用新資料更
 
 【輸出格式】
 {"type":"kinwell.terms","v":1,"ver":null,"product":null,"rules":[{"name":null,"pay":null,"perUnit":null,"limit":null,"sub":[],"maxDays":null,"icuX":null,"outSx":null,"inSitu":null,"waitIll":null,"waitAcc":null,"accOnly":null,"outpatient":null,"copyClaim":null,"maxAge":null,"excl":[],"quote":null,"clause":null,"extra":false}],"unreadable":[]}
+```
+
+### 保單條款審查（最後附條款規則 JSON）
+
+保單明細「🤖 請 AI 幫忙」→「📋 複製『保單條款審查』提示詞」：前面是共同規則、逐條審查的六個項目和這張保單的資料（去識別化），最後一段（下面這段）請 AI 附上條款規則 JSON。AI 回覆後整段複製，按「📥 貼回 AI 的審查結果」：審查文字存在這張保單，JSON 存進「📜 條款規則」給理賠試算用；只有文字沒有 JSON 也能存。
+
+```text
+7. 最後把每個保障項目的給付規則整理成下面格式的 JSON，放在回覆最後（App 會存進「條款規則」，理賠試算會用）：條款上找不到的欄位填 null，不要推算；每條附 quote（逐字原文）和 clause（條號）。pay：daily＝每日 × 天數、expense＝依收據實支實付、lump＝一次給付、table＝依手術表或倍數表、ratio＝依失能等級比例、waiver＝豁免保費；perUnit：以單位或計畫計時每單位的金額，例如 {"amt":1000,"unit":"元/日"}；limit：每次最高給付（元）；sub：實支實付的分項限額；maxDays：每次住院最多給付幾天；icuX：加護病房是平常的幾倍；outSx：門診手術給付比例；inSitu：原位癌給付比例；waitIll、waitAcc：疾病、意外的等待期天數；accOnly：只賠意外填 true；outpatient：門診也賠填 true；copyClaim：可以用收據副本填 true；maxAge：最高續保或保障到幾歲；excl：除外責任摘要（每條 40 字內，附條號）。
+{"type":"kinwell.terms","v":1,"ver":null,"product":null,"rules":[{"name":null,"pay":null,"perUnit":null,"limit":null,"sub":[],"maxDays":null,"icuX":null,"outSx":null,"inSitu":null,"waitIll":null,"waitAcc":null,"accOnly":null,"outpatient":null,"copyClaim":null,"maxAge":null,"excl":[],"quote":null,"clause":null,"extra":false}],"unreadable":[]}
+回覆太長被截斷時，我會說「繼續」：請從 JSON 的開頭重新輸出完整的 JSON。
 ```
 
 ### 突發狀況：理賠準備與怎麼問醫師
