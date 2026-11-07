@@ -1171,10 +1171,10 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       /壽險（身故）400 萬 含錯誤/.test(z3.cov) && /住院日額1,000 元\/日 含錯誤/.test(z3.cov) && /住院醫療費用（實支實付）1 項不是金額（看條款）/.test(z3.cov) && /豁免保費1 項（不算金額）/.test(z3.cov) && /意外身故／失能500 萬(?! 含)/.test(z3.cov)
         && z3.sum === 'life:4000000,hosp_day:1000day,hosp_real:nm1,waiver:nm1,accident:5000000' && /王小明 每年3,000 元/.test(z3.cov) && /已經繳完、保障還在：甲人壽 安心終身壽險、乙人壽 醫療終身保險、丙人壽 定期壽險/.test(z3.cov)
         && /年收入約 80 萬、負債約 600 萬/.test(z3.mp) && /每年保費約 3,000 元（繳費期滿的不算）/.test(z3.mp) && /住院醫療費用（實支實付） 1 項金額算不出來（以單位／計畫／倍數計，或沒寫金額）/.test(z3.pc), JSON.stringify({ sum: z3.sum, cov: z3.cov.slice(0, 300) }));
-    check('保障缺口：壽險目標＝年收入 80 萬 × 10 與負債 600 萬取大的（800 萬），有 400 萬 → 不足；實支實付只有「計畫」→ 金額不明；日額 1,000／2,000 不足；癌症、重大疾病沒有；失能、長照可評估；圖示：缺口進度條、保障到幾歲時間軸（終身、部分到期變淡）、保費占年收入量表、全家地圖（✕ 有錯、缺口數，小孩缺實支實付 → 紅色）',
-      z3.gap === 'low,low,other,low,none,none,adv,adv' && /有 400 萬／目標 800 萬・年收入 80 萬 × 10、負債 600 萬，取大的/.test(z3.cov) && /實支實付醫療（每次限額）金額不明/.test(z3.cov) && /雙十原則/.test(z3.cov)
+    check('保障缺口：壽險目標＝年收入 80 萬 × 10 與負債 600 萬取大的（800 萬），有 400 萬 → 不足；實支實付只有「計畫」→ 金額不明；日額 1,000／2,000 不足；癌症、重大疾病沒有；失能扶助（照顧費 3 萬＋月收入一半，每月）、長照（每月 3 萬）沒有；圖示：缺口進度條、保障到幾歲時間軸（終身、部分到期變淡）、保費占年收入量表、全家地圖（✕ 有錯、缺口數，小孩缺實支實付 → 紅色）',
+      z3.gap === 'low,low,other,low,none,none,none,none' && /有 400 萬／目標 800 萬・年收入 80 萬 × 10、負債 600 萬，取大的/.test(z3.cov) && /實支實付醫療（每次限額）金額不明/.test(z3.cov) && /雙十原則/.test(z3.cov)
         && /壽險保到 終身/.test(z3.label) && /醫療保到 終身/.test(z3.label) && /意外保到 ？/.test(z3.label) && z3.fade && z3.gauge && /王小明 保費占年收入0\.4%/.test(z3.cov)
-        && /王小明\/✕\/✔\/✕\/—\/—\/—\/—\/6/.test(z3.map) && /小寶\/—\/—\/—\/—\/—\/—\/—\/2/.test(z3.map) && /\/缺口$/.test(z3.map.split('|')[0]) && z3.er === 2 && z3.gp === 'gp2,gp1', JSON.stringify({ gap: z3.gap, label: z3.label, map: z3.map, er: z3.er, gp: z3.gp }));
+        && /王小明\/✕\/✔\/✕\/—\/—\/—\/—\/8/.test(z3.map) && /小寶\/—\/—\/—\/—\/—\/—\/—\/2/.test(z3.map) && /\/缺口$/.test(z3.map.split('|')[0]) && z3.er === 2 && z3.gp === 'gp2,gp1', JSON.stringify({ gap: z3.gap, label: z3.label, map: z3.map, er: z3.er, gp: z3.gp }));
     // 保險公司更新：同一張保單重新匯入 → 列出差異、預設「用新資料更新這張」；匯到小孩的父母保單 → 生效日早於出生，預設不勾
     await page.evaluate(() => { go('ins', 'pol'); openPolImport() }); await page.waitForTimeout(200);
     await page.fill('#pi-in', JSON.stringify({ type: 'kinwell.policy', v: 1, policies: [
@@ -1873,6 +1873,35 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       /info:繳別不明：每年保費先不算（不影響保障）/.test(q1.f1) && q1.pe === ',2090-01-01' && q1.direct === 0 && q1.det >= 1, JSON.stringify({ f1: q1.f1, pe: q1.pe, direct: q1.direct, det: q1.det }));
     check('匯入與核對提示詞：以單位／計畫計的請 AI 依給付表算出 calc（金額、每單位、算式、給付表原文、頁碼），沒有給付表就填 null',
       /"calc":null/.test(q1.pp) && /給付表/.test(q1.pp) && /perUnit/.test(q1.pp) && /formula/.test(q1.pp) && /calc/.test(q1.ck), '');
+    await page.close();
+  }
+
+  // =============== 6zr. 批次刪除（可以復原）；失能扶助、長照有建議金額與公式；依身分顯示說明（軍人含榮民）；預算有限的最低組合；「依我的身分規劃」提示詞 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    const P = (id, it) => ({ id, insurer: '甲人壽', product: '保單' + id, start: '2015-01-01', payYears: 20, payFreq: '年', prem: 10000, status: 'active', src: 'manual', chk: true, warn: [], t: T(0), items: it });
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me', job: 'mil', earner: true, inc: 80, debt: 600 },
+        { id: 'b', name: '林美華', sex: 'f', birth: '1986-02-02', h: 160, w: 52, act: '1.375', goal: 'keep', role: 'spouse', job: 'lab' }], active: 'a',
+      ins: { a: [P('d1', [{ name: '失能扶助', kind: 'main', cat: 'disability', amt: 2, unit: '萬元/月', quote: '每月 2 萬元' }]), P('d2', [{ name: '壽險', kind: 'main', cat: 'life', amt: 100, unit: '萬元', quote: '100 萬元' }]), P('d3', [{ name: '實支實付', kind: 'rider', cat: 'hosp_real', amt: 20, unit: '萬元', quote: '20 萬元' }])] } });
+    const r1 = await page.evaluate(() => { const m = me(); go('ins', 'cov'); const G = covGap(m), dis = G.find(g => g.k === 'disability'), ltc = G.find(g => g.k === 'ltc'), t = $('#covBody').textContent;
+      const id = $('#idGuides')?.textContent || '', oth = $('#othGuides')?.textContent || ''; const pr = typeof promptIdPlan === 'function' ? promptIdPlan(m) : '';
+      ACT = 'b'; renderAll(); go('ins', 'cov'); const id2 = $('#idGuides')?.textContent || '', oth2 = $('#othGuides')?.textContent || ''; ACT = 'a'; renderAll();
+      return { dis: [dis.tg, dis.have, dis.st].join(), dwhy: dis.why, ltc: [ltc.tg, ltc.st].join(), t, id, oth, id2, oth2, pr } });
+    check('失能扶助、長照有建議金額與公式：失能扶助每月＝照顧費約 3 萬＋主要收入者月收入的一半（80 萬 → 33,000）＝ 63,000 元/月，現有 2 萬元/月 → 不足；長照 40 歲起每月 3 萬；健檢的建議補強寫出算法',
+      r1.dis === '63000,20000,low' && /照顧費每月約 3 萬 ＋ 月收入的一半 33,000 元/.test(r1.dwhy) && r1.ltc === '30000,none' && /失能扶助（每月）/.test(r1.t) && /有 20,000 元\/月／目標 63,000 元\/月/.test(r1.t) && /失能扶助險（每月 63,000 元\/月）/.test(r1.t) && /算法：照顧費每月約 3 萬/.test(r1.t),
+      JSON.stringify({ dis: r1.dis, dwhy: r1.dwhy, ltc: r1.ltc }));
+    check('依身分顯示：軍人先看「軍人與榮民」（軍保、國軍團體意外保險、意外險職業等級與戰爭軍事行動除外、服現役滿 10 年退伍才是榮民、第二類、榮民就醫、補助補不到的自費、預算有限怎麼補）和預算有限的最低組合；勞工的說明收在「其他身分」；配偶（勞工）則相反',
+      /軍人與榮民/.test(r1.id) && /服現役滿 10 年、退伍/.test(r1.id) && /第二類退除役官兵/.test(r1.id) && /國軍團體意外保險/.test(r1.id) && /戰爭、軍事行動/.test(r1.id) && /病房升等/.test(r1.id) && /預算有限的最低保險組合/.test(r1.id) && /先保大、後保小/.test(r1.id)
+        && /勞工/.test(r1.oth) && !/勞保普通事故/.test(r1.id) && /勞保普通事故/.test(r1.id2) && /軍人與榮民/.test(r1.oth2) && !/軍人與榮民/.test(r1.id2), JSON.stringify({ id: r1.id.slice(0, 120), id2: r1.id2.slice(0, 120) }));
+    check('「依我的身分規劃保險」提示詞：帶身分、現有保障與健檢結果，留預算讓使用者填，請 AI 列制度（不確定標要確認）、自費風險、依預算排方案、保太多的、投保前要問的（戰爭或軍事行動除外）；不含姓名生日',
+      /我的預算/.test(r1.pr) && /軍人保險/.test(r1.pr) && /要確認/.test(r1.pr) && /戰爭或軍事行動/.test(r1.pr) && /失能扶助（每月）/.test(r1.pr) && !/王小明|1984-05-05/.test(r1.pr), '');
+    const r2 = await page.evaluate(async () => { const m = me(); go('ins', 'pol'); const btn = $('#polBody [data-poldel]'); if (!btn) return { btn: false }; btn.click(); await new Promise(r => setTimeout(r, 300));
+      const cbs = [...document.querySelectorAll('#sheetBody [data-pdl]')]; cbs.filter(c => ['d1', 'd2'].includes(c.dataset.pdl)).forEach(c => { c.checked = true; c.dispatchEvent(new Event('change')) }); const lab = $('#pdl-go').textContent; $('#pdl-go').click();
+      const n1 = insOf(m).length, undo = $('#polBody [data-polundo]')?.textContent || ''; $('#polBody [data-polundo]')?.click(); const n2 = insOf(m).length, saved = JSON.parse(localStorage.getItem('nc_ins')).a.length;
+      if (typeof openPolDel !== 'function') return { btn: false }; openPolDel(); $('#pdl-all').checked = true; $('#pdl-all').dispatchEvent(new Event('change')); const all = $$('#sheetBody [data-pdl]:checked').length; closeSheet();
+      return { btn: true, cbs: cbs.length, lab, n1, undo, n2, saved, all } });
+    check('保單批次刪除：勾選 2 張 → 按鈕寫「刪除勾選的 2 張保單」→ 確認後刪掉；保單清單上方「↩︎ 復原剛刪除的 2 張保單」可以救回來（存檔也回來）；可以全選',
+      r2.btn && r2.cbs === 3 && /刪除勾選的 2 張保單/.test(r2.lab) && r2.n1 === 1 && /復原剛刪除的 2 張保單/.test(r2.undo) && r2.n2 === 3 && r2.saved === 3 && r2.all === 3, JSON.stringify(r2));
     await page.close();
   }
 
