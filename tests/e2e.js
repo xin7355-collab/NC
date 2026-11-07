@@ -1050,6 +1050,82 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6y. 家系表（每位家人）、用藥結構化、核保除外與既往症、候選商品（建議書）比較、理賠時間軸與請求權時效 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    const REL = [{ r: 'father', dx: 'crc', age: 52 }, { r: 'mother', dx: 'breast', age: 38, gene: 'brca' }, { r: 'pgm', dx: 'ovary', age: 60 }, { r: 'uncp', dx: 'pancreas', age: 55 }, { r: 'father', dx: 'mi', age: 50 }];
+    const MEDS = [{ n: 'Warfarin', dose: '3 mg', why: '心房顫動' }, { n: 'Bisoprolol 2.5 mg' }, { n: 'Ibuprofen' }, { n: 'Glimepiride 2 mg' }, { n: 'Levofloxacin 500 mg' }, { n: 'Atorvastatin 20 mg' }];
+    page = await newPage({ members: [{ id: 'g', name: '測', sex: 'f', birth: '1990-03-01', h: 160, w: 55, act: '1.375', goal: 'keep', fh: { ca: [], chr: [], early: false, rel: REL },
+        cond: { items: [{ k: 'disc', y: 2019 }, { k: 'ckd' }], medsL: MEDS, meds: '魚油', allergy: '無', surg: '' } },
+      { id: 'h', name: '乙', sex: 'f', birth: '1990-03-01', h: 160, w: 55, act: '1.375', goal: 'keep', fh: { ca: [], chr: [], rel: REL.map(r => ({ ...r, gene: '' })) } }], active: 'g' });
+    const fa = await page.evaluate(() => { const g = MEM[0], h = MEM[1], f = fhOf(g), P = m => yearPlan(m).items.map(o => `${o.pr}|${o.t}|${o.why}`);
+      return { ca: f.ca.join(), chr: f.chr.join(), early: f.early, gene: f.gene, mbc: f.mbc, pg: P(g), ph: P(h), ai: aiPrompt(g, { topic: 'all', fh: true }), sum: summaryText(g) } });
+    const has = (L, re) => L.find(x => re.test(x)) || '';
+    check('家系表：父親 52 歲大腸癌、母親 38 歲乳癌（BRCA 陽性）、祖母卵巢癌、伯叔胰臟癌、父親 50 歲心肌梗塞 → 一等親癌症只算父母、早發、早發心血管、致病基因都自動推導；大腸鏡 40 歲開始每 5 年；乳房可提早到 30 歲；有致病基因 → 優先遺傳諮詢；Lp(a)',
+      fa.ca === 'crc,breast' && /cvd/.test(fa.chr) && fa.early && fa.gene && !fa.mbc && /^3\|大腸鏡：40 歲開始、每 5 年\|一等親 52 歲確診大腸癌（60 歲前）/.test(has(fa.pg, /大腸鏡：40/)) && /^2\|乳房檢查：可以提早到 30 歲開始/.test(has(fa.pg, /乳房檢查：可以提早/))
+        && /^1\|遺傳諮詢（家族已驗出致病基因）/.test(has(fa.pg, /家族已驗出/)) && !!has(fa.pg, /Lp\(a\)/), JSON.stringify({ ca: fa.ca, chr: fa.chr, pg: fa.pg.filter(x => /大腸鏡：|乳房檢查|遺傳|Lp/.test(x)) }));
+    check('沒驗基因時：遺傳諮詢理由合併成一條（卵巢癌、胰臟癌、50 歲前乳癌、父系 2 位）；林奇症候群也合併理由（父系 3 位）；AI 與看診摘要列出每位家人（不寫名字）',
+      /遺傳諮詢（BRCA 基因評估）\|.*有家人得卵巢癌、有家人得胰臟癌、有家人 50 歲以前得乳癌、父系有 2 位家人得乳癌、卵巢癌、胰臟癌或攝護腺癌/.test(has(fa.ph, /BRCA/)) && fa.ph.filter(x => /BRCA/.test(x)).length === 1
+        && /^2\|遺傳諮詢（林奇症候群評估）\|.*父系有 3 位家人得大腸癌、子宮內膜癌等林奇相關癌症/.test(has(fa.ph, /林奇/)) && /【家族史（一、二等親）】父親：大腸癌（52 歲確診）、母親：乳癌（38 歲確診），BRCA1／BRCA2 陽性、祖母（父系）：卵巢癌（60 歲確診）/.test(fa.ai) && /家族史：父親：大腸癌（52 歲確診）/.test(fa.sum),
+      JSON.stringify({ brca: fa.ph.filter(x => /BRCA|林奇/.test(x)) }));
+    // 家系表：實際點畫面新增一位家人
+    await page.evaluate(() => openMemberEdit('h', 'fh')); await page.waitForTimeout(300);
+    await page.click('#m-fradd'); await page.waitForTimeout(100);
+    const n0 = await page.evaluate(() => document.querySelectorAll('#m-frel [data-fri]').length);
+    await page.selectOption(`#m-frel [data-fri="${n0 - 1}"] [data-ff="r"]`, 'brother'); await page.selectOption(`#m-frel [data-fri="${n0 - 1}"] [data-ff="dx"]`, 'stomach'); await page.fill(`#m-frel [data-fri="${n0 - 1}"] [data-ff="age"]`, '41');
+    await page.click('#m-save'); await page.waitForTimeout(400);
+    const fu = await page.evaluate(() => { const h = MEM.find(x => x.id === 'h'); return { n: h.fh.rel.length, last: JSON.stringify(h.fh.rel[h.fh.rel.length - 1]), ca: fhOf(h).ca.join() } });
+    check('家系表表單：「＋ 新增一位家人」選兄弟、胃癌、41 歲 → 存檔後一等親癌症多了胃癌', fu.n === 6 && fu.last === JSON.stringify({ r: 'brother', dx: 'stomach', age: 41, gene: '' }) && /stomach/.test(fu.ca), JSON.stringify(fu));
+    // 用藥結構化
+    const md = await page.evaluate(() => { ACT = 'g'; const m = me(), F = fitPlan(m), N = nutriPlan(m); renderBody();
+      return { cls: medCls('Warfarin').join() + '|' + medCls('保栓通').join() + '|' + medCls('維他命').join(), warn: medWarn(m).join('｜'), W: F.W.map(x => x.t).join('｜'), N: N.F.map(f => f.t).join('｜'), gum: symCtx(m, 'gum').join('｜'), heel: symCtx(m, 'heel').join('｜'),
+        sum: summaryText(m), decl: healthDecl(m).join('｜'), card: $('#condBody').textContent, cl: JSON.stringify(cleanCond({ items: [], medsL: [{ n: '<b>X</b>', start: '2026-13', dose: 'a'.repeat(60) }, { n: '' }, null] }).medsL) } });
+    check('用藥：一種藥一筆，App 辨識類別（Warfarin＝抗凝血、保栓通＝抗血小板）；交互作用提醒（抗凝血＋止痛藥、腎臟病吃止痛藥、Quinolone 跟腱）；病史頁列出用藥與提醒',
+      md.cls === 'Warfarin 抗凝血|抗血小板|' && /抗凝血或抗血小板藥再加止痛消炎藥/.test(md.warn) && /腎功能不好：避免長期吃止痛消炎藥/.test(md.warn) && /Quinolone/.test(md.warn) && /目前用藥Warfarin 3 mg（心房顫動）/.test(md.card) && /💊 抗凝血或抗血小板藥再加止痛消炎藥/.test(md.card),
+      JSON.stringify({ cls: md.cls, warn: md.warn }));
+    check('用藥接進其他功能：乙型阻斷劑 → 運動改說話測試；降血糖藥 → 注意低血糖；Warfarin → 維生素 K 穩定；Atorvastatin → 避免葡萄柚；牙齦與腳跟症狀帶入；看診摘要、健康告知列出；用藥資料會被清洗',
+      /吃乙型阻斷劑：心率會偏低/.test(md.W) && /低血糖/.test(md.W) && /吃 Warfarin（抗凝血）/.test(md.N) && /吃的藥怕葡萄柚/.test(md.N) && /抗凝血或抗血小板藥/.test(md.gum) && /quinolone/.test(md.heel)
+        && /■ 目前用藥 Medications\n・Warfarin 3 mg（心房顫動）\n・Bisoprolol 2.5 mg/.test(md.sum) && /\n魚油/.test(md.sum) && /目前用藥：Warfarin 3 mg（心房顫動）/.test(md.decl) && /^\[\{"id":"[\w-]+","n":"<b>X<\/b>","dose":"a{40}","why":"","start":"","act":true\}\]$/.test(md.cl), JSON.stringify({ W: md.W, N: md.N, cl: md.cl }));
+    await page.evaluate(() => { closeSheet(); openMemberEdit('g', 'cond') }); await page.waitForTimeout(300);
+    const m0 = await page.evaluate(() => document.querySelectorAll('#m-medl [data-mi]').length);
+    await page.click('#m-medadd'); await page.fill(`#m-medl [data-mi="${m0}"] [data-mf="n"]`, 'Rosuvastatin'); await page.fill(`#m-medl [data-mi="${m0}"] [data-mf="dose"]`, '10 mg 每晚'); await page.fill(`#m-medl [data-mi="${m0}"] [data-mf="why"]`, '降血脂');
+    await page.click('#m-save'); await page.waitForTimeout(400);
+    const m1 = await page.evaluate(() => { const L = condOf(MEM.find(x => x.id === 'g')).medsL; return { n: L.length, last: `${L[L.length - 1].n}|${L[L.length - 1].dose}|${L[L.length - 1].why}`, meds: condOf(MEM.find(x => x.id === 'g')).meds } });
+    check('用藥表單：「＋ 新增藥物」填 Rosuvastatin 10 mg 降血脂 → 存檔；原本的用藥補充文字保留', m0 === 6 && m1.n === 7 && m1.last === 'Rosuvastatin|10 mg 每晚|降血脂' && m1.meds === '魚油', JSON.stringify({ m0, m1 }));
+    // 核保除外、既往症
+    const uw = await page.evaluate(() => { closeSheet(); const m = MEM.find(x => x.id === 'g'); ACT = 'g';
+      const { p } = polCheck({ insurer: '甲人壽', product: '醫療險', start: '2021-03-05', payFreq: '年繳', premium: 10000, uwResult: '除外承保', uwExclusion: '對腰椎疾病不負給付責任', coverages: [{ name: '住院日額', cat: 'hosp_day', amount: 1500, unit: '元/日', quote: '每日 1,500 元' }] }, m);
+      p.chk = true; INS.g = [p]; S.set('ins', INS); const e = { id: 'e1', type: 'ad', d: '2026-10-01', end: '2026-10-03', hosp: '乙醫院', dx: '椎間盤突出', claims: [] }; CLM.g = [e]; S.set('clm', CLM);
+      const M = evtMatch(m, e); openPol(p.id); const det = $('#sheetBody').textContent; closeSheet();
+      return { uw: JSON.stringify(p.uw), pw: M[0].pw.join('｜'), det, pr: promptClaim(m, e), pp: promptPolicy() } });
+    check('核保紀錄：AI 讀到「除外承保、對腰椎疾病不負給付責任」→ 存成核保結果；保單詳情顯示；理賠時提醒除外約定，並提醒既往症（2019 年椎間盤突出早於 2021 年投保）；理賠提示詞也帶入；保單提示詞要求抄批註',
+      uw.uw === JSON.stringify({ res: 'excl', excl: '對腰椎疾病不負給付責任', decl: '' }) && /投保時有除外約定：「對腰椎疾病不負給付責任」/.test(uw.pw) && /既往症提醒：「椎間盤突出／坐骨神經痛」2019 年確診，早於這張保單生效（2021 年）/.test(uw.pw)
+        && /核保除外承保（有批註）：對腰椎疾病不負給付責任/.test(uw.det) && /App 提醒：投保時有除外約定/.test(uw.pr) && /uwExclusion/.test(uw.pp) && /批註書、除外約定/.test(uw.pp), JSON.stringify({ uw: uw.uw, pw: uw.pw }));
+    // 候選商品（建議書）：實際點畫面匯入
+    await page.evaluate(() => go('ins', 'pol')); await page.waitForTimeout(200); await page.click('#polBody [data-poladd]'); await page.waitForTimeout(300);
+    await page.click('#pi-kind [data-v="quote"]');
+    await page.fill('#pi-in', JSON.stringify({ type: 'jiaankang.policy', v: 1, policies: [{ insurer: '乙人壽', product: '癌症險建議書', payFreq: '年繳', premium: 8000,
+      coverages: [{ name: '癌症一次金', cat: 'cancer', amount: 50, unit: '萬元', quote: '罹患癌症一次給付 50 萬元' }, { name: '住院日額', cat: 'hosp_day', amount: 1000, unit: '元/日', quote: '每日 1,000 元', renewable: '不保證續保' }] }] }));
+    await page.click('#pi-go'); await page.waitForTimeout(300); await page.click('#pi-save'); await page.waitForTimeout(400);
+    const q0 = await page.evaluate(() => { const m = me(), q = insOf(m).find(p => p.status === 'quote'); renderTodo();
+      return { st: q?.status, view: $('.view.on').id + '/' + !$('#v-ins .subp[data-sub="cov"]').hidden, cov: $('#covBody').textContent, sum: covSum(m).map(s => s.cat).join(), todo: $('#todoCard').textContent, pol: (renderPol(), $('#polBody').textContent), qid: q?.id, qm: evtMatch(m, CLM.g[0]).some(x => x.p.status === 'quote') } });
+    await page.evaluate(id => openPol(id), q0.qid); await page.waitForTimeout(200); await page.click('#pd-buy'); await page.waitForTimeout(200);
+    const q1 = await page.evaluate(id => { const q = insFind(me(), id); return `${q.status}|${q.start === ymd(new Date())}|${q.chk}|${covSum(me()).map(s => s.cat).join()}` }, q0.qid);
+    check('建議書（還沒買）匯入成「候選」：不算進目前保障、不算待核對；「保障」頁顯示加買後：癌症「補缺口」、住院日額 1,500 → 2,500「加碼」、不保證續保提醒；候選不參與理賠比對；買了以後一鍵轉成正式保單',
+      q0.st === 'quote' && q0.view === 'v-ins/true' && /如果加買候選商品/.test(q0.cov) && /癌症沒有 → 50 萬 補缺口/.test(q0.cov) && /住院日額1,500 元\/日 → 2,500 元\/日 加碼（和現有重複）/.test(q0.cov) && /「住院日額」不保證續保/.test(q0.cov)
+        && q0.sum === 'hosp_day' && !q0.qm && !/保單待核對/.test(q0.todo) && /候選商品（建議書／DM，還沒買）/.test(q0.pol) && /^active\|true\|false\|hosp_day,cancer/.test(q1), JSON.stringify({ q0: { ...q0, cov: q0.cov.slice(0, 200), todo: '', pol: '' }, q1 }));
+    // 理賠時間軸與時效
+    await page.evaluate(() => { closeSheet(); openEvt('e1') }); await page.waitForTimeout(200);
+    const pid = await page.evaluate(() => insOf(me()).find(p => p.insurer === '甲人壽').id);
+    await page.selectOption(`#sheetBody [data-cst="${pid}"]`, 'prep'); await page.waitForTimeout(100); await page.selectOption(`#sheetBody [data-cst="${pid}"]`, 'sent'); await page.waitForTimeout(100);
+    const tl = await page.evaluate(() => { openEvt('e1'); const t = $('#sheetBody').textContent; const m = me(); return { t, log: clmOf(m)[0].claims[0].log.map(l => l.st).join() } });
+    const st2 = await page.evaluate(([d, e]) => { closeSheet(); const m = me(); CLM.g.push({ id: 'e2', type: 'ad', d, end: e, hosp: '丙醫院', dx: '肺炎', claims: [] }); S.set('clm', CLM); renderTodo(); renderClm(); return { todo: $('#todoCard').textContent, list: $('#clmBody').textContent, due: evtDue(CLM.g[1]), cb: JSON.stringify(cleanCLM({ g: [{ id: 'x', type: 'ad', d: '2026-01-01', claims: [{ pid: 'p', st: 'sent', log: [{ st: 'sent', d: '2026-01-05' }, { st: 'evil', d: '2026-01-06' }, 5] }] }] }, v => typeof v === 'string' && /^[\w-]{1,40}$/.test(v)).g[0].claims[0].log) } }, [T(705), T(700)]);
+    check('理賠時間軸：住院→出院→準備文件→已送件依日期排；請求權時效約到出院後 2 年（2028-10-03）；快過時效又還沒申請的事件上總覽待辦；備份還原時進度紀錄會被清洗',
+      tl.log === 'prep,sent' && /時間軸/.test(tl.t) && /2026-10-01住院・乙醫院・椎間盤突出/.test(tl.t) && /2026-10-03出院/.test(tl.t) && /甲人壽：準備文件/.test(tl.t) && /甲人壽：已送件/.test(tl.t) && /請求權時效約到 2028-10-03/.test(tl.t)
+        && /⏳ 理賠時效快到：肺炎/.test(st2.todo) && /時效剩 \d+ 天/.test(st2.list) && st2.cb === JSON.stringify([{ st: 'sent', d: '2026-01-05' }]), JSON.stringify({ log: tl.log, todo: st2.todo.slice(0, 160), due: st2.due, cb: st2.cb }));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);

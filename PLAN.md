@@ -206,12 +206,13 @@ lab    = {id, t:'YYYY-MM-DD', hospital, items:{glu:{v, lo, hi, ref, flag, conv},
 exlog  = {id, d:'YYYY-MM-DD', k:EX 鍵|'other', min, int:'easy'|'mod'|'hard', note, kcal}   // nc_exlog
 watch  = {id, t:'YYYY-MM-DD', device, period, rhr, walkhr, hrv, stress, spo2, sleep, steps, exmin, workouts, vo2, resp, kcal, sbp, dbp, afib:true, extra:[{name, value, unit}]}   // nc_watch；近 7 天平均，備份還原時只留已知欄位與合理範圍（extra 只留名稱／數值／單位）
 cond   = member.cond = {items:[{k:COND 鍵 | n:自訂病名, y:確診年, st:'tx'|'fu'|'done', note, score, dr:醫師交代}], meds, allergy, surg}
-member += {job:'mil'|'civ'|'tea'|'lab'|'farm'|'fish'|'self'|'home'|'none'|'ret'|'stu'|'other', role:'me'|'spouse'|'child'|'parent'|'other', earner:bool}，fh += {mbc:男性家人乳癌, gene:家人驗出致病基因}
+member += {job:'mil'|'civ'|'tea'|'lab'|'farm'|'fish'|'self'|'home'|'none'|'ret'|'stu'|'other', role:'me'|'spouse'|'child'|'parent'|'other', earner:bool}，fh += {mbc:男性家人乳癌, gene:家人驗出致病基因, rel:[{r:'father'|'mother'|'brother'|'sister'|'son'|'daughter'|'pgf'|'pgm'|'mgf'|'mgm'|'uncp'|'auntp'|'uncm'|'auntm', dx:癌症或慢性病鍵（含 mi、stroke）, age:確診年齡, gene:''|'neg'|'brca'|'lynch'|'other'}]}
+cond   += medsL:[{id, n:藥名, dose, why:用途, start:'YYYY-MM', act}]（只有填了才出現）
 fu     = {成員 id: [{id, k:'ldl'|'cond:cac'|'doc:…', name, src:'lab'|'cond'|'doc', app:{lv,crit,msg,val,unit,t,dept,ver}|null, st, appt, next, t0,
                      log:[{id, d, hosp, dept, dx, plan, dr, rel:'match'|'partial'|'differ'|'over'|'unable'|'na'|'missed', st, next}]}]}   // nc_fu
 ins    = {被保險人成員 id: [{id, insurer, product, no4, bene, hint, start, payYears, payFreq:'年'|'半年'|'季'|'月'|'躉繳', prem（每期）, status:'active'|'paidup'|'lapsed'|'ended', endDate, endAge, note,
-                     items:[{name, kind:'main'|'rider', cat, amt, unit, limit, wait, renew:'guar'|'yes'|'no'|'', maxAge, endDate, excl, quote, page}], src:'ai'|'manual', ver, chk:已核對, warn:[防錯提醒], t}]}   // nc_ins
-clm    = {成員 id: [{id, type:'op'|'er'|'ad'|'sx'|'acc'|'ca'|'other', d, end, hosp, dx, cost, note, ai, claims:[{pid, st, paid, d}]}]}   // nc_clm
+                     items:[{name, kind:'main'|'rider', cat, amt, unit, limit, wait, renew:'guar'|'yes'|'no'|'', maxAge, endDate, excl, quote, page}], uw:{res:''|'std'|'extra'|'excl'|'other', excl, decl}, src:'ai'|'manual', ver, chk:已核對, warn:[防錯提醒], t}]}   // nc_ins；status 另有 'quote'＝候選（建議書）
+clm    = {成員 id: [{id, type:'op'|'er'|'ad'|'sx'|'acc'|'ca'|'other', d, end, hosp, dx, cost, note, ai, claims:[{pid, st, paid, d, log:[{st, d}]}]}]}   // nc_clm
 scale／lab／watch += chk:[存檔時的防錯疑點]
 img    = {菜色id: 'idb'}   // 圖片本體在 IndexedDB「nutricore / img」，壓成 384px JPEG
 ```
@@ -231,11 +232,19 @@ img    = {菜色id: 'idb'}   // 圖片本體在 IndexedDB「nutricore / img」�
 | 口腔癌篩檢 | 官方資格「30 歲以上嚼檳榔（含已戒）或吸菸者」：嚼檳榔（含已戒）、目前吸菸 → 公費每 2 年；只有已戒菸 → 列「向院所確認資格」 |
 | 牙科 | 13 歲以上：健保每半年洗牙 1 次；糖尿病（或血糖異常）可每 3 個月；有牙周病優先度提高。病史新增牙周病（K05.3）、口腔白斑／紅斑（K13.2）；症狀新增嘴破／白斑（>2 週、硬塊、出血 → 儘快）、牙齦流血（腫到呼吸吞嚥困難 → 立即；臉腫發燒 → 儘快），牙齦症狀會帶入糖尿病與抗凝血／抗血小板藥 |
 | 家族史旗標 | 「家人驗出 BRCA、林奇等致病基因」→ 遺傳諮詢（優先）；「男性家人得過乳癌」→ BRCA 遺傳諮詢 |
+| 家系表（`fh.rel`） | 每位罹病家人一筆：關係（一等親 6 種、二等親 8 種，含父系／母系）、疾病、確診年齡、基因檢測。一等親的癌症、慢性病自動合併；男性 55、女性 65 歲前心肌梗塞或中風＝早發心血管；一等親 50 歲前癌症或同一種癌症 2 人以上＝早發。舊版勾選（不知道是誰時）照樣有效 |
+| 家系表 → 建議 | 一等親大腸癌：60 歲前確診 → 40 歲或比家人早 10 年（取早）開始大腸鏡、每 5 年；60 歲以後 → 40 歲開始、間隔同一般人（USMSTF）。女性一等親乳癌：比家人確診早 10 年開始（不早於 30 歲），40 歲前才列。遺傳諮詢（BRCA）理由：家人卵巢癌、胰臟癌、50 歲前乳癌、男性乳癌、同一邊家族 2 人以上乳癌／卵巢／胰臟／攝護腺癌；林奇：一等親 50 歲前大腸癌或子宮內膜癌、同一邊 2 人以上林奇相關癌症（大腸、子宮內膜、卵巢、胃、胰臟）。理由合併到同一條，不重複列。父親或兄弟攝護腺癌 65 歲前確診或 2 人以上 → PSA 40 歲起討論（否則 45） |
+| 用藥（`cond.medsL`） | 一種藥一筆（藥名、劑量用法、用途、開始年月）＋用藥補充文字。依藥名（英文學名、常見中文商品名）辨識：Warfarin、新型抗凝血劑、抗血小板、乙型阻斷劑、降血壓、Statin、可能低血糖的降血糖藥、其他降血糖、Quinolone、NSAIDs、口服類固醇、怕葡萄柚的藥 |
+| 用藥 → 提醒 | 抗凝血＋抗血小板、抗凝血或抗血小板＋NSAIDs（出血）；腎臟病或 eGFR 異常＋NSAIDs；口服類固醇（血糖、血壓、骨鬆、感染）；Quinolone（跟腱）。運動：乙型阻斷劑改用說話測試、降血糖藥注意低血糖。飲食：Warfarin 維生素 K 份量穩定、保健食品先問；Simvastatin／Atorvastatin／Felodipine／Nifedipine 避免大量葡萄柚。牙齦症狀帶入抗凝血、腳跟痛帶入 Quinolone。一律註明以醫師、藥師為準、不要自己停藥 |
+| 核保紀錄（`policy.uw`） | 核保結果（標準、加費、除外、其他）、除外／批註原文、投保時告知了什麼；AI 提示詞要求逐字抄批註。理賠時：有除外約定就提醒確認範圍；病史確診年早於保單生效年、且診斷和病名相符 → 既往症提醒（據實告知且沒被除外通常照條款理賠；沒告知可能有爭議，保險法 §64） |
+| 候選商品（`status:'quote'`） | 建議書／DM 匯入成候選：不算進目前保障、不算待核對、不參與理賠比對；「保障」頁列出加買後每一類的變化（補缺口／加碼和現有重複）、年繳保費變化、不保證續保、第二張實支實付要副本理賠；買了以後一鍵轉成正式保單（要再核對） |
+| 理賠時間軸 | 就醫日、出院日、每張保單每次改進度的日期依序排列；請求權時效約到「出院日（沒有就用就醫日）＋2 年」（保險法 §65），還沒送件且 90 天內到期上總覽待辦、清單顯示剩幾天 |
 | 睡眠呼吸中止 | 病史可填 AHI：<5 不算、5–14 輕度、15–29 中度（建議治療）、≥30 重度 |
 | 職業身分 | 軍職、公務人員、教師、勞工、農民、漁民、自營、家管、無固定工作、退休、學生：只用來推測「可能適用」的社會保險，提示詞一律標「需依投保紀錄確認」 |
 
 ## 6. 下一步
-- **Phase 2（家族與保障深化）**：家族史改成每位親屬一筆（關係、性別、癌別、確診年齡、父系／母系）以精算遺傳風險；用藥結構化（藥名、劑量、起訖、開藥醫師）；保險商品比較資料匯入（業務 DM／建議書經 AI 讀取）；理賠事件時間軸（症狀 → 門診 → 住院 → 申請 → 核定）與投保時健康告知書保存。
+- **v6.1 已完成**：家族史每位親屬一筆、用藥結構化、保險商品（建議書）比較、理賠事件時間軸、投保時核保與告知紀錄。
+- **之後可以做**：保單 PDF 在手機上直接抽文字（不經 AI）、條款新舊版本比對存檔、法規審查結果存檔（附來源與日期）、睡眠治療紀錄（CPAP 使用時數）。
 - **不採用（以及原因）**：改成 Windows 桌面版（Tauri＋SQLCipher）——使用者在 iPhone，等於重寫，改用加密備份；20 多張資料表的 ERD——一個家庭用不到，用 localStorage 分集合＋id 關聯即可；「AI 理賠判斷正確率 95%」——沒有標註資料前是假指標，改統計 App 與醫師一致率、提醒過度與漏判；自動抓全市場即時保費——沒有合法穩定的資料來源，改半手動匯入。
 - **Phase 4**：PWA 離線、體重與體脂目標線、歷年比較折線圖、匯出 PDF 給醫師看。
 - 手錶目前用截圖＋AI 讀數字（隱私：數據不離開手機）；Apple 健康沒有網頁 API，要自動同步得做原生 App（HealthKit），成本高，暫不做。

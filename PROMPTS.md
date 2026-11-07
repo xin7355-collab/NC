@@ -181,13 +181,14 @@ App 整理的發現：（心臟、頭暈、肌少症會列出）
 8. 身分證字號、完整保單號碼、姓名、電話、地址一律不要輸出；保單號碼只填末 4 碼（policyNoLast4）；被保險人只寫稱謂（insuredHint，例如「本人」「配偶」「長子」，不知道就填 null）。
 9. 看不清楚、被遮住或你不確定的內容，寫進 unreadable 陣列，不要猜。
 10. 一份文件有多張保單（例如保單健診表），policies 陣列就放多筆。
+12. 有批註書、除外約定（例如「對某部位或某疾病不負給付責任」）或加費承保：uwResult 填核保結果（標準承保、加費承保、除外承保），除外內容逐字抄到 uwExclusion；文件沒寫就填 null。
 11. 輸出前逐筆自我核對：每個 amount 都必須能在同一筆的 quote 裡找到。
 
 【cat 代號】
 life＝壽險／身故保險金、accident＝意外身故或失能、acc_med＝意外醫療（實支或日額）、hosp_day＝住院日額（病房費、住院醫療保險金每日）、hosp_real＝住院醫療費用實支實付（雜費限額）、surgery＝手術（含門診手術）、cancer＝癌症（初次罹癌、癌症住院、化療放療）、critical＝重大疾病／重大傷病一次金、disability＝失能扶助／失能保險金、ltc＝長期照顧、waiver＝豁免保費、other＝其他
 
 【輸出格式】
-{"type":"jiaankang.policy","v":1,"policies":[{"insurer":null,"product":null,"policyNoLast4":null,"insuredHint":null,"beneficiary":null,"start":null,"payYears":null,"payFreq":null,"premium":null,"currency":"TWD","status":null,"endDate":null,"endAge":null,"coverages":[{"name":null,"kind":"main","cat":"other","amount":null,"unit":null,"limit":null,"waitingDays":null,"renewable":null,"maxAge":null,"endDate":null,"exclusions":null,"quote":null,"page":null}],"notes":null}],"unreadable":[]}
+{"type":"jiaankang.policy","v":1,"policies":[{"insurer":null,"product":null,"policyNoLast4":null,"insuredHint":null,"beneficiary":null,"start":null,"payYears":null,"payFreq":null,"premium":null,"currency":"TWD","status":null,"endDate":null,"endAge":null,"uwResult":null,"uwExclusion":null,"coverages":[{"name":null,"kind":"main","cat":"other","amount":null,"unit":null,"limit":null,"waitingDays":null,"renewable":null,"maxAge":null,"endDate":null,"exclusions":null,"quote":null,"page":null}],"notes":null}],"unreadable":[]}
 ```
 
 - **App 的防錯檢查**（不靠 AI 自律）：每個金額必須出現在 AI 抄的原文 `quote` 裡（接受千分位、全形數字、萬元換算；原文是國字數字時提醒人工核對）；身分證字號、手機號碼自動刪除；保單號碼只留末 4 碼；生效日在未來、繳費年期不合理、年繳保費超過 100 萬、已超過最高續保年齡都會提醒；同一位被保險人已有同公司、同商品、同生效日的保單 → 預設不匯入。
