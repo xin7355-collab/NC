@@ -1,9 +1,9 @@
-# 家安康（原 NutriCore）AI 提示詞
+# Kinwell（舊名：家安康、NutriCore）AI 提示詞
 
 > App 內已內建「📋 複製提示詞」按鈕，這份文件只是備查（內容與 App 內完全相同）。不串接任何 AI API、不需要付費金鑰：提示詞由你自己貼給 ChatGPT／Gemini／Claude。
 > 流程：複製提示詞 → 貼到 AI 並附上截圖或文件 → 複製 AI 回的 JSON → 貼回 App →「解析並核對」→ App 做防錯檢查 → 你對照原始文件確認 → 儲存。
 > 截圖前請先塗掉姓名、身分證字號、病歷號、完整保單號碼。
-> JSON 的 `type` 用 `jiaankang.*`；舊版 `nutricore.*` 的回覆一樣可以匯入。
+> JSON 的 `type` 用 `kinwell.*`；舊版 `jiaankang.*`、`nutricore.*` 的回覆一樣可以匯入。
 
 ## 一、體脂機截圖
 
@@ -25,7 +25,7 @@
 weight＝體重（kg）、bmi＝BMI、fat＝體脂率（%）、fatMass＝脂肪量（kg）、visceral＝內臟脂肪等級（級）、muscle＝肌肉量（kg）、muscleRate＝肌肉率（%）、skeletal＝骨骼肌量（kg）、lean＝去脂體重（kg）、water＝體水分量（kg）、waterRate＝身體水分率（%）、protein＝蛋白質量（kg）、proteinRate＝蛋白質率（%）、bone＝骨鹽量（kg）、boneRate＝骨鹽率（%）、bmr＝基礎代謝（kcal）、whr＝腰臀比、bodyAge＝身體年齡（歲）、hr＝心率（次/分）、score＝身體得分（分）、stdWeight＝標準體重（kg）、bodyType＝身體類型（文字）、device＝體脂計品牌或 App 名稱
 
 【輸出格式】
-{"type":"jiaankang.scale","v":1,"measuredAt":null,"device":null,"weight":null,"bmi":null,"fat":null,"fatMass":null,"visceral":null,"muscle":null,"muscleRate":null,"skeletal":null,"lean":null,"water":null,"waterRate":null,"protein":null,"proteinRate":null,"bone":null,"boneRate":null,"bmr":null,"whr":null,"bodyAge":null,"hr":null,"score":null,"stdWeight":null,"bodyType":null,"status":{},"other":[]}
+{"type":"kinwell.scale","v":1,"measuredAt":null,"device":null,"weight":null,"bmi":null,"fat":null,"fatMass":null,"visceral":null,"muscle":null,"muscleRate":null,"skeletal":null,"lean":null,"water":null,"waterRate":null,"protein":null,"proteinRate":null,"bone":null,"boneRate":null,"bmr":null,"whr":null,"bodyAge":null,"hr":null,"score":null,"stdWeight":null,"bodyType":null,"status":{},"other":[]}
 ```
 
 ## 二、體檢報告
@@ -71,7 +71,7 @@ hpv＝HPV 檢測（陰性／陽性（非 16／18 型）／16／18 型陽性）
 fundus＝眼底攝影（正常／輕微異常／視網膜病變／疑似青光眼）
 
 【輸出格式】
-{"type":"jiaankang.lab","v":1,"date":"YYYY-MM-DD","hospital":null,"items":{"glu":{"value":105,"unit":"mg/dL","ref":"70-99","lo":70,"hi":99,"flag":"H"},"us_liver":{"value":"輕度脂肪肝","note":"Mild fatty liver"}},"extra":[{"name":"項目原名","value":null,"unit":null,"ref":null,"lo":null,"hi":null,"flag":null}]}
+{"type":"kinwell.lab","v":1,"date":"YYYY-MM-DD","hospital":null,"items":{"glu":{"value":105,"unit":"mg/dL","ref":"70-99","lo":70,"hi":99,"flag":"H"},"us_liver":{"value":"輕度脂肪肝","note":"Mild fatty liver"}},"extra":[{"name":"項目原名","value":null,"unit":null,"ref":null,"lo":null,"hi":null,"flag":null}]}
 （glu、us_liver 只是格式範例，請以實際報告內容為準）
 ```
 
@@ -134,7 +134,7 @@ fundus＝眼底攝影（正常／輕微異常／視網膜病變／疑似青光�
 rhr＝靜止心率（bpm；小米叫「安靜心率」）、walkhr＝步行平均心率（bpm；Apple、小米都叫「步行平均心率」）、hrv＝心率變異 HRV（ms）、stress＝平均壓力（0–100；小米、華為、Garmin、Samsung 的「壓力」）、spo2＝血氧（%）、sleep＝每晚睡眠時數（小時；小米「主要睡眠時長」7h36m → 7.6）、steps＝每日步數、exmin＝每日運動分鐘（Apple「運動」圓圈、Garmin「熱血時間」；畫面是一週總分鐘請 ÷7）、vo2＝最大攝氧量 VO2max（ml/kg/min，Apple 健康叫「有氧體能」）、resp＝睡眠時呼吸速率（次／分）、kcal＝每日活動消耗（Apple「動態能量」、Garmin「活動卡路里」、小米「活動消耗」或健康摘要的「卡路里日均消耗」，kcal；只有「總卡路里」就填總卡路里，App 會自動扣掉基礎代謝；會用來校正每日該吃多少熱量）、sbp／dbp＝手錶量的收縮壓／舒張壓（mmHg）
 
 【輸出格式】
-{"type":"jiaankang.watch","v":1,"date":null,"device":null,"period":null,"rhr":null,"walkhr":null,"hrv":null,"stress":null,"spo2":null,"sleep":null,"steps":null,"exmin":null,"workouts":null,"vo2":null,"resp":null,"kcal":null,"sbp":null,"dbp":null,"afib":null,"other":[]}
+{"type":"kinwell.watch","v":1,"date":null,"device":null,"period":null,"rhr":null,"walkhr":null,"hrv":null,"stress":null,"spo2":null,"sleep":null,"steps":null,"exmin":null,"workouts":null,"vo2":null,"resp":null,"kcal":null,"sbp":null,"dbp":null,"afib":null,"other":[]}
 ```
 
 - **要截哪一頁**：iPhone「健康」App →「瀏覽」→ 心臟（靜止心率、心率變異、有氧體能）、呼吸（血氧、呼吸速率）、睡眠、活動（步數、運動時間、動態能量），切到「週」看平均；小米運動健康、Garmin、華為、Samsung 點進睡眠、心率、壓力、步數卡片，切到「週」再截圖（早上截的「日」只有半天資料）。
@@ -188,7 +188,7 @@ App 整理的發現：（心臟、頭暈、肌少症會列出）
 life＝壽險／身故保險金、accident＝意外身故或失能、acc_med＝意外醫療（實支或日額）、hosp_day＝住院日額（病房費、住院醫療保險金每日）、hosp_real＝住院醫療費用實支實付（雜費限額）、surgery＝手術（含門診手術）、cancer＝癌症（初次罹癌、癌症住院、化療放療）、critical＝重大疾病／重大傷病一次金、disability＝失能扶助／失能保險金、ltc＝長期照顧、waiver＝豁免保費、other＝其他
 
 【輸出格式】
-{"type":"jiaankang.policy","v":1,"policies":[{"insurer":null,"product":null,"policyNoLast4":null,"insuredHint":null,"beneficiary":null,"start":null,"payYears":null,"payFreq":null,"premium":null,"currency":"TWD","status":null,"endDate":null,"endAge":null,"uwResult":null,"uwExclusion":null,"coverages":[{"name":null,"kind":"main","cat":"other","amount":null,"unit":null,"limit":null,"waitingDays":null,"renewable":null,"maxAge":null,"endDate":null,"exclusions":null,"quote":null,"page":null}],"notes":null}],"unreadable":[]}
+{"type":"kinwell.policy","v":1,"policies":[{"insurer":null,"product":null,"policyNoLast4":null,"insuredHint":null,"beneficiary":null,"start":null,"payYears":null,"payFreq":null,"premium":null,"currency":"TWD","status":null,"endDate":null,"endAge":null,"uwResult":null,"uwExclusion":null,"coverages":[{"name":null,"kind":"main","cat":"other","amount":null,"unit":null,"limit":null,"waitingDays":null,"renewable":null,"maxAge":null,"endDate":null,"exclusions":null,"quote":null,"page":null}],"notes":null}],"unreadable":[]}
 ```
 
 - **App 的防錯檢查**（不靠 AI 自律）：每個金額必須出現在 AI 抄的原文 `quote` 裡（接受千分位、全形數字、萬元換算；原文是國字數字時提醒人工核對）；身分證字號、手機號碼自動刪除；保單號碼只留末 4 碼；生效日在未來、繳費年期不合理、年繳保費超過 100 萬、已超過最高續保年齡都會提醒；同一位被保險人已有同公司、同商品、同生效日的保單 → 預設不匯入。

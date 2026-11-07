@@ -1,4 +1,4 @@
-// 家安康（原 NutriCore）端對端測試：用 iPhone 尺寸的無頭 Chromium 操作 index.html（不連外網，外部 API 全部模擬）
+// Kinwell（舊名：家安康、NutriCore）端對端測試：用 iPhone 尺寸的無頭 Chromium 操作 index.html（不連外網，外部 API 全部模擬）
 // 用法：node tests/e2e.js            跑全部測試
 //       node tests/e2e.js --update-prompts   依 App 內提示詞重寫 PROMPTS.md
 const path = require('path'), fs = require('fs');
@@ -161,7 +161,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   const big = path.join(require('os').tmpdir(), 'nc-big.json'); fs.writeFileSync(big, '{"app":"NutriCore","pad":"' + 'x'.repeat(6 * 1048576) + '"}');
   await page.setInputFiles('#importFile', big); await page.waitForTimeout(400);
   const bigRes = await page.evaluate(() => ({ t: document.querySelector('#toast').textContent, mem: MEM.map(m => m.id).join() }));
-  check('超過 5MB 的檔案直接拒絕（不讀進記憶體）', /不是家安康（NutriCore）備份/.test(bigRes.t) && bigRes.mem === 'ok1', bigRes.t.slice(0, 40)); fs.unlinkSync(big);
+  check('超過 5MB 的檔案直接拒絕（不讀進記憶體）', /不是 Kinwell 備份/.test(bigRes.t) && bigRes.mem === 'ok1', bigRes.t.slice(0, 40)); fs.unlinkSync(big);
   check('輸入框字級 ≥16px（iOS 不自動放大）', await page.evaluate(() => { const t = document.createElement('textarea'); document.body.appendChild(t); const v = parseFloat(getComputedStyle(t).fontSize); t.remove(); return v >= 16 }));
 
   // =============== 6. 文件一致性 ===============
@@ -923,7 +923,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
-  // =============== 6x. 家安康：改名與版面、回診追蹤（App vs 醫師）、保險（AI 匯入＋防錯）、理賠、匯出匯入（單一成員／加密）、防 AI 讀錯、牙齒口腔、家族史、職業身分 ===============
+  // =============== 6x. 改名與版面、回診追蹤（App vs 醫師）、保險（AI 匯入＋防錯）、理賠、匯出匯入（單一成員／加密）、防 AI 讀錯、牙齒口腔、家族史、職業身分 ===============
   {
     const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
     const seedA = { id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 70, act: '1.375', goal: 'keep', job: 'civ', role: 'me', earner: true, life: { smoke: 'former', ppd: 1, yrs: 6, quit: 10, betel: 'never', alc: 'some' },
@@ -933,8 +933,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     const ia = await page.evaluate(() => ({ title: document.title, logo: $('.logo').textContent, nav: [...document.querySelectorAll('#nav button')].map(b => b.textContent.trim()).join('|'),
       sub: [...document.querySelectorAll('#v-body .subnav [data-sub]')].map(b => b.dataset.sub + ':' + b.firstChild.textContent).join(','), ins: [...document.querySelectorAll('#v-ins .subnav [data-sub]')].map(b => b.firstChild.textContent).join('|'),
       self: (go('self'), $('.view.on').id + ':' + !$('#v-body .subp[data-sub="self"]').hidden), todo: (go('dash'), $('#todoCard').textContent), ldlMsg: labEval(labsOf(me())[0], me()).find(i => i.k === 'ldl').msg, tools: (renderTool(), document.querySelectorAll('#toolBody .card').length) }));
-    check('改名「家安康」；底部 總覽｜健康｜飲食｜運動｜保險；健康頁 狀況｜紀錄｜追蹤｜病史｜自測（舊「自我檢測」連結導到這裡）；保險頁 保單｜保障｜理賠｜AI 工具（7 種提示詞）；總覽有待辦與急症入口；LDL 165 不再說「對一般人可能正常」',
-      /^家安康/.test(ia.title) && ia.logo === '家安康' && ia.nav === '總覽|健康|飲食|運動|保險' && ia.sub === 'now:狀況,rec:紀錄,plan:追蹤,cond:病史,self:自測' && ia.ins === '保單|保障|理賠|AI 工具' && ia.self === 'v-body:true' && ia.tools === 7
+    check('改名「Kinwell」；底部 總覽｜健康｜飲食｜運動｜保險；健康頁 狀況｜紀錄｜追蹤｜病史｜自測（舊「自我檢測」連結導到這裡）；保險頁 保單｜保障｜理賠｜AI 工具（7 種提示詞）；總覽有待辦與急症入口；LDL 165 不再說「對一般人可能正常」',
+      /^Kinwell/.test(ia.title) && ia.logo === 'Kinwell' && ia.nav === '總覽|健康|飲食|運動|保險' && ia.sub === 'now:狀況,rec:紀錄,plan:追蹤,cond:病史,self:自測' && ia.ins === '保單|保障|理賠|AI 工具' && ia.self === 'v-body:true' && ia.tools === 7
         && /待辦/.test(ia.todo) && /急症自我檢測/.test(ia.todo) && /項異常還沒記下醫師怎麼說/.test(ia.todo) && !/對一般人可能正常/.test(ia.ldlMsg) && /冠狀動脈鈣化/.test(ia.ldlMsg), JSON.stringify(ia));
     // 回診追蹤：實際點畫面
     await page.evaluate(() => go('body', 'plan')); await page.waitForTimeout(200);
@@ -970,7 +970,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.click('#pi-save'); await page.waitForTimeout(400);
     const i1 = await page.evaluate(() => ({ a: JSON.stringify(insOf(MEM[0]).map(p => ({ s: p.start, a: polAnnual(p), no: p.no4, chk: p.chk, n: p.items.length, note: p.note }))), b: insOf(MEM[1]).map(p => polAnnual(p) + ':' + p.warn.length).join(), view: $('.view.on').id, badge: $('#v-ins .subnav [data-sub="pol"] .bd')?.textContent }));
     check('保單 AI 匯入：提示詞要逐字原文＋頁碼、民國年換算、不輸出身分證；貼上（含 ``` 也可以）→ 防錯：保單號碼只留末 4 碼、身分證自動刪除、列出 AI 看不清楚的、金額在原文找不到會警告、沒附原文會提醒；依稱謂分給配偶；月繳 500 → 年繳 6,000；匯入後「待核對」',
-      /民國年請加 1911/.test(pp) && /quote/.test(pp) && /身分證字號/.test(pp) && /"type":"jiaankang.policy"/.test(pp) && /保單號碼只保留末 4 碼/.test(i0.out) && /偵測到身分證字號，已自動刪除/.test(i0.out) && /AI 說看不清楚：第 4 頁右下角被手指擋住/.test(i0.out)
+      /民國年請加 1911/.test(pp) && /quote/.test(pp) && /身分證字號/.test(pp) && /"type":"kinwell.policy"/.test(pp) && /保單號碼只保留末 4 碼/.test(i0.out) && /偵測到身分證字號，已自動刪除/.test(i0.out) && /AI 說看不清楚：第 4 頁右下角被手指擋住/.test(i0.out)
         && /「意外身故」的金額 500 在原文裡找不到：可能讀錯/.test(i0.out) && /「意外醫療」沒有附原文/.test(i0.out) && /防錯檢查通過/.test(i0.out) && i0.checks === '111' && i0.mids === 'a,b,a'
         && i1.a === JSON.stringify([{ s: '2021-03-05', a: 24000, no: '5678', chk: false, n: 2, note: '要保人身分證 ＊＊＊' }, { s: '2023-05-01', a: 3000, no: '', chk: false, n: 1, note: '' }]) && /^6000:[2-9]/.test(i1.b) && i1.view === 'v-ins' && i1.badge === '2', JSON.stringify({ i0: { ...i0, out: i0.out.slice(0, 160) }, i1 }));
     const pid = await page.evaluate(() => insOf(MEM[0])[0].id);
@@ -980,8 +980,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.evaluate(() => openPolImport()); await page.waitForTimeout(200); await page.fill('#pi-in', JSON.stringify(polJSON)); await page.click('#pi-go'); await page.waitForTimeout(300);
     const dup = await page.evaluate(() => ({ checks: [...document.querySelectorAll('#pi-out [data-pi]')].map(c => c.checked ? 1 : 0).join(''), out: $('#pi-out').textContent }));
     const man = await page.evaluate(() => { closeSheet(); const { p, err } = polCheck({ insurer: '丁人壽', product: '定期壽險', start: '2030-01-01', payFreq: '年', premium: 2000000, payYears: 99, coverages: [{ name: '身故', cat: 'life', amount: 500, unit: '萬元', maxAge: 30 }] }, me(), true); return { err: err.length, warn: p.warn.join('｜'), py: p.payYears } });
-    check('核對後才打 ✔：住院日額 2 張加總 3,000 元/日（含待核對）、癌症 30 萬；全家保障地圖（本人醫療、癌症 ✔，配偶意外「待」）；繳費期滿倒數；同一張再匯入預設不勾；手動輸入也檢查（未來生效日、年期、年繳 200 萬、超過續保年齡）',
-      c0.chk && /住院日額3,000 元\/日 含待核對/.test(c0.cov) && /癌症30 萬/.test(c0.cov) && /王小明\/—\/—\/✔\/✔\/—\/—\/—/.test(c0.map) && /小美\/—\/待\/—\/—\/—\/—\/—/.test(c0.map) && /繳費到 2040 年/.test(c0.end)
+    check('核對後才打 ✔：住院日額 2 張加總 3,000 元/日（含待核對）、癌症 30 萬；全家保障地圖（本人醫療、癌症 ✔；配偶意外 ✕：AI 讀的 500 萬和原文 300 萬對不上）；繳費期滿倒數；同一張再匯入預設不勾；手動輸入也檢查（未來生效日、年期、年繳 200 萬、超過續保年齡）',
+      c0.chk && /住院日額3,000 元\/日 含待核對/.test(c0.cov) && /癌症30 萬/.test(c0.cov) && /王小明\/—\/—\/✔\/✔\/—\/—\/—/.test(c0.map) && /小美\/—\/✕\/—\/—\/—\/—\/—/.test(c0.map) && /繳費到 2040 年/.test(c0.end)
         && dup.checks === '000' && /已經有同一張保單/.test(dup.out) && man.err === 0 && /在未來/.test(man.warn) && /繳費年期 99 不合理/.test(man.warn) && /年繳保費約 200 萬/.test(man.warn) && /最高到 30 歲/.test(man.warn) && !/沒有附原文/.test(man.warn) && man.py === null,
       JSON.stringify({ map: c0.map, end: c0.end, dup: dup.checks, man }));
     // 理賠
@@ -1017,7 +1017,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     const im7 = await page.evaluate(() => ({ n: MEM.length, names: MEM.map(m => m.name).join(), fu: fuOf(MEM.find(m => m.id === 'a')).length, labs: labsOf(MEM.find(m => m.id === 'a')).length }));
     fs.unlinkSync(memFile); fs.unlinkSync(encFile);
     check('匯出匯入：單一成員檔（只含她的保單）匯入到別人手機 → 新增成員；再匯入同一人 → 可合併／取代／另存新成員；加密備份看不到明文、密碼錯打不開、正確密碼解開後可合併',
-      ex.kind === 'member' && ex.mem === 'b' && ex.ins === 'b' && ex.labs === '' && ex.enc && ex.bad === 'fail' && ex.dec === '2:2' && /^jiaankang-小美-\d{4}-\d{2}-\d{2}-enc\.json$/.test(ex.name)
+      ex.kind === 'member' && ex.mem === 'b' && ex.ins === 'b' && ex.labs === '' && ex.enc && ex.bad === 'fail' && ex.dec === '2:2' && /^kinwell-小美-\d{4}-\d{2}-\d{2}-enc\.json$/.test(ex.name)
         && /新增成員「小美」/.test(im0) && im1.mem === '別人,小美' && im1.act === '小美' && im1.ins === 1 && im2 === 'merge,replace1,new' && im3.n === 3 && im3.ins === 1 && im3.act === '小美（匯入）'
         && im4 && /密碼錯誤/.test(im5) && im6 === 'merge,replace' && im7.n === 4 && /王小明/.test(im7.names) && im7.fu === 4 && im7.labs === 1, JSON.stringify({ ex, im1, im2, im3, im5, im6, im7 }));
     // 防 AI 讀錯
@@ -1123,6 +1123,90 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('理賠時間軸：住院→出院→準備文件→已送件依日期排；請求權時效約到出院後 2 年（2028-10-03）；快過時效又還沒申請的事件上總覽待辦；備份還原時進度紀錄會被清洗',
       tl.log === 'prep,sent' && /時間軸/.test(tl.t) && /2026-10-01住院・乙醫院・椎間盤突出/.test(tl.t) && /2026-10-03出院/.test(tl.t) && /甲人壽：準備文件/.test(tl.t) && /甲人壽：已送件/.test(tl.t) && /請求權時效約到 2028-10-03/.test(tl.t)
         && /⏳ 理賠時效快到：肺炎/.test(st2.todo) && /時效剩 \d+ 天/.test(st2.list) && st2.cb === JSON.stringify([{ st: 'sent', d: '2026-01-05' }]), JSON.stringify({ log: tl.log, todo: st2.todo.slice(0, 160), due: st2.due, cb: st2.cb }));
+    await page.close();
+  }
+
+  // =============== 6z. Kinwell：保單顏色分級（錯誤／待核對／已核對）＋怎麼修正、保障加總（單位／計畫、豁免不算金額，日額只寫元當每日）、繳費期滿不算保費、保險公司更新 → 重新匯入取代＋變更紀錄＋復原、保障缺口、時間軸、桌機寬度 ===============
+  {
+    const POLS = [
+      { id: 'p1', insurer: '甲人壽', product: '安心終身壽險', start: '1978-03-01', payYears: 20, payFreq: '年', prem: 30000, status: 'active', items: [{ name: '身故保險金', kind: 'main', cat: 'life', amt: 100, unit: '萬元', quote: '身故保險金 100 萬元' }], src: 'ai', chk: true, warn: [], t: '2026-11-01' },
+      { id: 'p2', insurer: '乙人壽', product: '醫療終身保險', start: '2020-01-01', payYears: 20, payFreq: '年', prem: 20000, status: 'paidup', items: [
+        { name: '住院日額', kind: 'main', cat: 'hosp_day', amt: 1000, unit: '元', quote: '住院日額 1,000 元' }, { name: '住院醫療計畫', kind: 'rider', cat: 'hosp_real', amt: 2, unit: '計畫', quote: '計畫二' },
+        { name: '豁免保費', kind: 'rider', cat: 'waiver', amt: 20000, unit: '元', quote: '豁免保險費 20,000 元' }], src: 'ai', chk: false, warn: ['AI 說看不清楚：第 3 頁模糊'], t: '2026-11-01' },
+      { id: 'p3', insurer: '丙人壽', product: '定期壽險', start: '2000-01-01', payYears: 20, payFreq: '年', prem: 10000, status: 'paidup', items: [{ name: '身故', cat: 'life', amt: 300, unit: '萬元', maxAge: 75, quote: '身故保險金 300 萬元' }], src: 'ai', chk: true, warn: [], t: '2026-11-01' },
+      { id: 'p4', insurer: '丁產險', product: '傷害保險', start: '2024-01-10', payFreq: '年', prem: 3000, status: 'active', items: [{ name: '意外身故', cat: 'accident', amt: 500, unit: '萬元', quote: '意外身故保險金 300 萬元' }], src: 'ai', chk: false, warn: [], t: '2026-11-01' }];
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 70, act: '1.375', goal: 'keep', job: 'lab', role: 'me', earner: true, inc: 80, debt: 600 },
+      { id: 'k', name: '小寶', sex: 'm', birth: '2018-06-01', h: 120, w: 22, act: '1.375', goal: 'keep', role: 'child' }], active: 'a', ins: { a: POLS },
+      clm: { a: [{ id: 'e9', type: 'acc', d: '2026-05-01', dx: '扭傷', claims: [{ pid: 'p4', st: 'paid' }] }] } });
+    const z0 = await page.evaluate(() => { go('ins', 'pol'); const m = me();
+      return { rows: [...document.querySelectorAll('#polBody .rec')].map(x => x.className.match(/plv-(\w+)/)[1] + ':' + x.querySelector('.tg').textContent).join(), bd: $('#v-ins .subnav [data-sub="pol"] .bd').textContent + '|' + $('#v-ins .subnav [data-sub="pol"] .bd').className,
+        legend: $('#polBody .plegend').textContent, lv: insOf(m).map(p => polLv(p, m)).join(), todo: (renderTodo(), $('#todoCard').textContent), app: APP_ID, ids: APP_IDS.join(), fn: fileName(null, false), ics: fitICS(m, fitPlan(m)).includes('PRODID:-//Kinwell//'), pp: promptPolicy() } });
+    check('改名 Kinwell（備份 id、檔名 kinwell-…、提示詞 type kinwell.*、行事曆 PRODID）；舊名 JiaAnKang、NutriCore 的備份照樣接受；保單清單用顏色分級：生效日早於出生、繳費期滿卻還在繳、金額和原文對不上＝🔴 錯誤，已核對＝🟢；徽章紅色；總覽待辦列出錯誤與保障不足',
+      z0.app === 'Kinwell' && z0.ids === 'Kinwell,JiaAnKang,NutriCore' && /^kinwell-all-\d{4}-\d{2}-\d{2}\.json$/.test(z0.fn) && z0.ics && /"type":"kinwell.policy"/.test(z0.pp)
+        && z0.rows === 'err:🔴 錯誤,err:🔴 錯誤,ok:🟢 已核對,err:🔴 錯誤' && z0.bd === '3|bd r' && /錯誤：資料矛盾/.test(z0.legend) && /待核對：對照保單確認/.test(z0.legend) && z0.lv === 'err,err,ok,err'
+        && /🔴 3 張保單資料有錯誤/.test(z0.todo) && /🛡 保障不足：壽險低於目標、意外險低於目標/.test(z0.todo), JSON.stringify({ ...z0, pp: '', todo: z0.todo.slice(0, 120) }));
+    const z1 = await page.evaluate(() => { openPol('p1'); const a = $('#sheetBody').textContent, bar = $('#sheetBody .plvbar').className; openPol('p2'); const b = $('#sheetBody').textContent, log = $('#sheetBody details[open]')?.textContent || '';
+      return { a, bar, b, log, ci: [...document.querySelectorAll('#sheetBody .cdet')].map(c => (c.className.match(/ci-(\w+)/) || [, '-'])[1]).slice(0, 3).join() } });
+    check('保單明細：顏色條＋逐項「怎麼修正」（生效日早於出生 → 選錯家人或民國年；繳費期滿矛盾；「計畫」不是金額要換算；日額只寫「元」當每日；豁免保費不算金額）；有問題的保障項目標顏色；未核對時展開匯入紀錄；「終身」顯示；保險公司更新的處理步驟',
+      /plv-err/.test(z1.bar) && /生效日 1978-03-01 早於被保險人（王小明）出生日 1984-05-05/.test(z1.a) && /匯入到錯的家人/.test(z1.a) && /民國年＋1911/.test(z1.a) && /保障到終身（依名稱判斷）/.test(z1.a)
+        && /狀態是「繳費期滿」，但 2020-01-01 生效、繳 20 年，最後一期在 2039-01/.test(z1.b) && /「住院醫療計畫」以「計畫」計，不是金額/.test(z1.b) && /2 單位 × 每單位 1,000 元\/日 → 2,000 元\/日/.test(z1.b)
+        && /「住院日額」單位寫「元」，App 當成每日給付/.test(z1.b) && /「豁免保費」是豁免保費：不算保障金額/.test(z1.b) && /年繳保費20,000 元（已繳完）/.test(z1.b) && /第 3 頁模糊/.test(z1.log) && z1.ci === '-,chk,-'
+        && /保險公司更新了條款、保費或保額，怎麼改/.test(z1.b) && /保險存摺/.test(z1.b) && /用新資料更新這張/.test(z1.b), JSON.stringify({ bar: z1.bar, ci: z1.ci, b: z1.b.slice(0, 200) }));
+    // 我已核對：還有錯誤要先確認；金額對不上原文的錯誤核對後消失，資料矛盾的不會
+    const z2 = await page.evaluate(() => { const m = me(); let msg = ''; const c0 = window.confirm; window.confirm = t => { msg = t; return true }; openPol('p4'); $('#pd-chk').click(); openPol('p2'); $('#pd-chk').click(); window.confirm = c0; closeSheet();
+      return { msg, lv: insOf(m).map(p => polLv(p, m)).join(), chk: insOf(m).map(p => p.chk ? 1 : 0).join('') } });
+    check('按「我已核對」時還有錯誤會先跳確認；金額對不上原文（AI 讀錯）核對後消失 → 綠；繳費期滿矛盾核對後仍是紅色，直到資料改正',
+      /還有 1 個錯誤/.test(z2.msg) && /繳費期滿/.test(z2.msg) && /資料矛盾的紅色會留著/.test(z2.msg) && z2.lv === 'err,err,ok,ok' && z2.chk === '1111', JSON.stringify(z2));
+    await page.evaluate(() => go('ins', 'cov')); await page.waitForTimeout(150);
+    const z3 = await page.evaluate(() => { const m = me(), svg = $('#covBody svg[role="img"]');
+      return { cov: $('#covBody').textContent, gap: [...document.querySelectorAll('#covBody .gap')].map(g => g.className.match(/g-(\w+)/)[1]).join(), sum: covSum(m).map(s => s.cat + ':' + (s.nm ? 'nm' + s.n : s.v + s.per)).join(), label: svg?.getAttribute('aria-label'), fade: [...(svg?.querySelectorAll('rect') || [])].some(r => +r.getAttribute('opacity') < 1),
+        map: [...document.querySelectorAll('#covBody table.imap tr')].map(r => [...r.children].map(c => c.textContent).join('/')).join('|'), er: document.querySelectorAll('#covBody table.imap td.er').length, gp: [...document.querySelectorAll('#covBody table.imap td.gp1,#covBody table.imap td.gp2')].map(t => t.className).join(),
+        gauge: !!$('#covBody .pgauge'), mp: promptMinProt(), pc: promptCompare(m) } });
+    check('保障加總：單位／計畫、豁免保費不加進金額（另計項數）；住院日額只寫「元」當作每日；壽險 100＋300＝400 萬含錯誤；繳費期滿的不算每年保費（只算還在繳的 3,000 元）；提示詞帶年收入、只算還在繳的保費',
+      /壽險（身故）400 萬 含錯誤/.test(z3.cov) && /住院日額1,000 元\/日 含錯誤/.test(z3.cov) && /住院醫療費用（實支實付）1 項不是金額（看條款）/.test(z3.cov) && /豁免保費1 項（不算金額）/.test(z3.cov) && /意外身故／失能500 萬(?! 含)/.test(z3.cov)
+        && z3.sum === 'life:4000000,hosp_day:1000day,hosp_real:nm1,waiver:nm1,accident:5000000' && /王小明 每年3,000 元/.test(z3.cov) && /已經繳完、保障還在：甲人壽 安心終身壽險、乙人壽 醫療終身保險、丙人壽 定期壽險/.test(z3.cov)
+        && /年收入約 80 萬、負債約 600 萬/.test(z3.mp) && /每年保費約 3,000 元（繳費期滿的不算）/.test(z3.mp) && /住院醫療費用（實支實付） 1 項金額算不出來（以單位／計畫／倍數計，或沒寫金額）/.test(z3.pc), JSON.stringify({ sum: z3.sum, cov: z3.cov.slice(0, 300) }));
+    check('保障缺口：壽險目標＝年收入 80 萬 × 10 與負債 600 萬取大的（800 萬），有 400 萬 → 不足；實支實付只有「計畫」→ 金額不明；日額 1,000／2,000 不足；癌症、重大疾病沒有；失能、長照可評估；圖示：缺口進度條、保障到幾歲時間軸（終身、部分到期變淡）、保費占年收入量表、全家地圖（✕ 有錯、缺口數，小孩缺實支實付 → 紅色）',
+      z3.gap === 'low,low,other,low,none,none,adv,adv' && /有 400 萬／目標 800 萬・年收入 80 萬 × 10、負債 600 萬，取大的/.test(z3.cov) && /實支實付醫療（每次限額）金額不明/.test(z3.cov) && /雙十原則/.test(z3.cov)
+        && /壽險保到 終身/.test(z3.label) && /醫療保到 終身/.test(z3.label) && /意外保到 ？/.test(z3.label) && z3.fade && z3.gauge && /王小明 保費占年收入0\.4%/.test(z3.cov)
+        && /王小明\/✕\/✔\/✕\/—\/—\/—\/—\/6/.test(z3.map) && /小寶\/—\/—\/—\/—\/—\/—\/—\/2/.test(z3.map) && /\/缺口$/.test(z3.map.split('|')[0]) && z3.er === 2 && z3.gp === 'gp2,gp1', JSON.stringify({ gap: z3.gap, label: z3.label, map: z3.map, er: z3.er, gp: z3.gp }));
+    // 保險公司更新：同一張保單重新匯入 → 列出差異、預設「用新資料更新這張」；匯到小孩的父母保單 → 生效日早於出生，預設不勾
+    await page.evaluate(() => { go('ins', 'pol'); openPolImport() }); await page.waitForTimeout(200);
+    await page.fill('#pi-in', JSON.stringify({ type: 'kinwell.policy', v: 1, policies: [
+      { insurer: '丁產險', product: '傷害保險', start: '2024-01-10', payFreq: '年繳', premium: 3300, coverages: [{ name: '意外身故', cat: 'accident', amount: 300, unit: '萬元', quote: '意外身故保險金 300 萬元' }, { name: '意外醫療', cat: 'acc_med', amount: 3, unit: '萬元', quote: '意外醫療 3 萬元' }] },
+      { insurer: '戊人壽', product: '終身壽險', insuredHint: '子女', start: '1980-02-02', payYears: 20, payFreq: '年繳', premium: 12000, coverages: [{ name: '身故', cat: 'life', amount: 100, unit: '萬元', quote: '身故保險金 100 萬元' }] }] }));
+    await page.click('#pi-go'); await page.waitForTimeout(300);
+    const z4 = await page.evaluate(() => ({ checks: [...document.querySelectorAll('#pi-out [data-pi]')].map(c => c.checked ? 1 : 0).join(''), mode: $('#pi-out [data-pimode]').value, out: $('#pi-out').textContent }));
+    await page.click('#pi-save'); await page.waitForTimeout(300);
+    const z5 = await page.evaluate(() => { const m = me(), q = insFind(m, 'p4'); openPol('p4'); return { n: insOf(m).length, kid: insOf(MEM[1]).length, prem: q.prem, chk: q.chk, it: q.items.map(c => c.name + c.amt).join(), hist: q.hist.map(h => h.why + ':' + h.d.prem + ':' + h.d.chk).join(), claim: !!insFind(m, CLM.a[0].claims[0].pid), toast: $('#toast').textContent, sheet: $('#sheetBody').textContent } });
+    check('保險公司更新保費、保額：重新匯入同一張 → 列出差異（保費 3,000 → 3,300、意外身故 500 → 300 萬、新增意外醫療），預設「用新資料更新這張」：保單 id 不變（理賠紀錄還連得到）、舊版存進變更紀錄、要重新核對；匯到小孩名下但生效日早於出生 → 紅字、預設不匯入',
+      z4.checks === '10' && z4.mode === 'upd' && /這次有 3 處不同/.test(z4.out) && /保費 3,000 元 → 3,300 元/.test(z4.out) && /「意外身故」500 萬元 → 300 萬元/.test(z4.out) && /新增「意外醫療」3 萬元/.test(z4.out) && /生效日 1980-02-02 早於被保險人（小寶）出生日/.test(z4.out)
+        && z5.n === 4 && z5.kid === 0 && z5.prem === 3300 && z5.chk === false && z5.it === '意外身故300,意外醫療3' && z5.hist === 'import:3000:true' && z5.claim && /已更新 1 張（舊版存在變更紀錄）/.test(z5.toast)
+        && /變更紀錄（1）/.test(z5.sheet) && /重新匯入更新/.test(z5.sheet) && /保費 3,000 元 → 3,300 元/.test(z5.sheet), JSON.stringify({ z4: { ...z4, out: z4.out.slice(0, 200) }, z5: { ...z5, sheet: '' } }));
+    // 復原、編輯也存變更紀錄、核對狀態不會因為編輯就自動變成已核對
+    await page.evaluate(() => $('#sheetBody [data-prest="0"]').click()); await page.waitForTimeout(200);
+    const z6 = await page.evaluate(() => { const q = insFind(me(), 'p4'); return { prem: q.prem, chk: q.chk, it: q.items.map(c => c.name + c.amt).join(), hist: q.hist.map(h => h.why + ':' + h.d.prem).join() } });
+    await page.evaluate(() => openPol('p2')); await page.click('#pd-edit'); await page.waitForTimeout(200); await page.selectOption('#pe-st', 'active'); await page.click('#pe-save'); await page.waitForTimeout(200);
+    const z7 = await page.evaluate(() => { const m = me(), q = insFind(m, 'p2'); return { st: q.status, chk: q.chk, lv: polLv(q, m), warn: q.warn.join(), hist: q.hist.map(h => h.why + ':' + h.d.status).join(), sheet: $('#sheetBody').textContent, annual: insOf(m).filter(p => polPaying(p)).map(p => p.id).join() } });
+    check('「復原到這版」回到更新前（保費 3,000、意外身故 500 萬、已核對），更新後的版本也存進紀錄；編輯（繳費期滿 → 有效）也存變更紀錄、保留匯入紀錄、不會自動標成已核對；改正後紅色消失，保費開始算進每年保費',
+      z6.prem === 3000 && z6.chk === true && z6.it === '意外身故500' && z6.hist === 'restore:3300' && z7.st === 'active' && z7.chk === true && z7.lv === 'ok' && /第 3 頁模糊/.test(z7.warn) && z7.hist === 'edit:paidup' && /手動編輯/.test(z7.sheet) && /狀態 繳費期滿（保障還在） → 有效/.test(z7.sheet) && z7.annual === 'p2,p4',
+      JSON.stringify({ z6, z7: { ...z7, sheet: '' } }));
+    // 調整目標；備份來回：變更紀錄、年收入、目標都保留，壞資料被清掉
+    await page.evaluate(() => { closeSheet(); go('ins', 'cov') }); await page.waitForTimeout(150); await page.click('#covBody [data-gapedit]'); await page.waitForTimeout(200);
+    await page.fill('#gp-inc', '100'); await page.fill('#sheetBody [data-gk="life"]', '0'); await page.fill('#sheetBody [data-gk="hosp_real"]', 'abc'); await page.click('#gp-save'); await page.waitForTimeout(200);
+    const z8 = await page.evaluate(() => { const m = me(), G = covGap(m), d = cleanBackup(JSON.parse(JSON.stringify({ ...packData(null), members: [{ ...MEM[0], covT: { life: 0, cancer: -5, evil: 9 }, inc: 'x' }, MEM[1]] })));
+      return { inc: m.inc, covT: JSON.stringify(m.covT), life: G.find(g => g.k === 'life').st, acc: G.find(g => g.k === 'accident').tg, cov: $('#covBody').textContent, todo: (renderTodo(), $('#todoCard').textContent),
+        bk: JSON.stringify({ covT: d.mem[0].covT, inc: d.mem[0].inc, hist: d.ins.a.find(p => p.id === 'p4').hist.map(h => h.why + ':' + h.d.prem).join(), h2: d.ins.a.find(p => p.id === 'p2').hist.length }) } });
+    check('調整目標：年收入改 100 萬 → 意外目標 1,000 萬；壽險目標填 0 ＝不急；亂填的目標不存；備份還原保留變更紀錄與目標，負數、未知欄位、非數字年收入被清掉',
+      z8.inc === 100 && z8.covT === '{"life":0}' && z8.life === 'na' && z8.acc === 1000 && /有 500 萬／目標 1,000 萬/.test(z8.cov) && /🛡 保障不足：意外險低於目標/.test(z8.todo) && !/壽險低於目標/.test(z8.todo)
+        && z8.bk === JSON.stringify({ covT: { life: 0 }, inc: '', hist: 'restore:3300', h2: 1 }), JSON.stringify(z8.bk) + ' ' + z8.covT);
+    // 小孩：壽險不急（保險法第 107 條）
+    const z9 = await page.evaluate(() => { ACT = 'k'; renderAll(); const G = covGap(me()); ACT = 'a'; return G.map(g => g.k + ':' + g.st).join() + '|' + G[0].why });
+    check('未滿 15 歲：壽險不急（身故保險金滿 15 歲才生效，保險法第 107 條）；沒有保單也算出缺口（實支實付、住院日額）', /^life:na,accident:adv,hosp_real:none,hosp_day:none,cancer:adv,critical:adv/.test(z9) && /第 107 條/.test(z9), z9);
+    // 電腦寬螢幕：內容維持手機寬度置中
+    await page.setViewportSize({ width: 1280, height: 860 }); await page.waitForTimeout(200);
+    const z10 = await page.evaluate(() => { openPol('p1'); const r = { body: Math.round(document.body.getBoundingClientRect().width), nav: Math.round($('#nav').getBoundingClientRect().width), sheet: Math.round($('.sheet-panel').getBoundingClientRect().width), left: Math.round(document.body.getBoundingClientRect().left) }; closeSheet(); return r });
+    check('電腦或平板橫放：內容、底部選單、彈出視窗都維持手機寬度置中（不會拉滿整個螢幕）', z10.body === 640 && z10.nav === 620 && z10.sheet === 640 && z10.left === 320, JSON.stringify(z10));
     await page.close();
   }
 
