@@ -268,6 +268,30 @@ C. 還需要我補的文件
 D. JSON：貼回 App「保單 → 用 AI 匯入保單」，選「用新資料更新這張」
 ```
 
+### 條款規則擷取（理賠試算用）
+
+保單明細「📜 條款規則」→「📋 複製擷取提示詞」：App 附上這張保單的保險公司、商品、生效日與保障項目（名稱、代碼、類別、金額，不含個資）；連同條款 PDF 交給 AI，把回的 JSON 貼回「貼上 AI 的結果」。
+
+```text
+你是「保單條款規則擷取器」。我會附上下面這張保單的條款 PDF 或照片（主約和附約條款都可以）。你的任務只有「把條款上寫的給付規則抄成 JSON」，不要分析、不要用一般保險常識補。
+
+【規則】
+1. 只輸出一個 JSON 物件，前後不要有任何文字，也不要用 ``` 包起來。
+2. 條款上找不到的欄位一律填 null，禁止推算或猜測。
+3. 每一條規則都附 quote（逐字抄下條款原文，一定要含數字或關鍵字）與 clause（條號，例如「第十二條」）。
+4. 先確認條款版本：ver 填條款名稱與備查文號或日期；和下面的商品名稱不一致，寫進 unreadable。
+5. 下面「保障項目」的每一項各輸出一筆 rules（name 照抄保障名稱）；條款有、但保單沒列的給付也可以列，extra 填 true。
+6. pay 給付方式：daily＝每日 × 天數、expense＝依收據實支實付、lump＝一次給付、table＝依手術表或倍數表、ratio＝依失能等級比例、waiver＝豁免保費。
+7. perUnit：以「單位」「計畫」計時，每單位或這個計畫的金額與單位，例如 {"amt":1000,"unit":"元/日"}；limit：每次（每次住院）最高給付金額（元）；sub：實支實付的分項限額，例如 [{"name":"病房費","amt":2000,"unit":"元/日"},{"name":"雜費","amt":100000,"unit":"元/次"},{"name":"手術費","amt":50000,"unit":"元/次"}]；maxDays：每次住院最多給付幾天。
+8. icuX：住加護病房或燒燙傷病房時，日額是平常的幾倍（例如 2）；outSx：門診手術的給付比例（例如 0.5，不賠填 0）；inSitu：原位癌（零期）的給付比例（例如 0.1）。
+9. waitIll：疾病的等待期天數；waitAcc：意外的等待期天數（沒有就填 0）；accOnly：只賠意外傷害填 true；outpatient：門診（沒住院）也賠填 true；copyClaim：可以用收據副本申請填 true；maxAge：最高續保或保障到幾歲。
+10. excl：除外責任，逐條摘要（每條 40 字內，附條號）。
+11. 身分證字號、保單號碼、姓名一律不要輸出；看不清楚或缺頁的寫進 unreadable，不要猜。
+
+【輸出格式】
+{"type":"kinwell.terms","v":1,"ver":null,"product":null,"rules":[{"name":null,"pay":null,"perUnit":null,"limit":null,"sub":[],"maxDays":null,"icuX":null,"outSx":null,"inSitu":null,"waitIll":null,"waitAcc":null,"accOnly":null,"outpatient":null,"copyClaim":null,"maxAge":null,"excl":[],"quote":null,"clause":null,"extra":false}],"unreadable":[]}
+```
+
 ### 突發狀況：理賠準備與怎麼問醫師
 
 保險 → 理賠 →「🧮 發生事情了：保險會不會賠？」選情況、填住院天數與收據金額：App 先逐項試算（會賠／可能會賠／不賠＋原因與估計金額）；按「問 AI」複製：附上狀況、被保險人性別年齡與病史名稱、App 的逐項試算，以及所有有效保單（不含姓名、生日、受益人）。

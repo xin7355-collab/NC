@@ -165,16 +165,16 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   check('輸入框字級 ≥16px（iOS 不自動放大）', await page.evaluate(() => { const t = document.createElement('textarea'); document.body.appendChild(t); const v = parseFloat(getComputedStyle(t).fontSize); t.remove(); return v >= 16 }));
 
   // =============== 6. 文件一致性 ===============
-  const prompts = await page.evaluate(() => ({ scale: promptScale(), lab: promptLab(), watch: promptWatch(), policy: promptPolicy(), law: PROMPT_LAW, lawdiff: PROMPT_LAWDIFF, insrule: INS_RULE + '\n' + EVID, polchk: POLCHK_HEAD, claimprep: CLAIMPREP_HEAD }));
+  const prompts = await page.evaluate(() => ({ scale: promptScale(), lab: promptLab(), watch: promptWatch(), policy: promptPolicy(), law: PROMPT_LAW, lawdiff: PROMPT_LAWDIFF, insrule: INS_RULE + '\n' + EVID, polchk: POLCHK_HEAD, claimprep: CLAIMPREP_HEAD, terms: TERMS_HEAD }));
   const md = p => '```text\n' + p + '\n```';
   const pfile = path.join(ROOT, 'PROMPTS.md');
   if (process.argv.includes('--update-prompts')) {
     const doc = fs.readFileSync(pfile, 'utf8').replace(/(## 一、體脂機截圖\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.scale)).replace(/(## 二、體檢報告\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.lab)).replace(/(## 四、手錶／健康 App 截圖\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.watch))
-      .replace(/(## 六、保單匯入（照片／PDF → JSON）\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.policy)).replace(/(### 法令／條例更新審查\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.law)).replace(/(### 法規新舊條文比對\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.lawdiff)).replace(/(### 保單核對（哪裡有錯、去哪裡找）\n\n[^\n]*\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.polchk)).replace(/(### 突發狀況：理賠準備與怎麼問醫師\n\n[^\n]*\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.claimprep)).replace(/(### 共同規則與證據分級\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.insrule));
+      .replace(/(## 六、保單匯入（照片／PDF → JSON）\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.policy)).replace(/(### 法令／條例更新審查\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.law)).replace(/(### 法規新舊條文比對\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.lawdiff)).replace(/(### 保單核對（哪裡有錯、去哪裡找）\n\n[^\n]*\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.polchk)).replace(/(### 突發狀況：理賠準備與怎麼問醫師\n\n[^\n]*\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.claimprep)).replace(/(### 條款規則擷取（理賠試算用）\n\n[^\n]*\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.terms)).replace(/(### 共同規則與證據分級\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.insrule));
     fs.writeFileSync(pfile, doc); console.log('已更新 PROMPTS.md');
   }
   const doc = fs.readFileSync(pfile, 'utf8');
-  check('PROMPTS.md 與 App 內提示詞一致（體脂機、體檢、手錶、保單、法令審查、法規比對、保單核對、突發狀況理賠準備）', doc.includes(md(prompts.scale)) && doc.includes(md(prompts.lab)) && doc.includes(md(prompts.watch)) && doc.includes(md(prompts.policy)) && doc.includes(md(prompts.law)) && doc.includes(md(prompts.lawdiff)) && doc.includes(md(prompts.insrule)) && doc.includes(md(prompts.polchk)) && doc.includes(md(prompts.claimprep)), '不一致時執行 node tests/e2e.js --update-prompts');
+  check('PROMPTS.md 與 App 內提示詞一致（體脂機、體檢、手錶、保單、法令審查、法規比對、保單核對、突發狀況理賠準備、條款規則擷取）', doc.includes(md(prompts.scale)) && doc.includes(md(prompts.lab)) && doc.includes(md(prompts.watch)) && doc.includes(md(prompts.policy)) && doc.includes(md(prompts.law)) && doc.includes(md(prompts.lawdiff)) && doc.includes(md(prompts.insrule)) && doc.includes(md(prompts.polchk)) && doc.includes(md(prompts.claimprep)) && doc.includes(md(prompts.terms)), '不一致時執行 node tests/e2e.js --update-prompts');
   const selfHead = await page.evaluate(() => selfPrompt(me(), []).split('\n').slice(0, 2).join('\n'));
   check('PROMPTS.md 第五節（自我檢測給 AI）的開頭規則和 App 一致', doc.includes('```text\n' + selfHead + '\n'), '改了 selfPrompt 開頭要同步 PROMPTS.md 第五節');
   await page.close();
@@ -1610,6 +1610,63 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
         && /住院、住院 5 天、加護病房 1 天、不是意外（疾病）、有手術、健保自付 8000 元、自費 20000 元/.test(i5) && !/王小明|1984-05-05/.test(i5), i5.slice(0, 400));
     const i6 = await page.evaluate(() => { closeSheet(); openEvt('v1'); const t = $('#sheetBody').textContent; closeSheet(); return t });
     check('已經記下的理賠事件（住院 5 天、自付 8,000 元）打開時，最上面也有「App 試算：保險會不會賠」', /App 試算：保險會不會賠/.test(i6) && /每日 2,000 元 × 5 天 ≈ 10,000 元/.test(i6) && /收據 8,000 元/.test(i6), i6.slice(0, 300));
+    await page.close();
+  }
+
+  // =============== 6zj. 條款規則：下載條款交給 AI 抄成規則 → 貼回 App；理賠試算改用條款（加護病房倍數、實支實付分項限額、每次最多天數、計畫換算、只賠意外、門診也賠、門診手術比例、原位癌比例、條款的等待期）；編輯、備份、重新匯入都保留 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    const P = (id, o) => ({ id, insurer: '甲人壽', product: '醫療', start: '2015-01-01', payYears: 20, payFreq: '年', prem: 20000, status: 'active', src: 'ai', chk: true, warn: [], t: T(0), ...o });
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep' }, { id: 'k', name: '小孩', sex: 'm', birth: '2015-01-01', h: 140, w: 35, act: '1.375', goal: 'keep', role: 'child' }], active: 'a',
+      ins: { a: [P('t1', { product: '甲人壽住院醫療', items: [{ name: '住院日額', kind: 'main', cat: 'hosp_day', amt: 2000, unit: '元/日', quote: '每日 2,000 元' }, { name: '實支實付', kind: 'rider', cat: 'hosp_real', amt: 20, unit: '萬元', quote: '20 萬元' },
+            { name: '手術', kind: 'rider', cat: 'surgery', amt: 10, unit: '倍', quote: '10 倍' }, { name: '傷害醫療', kind: 'rider', cat: 'acc_med', amt: 5, unit: '萬元', quote: '5 萬元' },
+            { name: '住院醫療計畫', kind: 'rider', cat: 'hosp_day', amt: 2, unit: '計畫', quote: '計畫二' }, { name: '癌症一次金', kind: 'rider', cat: 'cancer', amt: 50, unit: '萬元', quote: '50 萬元' }] }),
+          P('t2', { insurer: '乙人壽', product: '新醫療', start: T(10), items: [{ name: '住院日額', kind: 'main', cat: 'hosp_day', amt: 1000, unit: '元/日', quote: '每日 1,000 元' }] }),
+          P('t3', { insurer: '丙人壽', product: '防護醫療', start: T(20), items: [{ name: '住院日額', kind: 'main', cat: 'hosp_day', amt: 1500, unit: '元/日', quote: '每日 1,500 元' }],
+            terms: { ver: '丙人壽防護醫療 v1', t: T(0), rules: [{ name: '住院日額', pay: 'daily', waitIll: 30, quote: '等待期間 30 日', clause: '第五條', sub: [], excl: [] }], warn: [] } })] } });
+    const TJ = { type: 'kinwell.terms', v: 1, ver: '甲人壽住院醫療保險附約 112.01.01 備查', product: '甲人壽住院醫療', rules: [
+      { name: '住院日額', pay: 'daily', maxDays: 3, icuX: 2, waitIll: 30, quote: '每日給付住院日額，加護病房期間按二倍給付，每次住院最高 3 日', clause: '第八條' },
+      { name: '實支實付', pay: 'expense', limit: 300000, sub: [{ name: '病房費', amt: 2000, unit: '元/日' }, { name: '雜費', amt: 100000, unit: '元/次' }, { name: '手術費', amt: 50000, unit: '元/次' }], copyClaim: true, quote: '病房費每日 2,000 元、雜費 10 萬、手術費 5 萬', clause: '第九條' },
+      { name: '手術', pay: 'table', outSx: 0.5, quote: '門診手術按手術表二分之一給付', clause: '第十條' },
+      { name: '傷害醫療', pay: 'expense', accOnly: true, outpatient: true, quote: '因意外傷害事故門診亦給付', clause: '第十一條' },
+      { name: '住院醫療計畫', pay: 'daily', perUnit: { amt: 1000, unit: '元/日' }, quote: '每計畫每日 1,000 元', clause: '第十二條' },
+      { name: '癌症一次金', pay: 'lump', inSitu: 0.1, waitIll: 90, quote: '原位癌按百分之十給付', clause: '第十三條' },
+      { name: '壞的', icuX: 99, waitIll: -5, maxDays: 0, quote: '' }, { name: '條款才有的', pay: 'lump', extra: true, quote: 'x' }], unreadable: ['第 5 頁模糊', '<img src=x onerror="window.__tx=1">'] };
+    const j1 = await page.evaluate(() => { Object.defineProperty(navigator, 'clipboard', { value: { writeText: t => { window.__clip = t; return Promise.resolve() } }, configurable: true });
+      openPol('t1'); const before = $('#sheetBody').textContent, has = !!document.querySelector('#sheetBody [data-termscopy]') && !!document.querySelector('#sheetBody [data-termsimp]'); window.__clip = ''; document.querySelector('#sheetBody [data-termscopy]')?.click(); return { before, has } });
+    await page.waitForTimeout(100);
+    const j2 = await page.evaluate(TJ => { const clip = window.__clip || ''; document.querySelector('#sheetBody [data-termsimp]')?.click(); if (!$('#tm-in')) return { clip, prev: '', n: -1, bad: '', after: '', img: false };
+      $('#tm-in').value = '```json\n' + JSON.stringify(TJ) + '\n```'; $('#tm-go').click(); const prev = $('#tm-out').textContent, img = !!$('#tm-out img'); $('#tm-save')?.click(); const p = insFind(me(), 't1'), after = $('#sheetBody').textContent;
+      return { clip, prev, img, n: p.terms?.rules?.length, bad: JSON.stringify((p.terms?.rules || []).find(r => r.name === '壞的') || null), after } }, TJ);
+    await page.waitForTimeout(100);
+    check('保單明細「📜 條款規則」：還沒匯入時說明去哪裡下載條款；複製擷取提示詞（附這張保單的保障項目、不附姓名生日）→ 貼回 AI 的結果 → 核對（對到幾項、看不清楚的、異常值清掉、HTML 只當文字）→ 存入；明細顯示每一項的條款規則',
+      /還沒匯入條款/.test(j1.before) && j1.has && /保單條款規則擷取器/.test(j2.clip) && /"name":"住院醫療計畫"/.test(j2.clip) && /kinwell\.terms/.test(j2.clip) && !/王小明|1984-05-05/.test(j2.clip)
+        && /對到 6／6 項保障/.test(j2.prev) && /第 5 頁模糊/.test(j2.prev) && !j2.img && !(await page.evaluate(() => window.__tx === 1)) && j2.n === 8 && /"icuX":null/.test(j2.bad) && /"waitIll":null/.test(j2.bad) && /"maxDays":null/.test(j2.bad)
+        && /甲人壽住院醫療保險附約 112\.01\.01 備查/.test(j2.after) && /加護病房 2 倍/.test(j2.after) && /門診手術 50%/.test(j2.after) && /原位癌 10%/.test(j2.after) && /只賠意外/.test(j2.after) && /可以用收據副本/.test(j2.after),
+      JSON.stringify({ before: j1.before.slice(0, 60), has: j1.has, n: j2.n, bad: j2.bad, prev: j2.prev.slice(0, 160), img: j2.img }));
+    const j3 = await page.evaluate(() => { try { const m = me(), R = claimEst(m, { k: 'ad', d: todayS(), days: '5', icu: '2', cost: '50000', self: '250000', sx: true }), f = n => { for (const o of R.out) for (const r of o.its) if (polName(o.p) + '/' + r.c.name === n) return r.v + ':' + (r.amt ?? '') + ':' + r.txt + (r.terms ? '｜條款' : ''); return '-' };
+      return { day: f('甲人壽住院醫療/住院日額'), real: f('甲人壽住院醫療/實支實付'), plan: f('甲人壽住院醫療/住院醫療計畫'), sx: f('甲人壽住院醫療/手術'), t2: f('乙人壽 新醫療/住院日額'), t3: f('丙人壽 防護醫療/住院日額'), nNoT: R.nNoT } } catch (e) { return { err: e.message } } });
+    check('理賠試算改用條款（住院 5 天、加護病房 2 天、收據 30 萬、有手術）：住院日額每次最多 3 天＋加護病房加倍 ≈ 10,000 元；實支實付照分項限額（病房費 × 5 天＋雜費＋手術費）≈ 160,000 元；「計畫二」用條款換算成每日 2,000 元；條款的等待期 30 天也會擋；沒匯入條款的照舊用保單金額',
+      /^yes:10000:每日 2,000 元 × 3 天 ＋ 加護病房 2 天再加 1 倍 ≈ 10,000 元（條款每次最多 3 天）/.test(j3.day) && /｜條款$/.test(j3.day) && /^yes:160000:依條款分項限額（病房費 2,000 元×5 天＋雜費 10 萬＋手術費 5 萬＝160,000 元）/.test(j3.real)
+        && /^yes:10000:每日 2,000 元 × 5 天 ≈ 10,000 元/.test(j3.plan) && /｜條款$/.test(j3.plan) && /^maybe::10 倍：日額 × 倍數/.test(j3.sx) && /^yes:5000:每日 1,000 元 × 5 天 ≈ 5,000 元$/.test(j3.t2)
+        && /^no::等待期內（生效 20 天，等待期 30 天，依條款第五條）：疾病通常不賠/.test(j3.t3) && j3.nNoT === 1, JSON.stringify(j3));
+    const j4 = await page.evaluate(() => { try { const m = me(), g = (x, n) => { const R = claimEst(m, { d: todayS(), ...x }); for (const o of R.out) for (const r of o.its) if (polName(o.p) + '/' + r.c.name === n) return r.v + ':' + (r.amt ?? '') + ':' + r.txt + (r.why.length ? '〔' + r.why.join('；') + '〕' : ''); return '-' };
+      return { outSx: g({ k: 'sx', sxOut: true }, '甲人壽住院醫療/手術'), accOut: g({ k: 'acc', days: '0', cost: '3000' }, '甲人壽住院醫療/傷害醫療'), insitu: g({ k: 'ca', inSitu: true }, '甲人壽住院醫療/癌症一次金'), ca: g({ k: 'ca' }, '甲人壽住院醫療/癌症一次金') } } catch (e) { return { err: e.message } } });
+    check('條款的細節：門診手術條款給付 50%；意外門診條款寫「門診也賠」→ 傷害醫療依收據 ≈ 3,000 元；原位癌條款給付 10% ≈ 5 萬；一般癌症照 50 萬並註明原位癌只給 10%',
+      /門診手術：條款給付 50%/.test(j4.outSx) && /^yes:3000:依收據實支：收據 3,000 元，上限 5 萬 → ≈ 3,000 元/.test(j4.accOut) && /門診也賠/.test(j4.accOut) && /^yes:50000:原位癌依條款給付 10%/.test(j4.insitu)
+        && /^yes:500000:50 萬（初次罹癌以病理報告日期為準；原位癌只給 10%）/.test(j4.ca), JSON.stringify(j4));
+    const j5 = await page.evaluate(() => { const m = me(), p = insFind(m, 't1'); openPolEdit('t1'); $('#pe-save').click(); const afterEdit = (insFind(m, 't1').terms?.rules || []).length;
+      const b = cleanBackup({ app: 'Kinwell', members: [MEM[0]], active: 'a', ins: { a: [JSON.parse(JSON.stringify(insFind(m, 't1')))] } }), bk = (b.ins?.a?.[0]?.terms?.rules || []).length;
+      const np = polCheck({ insurer: '甲人壽', product: '甲人壽住院醫療', start: '2015-01-01', coverages: [{ name: '住院日額', cat: 'hosp_day', amount: 2500, unit: '元/日', quote: '每日 2,500 元' }] }, m).p, mg = (polMerge(insFind(m, 't1'), np, { status: '' }).terms?.rules || []).length;
+      const pp = promptClaimPrep(m, CLAIM_SCN.find(x => x.k === 'ad'), { k: 'ad', d: todayS(), days: '5', add: [], note: '', dx: '' }); closeSheet(); go('ins', 'pol');
+      return { afterEdit, bk, mg, pp: /【已匯入的條款規則/.test(pp) && /第八條/.test(pp), line: $('#polBody').textContent } });
+    const j6 = await page.evaluate(() => { const m = me(), mk = acc => ({ id: 'z', insurer: '甲', product: '乙', start: '2015-01-01', status: 'active', src: 'ai', chk: false, items: [{ name: '傷害住院日額', cat: 'hosp_day', amt: 1000, unit: '元/日', quote: '每日 1,000 元' }, { name: '住院日額', cat: 'hosp_day', amt: 1000, unit: '元/日', quote: '每日 1,000 元' }],
+        terms: { ver: 'v', t: todayS(), rules: [{ name: '傷害住院日額', accOnly: acc, clause: '第三條', sub: [], excl: [] }, { name: '住院日額', accOnly: true, clause: '第四條', sub: [], excl: [] }], warn: [] } });
+      const f = p => polAudit(p, m).filter(x => /只賠意外/.test(x.t)).map(x => x.ci + ':' + x.t).join('｜'); return f(mk(false)) + '#' + f(mk(true)) });
+    check('保單檢查跟著條款：條款寫生病也賠 → 名稱有「傷害」也不再提醒；條款寫只賠意外 → 提醒「生病住院不賠」並附條號（名稱沒有「傷害」也會提醒）',
+      j6 === '1:「住院日額」條款寫只賠意外傷害（第四條）：生病住院不賠#0:「傷害住院日額」條款寫只賠意外傷害（第三條）：生病住院不賠｜1:「住院日額」條款寫只賠意外傷害（第四條）：生病住院不賠', j6);
+    check('條款規則在編輯保單、備份還原、重新匯入更新後都保留；問 AI 的提示詞附上用得到的條款規則（原文與條號）；保單清單標「📜 已匯入條款」',
+      j5.afterEdit === 8 && j5.bk === 8 && j5.mg === 8 && j5.pp && /📜 已匯入條款/.test(j5.line), JSON.stringify({ ...j5, line: j5.line.slice(0, 120) }));
     await page.close();
   }
 
