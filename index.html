@@ -276,7 +276,7 @@ table.imap td.er{color:var(--red);font-weight:800}table.imap td.gp1{color:var(--
 .pgl{display:flex;justify-content:space-between;font-size:calc(10px*var(--fz));color:var(--mute)}
 /* 電腦或平板橫放：內容維持手機寬度置中，不要拉成整個螢幕 */
 @media (min-width:720px){html{background:radial-gradient(600px 400px at 90% -10%,rgba(34,228,255,.18),transparent 60%),radial-gradient(500px 400px at -10% 30%,rgba(182,255,60,.10),transparent 60%),var(--bg)}body{max-width:640px;margin:0 auto;background:transparent}nav{left:50%;right:auto;width:620px;margin-left:-310px}.sheet-panel{left:50%;right:auto;width:640px;margin-left:-320px}.tour-card{left:50%;right:auto;width:560px;margin-left:-280px}}
-@media (min-width:1024px){body{max-width:1240px;padding:24px 32px 40px 140px}nav{left:max(20px,calc(50vw - 596px));right:auto;top:96px;bottom:auto;width:92px;margin-left:0;flex-direction:column;justify-content:flex-start;gap:4px;padding:8px 6px;border-radius:20px}nav button{flex:0 0 auto;padding:12px 0}#v-dash.on,.view.on>.subp:not([hidden]){column-count:2;column-gap:18px}.card,.qa,.row2,.days,.tags{break-inside:avoid}#critBox,#critBody{column-span:all}.sheet-panel{left:auto;right:0;top:0;bottom:0;width:min(600px,100vw);margin-left:0;max-height:none;border-radius:22px 0 0 22px;border:1px solid var(--line);border-right:0;transform:translateX(105%)}.grab{display:none}}
+@media (min-width:1024px){body{max-width:1240px;padding:24px 32px 40px 140px}nav{left:max(20px,calc(50vw - 596px));right:auto;top:96px;bottom:auto;width:92px;margin-left:0;flex-direction:column;justify-content:flex-start;gap:4px;padding:8px 6px;border-radius:20px}nav button{flex:0 0 auto;padding:12px 0}#v-dash.on,.view.on>.subp:not([hidden]){column-count:2;column-gap:18px}.card,.qa,.row2,.days,.tags{break-inside:avoid}#critBox,#critBody{column-span:all}.sheet-panel{left:auto;right:0;top:0;bottom:0;width:min(600px,100vw);margin-left:0;max-height:none;padding-top:calc(env(safe-area-inset-top) + 8px);border-radius:22px 0 0 22px;border:1px solid var(--line);border-right:0;transform:translateX(105%)}.grab{display:none}}
 .kv{display:grid;grid-template-columns:1fr auto;gap:9px 12px;font-size:calc(13px*var(--fz));align-items:center}
 .kv>span:nth-child(odd){color:var(--mute)}
 .kv>span:nth-child(even){text-align:right}
@@ -937,9 +937,11 @@ function devLv(s){if(!s)return 0;s=String(s);for(const[k,v]of DEVW)if(s.includes
 
 const fattyKnown=m=>condKeys(m).has('nafld')||labsOf(m).slice(0,2).some(r=>/脂肪肝/.test(String(r.items?.us_liver?.v||'')));
 // 蛋白質差多少就補多少：從份量大的開始挑，最多 3 樣；有血脂或心血管問題不推雞蛋
-function protTip(gap,md){const P=[['雞胸肉或魚一份 100 g（約 20 g）',20],['一盒板豆腐（約 15 g）',15],['一杯無糖豆漿（約 10 g）',10],['一杯無糖優格（約 8 g）',8],...(md.heart?[]:[['1 顆蛋（約 7 g）',7]])],pick=[];let n=0;
+function protTip(gap,md,no=[]){const x=k=>no.includes(k),meat=x('chicken')&&x('fish')?null:x('chicken')?'魚一份 100 g（約 20 g）':x('fish')?'雞胸肉一份 100 g（約 20 g）':'雞胸肉或魚一份 100 g（約 20 g）';
+  const P=[[meat,20],[!x('soy')&&'一盒板豆腐（約 15 g）',15],[!x('soy')&&'一杯無糖豆漿（約 10 g）',10],[!x('dairy')&&'一杯無糖優格（約 8 g）',8],[!md.heart&&!x('egg')&&'1 顆蛋（約 7 g）',7]].filter(p=>p[0]),pick=[];let n=0;
   for(const[t,g]of P)if(n<gap&&pick.length<3){pick.push(t);n+=g}
-  return `🥚 蛋白質還差約 ${gap} g：可以加 ${pick.join('＋')}${md.heart?'。蛋一天 1 顆為宜（有血脂問題或冠狀動脈鈣化更要注意）':''}`}
+  if(!pick.length)return `🥚 蛋白質還差約 ${gap} g：把三餐的主菜份量加大一點（避開你不吃的食物）`;
+  return `🥚 蛋白質還差約 ${gap} g：可以加 ${pick.join('＋')}${n<gap?`（約補 ${n} g，其餘把三餐的主菜份量加大一點）`:''}${md.heart?'。蛋一天 1 顆為宜（有血脂問題或冠狀動脈鈣化更要注意）':''}`}
 function scaleEval(rec,m){
   const a=ageOf(m),male=m.sex!=='f',kid=a<18,st=rec.status||{},out=[];
   // 體脂機是生物電阻估算的慢性指標：最高只到「異常」，不觸發「1–2 週內就診」與分數上限
@@ -1009,6 +1011,9 @@ function labEval(rec,m){
 }
 // App 自己算得出來、不用問 AI 的綜合指標：FIB-4（肝纖維化風險）、代謝症候群（國健署 5 項）
 const r2=v=>Math.round(v*100)/100;
+// 報告沒驗 eGFR 但有肌酸酐（18 歲以上）→ CKD-EPI 2021；等級和實際驗的 eGFR 用同一套門檻
+function egfrEst(m){const l=labsOf(m)[0],iv=k=>num(l?.items?.[k]?.v);if(!l||iv('egfr')!=null)return null;const cr=iv('cr'),a=Math.floor(ageOf(m));if(!(cr>0)||a<18)return null;
+  const e=egfrCalc(cr,a,m.sex==='f');return e?{v:e,cr,a,lv:e<30?3:e<45?2:e<60?1:0}:null}
 function derivedOf(m){const l=labsOf(m)[0],a=Math.floor(ageOf(m)),male=m.sex!=='f',iv=k=>num(l?.items?.[k]?.v),out=[];if(!l)return out;
   const ast=iv('ast'),alt=iv('alt');let plt=iv('plt');if(plt!=null&&plt>=PERUL.plt)plt/=1000;
   if(ast!=null&&alt>0&&plt>0){const f=a*ast/(plt*Math.sqrt(alt)),lo=a>=65?2:1.3;
@@ -1020,8 +1025,8 @@ function derivedOf(m){const l=labsOf(m)[0],a=Math.floor(ageOf(m)),male=m.sex!=='
   if(have.length>=3||hit.length>=3)out.push({k:'mets',name:'代謝症候群（國健署 5 項）',val:`${hit.length}/5`,lv:hit.length>=3?2:hit.length===2?1:0,
     txt:hit.length>=3?'符合代謝症候群（≥3 項）：心血管、糖尿病、脂肪肝風險明顯上升，建議家醫科或新陳代謝科整體評估':hit.length===2?'再多 1 項就是代謝症候群，現在調整最有效':'目前未達代謝症候群',
     src:C.map(c=>`${c[0]} ${c[1]==null?'沒資料':c[3]+(c[2]?' ✗':' ✓')}`).join('、')});
-  {const cr=iv('cr');if(cr>0&&iv('egfr')==null&&a>=18){const e=egfrCalc(cr,a,!male);if(e)out.push({k:'egfr_calc',name:'腎絲球過濾率 eGFR（App 由肌酸酐算）',val:Math.round(e),lv:e<30?2:e<60?1:0,
-    txt:e>=90?'正常（≥90）':e>=60?'60–89：輕度下降，多數人沒有腎臟病，要搭配尿蛋白判斷；年紀增長也會慢慢下降':e>=30?'30–59：中度下降，建議腎臟科評估':'低於 30：請儘快到腎臟科',src:`肌酸酐 ${cr}、年齡 ${a}、${male?'男':'女'}（CKD-EPI 2021）`})}}
+  {const E=egfrEst(m);if(E){const e=E.v;out.push({k:'egfr_calc',name:'腎絲球過濾率 eGFR（App 由肌酸酐算）',val:Math.round(e),lv:E.lv,
+    txt:e>=90?'正常（≥90）':e>=60?'60–89：輕度下降，多數人沒有腎臟病，要搭配尿蛋白判斷；年紀增長也會慢慢下降':e>=45?'45–59：3 個月後複驗肌酸酐與尿蛋白；持續低於 60 就是慢性腎臟病，飲食已改成顧腎（蛋白質 ≤1.0 g/kg）':e>=30?'30–44：中度下降，請到腎臟科評估':'低於 30：請儘快到腎臟科',src:`肌酸酐 ${E.cr}、年齡 ${E.a}、${male?'男':'女'}（CKD-EPI 2021）`})}}
   const bs=biaSeg(l);if(bs)out.push({k:'bia',name:'InBody 分段分析',val:bs.hiF.length||bs.loL.length||bs.asym.length?'有偏差':'平衡',lv:bs.hiF.includes('軀幹')||bs.loL.length?1:0,txt:bs.txt,src:bs.src});
   return out}
 // 「其他項目」分類：原始阻抗、理學檢查、視力聽力、InBody、尿液、血液、其他（順序有意義：先比對較明確的）
@@ -1211,7 +1216,7 @@ function dietMode(m){
   const{scale,lab}=issuesOf(m),all=[...scale,...lab],o={};all.forEach(i=>{if(i.organ)o[i.organ]=Math.max(o[i.organ]||0,i.lv)});
   const md={lowCarb:(o.pancreas||0)>=1||all.some(i=>i.k==='tg'||(i.k==='visceral'&&i.lv>=1)),heart:(o.vessel||0)>=1||all.some(i=>i.k==='cac'||i.k==='img_cac'),liver:(o.liver||0)>=1,lowPur:all.some(i=>i.k==='ua'),kidney:all.some(i=>['egfr','cr','upro','uacr'].includes(i.k)&&i.lv>=2),kidneyMild:all.some(i=>['egfr','cr','upro','uacr'].includes(i.k)&&i.lv===1),waterLim:all.some(i=>i.k==='egfr'&&i.lv>=3)};
   {const cd=condKeys(m);if(cd.has('dm')||cd.has('predm')||cd.has('nafld'))md.lowCarb=true;if(['htn','cac','cad','stroke','lipid','hf'].some(k=>cd.has(k)))md.heart=true;
-    if(['nafld','hbv','hcv'].some(k=>cd.has(k)))md.liver=true;if(cd.has('gout'))md.lowPur=true;if(cd.has('ckd'))md.kidney=true;if(cd.has('hf'))md.waterLim=true;if(md.kidney)md.kidneyMild=false}
+    if(['nafld','hbv','hcv'].some(k=>cd.has(k)))md.liver=true;if(cd.has('gout'))md.lowPur=true;if(cd.has('ckd'))md.kidney=true;{const E=egfrEst(m);if(E?.lv>=2)md.kidney=true;else if(E?.lv===1)md.kidneyMild=true}if(cd.has('hf'))md.waterLim=true;if(md.kidney)md.kidneyMild=false}
   md.tags=[md.lowCarb&&'控醣：碳水降、脂肪 30%',md.heart&&'護心：少油少鹽',md.liver&&'護肝：禁酒、少油炸',md.lowPur&&'低普林：避開海鮮濃湯',md.kidney&&'護腎：蛋白質 0.8 g/kg',md.kidneyMild&&'顧腎：蛋白質 ≤1.0 g/kg'].filter(Boolean);
   return md;
 }
@@ -3451,7 +3456,7 @@ function openScaleDetail(id){
   const m=me(),r=scalesOf(m).find(x=>x.id===id);if(!r)return;const iss=scaleEval(r,m).sort((a,b)=>b.lv-a.lv);
   openSheet(sheetHead('體脂紀錄',`${esc(m.name)}・${fmtDT(r.t)}${r.device?'・'+esc(r.device):''}`)+`
     <div class="kv" style="margin:14px 0">${SF.filter(f=>r[f.k]!=null).map(f=>`<span>${f.n}${(r.derived||[]).includes(f.k)?' <em class="dev">推算</em>':''}</span><span><b>${fmt(r[f.k])}</b> <span class="sub">${f.u}</span>${r.status?.[f.k]?` <em class="dev${devLv(r.status[f.k])?'':' ok'}">${esc(r.status[f.k])}</em>`:''}</span>`).join('')}${r.bodyType?`<span>身體類型</span><span>${esc(r.bodyType)}</span>`:''}</div>
-    ${chkHTML([...new Set([...(r.chk||[]),...scaleCheck(r,m)])])}${extraHTML(r.extra)}<div class="h4">判讀</div>${iss.length?issueHTML(iss):'<div class="empty">各項指標正常 👍</div>'}${bodyCompare(r,m)}
+    ${chkHTML([...new Set([...(Array.isArray(r.chk)?r.chk:[]),...scaleLive(r,m)])])}${extraHTML(r.extra)}<div class="h4">判讀</div>${iss.length?issueHTML(iss):'<div class="empty">各項指標正常 👍</div>'}${bodyCompare(r,m)}
     <p class="note">內建判定採國健署成人標準與一般體脂計分級（內臟脂肪 1–9 標準、10–14 偏高、≥15 過高）。各品牌標準不同，設備判定與內建判定並列，取較嚴重者。</p>
     <div class="row2"><button class="btn danger" id="sd-del" style="flex:0 0 30%">刪除</button><button class="btn ghost" id="sd-edit">編輯</button></div>`);
   $('#sd-edit').onclick=()=>openScaleSheet(r);$('#sd-del').onclick=()=>delScale(r.id);
@@ -3616,7 +3621,7 @@ function openLabDetail(id){
   const iss=annotPrev(m,labEval(rec,m).sort((a,b)=>(b.crit?1:0)-(a.crit?1:0)||b.lv-a.lv),rec),sc=scoreOf(iss),[gt,gc]=grade(sc),dp=deptPlan(iss);
   const orgs=[...new Set(iss.map(i=>i.organ).filter(o=>o&&ORG[o].tip))];
   const normal=Object.entries(rec.items||{}).filter(([k])=>!iss.some(i=>i.k===k));
-  openSheet(sheetHead('體檢分析',`${esc(m.name)}・${esc(rec.t)}${rec.hospital?'・'+esc(rec.hospital):''}`)+chkHTML([...new Set([...(rec.chk||[]),...labCheck(rec.items||{},m,rec.t)])])+`
+  openSheet(sheetHead('體檢分析',`${esc(m.name)}・${esc(rec.t)}${rec.hospital?'・'+esc(rec.hospital):''}`)+chkHTML([...new Set([...(Array.isArray(rec.chk)?rec.chk:[]),...labCheck(obj(rec.items),m,rec.t)])])+`
     <div style="display:flex;gap:14px;align-items:center;margin:14px 0 4px">${scoreRing(sc,gc)}<div><div style="font-size:calc(22px*var(--fz));font-weight:800;color:${gc}">${gt}</div><div class="sub" style="margin-top:4px">異常 ${iss.length} 項・正常 ${normal.length} 項</div><div class="sub">扣分：每個器官最嚴重一項全扣（注意 −3／異常 −8／嚴重 −15），同器官其他項扣 40%；有「注意」最高 89、「異常」最高 74、「嚴重」最高 59 分</div></div></div>
     ${Object.entries(rec.items||{}).some(([k,it])=>LABK[k]?.t==='opt'&&/^原文：/.test(it?.ref||'')&&[60,63].includes(it.ref.length))?'<div class="hl" style="margin:10px 0;border-color:rgba(255,181,71,.5)">⚠️ 這份報告是舊版匯入，影像報告的原文可能被截斷，附帶發現（例如冠狀動脈鈣化）可能沒判讀到：按下方「編輯數值」，在那一項的「報告原文」貼上完整的醫師總評，或用 AI 只匯入那一頁（不會清掉其他數值）。</div>':''}
     ${iss.some(i=>i.crit)?critHTML(iss,rec.t):iss.some(i=>i.lv===3)?'<div class="banner">⚠️ 有「嚴重」等級的項目，建議 1–2 週內就醫。若有胸痛、呼吸困難、單側無力、意識改變等症狀，請立即掛急診。</div>':''}
@@ -3701,7 +3706,7 @@ function renderMenu(){
   const line=(nm,v,t,col)=>`<div class="row"><span>${nm}</span><span>${Math.round(v)} / ${Math.round(t)}</span></div><div class="bar"><i style="width:${Math.min(100,v/t*100)}%;background:${col}"></i></div>`;
   const gap=Math.round(c.prot-Pp);
   $('#menuSum').innerHTML=(xb.min?`<div class="hl" style="margin-bottom:10px">🏃 ${exBonusTxt(xb,c)}</div>`:'')+line('熱量 kcal',K,tgt,'linear-gradient(90deg,var(--cyan),var(--lime))')+line('蛋白質 g',Pp,c.prot,'var(--cyan)')+line('碳水 g',C,c.carb+xc,'var(--lime)')+line('脂肪 g',F,c.fat+xf,'var(--pink)')+
-    (gap>10&&!c.mode.kidney?`<div class="hl" style="margin-top:12px">${esc(protTip(gap,c.mode))}</div>`:'')+
+    (gap>10&&!c.mode.kidney?`<div class="hl" style="margin-top:12px">${esc(protTip(gap,c.mode,dietOf(me()).no))}</div>`:'')+
     '<p class="note">點一餐可看食材、移除不要的菜。每位家人依自己的體檢、目標和不吃的食材排菜（同一天會盡量排一樣的菜，方便一起煮），份量以 0.25 份為單位。</p>';
 }
 const fmtQ=(q,u)=>u==='g'||u==='ml'?`${Math.round(q)} ${u}`:`${Math.round(q*10)/10} ${u}`;
@@ -4090,7 +4095,7 @@ function openFUDoc(){openSheet(sheetHead('＋ 醫師發現的新問題','App 沒
 
 /* ================= 總覽「待辦」：回診逾期／快到了、還沒看醫師的異常、保單待核對與到期、理賠補件；永遠有急症入口 ================= */
 function renderTodo(){const m=me(),el=$('#todoCard');if(!el)return;const out=[];
-  {const F=selfF(m);for(const r of selfLatest(m,30)){let R=null;try{R=selfRate(r.k,r.a,m,F)}catch(e){}if(R&&R.lv>=3)out.push([0,`${R.lv>=4?'🚨':'⚠️'} ${SELF[r.k].ic} ${SELF[r.k].n}：${R.head}`,`${r.t} 自我檢測・建議${SLV[R.lv][0]}；看過醫師、症狀改變時再測一次`,`data-self="${r.k}"`])}}
+  {const L=selfLatest(m,30),F=L.length?selfF(m):null;for(const r of L){let R=null;try{R=selfRate(r.k,r.a,m,F)}catch(e){}if(R&&R.lv>=3)out.push([0,`${R.lv>=4?'🚨':'⚠️'} ${SELF[r.k].ic} ${SELF[r.k].n}：${R.head}`,`${r.t} 自我檢測・建議${SLV[R.lv][0]}；看過醫師、症狀改變時再測一次`,`data-self="${r.k}"`])}}
   for(const x of fuOpen(m)){const s=fuState(x);if(s.c==='bad')out.push([0,`⏰ 回診逾期：${x.name}`,s.txt,`data-fu="${esc(x.id)}"`]);else if(s.c==='warn'&&fuDue(x))out.push([1,`📅 ${x.st==='booked'?'回診':'追蹤'}：${x.name}`,s.txt,`data-fu="${esc(x.id)}"`])}
   const td=fuOpen(m).filter(x=>x.st==='todo').length+fuSuggest(m).filter(s=>s.src==='lab').length;
   if(td)out.push([2,`🩺 ${td} 項異常還沒記下醫師怎麼說`,'看完醫師在「健康 → 追蹤」記一下，App 會提醒下次回診','data-go="body" data-gosub="plan"']);
@@ -4657,9 +4662,12 @@ function renderTool(){const m=me(),el=$('#toolBody');if(!el)return;const L=insOf
 /* ================= 防 AI 讀錯：同一份資料裡的數字要彼此對得起來（不是判讀健康，是抓「讀錯欄位、小數點、單位、民國年」） ================= */
 // CKD-EPI 2021（不分種族）：用肌酸酐反推 eGFR，和報告上的 eGFR 比對
 function egfrCalc(cr,age,fem){if(!(cr>0)||!(age>=18))return null;const k=fem?.7:.9,a=fem?-.241:-.302,x=cr/k;return 142*Math.pow(Math.min(x,1),a)*Math.pow(Math.max(x,1),-1.2)*Math.pow(.9938,age)*(fem?1.012:1)}
+// 打開舊紀錄時的即時檢查：只看最近 60 天、成年人（小孩會長高，用現在的身高檢查舊紀錄會誤報）
+const scaleLive=(r,m)=>ageOf(m)>=18&&dayDiff(String(r.t).slice(0,10),todayS())<=60?scaleCheck(r,m):[];
 function scaleCheck(v,m){const W=[],h=(+m.h||0)/100,n=k=>num(v[k]);
   const w=n('weight'),bmi=n('bmi'),fat=n('fat'),fm=n('fatMass'),mu=n('muscle'),sk=n('skeletal'),le=n('lean');
-  if(w!=null&&bmi!=null&&h){const b=w/(h*h);if(Math.abs(b-bmi)>1)W.push(`BMI ${bmi} 和體重 ${w} kg、身高 ${m.h} cm 算出來的 ${r1(b)} 差很多：AI 可能讀錯，或身高設定不同`);else if(bmi>0){const ih=Math.sqrt(w/bmi)*100;if(Math.abs(ih-h*100)>=1)W.push(`體脂機用的身高約 ${Math.round(ih)} cm，和你填的 ${m.h} cm 不同：請到體脂機 App 改身高（會影響 BMI、體脂率、基礎代謝的計算）`)}}
+  if(w!=null&&bmi!=null&&h&&!(v.derived||[]).some(k=>k==='bmi'||k==='weight')){const b=w/(h*h);if(Math.abs(b-bmi)>1)W.push(`BMI ${bmi} 和體重 ${w} kg、身高 ${m.h} cm 算出來的 ${r1(b)} 差很多：AI 可能讀錯，或身高設定不同`);else if(bmi>0){const ih=Math.sqrt(w/bmi)*100,dec=(String(v.bmi).split('.')[1]||'').length,tol=Math.max(1,ih*(dec?.5*10**-dec:.5)/bmi);   // BMI 只到整數時，推回的身高本來就差 ±2 cm
+    if(Math.abs(ih-h*100)>=tol)W.push(`體脂機用的身高約 ${Math.round(ih)} cm，和 App 裡的 ${m.h} cm 不同：確認體脂機 App 或成員資料的身高（會影響 BMI、體脂率、基礎代謝的計算）`)}}
   if(w&&fat!=null&&fm!=null){const f=fm/w*100;if(Math.abs(f-fat)>2.5)W.push(`體脂率 ${fat}% 和「脂肪量 ${fm} kg ÷ 體重」算出來的 ${r1(f)}% 對不起來`)}
   if(w!=null&&mu!=null&&mu>=w)W.push(`肌肉量 ${mu} kg 不可能大於或等於體重 ${w} kg`);
   if(mu!=null&&sk!=null&&sk>mu)W.push(`骨骼肌 ${sk} kg 比肌肉量 ${mu} kg 還多：可能兩個欄位對調`);
@@ -4673,13 +4681,14 @@ function labCheck(items,m,date){const W=[],v=k=>num(items[k]?.v??items[k]),a=age
   {const gr=items.grip_r,gl=items.grip_l,eqLo=x=>x&&typeof x==='object'&&num(x.v)!=null&&num(x.lo)!=null&&num(x.hi)!=null&&num(x.v)===num(x.lo);
    if(eqLo(gr)||eqLo(gl))W.push(`握力剛好等於參考範圍下限（右 ${gr?.v??'—'}、左 ${gl?.v??'—'} kg）：可能把 InBody 的「推估握力」範圍當成測量值；報告沒有實際測握力就刪掉這兩項`)}
   for(const[k,x]of Object.entries(items||{})){const L=LABK[k];if(!L?.okRx||!L.O||!x||typeof x!=='object')continue;const val=String(x.v??''),ref=String(x.ref||'');
-    if(val&&val!==L.O[0][0]&&L.okRx.test(ref)&&!L.badRx?.test(ref))W.push(`「${L.n}」原文寫無明顯異常，AI 卻選「${val}」：App 判為${L.O[0][0]}；要改請按「編輯」選「${L.O[0][0]}」`)}
+    const tok=val.split(/[／（）()、，,\s]|如/).filter(t=>t.length>=2),said=tok.some(t=>ref.includes(t)||ref.includes(t.slice(-2)));   // 原文有寫 AI 選的發現（主動脈弓鈣化）＝選得對
+    if(val&&val!==L.O[0][0]&&L.okRx.test(ref)&&!L.badRx?.test(ref)&&!said)W.push(`「${L.n}」原文寫無明顯異常，AI 卻選「${val}」：App 判為${L.O[0][0]}；要改請按「編輯」選「${L.O[0][0]}」`)}
   if(date){if(date>todayS())W.push(`報告日期 ${date} 在未來：民國年是否換算錯？`);else if(date<addDays(todayS(),-3650))W.push(`報告日期 ${date} 是 10 年以前：民國年是否換算錯？`)}
   return W}
 function watchCheck(v){const W=[],n=k=>num(v[k]);if(n('rhr')!=null&&n('walkhr')!=null&&n('rhr')>n('walkhr'))W.push(`靜止心率 ${n('rhr')} 比步行平均心率 ${n('walkhr')} 還高：可能兩個欄位對調`);
   if(n('sbp')!=null&&n('dbp')!=null&&n('sbp')<=n('dbp'))W.push(`手錶血壓 ${n('sbp')}/${n('dbp')}：收縮壓應該比較高，可能填反`);return W}
 const chkNote=W=>W.length?`<br><span style="color:var(--amber)">🛡 <b>防 AI 讀錯檢查</b>：${W.map(esc).join('；')}。請對照截圖再存。</span>`:'';
-const chkHTML=W=>Array.isArray(W)&&W.length?`<div class="hl warn" style="margin:10px 0"><b>🛡 存檔時的疑點（${W.length}）</b><br>${W.map(esc).join('<br>')}<div class="sub" style="margin-top:4px">數字彼此對不起來，常見是 AI 讀錯欄位、小數點或單位：請對照原始截圖，有錯就按「編輯」修正。</div></div>`:'';
+const chkHTML=W0=>{const W=Array.isArray(W0)?W0.filter(x=>typeof x==='string'):[];return W.length?`<div class="hl warn" style="margin:10px 0"><b>🛡 防錯檢查的疑點（${W.length}）</b><br>${W.map(esc).join('<br>')}<div class="sub" style="margin-top:4px">數字彼此對不起來，常見是 AI 讀錯欄位、小數點或單位：請對照原始截圖，有錯就按「編輯」修正。</div></div>`:''};
 /* ================= 備份 ================= */
 // 備份檔可能被改過：id、日期格式不對的資料一律丟掉，避免壞資料或惡意內容進到畫面
 function cleanBackup(d){
@@ -4698,8 +4707,9 @@ function cleanBackup(d){
   const img={};for(const[k,v]of Object.entries(obj(d.img)))if(BY_ID[k]&&/^https:\/\//.test(String(v)))img[k]=String(v);
   const watch=recs(d.watch,/^\d{4}-\d{2}-\d{2}$/);for(const k in watch)watch[k]=watch[k].map(cleanWatch);
   const exlog={};for(const[k,arr]of Object.entries(obj(d.exlog)))if(okId(k)&&Array.isArray(arr))exlog[k]=arr.filter(x=>x&&okId(x.id)&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.d))).map(cleanExLog);   // 手錶只留已知欄位、合理範圍的數字
-  const scale=recs(d.scale,/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/);for(const k in scale)scale[k]=scale[k].map(x=>{const o={...x};delete o.extra;const e=normOther(x.extra,new Set());if(e.length)o.extra=e;return o});   // 體脂「其他數值」只留名稱／數值／單位
-  return{mem,self:cleanSelf(d.self,okId),scale,fu:cleanFU(d.fu,okId),ins:cleanINS(d.ins,okId),clm:cleanCLM(d.clm,okId),labs:recs(d.labs,/^\d{4}-\d{2}-\d{2}$/),watch,exlog,img,
+  const cleanChk=o=>{if(o&&'chk' in o){const c=Array.isArray(o.chk)?o.chk.filter(x=>typeof x==='string').slice(0,20).map(x=>x.slice(0,240)):[];if(c.length)o.chk=c;else delete o.chk}return o};   // 防錯疑點只留文字
+  const scale=recs(d.scale,/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/);for(const k in scale)scale[k]=scale[k].map(x=>{const o={...x};delete o.extra;const e=normOther(x.extra,new Set());if(e.length)o.extra=e;return cleanChk(o)});   // 體脂「其他數值」只留名稱／數值／單位
+  return{mem,self:cleanSelf(d.self,okId),scale,fu:cleanFU(d.fu,okId),ins:cleanINS(d.ins,okId),clm:cleanCLM(d.clm,okId),labs:Object.fromEntries(Object.entries(recs(d.labs,/^\d{4}-\d{2}-\d{2}$/)).map(([k,a])=>[k,a.map(x=>cleanChk({...x}))])),watch,exlog,img,
     gas:typeof d.gas==='string'&&(!d.gas||/^https:\/\/script\.google(usercontent)?\.com\//.test(d.gas))?d.gas:null};
 }
 

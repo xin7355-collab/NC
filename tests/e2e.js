@@ -1033,7 +1033,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('防 AI 讀錯：BMI 和體重身高對不起來、體脂率和脂肪量對不起來、肌肉量大於體重；LDL 比總膽固醇高、收縮壓比舒張壓低、eGFR 和肌酸酐差很多、日期在未來；靜止心率比步行心率高；正常資料不誤報；匯入訊息提醒同一天已有報告，存檔後詳情顯示疑點',
       /BMI 26.5 和體重 70 kg、身高 172 cm 算出來的 23.7/.test(ck.s) && /體脂率 20%/.test(ck.s) && /肌肉量 72 kg 不可能/.test(ck.s) && !/去脂體重/.test(ck.s)
         && /LDL 170 比總膽固醇 150 還高/.test(ck.l) && /收縮壓 80 應該比舒張壓 120 高/.test(ck.l) && /eGFR 30 和肌酸酐 1 算出來的約 96/.test(ck.l) && /在未來/.test(ck.l) && ck.ok === 0 && /靜止心率 95 比步行平均心率 80/.test(ck.w)
-        && /防 AI 讀錯檢查/.test(lm) && /LDL 170 比總膽固醇 150/.test(lm) && /2026-09-14 已經有一份報告/.test(lm) && /存檔時的疑點（2）/.test(ld.sheet) && ld.chk === 2, JSON.stringify({ ck, lm: lm.slice(0, 160), chk: ld.chk }));
+        && /防 AI 讀錯檢查/.test(lm) && /LDL 170 比總膽固醇 150/.test(lm) && /2026-09-14 已經有一份報告/.test(lm) && /防錯檢查的疑點（2）/.test(ld.sheet) && ld.chk === 2, JSON.stringify({ ck, lm: lm.slice(0, 160), chk: ld.chk }));
     // 牙齒口腔、家族史、睡眠呼吸中止 AHI、職業身分與最低保障提示詞
     const dn = await page.evaluate(() => { closeSheet(); const m = MEM.find(x => x.id === 'a'); ACT = 'a'; m.fh = { ca: [], chr: [], early: false, mbc: true, gene: false };
       const P = yearPlan(m).items.map(o => `${o.pr}|${o.t}|${o.why}|${o.when}`), osa = condOf(m).items.find(c => c.k === 'osa');
@@ -1266,6 +1266,40 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
     check(`品質門檻：index.html ${kb} KB ≤ 900 KB；30 份體檢×40 個其他項目比對 ${perf} ms ≤ 100 ms（CPU 沒降速；以前要 1 秒以上）；${attrs.length} 種按鈕動作都有處理程式`,
       kb <= 900 && perf <= 100 && !noH.length, JSON.stringify({ kb, perf, noH }));
+  }
+
+  // =============== 6zc. 審查找到的問題：壞掉的 chk 不能讓紀錄打不開、舊紀錄不用現在身高亂警告、算出來的 eGFR 也要影響飲食、補蛋白質避開不吃的食物、X 光原文有鈣化不叫你改正常、電腦版抽屜避開狀態列、地板守衛不誤擋、待辦不白算 ===============
+  {
+    page = await newPage({ members: [{ id: 'g', name: '奶奶', sex: 'f', birth: '1955-03-01', h: 155, w: 55, act: '1.2', goal: 'keep', diet: { no: ['chicken', 'fish', 'soy'], ban: [] } },
+        { id: 'c', name: '小孩', sex: 'm', birth: '2018-01-01', h: 150, w: 40, act: '1.375', goal: 'keep' }, { id: 'u', name: '成人', sex: 'm', birth: '1985-01-01', h: 172, w: 68, act: '1.375', goal: 'keep' }], active: 'g',
+      scale: { g: [{ id: 's1', t: '2026-11-01T08:00', weight: 55, bmi: 22.9, chk: true }], c: [{ id: 's2', t: '2025-01-01T08:00', weight: 32, bmi: 16.3 }],
+        u: [{ id: 's3', t: '2026-11-01T08:00', weight: 67.9, bmi: 23 }, { id: 's4', t: '2026-11-02T08:00', weight: 68, bmi: 23.5, derived: ['bmi'] }] },
+      labs: { g: [{ id: 'l1', t: '2026-10-01', hospital: '甲醫院', items: { cr: { v: 1.05 } }, extra: [], chk: { a: 1 } }] } });
+    const w0 = await page.evaluate(() => { const r = {}; const tryOpen = f => { try { f(); const t = $('#sheetBody').textContent; closeSheet(); return t } catch (e) { return 'ERR ' + e.message } };
+      r.scale = tryOpen(() => openScaleDetail('s1')); r.lab = tryOpen(() => openLabDetail('l1'));
+      const d = cleanBackup({ app: 'Kinwell', members: [MEM[0]], scale: { g: [{ id: 'z1', t: '2026-11-01T08:00', weight: 55, chk: 'abc' }] }, labs: { g: [{ id: 'z2', t: '2026-10-01', items: {}, chk: [1, 'ok', { x: 1 }] }] } });
+      r.clean = JSON.stringify([d.scale.g[0].chk ?? null, d.labs.g[0].chk ?? null]); return r });
+    check('壞掉的「防錯疑點」（chk 不是陣列，例如舊版或被改過的備份）不會讓體脂、體檢紀錄打不開（打不開就連刪除都按不到）；匯入備份時 chk 只留文字',
+      !/^ERR/.test(w0.scale) && /體脂紀錄/.test(w0.scale) && !/^ERR/.test(w0.lab) && /體檢分析/.test(w0.lab) && w0.clean === JSON.stringify([null, ['ok']]), JSON.stringify({ s: w0.scale.slice(0, 40), l: w0.lab.slice(0, 40), c: w0.clean }));
+    const w1 = await page.evaluate(() => { const u = MEM.find(x => x.id === 'u'), c = MEM.find(x => x.id === 'c'), S = id => scalesOf(MEM.find(x => scalesOf(x).some(r => r.id === id))).find(r => r.id === id);
+      ACT = 'c'; let child = ''; try { openScaleDetail('s2'); child = $('#sheetBody').textContent; closeSheet() } catch (e) { child = 'ERR' } ACT = 'g';
+      return { int: scaleCheck({ weight: 67.9, bmi: 23 }, { h: 170 }).join('｜') + scaleCheck(S('s3'), u).join('｜'), der: scaleCheck(S('s4'), u).join('｜'), child: /差很多|身高約/.test(child), word: scaleCheck({ weight: 74.6, bmi: 24.9 }, { h: 171.8 }).join('') } });
+    check('體脂機身高檢查不誤報：體脂機只顯示整數 BMI（23）時容許誤差放寬；BMI 是 App 自己算的不檢查；小孩長高後的舊紀錄不用現在身高警告；提醒寫「確認體脂機 App 或成員資料的身高」',
+      w1.int === '' && w1.der === '' && !w1.child && /體脂機用的身高約 173 cm/.test(w1.word) && /確認體脂機 App 或成員資料的身高/.test(w1.word), JSON.stringify(w1));
+    const w2 = await page.evaluate(() => { const m = me(), d = derivedOf(m).find(x => x.k === 'egfr_calc'), md = dietMode(m), c = calc(m);
+      return { e: d ? d.val + '|' + d.lv + '|' + d.txt : '', mild: md.kidneyMild, tags: md.tags.join(), pk: Math.round(c.prot / c.w * 100) / 100, tip: protTip(40, { heart: false }, ['chicken', 'fish', 'soy']), tip2: protTip(30, { heart: true }, ['chicken', 'fish', 'soy', 'dairy']) } });
+    check('算出來的 eGFR（71 歲女性、肌酸酐 1.05 → 約 57）和實際驗的一樣影響飲食：標「顧腎」、蛋白質 ≤1.0 g/kg；補蛋白質避開不吃的雞、魚、黃豆，補不夠會說還差多少',
+      /^5[67]\|1\|/.test(w2.e) && w2.mild === true && /顧腎/.test(w2.tags) && w2.pk <= 1.0 && !/雞|魚|豆腐|豆漿/.test(w2.tip) && /優格/.test(w2.tip) && /約補 15 g/.test(w2.tip) && !/雞|魚|豆|優格|蛋（/.test(w2.tip2) && /主菜/.test(w2.tip2),
+      JSON.stringify(w2));
+    const w3 = await page.evaluate(() => { const m = me(), opt = '輕微變化（如主動脈鈣化、陳舊病灶）';
+      const a = labCheck({ cxr: { v: opt, ref: '原文：肺部無明顯異常。主動脈弓鈣化。' } }, m).join('｜'), b = labCheck({ cxr: { v: opt, ref: '原文：胸部X光檢查：肺部無明顯異常(疑輕度脊椎側彎)' } }, m).join('｜');
+      let n = 0; const o = selfF; selfF = (...x) => { n++; return o(...x) }; renderTodo(); selfF = o; return { a, b, n } });
+    const css = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/@media \(min-width:1024px\)\{[^\n]*/)?.[0] || '';
+    const fg = require('child_process').spawnSync(process.execPath, [path.join(ROOT, 'tests', 'floor-guard.mjs'), '--selftest'], { cwd: ROOT, encoding: 'utf8' });
+    check('X 光原文寫肺部正常但另外有「主動脈弓鈣化」時，AI 選「輕微變化（如主動脈鈣化）」是對的，不叫你改正常；電腦版抽屜避開 iPad 狀態列（safe-area）；地板守衛自我測試全過（刪過期例外、同一列新增門檻、單位換算、千分位、「以下」、/* */ 註解）；沒有自我檢測結果時待辦不白算',
+      w3.a === '' && /原文寫無明顯異常/.test(w3.b) && /\.sheet-panel\{[^}]*padding-top:calc\(env\(safe-area-inset-top\) \+ 8px\)/.test(css) && fg.status === 0 && /自我測試全部通過/.test(fg.stdout) && w3.n === 0,
+      JSON.stringify({ a: w3.a, n: w3.n, fg: (fg.stdout || '').trim().split('\n').slice(-2).join(' ') }));
+    await page.close();
   }
 
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============

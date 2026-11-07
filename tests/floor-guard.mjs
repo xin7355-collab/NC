@@ -1,11 +1,86 @@
 #!/usr/bin/env node
 // 地板守衛（constraint-driven-development）：比對「還沒推上 origin/main 的改動」，擋下偷偷降低品質門檻的改法
-//   node tests/floor-guard.mjs [--base origin/main]
+//   node tests/floor-guard.mjs [--base origin/main]     檢查目前的改動
+//   node tests/floor-guard.mjs --selftest               自我測試（不碰 git）
 // 結束碼：0 沒問題；1 有降低門檻的改動（不要推，先修或請使用者同意）；2 沒辦法檢查（不是 git、找不到 origin/main）
-// 檢查：① 測試的 check( 變少（刪測試或把測試註解掉）② 測試加了跳過（if (false)、.skip、// check(）
-//       ③ index.html 新增 eval／new Function／document.write ④ CONSTRAINTS.md 的門檻被放寬或整條刪掉
+// 檢查：① 測試的 check( 變少 ② 測試被跳過（if (false)、.skip/.only、// 或 /* 註解掉的 check(）
+//       ③ index.html 新增 eval／new Function／document.write ④ CONSTRAINTS.md「規則」表的門檻被放寬或整條刪掉
 import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
+
+const TESTS = ['tests/e2e.js'];
+const countChecks = s => (s.match(/\bcheck\(/g) || []).length;
+// ② 一行測試程式是不是「把測試關掉」
+const skipsTest = t => /if\s*\(\s*(false|0)\s*\)/.test(t) || /\.(skip|only)\(/.test(t) || /^\s*\/\/.*\bcheck\(/.test(t) || /\/\*[^]*\bcheck\(/.test(t);
+const unsafe = t => /\beval\(|new Function\(|document\.write\(/.test(t);
+
+// ④ CONSTRAINTS.md：只看第一個表格（欄位「規則｜門檻｜…」），例外表格不算（刪過期例外＝收緊）
+function ruleRows(md) {
+  const rows = new Map(); let inRules = false;
+  for (const l of String(md || '').split('\n')) {
+    if (/^#{1,6}\s/.test(l)) { if (inRules) break; continue }
+    if (!l.trim().startsWith('|')) { if (inRules && l.trim()) break; continue }
+    const c = l.split('|').slice(1, -1).map(x => x.trim());
+    if (c[0] === '規則') { inRules = true; continue }
+    if (!inRules || /^[-: ]+$/.test(c.join(''))) continue;
+    rows.set(c[0], c[1] ?? '');
+  }
+  return rows;
+}
+// 門檻：「標籤 ≤ 數字 單位」或「數字 單位 以下／以內／以上」。數字去千分位、單位換成同一種（KB／MB、ms／s）
+const UNIT = { kb: 1, mb: 1024, gb: 1048576, ms: 1, s: 1000, '秒': 1000, '%': 1, '個': 1, '筆': 1, '張': 1, '': 1 };
+function thresholds(text) {
+  const out = [], t = String(text);
+  const re = /([^、，；。()（）|≤≥<>]*?)\s*(≤|≥|<|>|至少|不超過|不少於)\s*([\d,]+(?:\.\d+)?)\s*(KB|MB|GB|ms|s|秒|%|個|筆|張)?|([^、，；。()（）|≤≥<>]*?)\s*([\d,]+(?:\.\d+)?)\s*(KB|MB|GB|ms|s|秒|%|個|筆|張)?\s*(以下|以內|以上)/gi;
+  let m;
+  while ((m = re.exec(t))) {
+    const op = m[2] ?? m[8], num = parseFloat((m[3] ?? m[6]).replace(/,/g, '')), unit = (m[4] ?? m[7] ?? '').toLowerCase();
+    const dir = /≤|<|不超過|以下|以內/.test(op) ? 'max' : 'min', scale = UNIT[unit] ?? 1;
+    const label = (m[1] ?? m[5] ?? '').replace(/[`*：:]/g, '').trim().slice(-12);
+    const kind = /kb|mb|gb/.test(unit) ? 'size' : /ms|^s$|秒/.test(unit) ? 'time' : unit;
+    out.push({ key: `${label}|${dir}|${kind}`, dir, v: num * scale, raw: m[0].trim() });
+  }
+  return out;
+}
+function constraintsDiff(oldMd, newMd) {
+  const F = [], A = ruleRows(oldMd), B = ruleRows(newMd);
+  for (const [rule, cell] of A) {
+    if (!B.has(rule)) { F.push({ rule: '門檻被刪掉', file: 'CONSTRAINTS.md', text: rule }); continue }
+    const before = thresholds(cell), after = thresholds(B.get(rule));
+    for (const x of before) {
+      // 先用「標籤＋方向＋單位種類」配對；同一列標籤一樣的照順序
+      const same = before.filter(z => z.key === x.key), idx = same.indexOf(x), y = after.filter(z => z.key === x.key)[idx];
+      if (!y) { F.push({ rule: '門檻被刪掉', file: 'CONSTRAINTS.md', text: `${rule}：${x.raw}` }); continue }
+      if (x.dir === 'max' ? y.v > x.v : y.v < x.v) F.push({ rule: '門檻被放寬', file: 'CONSTRAINTS.md', text: `${rule}：${x.raw} → ${y.raw}` });
+    }
+  }
+  return F;
+}
+
+if (process.argv.includes('--selftest')) {
+  const T = (rows, extra = '') => `# 品質門檻\n\n| 規則 | 門檻 | 怎麼驗 |\n|---|---|---|\n${rows.map(r => `| ${r[0]} | ${r[1]} | x |`).join('\n')}\n\n## 例外\n\n| 編號 | 規則 | 原因 | 到期日 |\n|---|---|---|---|\n${extra}\n`;
+  const base = T([['單檔大小', 'index.html ≤ 900 KB'], ['速度', '比對 ≤ 100 ms'], ['測試', '`check(` 數量 ≥ 226'], ['數量', '≤ 1,000 筆']], '| E1 | 速度 | 暫時 | 2026-12-31 |');
+  const cases = [
+    ['原樣不變', base, 0],
+    ['刪掉過期的例外（收緊）', T([['單檔大小', 'index.html ≤ 900 KB'], ['速度', '比對 ≤ 100 ms'], ['測試', '`check(` 數量 ≥ 226'], ['數量', '≤ 1,000 筆']]), 0],
+    ['同一列前面新增門檻', T([['單檔大小', 'index.html ≤ 900 KB'], ['速度', '載入 ≤ 1500 ms、比對 ≤ 100 ms'], ['測試', '`check(` 數量 ≥ 226'], ['數量', '≤ 1,000 筆']], '| E1 | 速度 | 暫時 | 2026-12-31 |'), 0],
+    ['收緊門檻', T([['單檔大小', 'index.html ≤ 850 KB'], ['速度', '比對 ≤ 80 ms'], ['測試', '`check(` 數量 ≥ 230'], ['數量', '≤ 900 筆']]), 0],
+    ['單位換算：900 KB → 1.2 MB', T([['單檔大小', 'index.html ≤ 1.2 MB'], ['速度', '比對 ≤ 100 ms'], ['測試', '`check(` 數量 ≥ 226'], ['數量', '≤ 1,000 筆']]), 1],
+    ['千分位：1,000 → 1,500', T([['單檔大小', 'index.html ≤ 900 KB'], ['速度', '比對 ≤ 100 ms'], ['測試', '`check(` 數量 ≥ 226'], ['數量', '≤ 1,500 筆']]), 1],
+    ['「以下」寫法放寬', T([['單檔大小', 'index.html ≤ 900 KB'], ['速度', '比對 150 ms 以下'], ['測試', '`check(` 數量 ≥ 226'], ['數量', '≤ 1,000 筆']]).replace('比對 150 ms 以下', '比對 150 ms 以下'), 1],
+    ['最低數量調低', T([['單檔大小', 'index.html ≤ 900 KB'], ['速度', '比對 ≤ 100 ms'], ['測試', '`check(` 數量 ≥ 200'], ['數量', '≤ 1,000 筆']]), 1],
+    ['整條規則刪掉', T([['單檔大小', 'index.html ≤ 900 KB'], ['測試', '`check(` 數量 ≥ 226'], ['數量', '≤ 1,000 筆']]), 1],
+  ];
+  // 「以下」那一條：先把基準改成「以下」寫法再放寬
+  const baseBelow = base.replace('比對 ≤ 100 ms', '比對 100 ms 以下');
+  let ok = 0; const bad = [];
+  for (const [name, md, want] of cases) { const from = name.startsWith('「以下」') ? baseBelow : base, n = constraintsDiff(from, md).length, got = n ? 1 : 0; if (got === want) ok++; else bad.push(`${name}：預期 ${want ? '擋' : '不擋'}，實際 ${got ? '擋' : '不擋'}（${JSON.stringify(constraintsDiff(from, md))}）`) }
+  const lines = [['// check(1)', true], ['/* check(1) */', true], ['  if (false) check(1)', true], ['test.skip(', true], ['check(1)', false], ['const x = 1 // 說明', false]];
+  for (const [t, want] of lines) { if (skipsTest(t) === want) ok++; else bad.push(`「${t}」預期 ${want ? '算跳過' : '不算'}`) }
+  const total = cases.length + lines.length;
+  if (bad.length) { console.log(bad.map(b => '✗ ' + b).join('\n')); console.log(`floor-guard 自我測試失敗 ${bad.length}/${total}`); process.exit(1) }
+  console.log(`floor-guard 自我測試全部通過（${total} 項）`); process.exit(0);
+}
 
 const i = process.argv.indexOf('--base'), base = i > -1 ? process.argv[i + 1] : 'origin/main';
 const git = args => { try { return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024 }) } catch { return null } };
@@ -14,33 +89,25 @@ const top = git(['rev-parse', '--show-toplevel'])?.trim(); if (!top) bail('不�
 process.chdir(top);
 const mb = git(['merge-base', base, 'HEAD'])?.trim(); if (!mb) bail('找不到和 ' + base + ' 的共同起點（先 git fetch origin main）');
 const old = f => git(['show', `${mb}:${f}`]) ?? '', now = f => existsSync(f) ? readFileSync(f, 'utf8') : '';
-const findings = [], flag = (rule, file, text) => findings.push({ rule, file, text: String(text).trim().slice(0, 140) });
+const findings = [];
 
 // ① 測試數量不能變少
-const TESTS = ['tests/e2e.js'], count = s => (s.match(/\bcheck\(/g) || []).length;
-for (const f of TESTS) { const a = count(old(f)), b = count(now(f)); if (b < a) flag('測試變少', f, `check( 從 ${a} 個變成 ${b} 個`) }
+for (const f of TESTS) { const a = countChecks(old(f)), b = countChecks(now(f)); if (b < a) findings.push({ rule: '測試變少', file: f, text: `check( 從 ${a} 個變成 ${b} 個` }) }
 
-// 新增的行（含還沒 commit 的改動與新檔）
-const diff = (git(['diff', '--unified=0', mb, '--']) ?? bail('git diff 失敗')) + '\n' +
-  (git(['ls-files', '--others', '--exclude-standard']) || '').split('\n').filter(Boolean).map(f => now(f).split('\n').map(l => '+' + l).join('\n').replace(/^/, `+++ b/${f}\n`)).join('\n');
+// 新增的行：只看測試檔和 index.html（還沒 commit 的改動也算；其他沒追蹤的檔案不讀，避免讀到大檔）
+const WATCH = [...TESTS, 'index.html'];
+const diff = git(['diff', '--unified=0', mb, '--', ...WATCH]) ?? bail('git diff 失敗');
+const untracked = (git(['ls-files', '--others', '--exclude-standard', '--', ...WATCH]) || '').split('\n').filter(Boolean);
 let file = ''; const added = [];
 for (const line of diff.split('\n')) { if (line.startsWith('+++ ')) { file = line.slice(4).replace(/^b\//, ''); continue } if (line.startsWith('---') || line.startsWith('@@') || line.startsWith('diff ')) continue; if (line.startsWith('+')) added.push({ file, text: line.slice(1) }) }
-
+for (const f of untracked) for (const t of now(f).split('\n')) added.push({ file: f, text: t });
 for (const { file: f, text } of added) {
-  // ② 測試加了跳過
-  if (TESTS.includes(f) && (/if\s*\(\s*(false|0)\s*\)/.test(text) || /\.(skip|only)\(/.test(text) || /^\s*\/\/\s*check\(/.test(text))) flag('測試被跳過', f, text);
-  // ③ 不安全的寫法（XSS／程式注入）
-  if (f === 'index.html' && /\beval\(|new Function\(|document\.write\(/.test(text)) flag('不安全的寫法', f, text);
+  if (TESTS.includes(f) && skipsTest(text)) findings.push({ rule: '測試被跳過', file: f, text: text.trim().slice(0, 140) });
+  if (f === 'index.html' && unsafe(text)) findings.push({ rule: '不安全的寫法', file: f, text: text.trim().slice(0, 140) });
 }
+// ④ CONSTRAINTS.md 門檻
+findings.push(...constraintsDiff(old('CONSTRAINTS.md'), now('CONSTRAINTS.md')));
 
-// ④ CONSTRAINTS.md 門檻：表格第一欄是規則名稱；「≤ N」放寬＝變大、「≥ N」放寬＝變小；規則整條不見也算
-const rules = s => { const m = new Map(); for (const l of s.split('\n')) { const c = l.split('|').map(x => x.trim()); if (l.trim().startsWith('|') && c[1] && !/^[-:]+$/.test(c[1]) && c[1] !== '規則') m.set(c[1], l) } return m };
-const nums = t => [...t.matchAll(/(≤|≥|<|>|至少|不超過)\s*([\d.]+)/g)].map(x => ({ dir: /≤|<|不超過/.test(x[1]) ? 'max' : 'min', n: +x[2] }));
-const R0 = rules(old('CONSTRAINTS.md')), R1 = rules(now('CONSTRAINTS.md'));
-for (const [k, l0] of R0) { const l1 = R1.get(k); if (!l1) { flag('門檻被刪掉', 'CONSTRAINTS.md', k); continue }
-  const a = nums(l0), b = nums(l1); a.forEach((x, j) => { const y = b.filter(z => z.dir === x.dir)[a.filter(z => z.dir === x.dir).indexOf(x)]; if (!y) flag('門檻被刪掉', 'CONSTRAINTS.md', `${k}：${x.dir === 'max' ? '≤' : '≥'} ${x.n}`);
-    else if (x.dir === 'max' ? y.n > x.n : y.n < x.n) flag('門檻被放寬', 'CONSTRAINTS.md', `${k}：${x.n} → ${y.n}`) }) }
-
-if (!findings.length) { console.log(`floor-guard：沒有降低門檻的改動（比對 ${base}，測試 check( ${count(now('tests/e2e.js'))} 個）`); process.exit(0) }
+if (!findings.length) { console.log(`floor-guard：沒有降低門檻的改動（比對 ${base}，測試 check( ${countChecks(now('tests/e2e.js'))} 個）`); process.exit(0) }
 for (const x of findings) console.log(`✗ ${x.rule}：${x.file}：${x.text}`);
 console.log('floor-guard：有降低品質門檻的改動。真的要這樣改，先在 CONSTRAINTS.md 寫明原因並請使用者同意。'); process.exit(1);
