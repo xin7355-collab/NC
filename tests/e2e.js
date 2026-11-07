@@ -1318,7 +1318,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       const pr = window.prompt; window.prompt = () => '24,000'; openPol('p2'); const btn2 = [...document.querySelectorAll('#sheetBody [data-pfix]')].map(b => b.dataset.pfix).join(); document.querySelector('#sheetBody [data-pfix="prem"]')?.click(); window.prompt = pr;
       return { before, btn: btn + '|' + btn2, after, prem: insFind(m, 'p2').prem, phist: (insFind(m, 'p2').hist || []).length } });
     check('一鍵修正保單：「繳費期滿卻還在繳」直接按「還在繳：改成有效」、保費 0 直接填（輸入 24,000）；改之前存進變更紀錄可以復原；修正前「年繳保費」標「狀態寫繳費期滿，但還沒繳完」，不再寫「已繳完」',
-      /^st_active\|prem$/.test(v1.btn) && v1.after.st === 'active' && v1.after.hist === 'edit:paidup' && !v1.after.err && v1.prem === 24000 && v1.phist === 1 && /狀態寫繳費期滿，但還沒繳完/.test(v1.before) && !/24,000 元（已繳完）|0 元（已繳完）/.test(v1.before),
+      /st_active/.test(v1.btn.split('|')[0]) && /prem/.test(v1.btn.split('|')[1]) && v1.after.st === 'active' && v1.after.hist === 'edit:paidup' && !v1.after.err && v1.prem === 24000 && v1.phist === 1 && /狀態寫繳費期滿，但還沒繳完/.test(v1.before) && !/24,000 元（已繳完）|0 元（已繳完）/.test(v1.before),
       JSON.stringify({ btn: v1.btn, after: v1.after, prem: v1.prem }));
     const v2 = await page.evaluate(() => { ACT = 'k'; renderAll(); openPol('p3'); const btn = !!document.querySelector('#sheetBody [data-pfix="move"]'); document.querySelector('#sheetBody [data-pfix="move"]')?.click();
       const sheet = $('#sheetBody').textContent; document.querySelector('#sheetBody [data-pmv="a"]')?.click(); const r = { btn, sheet: /移到其他家人/.test(sheet), kid: insOf(MEM.find(x => x.id === 'k')).length, dad: insOf(MEM.find(x => x.id === 'a')).map(p => p.id).join(), toast: $('#toast').textContent };
@@ -1336,11 +1336,49 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       const a = selfRate('sleep', [1, 1, 1, 0, 0, 0, 0, 1], m, F), b = selfRate('sleep', [0, 0, 0, 0, 0, 1, 0, 1], m, F), c = selfRate('sleep', [1, 1, 1, 0, 0, 0, 0, 1], noOsa, selfF(noOsa));
       return { a: a.lv + '|' + a.head, b: b.lv + '|' + b.head, c: c.lv + '|' + c.head } });
     check('STOP-Bang：已確診睡眠呼吸中止時不再當成「篩檢高風險 → 門診」，改看治療有沒有效（還在打鼾、白天很睏 → 回診確認治療；症狀不多 → 照原本回診）；沒確診的人照原本判斷',
-      /^1\|已確診睡眠呼吸中止：症狀還在/.test(v4.a) && /^0\|已確診睡眠呼吸中止：目前症狀不多/.test(v4.b) && /^2\|睡眠呼吸中止：高風險/.test(v4.c), JSON.stringify(v4));
+      /^2\|已確診睡眠呼吸中止：症狀還在/.test(v4.a) && /^0\|已確診睡眠呼吸中止：目前症狀不多/.test(v4.b) && /^2\|睡眠呼吸中止：高風險/.test(v4.c), JSON.stringify(v4));
     const v5 = await page.evaluate(() => { recTab = 'scale'; go('body', 'rec'); renderRecs(); const g = $('#recList svg.trend');
       return { has: !!g, band: !!g?.querySelector('rect.band'), avg: !!g?.querySelector('polyline.avg'), dots: g ? g.querySelectorAll('circle').length : 0, label: g?.getAttribute('aria-label') || '', fat: !!$('#recList svg.trend.fat') } });
     check('體重趨勢圖：近 90 天每一筆的點＋7 天平均線、健康體重範圍色帶、體脂率另一張；讀螢幕的說明寫出最新平均與變化',
       v5.has && v5.band && v5.avg && v5.dots >= 25 && /近 90 天/.test(v5.label) && /kg/.test(v5.label) && v5.fat, JSON.stringify(v5));
+    await page.close();
+  }
+
+  // =============== 6ze. 第二輪審查：搬保單時的理賠紀錄、搬錯可以再搬、只搬等於下限的握力、保費輸入（萬、太低）、存檔失敗不報成功、滑鼠點分頁不亂捲、趨勢圖 30 天比較與壞資料、兒童色帶說明、確診後症狀多要門診 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    page = await newPage({ members: [{ id: 'a', name: '爸爸', sex: 'm', birth: '1975-01-01', h: 172, w: 75, act: '1.375', goal: 'keep', cond: { items: [{ k: 'osa' }], meds: '', allergy: '無', surg: '' } },
+        { id: 'k', name: '小孩', sex: 'm', birth: '2015-01-01', h: 145, w: 38, act: '1.375', goal: 'keep', role: 'child' }, { id: 'n', name: '無身高', sex: 'f', birth: '1990-01-01', w: 55, act: '1.375', goal: 'keep' }], active: 'k',
+      ins: { k: [{ id: 'p3', insurer: '丙人壽', product: '定期壽險', start: '1980-02-02', payYears: 20, payFreq: '年', prem: 12000, status: 'paidup', items: [{ name: '住院日額', cat: 'hosp_day', amt: 1000, unit: '元/日', quote: '每日 1,000 元' }], src: 'ai', chk: false, warn: [], t: T(0) }] },
+      clm: { k: [{ id: 'e1', type: 'ad', d: T(20), end: T(18), hosp: '乙醫院', dx: '肺炎', claims: [{ pid: 'p3', st: 'docs' }] }] },
+      labs: { a: [{ id: 'l1', t: T(30), items: { grip_r: { v: 26, lo: 26, hi: 40, ref: '26~40 kgf' }, grip_l: { v: 31, lo: 24, hi: 36, ref: '24~36 kgf' } }, extra: [] }] },
+      scale: { a: [{ id: 'x1', t: T(89) + 'T07:00', weight: 80 }, { id: 'x2', t: T(88) + 'T07:00', weight: 80 }, { id: 'x3', t: T(1) + 'T07:00', weight: 70 }, { id: 'x4', t: T(0) + 'T07:00', weight: 70 },
+          { id: 'x5', t: T(2) + 'T07:00', weight: '70 kg' }, { id: 'x6', t: '2026-13-45T07:00', weight: 71 }, { id: 'x7', t: T(-30) + 'T07:00', weight: 90 }],
+        k: Array.from({ length: 6 }, (_, i) => ({ id: 'k' + i, t: T(i * 5) + 'T07:00', weight: 38 + i * 0.1, fat: 20 })), n: Array.from({ length: 6 }, (_, i) => ({ id: 'n' + i, t: T(i * 5) + 'T07:00', weight: 55, fat: 25 })) } });
+    const u1 = await page.evaluate(() => { let asked = ''; const cf = window.confirm; window.confirm = t => { asked = t; return true };
+      openPol('p3'); document.querySelector('#sheetBody [data-pfix="move"]')?.click(); document.querySelector('#sheetBody [data-pmv="a"]')?.click(); window.confirm = cf;
+      const todo = (renderTodo(), $('#todoCard').textContent); openEvt('e1'); const ev = $('#sheetBody').textContent, orph = !!document.querySelector('#sheetBody [data-corph]');
+      document.querySelector('#sheetBody [data-corph]')?.click(); const left = (clmOf(me()).find(e => e.id === 'e1').claims || []).length;
+      ACT = 'a'; renderAll(); const p = insFind(me(), 'p3'); openPol('p3'); const always = !!document.querySelector('#sheetBody [data-pfix="move"]'), hist = (p?.hist || []).map(h => h.why + ':' + (h.from || '')).join(), histTxt = $('#sheetBody').textContent; closeSheet();
+      return { asked, todo: /理賠補件/.test(todo), ev: /保單已不在/.test(ev), orph, left, always, hist, histTxt: /原本在 小孩/.test(histTxt) } });
+    check('搬保單：先問一次（提到理賠紀錄）、記進變更紀錄（原本在小孩）、沒有錯誤的保單也能「移到其他家人」（搬錯可以再搬）；留下的理賠紀錄不再出現在待辦，打開事件看得到「保單已不在」並可以移除',
+      /移到 爸爸/.test(u1.asked) && /1 筆理賠紀錄/.test(u1.asked) && !u1.todo && u1.ev && u1.orph && u1.left === 0 && u1.always && u1.hist === 'move:小孩' && u1.histTxt, JSON.stringify(u1));
+    const u2 = await page.evaluate(() => { const m = me(), r = labsOf(m)[0]; labFix(r, 'grip'); return { r: 'grip_r' in r.items, l: 'grip_l' in r.items ? r.items.grip_l.v : null, ex: r.extra.map(e => e.name + '=' + e.value).join() } });
+    check('握力只搬「剛好等於下限」的那一隻手：右手 26（範圍 26–40）搬走，左手 31 是真的測量值留著',
+      u2.r === false && u2.l === 31 && /推估握力範圍（右手/.test(u2.ex) && !/左手/.test(u2.ex), JSON.stringify(u2));
+    const u3 = await page.evaluate(() => { const m = me(); INS.a.push({ id: 'p9', insurer: '丁人壽', product: '醫療', start: '2020-01-01', payFreq: '年', prem: 0, status: 'active', items: [{ name: '日額', cat: 'hosp_day', amt: 1000, unit: '元/日', quote: '每日 1,000 元' }], src: 'ai', chk: false, warn: [] });
+      const p = insFind(m, 'p9'), pr = window.prompt, out = []; for (const v of ['2.5萬', '1e4', '0.5', '24,000']) { window.prompt = () => v; out.push(polFix(m, p, 'prem') + ':' + p.prem) } window.prompt = pr;
+      const s0 = S.set; S.set = () => false; const st0 = (p.status = 'paidup', p.status); openPol('p9'); toast(''); const ok = polFix(m, p, 'st_active'); S.set = s0; return { out: out.join(','), fail: ok + ':' + p.status + ':' + st0 } });
+    check('填保費：「2.5萬」→ 25,000；「1e4」「0.5」這種看不懂或太低的不存；存檔失敗時不報成功、資料退回原狀',
+      u3.out === 'true:25000,false:25000,false:25000,true:24000' && u3.fail === 'false:paidup:paidup', JSON.stringify(u3));
+    const u4 = await page.evaluate(() => { go('body', 'now'); window.scrollTo(0, 400); const y0 = scrollY, b = document.querySelector('#v-body .subnav button'); b.dispatchEvent(new FocusEvent('focusin', { bubbles: true })); return { y0, y1: scrollY } });
+    check('滑鼠或手指點分頁（不是鍵盤 Tab）不會讓畫面亂捲', u4.y0 === u4.y1, JSON.stringify(u4));
+    const u5 = await page.evaluate(() => { const one = id => { ACT = id; recTab = 'scale'; go('body', 'rec'); renderRecs(); const g = $('#recList svg.trend'); return { svg: g ? g.outerHTML : '', note: $('#recList .card .note')?.textContent || '' } };
+      const a = one('a'), k = one('k'), n = one('n'); ACT = 'a'; return { aNaN: /NaN/.test(a.svg), a30: (a.svg.match(/>7 天平均[^<]*/) || [''])[0], aFuture: /90\.0/.test(a.svg), kNote: k.note, kBand: /rect class="band"/.test(k.svg), nBand: /rect class="band"/.test(n.svg), nNote: n.note } });
+    check('趨勢圖：30 天比較用 30 天前的平均（80 → 70：▼ 10.0）；「70 kg」字串、2026-13-45 這種壞日期、未來日期都跳過不畫 NaN；小孩的色帶說明不寫「BMI 18.5–24」；沒填身高不畫健康範圍色帶',
+      !u5.aNaN && /30 天▼ 10\.0/.test(u5.a30) && !u5.aFuture && u5.kBand && !/18\.5–24/.test(u5.kNote) && /兒童/.test(u5.kNote) && !u5.nBand && !/綠色帶/.test(u5.nNote), JSON.stringify(u5));
+    const u6 = await page.evaluate(() => { const m = MEM.find(x => x.id === 'a'), F = selfF(m); return [selfRate('sleep', [1, 1, 1, 0, 0, 1, 0, 1], m, F), selfRate('sleep', [1, 0, 0, 0, 0, 1, 0, 1], m, F)].map(r => r.lv + '|' + r.head).join('；') });
+    check('已確診睡眠呼吸中止：症狀 2 項以上 → 建議門診（回診確認治療）、只有 1 項 → 注意', /^2\|已確診睡眠呼吸中止：症狀還在.*；1\|已確診睡眠呼吸中止：症狀還在/.test(u6), u6);
     await page.close();
   }
 

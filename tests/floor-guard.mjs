@@ -5,6 +5,7 @@
 // 結束碼：0 沒問題；1 有降低門檻的改動（不要推，先修或請使用者同意）；2 沒辦法檢查（不是 git、找不到 origin/main）
 // 檢查：① 測試的 check( 變少 ② 測試被跳過（if (false)、.skip/.only、// 或 /* 註解掉的 check(）
 //       ③ index.html 新增 eval／new Function／document.write ④ CONSTRAINTS.md「規則」表的門檻被放寬或整條刪掉
+//       ⑤ index.html 新增的行有「行尾註解後面還接著程式」（註解把後面的程式吃掉）
 import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 
@@ -13,6 +14,8 @@ const countChecks = s => (s.match(/\bcheck\(/g) || []).length;
 // ② 一行測試程式是不是「把測試關掉」
 const skipsTest = t => /if\s*\(\s*(false|0)\s*\)/.test(t) || /\.(skip|only)\(/.test(t) || /^\s*\/\/.*\bcheck\(/.test(t) || /\/\*[^]*\bcheck\(/.test(t);
 const unsafe = t => /\beval\(|new Function\(|document\.write\(/.test(t);
+// ⑤ 行尾註解後面還接著程式（例如把註解插在一行中間，後面的 if(…)return… 全被註解掉）
+const swallowed = t => { const m = t.match(/[;}\)]\s+\/\/\s(.*)$/); return !!m && /(if|for)\s*\(|return[\s'"(`]|(const|let)\s+\w+\s*=|=>\s*\{|\)\{/.test(m[1].replace(/「[^」]*」|（[^）]*）/g, '')) };
 
 // ④ CONSTRAINTS.md：只看第一個表格（欄位「規則｜門檻｜…」），例外表格不算（刪過期例外＝收緊）
 function ruleRows(md) {
@@ -77,7 +80,9 @@ if (process.argv.includes('--selftest')) {
   for (const [name, md, want] of cases) { const from = name.startsWith('「以下」') ? baseBelow : base, n = constraintsDiff(from, md).length, got = n ? 1 : 0; if (got === want) ok++; else bad.push(`${name}：預期 ${want ? '擋' : '不擋'}，實際 ${got ? '擋' : '不擋'}（${JSON.stringify(constraintsDiff(from, md))}）`) }
   const lines = [['// check(1)', true], ['/* check(1) */', true], ['  if (false) check(1)', true], ['test.skip(', true], ['check(1)', false], ['const x = 1 // 說明', false]];
   for (const [t, want] of lines) { if (skipsTest(t) === want) ok++; else bad.push(`「${t}」預期 ${want ? '算跳過' : '不算'}`) }
-  const total = cases.length + lines.length;
+  const sw = [['const v=f(x);   // 壞資料不畫if(v.length<2)return 0;', true], ['let pk=1.6;   // 一般人 1.6 g/kgif(mode.kidney)pk=.8;', true], ['const a=1;   // 說明：先算 a（如果有）', false], ['x();   // 和「if(a)return」無關的說明', false], ['const u="https://a.b";', false]];
+  for (const [t, want] of sw) { if (swallowed(t) === want) ok++; else bad.push(`「${t}」預期 ${want ? '算吃掉程式碼' : '不算'}`) }
+  const total = cases.length + lines.length + sw.length;
   if (bad.length) { console.log(bad.map(b => '✗ ' + b).join('\n')); console.log(`floor-guard 自我測試失敗 ${bad.length}/${total}`); process.exit(1) }
   console.log(`floor-guard 自我測試全部通過（${total} 項）`); process.exit(0);
 }
@@ -104,6 +109,7 @@ for (const f of untracked) for (const t of now(f).split('\n')) added.push({ file
 for (const { file: f, text } of added) {
   if (TESTS.includes(f) && skipsTest(text)) findings.push({ rule: '測試被跳過', file: f, text: text.trim().slice(0, 140) });
   if (f === 'index.html' && unsafe(text)) findings.push({ rule: '不安全的寫法', file: f, text: text.trim().slice(0, 140) });
+  if (f === 'index.html' && swallowed(text)) findings.push({ rule: '註解吃掉程式碼', file: f, text: text.trim().slice(0, 140) });
 }
 // ④ CONSTRAINTS.md 門檻
 findings.push(...constraintsDiff(old('CONSTRAINTS.md'), now('CONSTRAINTS.md')));

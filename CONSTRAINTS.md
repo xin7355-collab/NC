@@ -11,6 +11,7 @@
 | 文字對比 | 主要色票在深色底、卡片、彈窗、警示框上 ≥ 4.5（WCAG 2.2 AA；停用的選項不受限） | design-qa rendered_audit＋色票計算 |
 | 焦點不被遮住 | 用 Tab 移動時，焦點不被頂端分頁列或底部選單蓋住（scroll-padding） | design-qa rendered_audit：BLOCKER ≤ 0 |
 | 不安全的寫法 | index.html 不新增 eval、new Function、document.write；使用者資料進畫面一律經 esc() | floor-guard、e2e「惡意備份檔被清洗」 |
+| 註解不能吃掉程式碼 | index.html 新增的行：行尾 `//` 註解後面還接著程式 ≤ 0 處（曾經發生兩次：註解插在一行中間，後面的判斷整個失效） | floor-guard（`--selftest` 有這兩個實例） |
 | 個資 | 健康與保險資料只存在手機；金鑰不進前端或 repo；使用者給的真實資料不進 repo、不進測試 | guardrails audit 必修 ≤ 0、人工 |
 | 防禦準則 | app-guardrails-audit 必修 ≤ 0 | `python3 .claude/skills/app-guardrails-audit/scripts/guardrails_audit.py audit .` |
 
