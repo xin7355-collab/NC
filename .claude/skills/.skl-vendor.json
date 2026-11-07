@@ -1,25 +1,49 @@
 {
   "skills": [
     "accessibility",
+    "adversarial-reviewer",
     "app-guardrails-audit",
     "apple-hig-expert",
+    "constraint-driven-development",
+    "design-qa",
     "e2e-testing",
     "error-handling",
     "make-interfaces-feel-better",
+    "performance-optimization",
+    "qa-acceptance",
+    "red-green-proof",
     "systematic-debugging",
+    "tw-writing",
     "verification-before-completion"
   ],
   "source_repo": "https://github.com/xin7355-collab/skl",
-  "source_commit": "b9b2cfe",
-  "updated_at": "2026-10-12T08:30:08Z",
+  "source_commit": "285dbf9",
+  "updated_at": "2026-11-07T04:02:17Z",
   "packs": [],
   "extra_skills": [
+    "community/skills/constraint-driven-development",
+    "community/skills/performance-optimization",
+    "community/skills/qa-acceptance",
+    "community/skills/tw-writing",
     "ecc/skills/accessibility",
     "ecc/skills/e2e-testing",
     "ecc/skills/error-handling",
     "ecc/skills/make-interfaces-feel-better",
+    "engineering-team/skills/adversarial-reviewer",
+    "engineering-team/skills/red-green-proof",
     "product-team/apple-hig-expert/skills/apple-hig-expert",
+    "product-team/skills/design-qa",
     "superpowers/skills/systematic-debugging",
     "superpowers/skills/verification-before-completion"
-  ]
+  ],
+  "hashes": {
+    "adversarial-reviewer": "153b327a15a6dc276d60d753f8eb1da037f1ce2e077ee24a6f5f679964d61040",
+    "app-guardrails-audit": "b1bef1b2680a1630c889d0579542c22e6451585ef4ef9cada876467428fa973b",
+    "constraint-driven-development": "6384162c5684d08f270d2680334e9bce1d1ebfae0baafcfef66a01c5da4c3df3",
+    "design-qa": "adb74a83a0f65698f3fb68e5fb50be9a015aeb6e5d93fa69d8d29e9415999389",
+    "performance-optimization": "f8b8eaf2e2c75f48f30f647d9193bf90620619f57b1805c17466c63a4236d202",
+    "qa-acceptance": "63483267e9a7e044ad2b2cc237955d8ccb8894052e52a9297a6d4df05b972699",
+    "red-green-proof": "750455f0627216941b366a08359a003443329482f2379b7a5cd4cd477b02ca21",
+    "tw-writing": "ec8eafabc4d6c19a470a72042bab10c7971f188242480cddda5ba7b26478ca98"
+  }
 }
