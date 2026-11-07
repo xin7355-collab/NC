@@ -176,19 +176,23 @@ App 整理的發現：（心臟、頭暈、肌少症會列出）
 3. 每一項保障都要附 quote：從文件逐字抄下這項保障名稱與金額的那一句（一定要含數字），以及 page（第幾頁，沒有頁碼填 null）。抄不到原文的保障不要列。
 4. amount 只填數字（不含逗號）；unit 照文件寫法另外填（例如「萬元」「元/日」「元」「倍」「萬元/次」）。
 5. 日期一律西元 YYYY-MM-DD；文件是民國年請加 1911（例如 110/03/05 → 2021-03-05）。
-6. premium 填文件上的「每期保費」，payFreq 填繳別（年繳、半年繳、季繳、月繳、躉繳）；不要換算成年繳。payYears 填繳費年期（例如 20 年期填 20）。
-7. cat 只能用下面的代號；判斷不出來就填 "other"，不要硬分類。主約 kind 填 "main"，附約填 "rider"。
-8. 身分證字號、完整保單號碼、姓名、電話、地址一律不要輸出；保單號碼只填末 4 碼（policyNoLast4）；被保險人只寫稱謂（insuredHint，例如「本人」「配偶」「長子」，不知道就填 null）。
-9. 看不清楚、被遮住或你不確定的內容，寫進 unreadable 陣列，不要猜。
-10. 一份文件有多張保單（例如保單健診表），policies 陣列就放多筆。
-12. 有批註書、除外約定（例如「對某部位或某疾病不負給付責任」）或加費承保：uwResult 填核保結果（標準承保、加費承保、除外承保），除外內容逐字抄到 uwExclusion；文件沒寫就填 null。
-11. 輸出前逐筆自我核對：每個 amount 都必須能在同一筆的 quote 裡找到。
+6. premium 填文件上整張保單的「每期保費」，payFreq 填繳別（年繳、半年繳、季繳、月繳、躉繳）；不要換算成年繳。payYears 填繳費年期（例如 20 年期填 20）；文件寫「繳至 X 歲」就把 X 填在 payToAge，payYears 填 null，不要自己換算。
+7. status 照文件寫（例如 有效、正常繳費、繳費期滿、減額繳清、展期定期、停效、解約、滿期、終止）。
+8. 保單健診表或明細表上，每一項險種（主約、附約）各有一列時：險種代碼填 code、這一項自己的狀態填 coverages 的 status、投保始期填 start、繳費終期填 payEnd、這一項的每期保費填 coverages 的 premium。
+9. cat 只能用下面的代號；判斷不出來就填 "other"，不要硬分類。名稱有「傷害」的醫療給付（例如傷害醫療保險金、傷害住院日額；名稱同時有「疾病」的不算）用 acc_med，不要用 hosp_day、hosp_real、surgery；燒燙傷保險金用 other。主約 kind 填 "main"，附約填 "rider"。
+10. 保險公司欄位空白、但商品名稱裡有公司名（例如「○○人壽△△終身壽險」）：insurer 填商品名稱裡的公司名。
+11. policyType：文件寫投資型、變額、萬能 → "投資型"；團體保險、團險 → "團體"；旅行平安險 → "旅平"；其他填 null。
+12. 身分證字號、完整保單號碼、姓名、電話、地址一律不要輸出；保單號碼只填末 4 碼（policyNoLast4）；被保險人、要保人只寫稱謂（insuredHint、holderHint，例如「本人」「配偶」「長子」「公司」，不知道就填 null）。
+13. 看不清楚、被遮住或你不確定的內容，寫進 unreadable 陣列，不要猜。
+14. 一份文件有多張保單（例如保單健診表），policies 陣列就放多筆。
+15. 有批註書、除外約定（例如「對某部位或某疾病不負給付責任」）或加費承保：uwResult 填核保結果（標準承保、加費承保、除外承保），除外內容逐字抄到 uwExclusion；文件沒寫就填 null。
+16. 輸出前逐筆自我核對：每個 amount 都必須能在同一筆的 quote 裡找到。
 
 【cat 代號】
 life＝壽險／身故保險金、accident＝意外身故或失能、acc_med＝意外醫療（實支或日額）、hosp_day＝住院日額（病房費、住院醫療保險金每日）、hosp_real＝住院醫療費用實支實付（雜費限額）、surgery＝手術（含門診手術）、cancer＝癌症（初次罹癌、癌症住院、化療放療）、critical＝重大疾病／重大傷病一次金、disability＝失能扶助／失能保險金、ltc＝長期照顧、waiver＝豁免保費、other＝其他
 
 【輸出格式】
-{"type":"kinwell.policy","v":1,"policies":[{"insurer":null,"product":null,"policyNoLast4":null,"insuredHint":null,"beneficiary":null,"start":null,"payYears":null,"payFreq":null,"premium":null,"currency":"TWD","status":null,"endDate":null,"endAge":null,"uwResult":null,"uwExclusion":null,"coverages":[{"name":null,"kind":"main","cat":"other","amount":null,"unit":null,"limit":null,"waitingDays":null,"renewable":null,"maxAge":null,"endDate":null,"exclusions":null,"quote":null,"page":null}],"notes":null}],"unreadable":[]}
+{"type":"kinwell.policy","v":1,"policies":[{"insurer":null,"product":null,"policyType":null,"policyNoLast4":null,"insuredHint":null,"holderHint":null,"beneficiary":null,"start":null,"payYears":null,"payToAge":null,"payFreq":null,"premium":null,"currency":"TWD","status":null,"endDate":null,"endAge":null,"uwResult":null,"uwExclusion":null,"coverages":[{"name":null,"code":null,"kind":"main","cat":"other","status":null,"start":null,"payEnd":null,"premium":null,"amount":null,"unit":null,"limit":null,"waitingDays":null,"renewable":null,"maxAge":null,"endDate":null,"exclusions":null,"quote":null,"page":null}],"notes":null}],"unreadable":[]}
 ```
 
 - **App 的防錯檢查**（不靠 AI 自律）：每個金額必須出現在 AI 抄的原文 `quote` 裡（接受千分位、全形數字、萬元換算；原文是國字數字時提醒人工核對）；身分證字號、手機號碼自動刪除；保單號碼只留末 4 碼；生效日在未來、繳費年期不合理、年繳保費超過 100 萬、已超過最高續保年齡都會提醒；同一位被保險人已有同公司、同商品、同生效日的保單 → 預設不匯入。

@@ -80,11 +80,19 @@ if (process.argv.includes('--selftest')) {
   for (const [name, md, want] of cases) { const from = name.startsWith('「以下」') ? baseBelow : base, n = constraintsDiff(from, md).length, got = n ? 1 : 0; if (got === want) ok++; else bad.push(`${name}：預期 ${want ? '擋' : '不擋'}，實際 ${got ? '擋' : '不擋'}（${JSON.stringify(constraintsDiff(from, md))}）`) }
   const lines = [['// check(1)', true], ['/* check(1) */', true], ['  if (false) check(1)', true], ['test.skip(', true], ['check(1)', false], ['const x = 1 // 說明', false]];
   for (const [t, want] of lines) { if (skipsTest(t) === want) ok++; else bad.push(`「${t}」預期 ${want ? '算跳過' : '不算'}`) }
-  const sw = [['const v=f(x);   // 壞資料不畫if(v.length<2)return 0;', true], ['let pk=1.6;   // 一般人 1.6 g/kgif(mode.kidney)pk=.8;', true], ['const a=1;   // 說明：先算 a（如果有）', false], ['x();   // 和「if(a)return」無關的說明', false], ['const u="https://a.b";', false]];
+  const sw = [['const v=f(x);   // 壞資料不畫if(v.length<2)return 0;', true], ['let pk=1.6;   // 一般人 1.6 g/kgif(mode.kidney)pk=.8;', true], ['if(!its.length)continue;   // 候選（建議書）還沒買，不參與理賠const age=e.d?1:2;', true], ['const a=1;   // 說明：先算 a（如果有）', false], ['x();   // 和「if(a)return」無關的說明', false], ['const u="https://a.b";', false]];
   for (const [t, want] of sw) { if (swallowed(t) === want) ok++; else bad.push(`「${t}」預期 ${want ? '算吃掉程式碼' : '不算'}`) }
   const total = cases.length + lines.length + sw.length;
   if (bad.length) { console.log(bad.map(b => '✗ ' + b).join('\n')); console.log(`floor-guard 自我測試失敗 ${bad.length}/${total}`); process.exit(1) }
   console.log(`floor-guard 自我測試全部通過（${total} 項）`); process.exit(0);
+}
+
+// ⑤ 整個檔案掃一次（不只新增的行）：舊程式裡被註解吃掉的程式碼也要抓出來
+const scanFile = f => (existsSync(f) ? readFileSync(f, 'utf8') : '').split('\n').map((t, n) => [n + 1, t]).filter(([, t]) => swallowed(t));
+if (process.argv.includes('--scan')) {
+  const f = process.argv[process.argv.indexOf('--scan') + 1] || 'index.html', hit = scanFile(f);
+  for (const [n, t] of hit) console.log(`✗ 註解吃掉程式碼：${f}:${n}：${t.trim().slice(0, 140)}`);
+  console.log(`floor-guard --scan：${f} 有 ${hit.length} 處註解吃掉程式碼`); process.exit(hit.length ? 1 : 0);
 }
 
 const i = process.argv.indexOf('--base'), base = i > -1 ? process.argv[i + 1] : 'origin/main';
@@ -109,8 +117,8 @@ for (const f of untracked) for (const t of now(f).split('\n')) added.push({ file
 for (const { file: f, text } of added) {
   if (TESTS.includes(f) && skipsTest(text)) findings.push({ rule: '測試被跳過', file: f, text: text.trim().slice(0, 140) });
   if (f === 'index.html' && unsafe(text)) findings.push({ rule: '不安全的寫法', file: f, text: text.trim().slice(0, 140) });
-  if (f === 'index.html' && swallowed(text)) findings.push({ rule: '註解吃掉程式碼', file: f, text: text.trim().slice(0, 140) });
 }
+for (const [n, t] of scanFile('index.html')) findings.push({ rule: '註解吃掉程式碼', file: `index.html:${n}`, text: t.trim().slice(0, 140) });
 // ④ CONSTRAINTS.md 門檻
 findings.push(...constraintsDiff(old('CONSTRAINTS.md'), now('CONSTRAINTS.md')));
 
