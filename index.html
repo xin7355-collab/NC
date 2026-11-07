@@ -18,6 +18,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
+html{color-scheme:dark;scroll-padding-top:calc(env(safe-area-inset-top) + 64px);scroll-padding-bottom:calc(env(safe-area-inset-bottom) + 104px)}   /* 用 Tab 移動時，焦點不會被頂端分頁列或底部選單蓋住 */
 html,body{background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;font-size:calc(15px*var(--fz))}
 body{min-height:100vh;padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 96px);
   background:radial-gradient(600px 400px at 90% -10%,rgba(34,228,255,.18),transparent 60%),
@@ -55,7 +56,7 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
 .kpi .k{font-size:calc(11px*var(--fz));color:var(--mute)}
 .kpi .v{font-size:calc(22px*var(--fz));font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi .u{font-size:calc(11px*var(--fz));color:var(--mute);font-weight:600;margin-left:3px}
-.kpi .t{font-size:calc(11px*var(--fz));margin-top:2px;color:var(--acc,var(--cyan));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .t{font-size:calc(11px*var(--fz));margin-top:2px;color:var(--acc,var(--cyan));display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .ric{flex:0 0 34px;height:34px;border-radius:11px;display:grid;place-items:center;background:rgba(34,228,255,.09);border:1px solid rgba(34,228,255,.18);font-size:calc(17px*var(--fz))}
 .qa{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.qa .btn{padding:12px 4px;margin:0}
 .h4{font-size:calc(13px*var(--fz));color:var(--mute);font-weight:600;letter-spacing:1px;margin:18px 0 6px}
@@ -79,6 +80,7 @@ input,select{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--
 input[type=date],input[type=datetime-local]{min-height:46px}
 select{background-image:linear-gradient(45deg,transparent 50%,var(--mute) 50%),linear-gradient(135deg,var(--mute) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:28px}
 input:focus,select:focus,textarea:focus{border-color:var(--cyan)}
+select option,select optgroup{background-color:#0f1930;color:#e8f0ff}select option:checked{background-color:#1d3f66;color:#fff}select option:disabled{color:#6b7896}
 input.bad,select.bad{border-color:var(--red)!important;background-color:rgba(255,93,108,.08)}
 textarea{width:100%;min-height:110px;background:rgba(0,0,0,.35);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:10px;font:16px/1.45 ui-monospace,Menlo,monospace;outline:none;resize:vertical}
 .seg{display:flex;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:3px}
@@ -268,12 +270,13 @@ table.imap td.er{color:var(--red);font-weight:800}table.imap td.gp1{color:var(--
 .cdet.ci-err,.cdet.ci-chk{padding-left:10px;box-shadow:inset 3px 0 0 var(--red)}.cdet.ci-chk{box-shadow:inset 3px 0 0 var(--amber)}
 .gap{padding:10px 0;border-top:1px solid var(--line);font-size:calc(13px*var(--fz))}.card h2+.gap{border-top:0}
 .gbar{position:relative;height:8px;border-radius:99px;background:rgba(138,151,180,.16);margin:7px 0 5px;overflow:hidden}.gbar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--mute)}
-.g-ok .gbar i{background:var(--lime)}.g-low .gbar i,.g-other .gbar i{background:var(--amber)}.g-has .gbar i{background:var(--cyan);opacity:.55}.g-none .gbar{box-shadow:inset 0 0 0 1px rgba(255,181,71,.6)}.g-none.core .gbar{box-shadow:inset 0 0 0 1px rgba(255,93,108,.75)}
+.g-ok .gbar i{background:var(--lime)}.g-low .gbar i,.g-other .gbar i{background:var(--amber)}.gbar.unk{background:repeating-linear-gradient(90deg,rgba(138,151,180,.32) 0 6px,transparent 6px 11px)}.g-none .gbar{box-shadow:inset 0 0 0 1px rgba(255,181,71,.6)}.g-none.core .gbar{box-shadow:inset 0 0 0 1px rgba(255,93,108,.75)}
 .pgauge{position:relative;height:10px;border-radius:99px;margin:8px 0 4px;background:linear-gradient(90deg,rgba(182,255,60,.35) 0 33.3%,rgba(255,181,71,.35) 33.3% 66.6%,rgba(255,93,108,.4) 66.6%)}
 .pgauge i{position:absolute;top:-4px;width:4px;height:18px;border-radius:2px;background:var(--text);margin-left:-2px;box-shadow:0 0 6px rgba(0,0,0,.6)}
 .pgl{display:flex;justify-content:space-between;font-size:calc(10px*var(--fz));color:var(--mute)}
 /* 電腦或平板橫放：內容維持手機寬度置中，不要拉成整個螢幕 */
 @media (min-width:720px){html{background:radial-gradient(600px 400px at 90% -10%,rgba(34,228,255,.18),transparent 60%),radial-gradient(500px 400px at -10% 30%,rgba(182,255,60,.10),transparent 60%),var(--bg)}body{max-width:640px;margin:0 auto;background:transparent}nav{left:50%;right:auto;width:620px;margin-left:-310px}.sheet-panel{left:50%;right:auto;width:640px;margin-left:-320px}.tour-card{left:50%;right:auto;width:560px;margin-left:-280px}}
+@media (min-width:1024px){body{max-width:1240px;padding:24px 32px 40px 140px}nav{left:max(20px,calc(50vw - 596px));right:auto;top:96px;bottom:auto;width:92px;margin-left:0;flex-direction:column;justify-content:flex-start;gap:4px;padding:8px 6px;border-radius:20px}nav button{flex:0 0 auto;padding:12px 0}#v-dash.on,.view.on>.subp:not([hidden]){column-count:2;column-gap:18px}.card,.qa,.row2,.days,.tags{break-inside:avoid}#critBox,#critBody{column-span:all}.sheet-panel{left:auto;right:0;top:0;bottom:0;width:min(600px,100vw);margin-left:0;max-height:none;border-radius:22px 0 0 22px;border:1px solid var(--line);border-right:0;transform:translateX(105%)}.grab{display:none}}
 .kv{display:grid;grid-template-columns:1fr auto;gap:9px 12px;font-size:calc(13px*var(--fz));align-items:center}
 .kv>span:nth-child(odd){color:var(--mute)}
 .kv>span:nth-child(even){text-align:right}
@@ -932,6 +935,11 @@ const sexT=s=>s==='f'?'女':'男';
 const DEVW=[['嚴重',3],['危險',2],['肥胖',2],['過高',2],['超標',2],['警戒',1],['偏高',1],['偏低',1],['不足',1],['偏瘦',1],['偏胖',1],['過低',1],['標準',0],['正常',0],['理想',0],['良好',0],['優秀',0]];
 function devLv(s){if(!s)return 0;s=String(s);for(const[k,v]of DEVW)if(s.includes(k))return v;return 0}
 
+const fattyKnown=m=>condKeys(m).has('nafld')||labsOf(m).slice(0,2).some(r=>/脂肪肝/.test(String(r.items?.us_liver?.v||'')));
+// 蛋白質差多少就補多少：從份量大的開始挑，最多 3 樣；有血脂或心血管問題不推雞蛋
+function protTip(gap,md){const P=[['雞胸肉或魚一份 100 g（約 20 g）',20],['一盒板豆腐（約 15 g）',15],['一杯無糖豆漿（約 10 g）',10],['一杯無糖優格（約 8 g）',8],...(md.heart?[]:[['1 顆蛋（約 7 g）',7]])],pick=[];let n=0;
+  for(const[t,g]of P)if(n<gap&&pick.length<3){pick.push(t);n+=g}
+  return `🥚 蛋白質還差約 ${gap} g：可以加 ${pick.join('＋')}${md.heart?'。蛋一天 1 顆為宜（有血脂問題或冠狀動脈鈣化更要注意）':''}`}
 function scaleEval(rec,m){
   const a=ageOf(m),male=m.sex!=='f',kid=a<18,st=rec.status||{},out=[];
   // 體脂機是生物電阻估算的慢性指標：最高只到「異常」，不觸發「1–2 週內就診」與分數上限
@@ -946,7 +954,7 @@ function scaleEval(rec,m){
     push('fat',f<lo?1:f>O?2:f>O-3?1:0,f<lo?'體脂過低：可能營養不足或肌肉量太少，請和營養師討論':f>O?`體脂偏高，已達${gT}`:`接近${gT}，再增加就算肥胖`,'abdomen','家醫科')}
   if(v('visceral')!=null){const x=v('visceral'),lv=x>=15?2:x>=10?1:0;
     push('visceral',lv,'內臟脂肪過高，代謝症候群與脂肪肝風險上升','abdomen','家醫科');
-    if(Math.max(lv,devLv(st.visceral))>=1)out.push({src:'體脂',k:'visceral_liver',name:'內臟脂肪 → 脂肪肝風險',short:'內臟脂肪',val:x,unit:'級',lv:1,msg:'建議腹部超音波確認是否有脂肪肝',organ:'liver',dept:'腸胃肝膽科'})}
+    if(Math.max(lv,devLv(st.visceral))>=1&&!fattyKnown(m))out.push({src:'體脂',k:'visceral_liver',name:'內臟脂肪 → 脂肪肝風險',short:'內臟脂肪',val:x,unit:'級',lv:1,msg:'建議腹部超音波確認是否有脂肪肝',organ:'liver',dept:'腸胃肝膽科'})}
   // 腳踩式體脂計量不到腰圍、臀圍，腰臀比是推算的：最多判到「注意」；有實際量的腰圍且正常就不判
   if(v('whr')!=null){const x=v('whr'),wst=+m.waist||num(labsOf(m)[0]?.items?.waist?.v);
     if(!(wst&&wst<(male?90:80)))push('whr',male?(x>=.9?1:0):(x>=.85?1:0),`體脂計推算的腰臀比（不是實際量測），僅供參考；請用皮尺在肚臍高度量腰圍：${male?'男 ≥90':'女 ≥80'} cm 才算腹部肥胖`,'abdomen','家醫科',1)}
@@ -1012,6 +1020,8 @@ function derivedOf(m){const l=labsOf(m)[0],a=Math.floor(ageOf(m)),male=m.sex!=='
   if(have.length>=3||hit.length>=3)out.push({k:'mets',name:'代謝症候群（國健署 5 項）',val:`${hit.length}/5`,lv:hit.length>=3?2:hit.length===2?1:0,
     txt:hit.length>=3?'符合代謝症候群（≥3 項）：心血管、糖尿病、脂肪肝風險明顯上升，建議家醫科或新陳代謝科整體評估':hit.length===2?'再多 1 項就是代謝症候群，現在調整最有效':'目前未達代謝症候群',
     src:C.map(c=>`${c[0]} ${c[1]==null?'沒資料':c[3]+(c[2]?' ✗':' ✓')}`).join('、')});
+  {const cr=iv('cr');if(cr>0&&iv('egfr')==null&&a>=18){const e=egfrCalc(cr,a,!male);if(e)out.push({k:'egfr_calc',name:'腎絲球過濾率 eGFR（App 由肌酸酐算）',val:Math.round(e),lv:e<30?2:e<60?1:0,
+    txt:e>=90?'正常（≥90）':e>=60?'60–89：輕度下降，多數人沒有腎臟病，要搭配尿蛋白判斷；年紀增長也會慢慢下降':e>=30?'30–59：中度下降，建議腎臟科評估':'低於 30：請儘快到腎臟科',src:`肌酸酐 ${cr}、年齡 ${a}、${male?'男':'女'}（CKD-EPI 2021）`})}}
   const bs=biaSeg(l);if(bs)out.push({k:'bia',name:'InBody 分段分析',val:bs.hiF.length||bs.loL.length||bs.asym.length?'有偏差':'平衡',lv:bs.hiF.includes('軀幹')||bs.loL.length?1:0,txt:bs.txt,src:bs.src});
   return out}
 // 「其他項目」分類：原始阻抗、理學檢查、視力聽力、InBody、尿液、血液、其他（順序有意義：先比對較明確的）
@@ -2139,7 +2149,7 @@ function calc(m){
   const sg=suggestGoal(m),gsel=GOALT[m.goal]?m.goal:'auto',goal=kid?'keep':gsel==='auto'?sg.goal:gsel;
   let target=goal==='cut'?tdee*.8:goal==='bulk'?tdee*1.1:tdee;target=Math.max(target,bmr);if(goal==='cut'&&!kid)target=Math.min(tdee,Math.max(target,male?1500:1200));
   const mode=dietMode(m);
-  let pk=kid?1.1:{cut:2,keep:1.6,bulk:1.8}[goal];if(mode.kidney)pk=.8;   // 腎功能異常時禁止高蛋白（KDIGO 2024：CKD G3–G5 0.8 g/kg）
+  let pk=kid?1.1:{cut:fitOf(m).lvl==='pro'?2:1.6,keep:1.6,bulk:1.8}[goal];if(mode.kidney)pk=.8;   // 減脂：一般人 1.6 g/kg 就能保住肌肉，規律重訓才用 2.0；腎功能異常時禁止高蛋白（KDIGO 2024：CKD G3–G5 0.8 g/kg）
   if(!kid&&a>=65&&!mode.kidney)pk=Math.max(pk,1.2);                      // 長者：蛋白質至少 1.2 g/kg 防肌少症
   if(mode.kidneyMild)pk=Math.min(pk,1);                                   // 腎功能略降或微量白蛋白尿：蛋白質不超過 1.0 g/kg，3 個月後複驗
   // 碳水佔熱量 50%（控糖 40%），脂肪補足其餘，並限制在 20–35%
@@ -2859,7 +2869,7 @@ function aiPrompt(m,o){
   {const ft=fuText(m);if(ft.length)out.push('',...ft)}
   if(l){out.push('',`【體檢報告 ${l.t}】App 判讀異常 ${lab.length} 項：`);
     lab.slice().sort((a,b)=>b.lv-a.lv).forEach(i=>{const pv=P?.items?.[i.k]?.v;out.push(`- ${iss(i)}${pv!=null&&pv!==''?`；前一次（${P.t}）${pv}`:''}`)});
-    {const ab=new Set(lab.map(i=>i.k)),has=k=>{const v=l.items?.[k]?.v;return v!=null&&v!==''},core=AI_CORE.filter(k=>has(k)&&!ab.has(k)).map(k=>`${LABK[k].s||LABK[k].n} ${l.items[k].v}${LABK[k].u?' '+LABK[k].u:''}`),miss=AI_CORE.filter(k=>!has(k)&&!(k==='waist'&&m.waist)).map(k=>LABK[k].s||LABK[k].n);
+    {const ab=new Set(lab.map(i=>i.k)),has=k=>{const v=l.items?.[k]?.v;return v!=null&&v!==''},core=AI_CORE.filter(k=>has(k)&&!ab.has(k)).map(k=>`${LABK[k].s||LABK[k].n} ${l.items[k].v}${LABK[k].u?' '+LABK[k].u:''}`),miss=AI_CORE.filter(k=>!has(k)&&!(k==='waist'&&m.waist)&&!(k==='egfr'&&has('cr'))).map(k=>LABK[k].s||LABK[k].n);
       if(core.length)out.push(`【關鍵數值（有驗、正常）】${core.join('、')}`);if(miss.length)out.push(`【這份報告沒有驗】${miss.join('、')}`)}
     const dv=derivedOf(m);if(dv.length)out.push(`【App 自動計算】${dv.map(d=>`${d.name} ${d.val}：${d.txt}（${d.src}）`).join('；')}`);
     const cd=cmpData(m);if(cd){const top=cd.rows.filter(r=>VDKEY.slice(0,6).includes(r.vd)).sort((a,b)=>VDKEY.indexOf(a.vd)-VDKEY.indexOf(b.vd)).slice(0,10);
@@ -3300,10 +3310,10 @@ function promptLab(){const OPT=LAB.filter(x=>x.t==='opt'),QI=LAB.filter(x=>x.t==
 5. unit 照抄報告原文（mg/dL、mmol/L、μmol/L、g/L、U/L…），不要自行換算單位。
 6. ref 照抄報告的參考範圍原文（例如 "70-99"、"<200"、"陰性"）；lo、hi 填參考範圍的下限、上限數字，沒有就填 null。
 7. flag 照抄報告的異常標記（H、L、*、↑、↓），沒有填 null。
-8. 血壓若寫成 "128/82"，請拆成 sbp=128、dbp=82。眼壓左右眼取較高值；骨密度取最低的 T 值（腰椎、髖部取較低者）；聽力左右任一耳異常就填異常。InBody 的「阻抗（kHz）」原始數據不用輸出。
+8. 血壓若寫成 "128/82"，請拆成 sbp=128、dbp=82。眼壓左右眼取較高值；骨密度取最低的 T 值（腰椎、髖部取較低者）；聽力左右任一耳異常就填異常。InBody 的「阻抗（kHz）」原始數據不用輸出；InBody 的「推估握力」是建議範圍、不是測量值，報告沒有實際測量握力就不要填 grip_r／grip_l。
 9. 姓名、身分證字號、病歷號、生日、電話、地址一律不要輸出。
 10. date 填檢查（採檢）日期，格式 YYYY-MM-DD 的西元年；報告若寫民國年（例如 115/09/20），請加 1911 換算成 2026-09-20。
-11. 影像與檢查（超音波、X 光、電腦斷層、心電圖、內視鏡、乳房攝影、抹片等）：value 只能填下方括號內其中一個選項；報告原文（醫師總評、結論）「每一句都完整照抄」放進 "note"，不要摘要。同一份報告裡的其他發現（例如冠狀動脈鈣化、肋膜增厚、肺氣腫、甲狀腺結節），另外各自放進 extra（name 寫發現名稱，value 照抄原文句子）。
+11. 影像與檢查（超音波、X 光、電腦斷層、心電圖、內視鏡、乳房攝影、抹片等）：value 只能填下方括號內其中一個選項（報告寫「無明顯異常」、只有其他部位的小發現時選「正常」，例如胸部 X 光「肺部無明顯異常（疑輕度脊椎側彎）」）；報告原文（醫師總評、結論）「每一句都完整照抄」放進 "note"，不要摘要。同一份報告裡的其他發現（例如冠狀動脈鈣化、肋膜增厚、肺氣腫、甲狀腺結節），另外各自放進 extra（name 寫發現名稱，value 照抄原文句子）。
 12. ${QI.map(x=>x.k).join('、')} 是抗體保護力，照抄原文（陽性／陰性或數值）。
 13. 輸出前逐項自我核對：每個數字都必須能在報告中找到原文，小數點位置正確。
 
@@ -3441,7 +3451,7 @@ function openScaleDetail(id){
   const m=me(),r=scalesOf(m).find(x=>x.id===id);if(!r)return;const iss=scaleEval(r,m).sort((a,b)=>b.lv-a.lv);
   openSheet(sheetHead('體脂紀錄',`${esc(m.name)}・${fmtDT(r.t)}${r.device?'・'+esc(r.device):''}`)+`
     <div class="kv" style="margin:14px 0">${SF.filter(f=>r[f.k]!=null).map(f=>`<span>${f.n}${(r.derived||[]).includes(f.k)?' <em class="dev">推算</em>':''}</span><span><b>${fmt(r[f.k])}</b> <span class="sub">${f.u}</span>${r.status?.[f.k]?` <em class="dev${devLv(r.status[f.k])?'':' ok'}">${esc(r.status[f.k])}</em>`:''}</span>`).join('')}${r.bodyType?`<span>身體類型</span><span>${esc(r.bodyType)}</span>`:''}</div>
-    ${chkHTML(r.chk)}${extraHTML(r.extra)}<div class="h4">判讀</div>${iss.length?issueHTML(iss):'<div class="empty">各項指標正常 👍</div>'}${bodyCompare(r,m)}
+    ${chkHTML([...new Set([...(r.chk||[]),...scaleCheck(r,m)])])}${extraHTML(r.extra)}<div class="h4">判讀</div>${iss.length?issueHTML(iss):'<div class="empty">各項指標正常 👍</div>'}${bodyCompare(r,m)}
     <p class="note">內建判定採國健署成人標準與一般體脂計分級（內臟脂肪 1–9 標準、10–14 偏高、≥15 過高）。各品牌標準不同，設備判定與內建判定並列，取較嚴重者。</p>
     <div class="row2"><button class="btn danger" id="sd-del" style="flex:0 0 30%">刪除</button><button class="btn ghost" id="sd-edit">編輯</button></div>`);
   $('#sd-edit').onclick=()=>openScaleSheet(r);$('#sd-del').onclick=()=>delScale(r.id);
@@ -3485,12 +3495,16 @@ function optFind(x,v){v=String(v??'').trim();if(!v||!x.O)return null;const nv=no
     return O.find(([l])=>l.includes(/腺瘤|adenoma/i.test(v)?(/進行|advanced/i.test(v)?'進行':'腺瘤'):'增生'))||null}
   for(const[l,lv,msg]of O)for(const part of l.split(/[／（）()、]/))if(part.length>=2&&nv.includes(normK(part)))return[l,lv,msg];
   return null}
-function resolveKey(name){
+// 別名表先正規化一次（以前每個「其他項目」都把幾百個別名重新正規化，資料多時 iPhone 開 App 要好幾秒）；同一個名稱的結果也記住
+let ALIASN=null;const RKC=new Map();
+function resolveKey(name){const key=String(name??'');if(RKC.has(key))return RKC.get(key);const r=resolveKey0(key);if(RKC.size<5000)RKC.set(key,r);return r}
+function resolveKey0(name){
+  if(!ALIASN){ALIASN=new Map();for(const[k,al]of Object.entries(ALIAS))for(const a of al){const na=normK(a);if(!ALIASN.has(na))ALIASN.set(na,k)}}
   const n=normK(name);if(!n)return null;if(LABK[n])return n;
   // 比值（A/G、BUN/Cr…）不拆開比對，避免「白蛋白/球蛋白比」被當成白蛋白
   const ratio=/比|ratio|\w\/\w/.test(n),c0=[n,...(ratio?[]:n.split(/[()\/、,，]/)),n.replace(/[a-z0-9\-()\/.+]+/g,''),n.replace(/[^\x00-\x7f]/g,'')].map(s=>s.trim());
   const cands=[...c0,...c0.map(s=>s.replace(/^(左|右)耳?/,'').replace(/(檢驗值|檢查值|檢查|測定|數值)$/,''))].filter(s=>s.length>=2);
-  for(const c of cands)for(const[k,al]of Object.entries(ALIAS))if(al.some(a=>normK(a)===c))return k;
+  for(const c of cands)if(ALIASN.has(c))return ALIASN.get(c);
   return null;
 }
 function convUnit(k,v,unit,lo,hi){
@@ -3602,7 +3616,7 @@ function openLabDetail(id){
   const iss=annotPrev(m,labEval(rec,m).sort((a,b)=>(b.crit?1:0)-(a.crit?1:0)||b.lv-a.lv),rec),sc=scoreOf(iss),[gt,gc]=grade(sc),dp=deptPlan(iss);
   const orgs=[...new Set(iss.map(i=>i.organ).filter(o=>o&&ORG[o].tip))];
   const normal=Object.entries(rec.items||{}).filter(([k])=>!iss.some(i=>i.k===k));
-  openSheet(sheetHead('體檢分析',`${esc(m.name)}・${esc(rec.t)}${rec.hospital?'・'+esc(rec.hospital):''}`)+chkHTML(rec.chk)+`
+  openSheet(sheetHead('體檢分析',`${esc(m.name)}・${esc(rec.t)}${rec.hospital?'・'+esc(rec.hospital):''}`)+chkHTML([...new Set([...(rec.chk||[]),...labCheck(rec.items||{},m,rec.t)])])+`
     <div style="display:flex;gap:14px;align-items:center;margin:14px 0 4px">${scoreRing(sc,gc)}<div><div style="font-size:calc(22px*var(--fz));font-weight:800;color:${gc}">${gt}</div><div class="sub" style="margin-top:4px">異常 ${iss.length} 項・正常 ${normal.length} 項</div><div class="sub">扣分：每個器官最嚴重一項全扣（注意 −3／異常 −8／嚴重 −15），同器官其他項扣 40%；有「注意」最高 89、「異常」最高 74、「嚴重」最高 59 分</div></div></div>
     ${Object.entries(rec.items||{}).some(([k,it])=>LABK[k]?.t==='opt'&&/^原文：/.test(it?.ref||'')&&[60,63].includes(it.ref.length))?'<div class="hl" style="margin:10px 0;border-color:rgba(255,181,71,.5)">⚠️ 這份報告是舊版匯入，影像報告的原文可能被截斷，附帶發現（例如冠狀動脈鈣化）可能沒判讀到：按下方「編輯數值」，在那一項的「報告原文」貼上完整的醫師總評，或用 AI 只匯入那一頁（不會清掉其他數值）。</div>':''}
     ${iss.some(i=>i.crit)?critHTML(iss,rec.t):iss.some(i=>i.lv===3)?'<div class="banner">⚠️ 有「嚴重」等級的項目，建議 1–2 週內就醫。若有胸痛、呼吸困難、單側無力、意識改變等症狀，請立即掛急診。</div>':''}
@@ -3687,7 +3701,7 @@ function renderMenu(){
   const line=(nm,v,t,col)=>`<div class="row"><span>${nm}</span><span>${Math.round(v)} / ${Math.round(t)}</span></div><div class="bar"><i style="width:${Math.min(100,v/t*100)}%;background:${col}"></i></div>`;
   const gap=Math.round(c.prot-Pp);
   $('#menuSum').innerHTML=(xb.min?`<div class="hl" style="margin-bottom:10px">🏃 ${exBonusTxt(xb,c)}</div>`:'')+line('熱量 kcal',K,tgt,'linear-gradient(90deg,var(--cyan),var(--lime))')+line('蛋白質 g',Pp,c.prot,'var(--cyan)')+line('碳水 g',C,c.carb+xc,'var(--lime)')+line('脂肪 g',F,c.fat+xf,'var(--pink)')+
-    (gap>10&&!c.mode.kidney?`<div class="hl" style="margin-top:12px">🥚 蛋白質還差約 ${gap} g：加 ${Math.ceil(gap/7)} 顆蛋，或一杯無糖豆漿（約 10 g）＋一盒板豆腐（約 15 g）</div>`:'')+
+    (gap>10&&!c.mode.kidney?`<div class="hl" style="margin-top:12px">${esc(protTip(gap,c.mode))}</div>`:'')+
     '<p class="note">點一餐可看食材、移除不要的菜。每位家人依自己的體檢、目標和不吃的食材排菜（同一天會盡量排一樣的菜，方便一起煮），份量以 0.25 份為單位。</p>';
 }
 const fmtQ=(q,u)=>u==='g'||u==='ml'?`${Math.round(q)} ${u}`:`${Math.round(q*10)/10} ${u}`;
@@ -4076,6 +4090,7 @@ function openFUDoc(){openSheet(sheetHead('＋ 醫師發現的新問題','App 沒
 
 /* ================= 總覽「待辦」：回診逾期／快到了、還沒看醫師的異常、保單待核對與到期、理賠補件；永遠有急症入口 ================= */
 function renderTodo(){const m=me(),el=$('#todoCard');if(!el)return;const out=[];
+  {const F=selfF(m);for(const r of selfLatest(m,30)){let R=null;try{R=selfRate(r.k,r.a,m,F)}catch(e){}if(R&&R.lv>=3)out.push([0,`${R.lv>=4?'🚨':'⚠️'} ${SELF[r.k].ic} ${SELF[r.k].n}：${R.head}`,`${r.t} 自我檢測・建議${SLV[R.lv][0]}；看過醫師、症狀改變時再測一次`,`data-self="${r.k}"`])}}
   for(const x of fuOpen(m)){const s=fuState(x);if(s.c==='bad')out.push([0,`⏰ 回診逾期：${x.name}`,s.txt,`data-fu="${esc(x.id)}"`]);else if(s.c==='warn'&&fuDue(x))out.push([1,`📅 ${x.st==='booked'?'回診':'追蹤'}：${x.name}`,s.txt,`data-fu="${esc(x.id)}"`])}
   const td=fuOpen(m).filter(x=>x.st==='todo').length+fuSuggest(m).filter(s=>s.src==='lab').length;
   if(td)out.push([2,`🩺 ${td} 項異常還沒記下醫師怎麼說`,'看完醫師在「健康 → 追蹤」記一下，App 會提醒下次回診','data-go="body" data-gosub="plan"']);
@@ -4204,6 +4219,7 @@ function polAudit(p,m){const F=[],add=(lv,k,t,fix,ci)=>F.push({lv,k,t,fix,ci}),Y
   if(p.start&&p.start>addDays(Y,31))add('chk','d',`生效日 ${p.start} 在未來：還不算進保障`,'如果是民國年換算錯（民國年＋1911），按「編輯」修正；真的還沒生效就不用改。');
   if(p.prem==null&&p.payFreq!=='躉繳'&&p.status==='active'&&!(pe&&Y>pe))add('chk','d','沒有保費','看保單首頁或繳費通知的「每期保費」，按「編輯」填上，每年保費和保費負擔才算得準。');
   else if(p.prem!=null&&!p.payFreq)add('chk','d','繳別不明：每年保費先不算','看繳費通知是年繳、半年繳、季繳還是月繳，按「編輯」選繳別。');
+  if(p.prem===0&&p.status==='active'&&p.payFreq!=='躉繳'&&!(pe&&Y>pe))add('chk','d','每期保費是 0','還在繳費的保單保費不會是 0：多半是 AI 沒讀到（保費常在另一頁）。看繳費通知或保險公司 App，按「編輯」填上實際保費；已經繳完就把狀態改成「繳費期滿」。');
   (p.items||[]).forEach((c,i)=>{const u=covUnit(c),n=`「${c.name}」`,amt=c.amt;
     if(u.nm==='waiver')add('info','d',`${n}是豁免保費：不算保障金額`,'不用改。發生條款寫的狀況（例如失能、重大疾病）後，之後的保費不用再繳。',i);
     else if(u.nm==='unit')add('chk','d',`${n}以「${c.unit}」計，不是金額：沒有加進總額`,'看條款的「每單位給付金額」和投保了幾個單位（或計畫幾），算出實際金額後按「編輯」改金額和單位（例：2 單位 × 每單位 1,000 元/日 → 2,000 元/日）。',i);
@@ -4234,8 +4250,8 @@ const GAPK=[{k:'life',t:'壽險（身故）',u:'萬',cats:['life'],pers:[''],s:'
 function gapDef(m){const a=ageOf(m),inc=num(m.inc)||0,debt=num(m.debt)||0,D={hosp_real:[20],hosp_day:[2000],cancer:[50],critical:[50]};
   if(a<15)return{...D,life:[0,'未滿 15 歲：身故保險金要滿 15 歲才生效，之前只能給付有上限的喪葬費用（保險法第 107 條），壽險不是重點'],accident:[null,'小孩以意外醫療為主'],cancer:[null],critical:[null]};
   const why=[inc&&`年收入 ${inc} 萬 × 10`,debt&&`負債 ${debt} 萬`].filter(Boolean).join('、')+(inc&&debt?'，取大的':'');
-  return{...D,life:inc||debt?[Math.max(inc*10,debt),why]:m.earner?[null,'填年收入、負債就能算目標']:[0,'沒有填收入和負債：壽險不急；要照顧家人可以自訂目標'],
-    accident:inc?[inc*10,`年收入 ${inc} 萬 × 10`]:[null,m.earner?'填年收入就能算目標':'']}}
+  return{...D,life:inc||debt?[Math.max(inc*10,debt),why]:[null,'填年收入、負債就能算目標（沒有家人要靠你的收入，可以把目標設 0）'],
+    accident:inc?[inc*10,`年收入 ${inc} 萬 × 10`]:[null,'填年收入就能算目標']}}
 const GST={ok:['足夠','ok'],low:['不足','warn'],none:['沒有','bad'],other:['金額不明','warn'],has:['有',''],adv:['沒有（可評估）','mute'],na:['不急','mute']};
 function covGap(m){const S0=covSum(m),T=obj(m.covT),D=gapDef(m);
   const G=GAPK.map(g=>{const E=S0.filter(s=>g.cats.includes(s.cat)),M=g.pers?E.filter(s=>!s.nm&&g.pers.includes(s.per)):[],oth=E.filter(s=>!M.includes(s)).reduce((a,s)=>a+s.n,0),
@@ -4246,10 +4262,10 @@ function covGap(m){const S0=covSum(m),T=obj(m.covT),D=gapDef(m);
   if(by('hosp_day').st==='none'&&by('hosp_real').st==='ok')Object.assign(by('hosp_day'),{st:'adv',why:'已經有足夠的實支實付，日額可以評估'});
   if(by('cancer').st==='none'&&by('critical').st==='ok')Object.assign(by('cancer'),{st:'adv',why:'重大傷病／重大疾病險通常包含癌症，看條款'});
   return G}
-function gapRow(g){const[lab,cls]=GST[g.st],fm=v=>g.u==='萬'?`${(+v.toFixed(1)).toLocaleString()} 萬`:`${Math.round(v).toLocaleString()} 元`,pct=g.tg>0?Math.min(100,g.have/g.tg*100):g.st==='has'?100:0,P=[];
+function gapRow(g){const[lab,cls]=GST[g.st],fm=v=>g.u==='萬'?`${(+v.toFixed(1)).toLocaleString()} 萬`:`${Math.round(v).toLocaleString()} 元`,pct=g.tg>0?Math.min(100,g.have/g.tg*100):0,P=[];
   if(!g.pers)P.push(g.oth?`有 ${g.oth} 項（給付方式看條款）`:'目前沒有');else{if(g.tg>0)P.push(g.have?`有 ${fm(g.have)}／目標 ${fm(g.tg)}`:`目標 ${fm(g.tg)}`);else if(g.have)P.push(`有 ${fm(g.have)}`);if(g.oth)P.push(`另有 ${g.oth} 項金額算不出來`)}
   if(g.why)P.push(esc(g.why));
-  return `<div class="gap g-${g.st}${g.core?' core':''}"><div class="row" style="margin:0"><span>${esc(g.t)}</span><span class="tg ${g.st==='none'&&!g.core?'warn':cls}">${lab}</span></div><div class="gbar"><i style="width:${pct.toFixed(0)}%"></i></div>
+  return `<div class="gap g-${g.st}${g.core?' core':''}"><div class="row" style="margin:0"><span>${esc(g.t)}</span><span class="tg ${g.st==='none'&&!g.core?'warn':cls}">${lab}</span></div><div class="gbar${g.tg>0||g.st==='na'?'':' unk'}"><i style="width:${pct.toFixed(0)}%"></i></div>
     <div class="sub">${P.join('・')}${g.er?' <em class="dev bad">含錯誤</em>':g.un?' <em class="dev">含待核對</em>':''}</div></div>`}
 const premGauge=(r,lab)=>r==null?'':`<div class="row" style="margin:12px 0 0"><span>${esc(lab)}</span><span class="tg ${r>.2?'bad':r>.1?'warn':'ok'}">${(r*100).toFixed(1)}%</span></div><div class="pgauge" role="img" aria-label="${esc(lab)} ${(r*100).toFixed(1)}%"><i style="left:${Math.min(100,r/.3*100).toFixed(1)}%"></i></div><div class="pgl"><span>0</span><span>10%</span><span>20%</span><span>30%+</span></div>`;
 // 保障到幾歲：每一類一條，顏色變淡＝這一類有部分保障已經到期；最後一列「繳費」＝還要繳到幾歲
@@ -4643,7 +4659,7 @@ function renderTool(){const m=me(),el=$('#toolBody');if(!el)return;const L=insOf
 function egfrCalc(cr,age,fem){if(!(cr>0)||!(age>=18))return null;const k=fem?.7:.9,a=fem?-.241:-.302,x=cr/k;return 142*Math.pow(Math.min(x,1),a)*Math.pow(Math.max(x,1),-1.2)*Math.pow(.9938,age)*(fem?1.012:1)}
 function scaleCheck(v,m){const W=[],h=(+m.h||0)/100,n=k=>num(v[k]);
   const w=n('weight'),bmi=n('bmi'),fat=n('fat'),fm=n('fatMass'),mu=n('muscle'),sk=n('skeletal'),le=n('lean');
-  if(w!=null&&bmi!=null&&h){const b=w/(h*h);if(Math.abs(b-bmi)>1)W.push(`BMI ${bmi} 和體重 ${w} kg、身高 ${m.h} cm 算出來的 ${r1(b)} 差很多：AI 可能讀錯，或身高設定不同`)}
+  if(w!=null&&bmi!=null&&h){const b=w/(h*h);if(Math.abs(b-bmi)>1)W.push(`BMI ${bmi} 和體重 ${w} kg、身高 ${m.h} cm 算出來的 ${r1(b)} 差很多：AI 可能讀錯，或身高設定不同`);else if(bmi>0){const ih=Math.sqrt(w/bmi)*100;if(Math.abs(ih-h*100)>=1)W.push(`體脂機用的身高約 ${Math.round(ih)} cm，和你填的 ${m.h} cm 不同：請到體脂機 App 改身高（會影響 BMI、體脂率、基礎代謝的計算）`)}}
   if(w&&fat!=null&&fm!=null){const f=fm/w*100;if(Math.abs(f-fat)>2.5)W.push(`體脂率 ${fat}% 和「脂肪量 ${fm} kg ÷ 體重」算出來的 ${r1(f)}% 對不起來`)}
   if(w!=null&&mu!=null&&mu>=w)W.push(`肌肉量 ${mu} kg 不可能大於或等於體重 ${w} kg`);
   if(mu!=null&&sk!=null&&sk>mu)W.push(`骨骼肌 ${sk} kg 比肌肉量 ${mu} kg 還多：可能兩個欄位對調`);
@@ -4654,6 +4670,10 @@ function labCheck(items,m,date){const W=[],v=k=>num(items[k]?.v??items[k]),a=age
   const sb=v('sbp'),db=v('dbp');if(sb&&db&&sb<=db)W.push(`收縮壓 ${sb} 應該比舒張壓 ${db} 高：可能填反`);
   const cr=v('cr'),eg=v('egfr');if(cr&&eg){const c=egfrCalc(cr,a,m.sex==='f');if(c&&Math.abs(c-eg)>Math.max(15,c*.3))W.push(`eGFR ${eg} 和肌酸酐 ${cr} 算出來的約 ${Math.round(c)} 差很多：確認單位（mg/dL 或 μmol/L）或是否讀錯`)}
   const hb=v('hb'),hct=v('hct');if(hb&&hct&&(hct/hb<2.3||hct/hb>3.8))W.push(`血容比 ${hct}% 和血紅素 ${hb} 對不起來（通常約 3 倍）`);
+  {const gr=items.grip_r,gl=items.grip_l,eqLo=x=>x&&typeof x==='object'&&num(x.v)!=null&&num(x.lo)!=null&&num(x.hi)!=null&&num(x.v)===num(x.lo);
+   if(eqLo(gr)||eqLo(gl))W.push(`握力剛好等於參考範圍下限（右 ${gr?.v??'—'}、左 ${gl?.v??'—'} kg）：可能把 InBody 的「推估握力」範圍當成測量值；報告沒有實際測握力就刪掉這兩項`)}
+  for(const[k,x]of Object.entries(items||{})){const L=LABK[k];if(!L?.okRx||!L.O||!x||typeof x!=='object')continue;const val=String(x.v??''),ref=String(x.ref||'');
+    if(val&&val!==L.O[0][0]&&L.okRx.test(ref)&&!L.badRx?.test(ref))W.push(`「${L.n}」原文寫無明顯異常，AI 卻選「${val}」：App 判為${L.O[0][0]}；要改請按「編輯」選「${L.O[0][0]}」`)}
   if(date){if(date>todayS())W.push(`報告日期 ${date} 在未來：民國年是否換算錯？`);else if(date<addDays(todayS(),-3650))W.push(`報告日期 ${date} 是 10 年以前：民國年是否換算錯？`)}
   return W}
 function watchCheck(v){const W=[],n=k=>num(v[k]);if(n('rhr')!=null&&n('walkhr')!=null&&n('rhr')>n('walkhr'))W.push(`靜止心率 ${n('rhr')} 比步行平均心率 ${n('walkhr')} 還高：可能兩個欄位對調`);

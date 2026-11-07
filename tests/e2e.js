@@ -1204,10 +1204,68 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     const z9 = await page.evaluate(() => { ACT = 'k'; renderAll(); const G = covGap(me()); ACT = 'a'; return G.map(g => g.k + ':' + g.st).join() + '|' + G[0].why });
     check('未滿 15 歲：壽險不急（身故保險金滿 15 歲才生效，保險法第 107 條）；沒有保單也算出缺口（實支實付、住院日額）', /^life:na,accident:adv,hosp_real:none,hosp_day:none,cancer:adv,critical:adv/.test(z9) && /第 107 條/.test(z9), z9);
     // 電腦寬螢幕：內容維持手機寬度置中
-    await page.setViewportSize({ width: 1280, height: 860 }); await page.waitForTimeout(200);
+    await page.setViewportSize({ width: 900, height: 860 }); await page.waitForTimeout(200);
     const z10 = await page.evaluate(() => { openPol('p1'); const r = { body: Math.round(document.body.getBoundingClientRect().width), nav: Math.round($('#nav').getBoundingClientRect().width), sheet: Math.round($('.sheet-panel').getBoundingClientRect().width), left: Math.round(document.body.getBoundingClientRect().left) }; closeSheet(); return r });
-    check('電腦或平板橫放：內容、底部選單、彈出視窗都維持手機寬度置中（不會拉滿整個螢幕）', z10.body === 640 && z10.nav === 620 && z10.sheet === 640 && z10.left === 320, JSON.stringify(z10));
+    check('平板橫放（寬 900）：內容、底部選單、彈出視窗維持手機寬度置中（不會拉滿整個螢幕）', z10.body === 640 && z10.nav === 620 && z10.sheet === 640 && z10.left === 130, JSON.stringify(z10));
     await page.close();
+  }
+
+  // =============== 6za. 下拉選單配色、電腦版（左側選單＋雙欄＋右側抽屜）、實際資料暴露的錯誤：成年人沒填收入不能說壽險「不急」、沒有目標的進度條不能是滿的、保費 0、急症自測沒上待辦、已知脂肪肝不再叫你照超音波、蛋白質目標與「加 6 顆蛋」、握力抄成範圍下限、X 光原文正常、eGFR 可由肌酸酐算、體脂機身高設定不同 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    page = await newPage({ members: [{ id: 'u', name: '測試甲', sex: 'm', birth: '1984-05-05', h: 171.8, w: 74, act: '1.375', goal: 'auto', fit: { lim: [], lvl: 'new', days: 3, min: 30, like: [], time: '07:00' },
+        cond: { items: [{ k: 'nafld', y: 2026, st: 'fu' }, { k: 'cac', st: 'fu' }], meds: '', allergy: '無', surg: '' } }], active: 'u',
+      scale: { u: [{ id: 's1', t: T(1) + 'T20:21', weight: 74.6, bmi: 24.9, fat: 21.2, visceral: 6, muscle: 55.6, status: { visceral: '警戒', fat: '偏高' } }] },
+      labs: { u: [{ id: 'l1', t: T(50), hospital: '甲醫院', items: { cr: { v: 0.95 }, ldl: { v: 112, hi: 130 }, grip_r: { v: 36, lo: 36, hi: 44, ref: '36~44 kgf' }, grip_l: { v: 34, lo: 34, hi: 41, ref: '34~41 kgf' },
+        cxr: { v: '輕微變化（如主動脈鈣化、陳舊病灶）', ref: '原文：胸部X光檢查：肺部無明顯異常(疑輕度脊椎側彎)' }, us_liver: { v: '輕度脂肪肝', ref: '原文：腹部超音波：輕度脂肪肝' } }, extra: [] }] },
+      self: { u: [{ id: 'h1', k: 'heart', t: T(0), a: [null, 0, 0, 0, null, 0, 0, 0, 1, null, 0, 61, 0, null, 0] }] },
+      ins: { u: [{ id: 'q1', insurer: '甲人壽', product: '終身壽險', start: '2014-10-25', payYears: 20, payFreq: '年', prem: 0, status: 'active', items: [{ name: '終身壽險', kind: 'main', cat: 'life', amt: 15.5, unit: '萬元', quote: '保險金額 15.5 萬元' }], src: 'ai', chk: false, warn: [], t: T(0) },
+        { id: 'q2', insurer: '乙產險', product: '傷害保險', start: '2020-01-01', payFreq: '年', prem: 2000, status: 'active', items: [{ name: '意外身故', cat: 'accident', amt: 110, unit: '萬元', quote: '意外身故 110 萬元' }], src: 'ai', chk: true, warn: [], t: T(0) }] } });
+    const y0 = await page.evaluate(() => { const m = me(); openPolEdit('q1'); const opt = $('#pe-st option'), sel = $('#pe-st'), bg = getComputedStyle(opt).backgroundColor, fg = getComputedStyle(opt).color; closeSheet();
+      const lum = c => { const [r, g, b] = (c.match(/\d+(\.\d+)?/g) || [255, 255, 255]).map(Number); return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 };
+      return { scheme: getComputedStyle(document.documentElement).colorScheme, bg, bgL: lum(bg), fgL: lum(fg), selBg: getComputedStyle(sel).backgroundColor } });
+    check('下拉選單：整頁宣告深色（color-scheme: dark），選項是深底淺字（電腦版 Chrome 不再白底淺字看不到）',
+      /dark/.test(y0.scheme) && /^rgb\(/.test(y0.bg) && y0.bgL < 0.25 && y0.fgL > 0.7, JSON.stringify(y0));
+    const y1 = await page.evaluate(() => { const m = me(); go('ins', 'cov'); const G = covGap(m), life = G.find(g => g.k === 'life'), acc = G.find(g => g.k === 'accident');
+      const rowOf = k => [...document.querySelectorAll('#covBody .gap')][GAPK.findIndex(g => g.k === k)];
+      return { life: life.st + '|' + life.why, acc: acc.st, lifeBar: rowOf('life').querySelector('.gbar').className + '|' + rowOf('life').querySelector('.gbar i').style.width, accBar: rowOf('accident').querySelector('.gbar').className + '|' + rowOf('accident').querySelector('.gbar i').style.width,
+        flags: polFlags(insFind(m, 'q1'), m).map(f => f.lv + ':' + f.t).join('｜') } });
+    check('保障缺口：成年人沒填年收入、負債時，壽險不能顯示「不急」，要說「填年收入、負債就能算目標」；沒有目標的列不畫滿格進度條（虛線＝還不能判斷）；有效保單每期保費 0 要提醒',
+      !/^na/.test(y1.life) && /填年收入、負債就能算目標/.test(y1.life) && /unk/.test(y1.lifeBar) && /\|0%$/.test(y1.lifeBar) && /unk/.test(y1.accBar) && /\|0%$/.test(y1.accBar) && /chk:每期保費是 0/.test(y1.flags), JSON.stringify(y1));
+    const y2 = await page.evaluate(() => { const m = me(); go('dash'); const c = calc(m), sc = scaleEval(scalesOf(m)[0], m).map(i => i.k).join();
+      go('menu', 'menu'); return { todo: $('#todoCard').innerHTML, prot: Math.round(c.prot), w: c.w, sc, menu: $('#menuSum').textContent } });
+    check('總覽待辦：心臟警訊自測結果是「儘快」→ 上待辦（點了打開結果）；已知脂肪肝（病史或超音波）不再出現「內臟脂肪 → 建議超音波確認脂肪肝」；新手減脂的蛋白質不超過每公斤 1.6 g；補蛋白質不再叫你「加 6 顆蛋」',
+      /心臟警訊/.test(y2.todo) && /data-self="heart"/.test(y2.todo) && !/visceral_liver/.test(y2.sc) && /visceral/.test(y2.sc) && y2.prot <= Math.round(y2.w * 1.6) + 1 && !/加 [2-9] 顆蛋/.test(y2.menu),
+      JSON.stringify({ todo: y2.todo.replace(/<[^>]+>/g, ' ').slice(0, 160), prot: y2.prot, w: y2.w, sc: y2.sc, menu: y2.menu.slice(-90) }));
+    const y3 = await page.evaluate(() => { const m = me(), r = labsOf(m)[0], W = labCheck(r.items, m, r.t), d = derivedOf(m).find(x => x.k === 'egfr_calc'), ai = aiPrompt(m, { topic: 'visit' }), sk = scaleCheck(scalesOf(m)[0], m);
+      openLabDetail(r.id); const det = $('#sheetBody').textContent; closeSheet(); return { W: W.join('｜'), egfr: d ? d.val + '|' + d.lv : '', miss: (ai.match(/【這份報告沒有驗】[^\n]*/) || [''])[0], sk: sk.join('｜'), det, lp: promptLab() } });
+    check('防 AI 讀錯：握力剛好等於參考範圍下限（把 InBody「推估握力」範圍當成測量值）、X 光原文寫肺部無明顯異常卻選「輕微變化」都提醒（舊紀錄打開也看得到）；eGFR 沒驗但有肌酸酐 → App 用 CKD-EPI 2021 算（約 102，正常），AI 提示詞不再說「沒有驗 eGFR」；體脂機 BMI 推回的身高 173 cm 和 171.8 cm 不同要提醒；體檢提示詞教 AI 不要把推估握力當測量值',
+      /握力.*範圍下限/.test(y3.W) && /原文寫.*無明顯異常/.test(y3.W) && /握力.*範圍下限/.test(y3.det) && /^10[0-4]\|0$/.test(y3.egfr) && !/eGFR/.test(y3.miss) && /體脂機用的身高約 173 cm/.test(y3.sk) && /推估握力/.test(y3.lp),
+      JSON.stringify({ W: y3.W, egfr: y3.egfr, miss: y3.miss, sk: y3.sk }));
+    // 電腦版：≥1024px 左側直式選單、內容雙欄、彈出視窗改成右側抽屜；平板寬度維持手機版置中
+    await page.setViewportSize({ width: 1280, height: 860 }); await page.waitForTimeout(200);
+    const y4a = await page.evaluate(() => { go('ins', 'cov'); const nav = $('#nav').getBoundingClientRect(), main = $('#v-ins .subp[data-sub="cov"]'), cols = getComputedStyle(main).columnCount, cards = [...main.querySelectorAll('#covBody > .card')].map(c => Math.round(c.getBoundingClientRect().left));
+      openPol('q1'); return { navV: nav.height > nav.width * 2, navL: Math.round(nav.left), navR: Math.round(nav.right), cols, lefts: [...new Set(cards)].length, body: Math.round(document.body.getBoundingClientRect().width) } });
+    await page.waitForTimeout(500);   // 等抽屜滑進來
+    const y4 = { ...y4a, ...(await page.evaluate(() => { const sp = $('.sheet-panel').getBoundingClientRect(); closeSheet(); go('dash'); return { spR: Math.round(sp.right), spW: Math.round(sp.width), spH: Math.round(sp.height), dc: getComputedStyle($('#v-dash')).columnCount } })) };
+    await page.setViewportSize({ width: 820, height: 1100 }); await page.waitForTimeout(200);
+    const y5 = await page.evaluate(() => ({ body: Math.round(document.body.getBoundingClientRect().width), cols: getComputedStyle($('#v-dash')).columnCount, navH: $('#nav').getBoundingClientRect().height < 100 }));
+    check('電腦版：寬 1280 時左側直式選單、保障頁與總覽內容分兩欄、彈出視窗改成右側抽屜（貼齊右邊、整個高度）；寬 820（平板）維持手機版置中、底部選單',
+      y4.navV && y4.navL >= 16 && y4.cols === '2' && y4.dc === '2' && y4.lefts >= 2 && y4.spR === 1280 && y4.spW <= 600 && y4.spH >= 850 && y5.body === 640 && y5.cols === 'auto' && y5.navH, JSON.stringify({ y4, y5 }));
+    await page.close();
+  }
+
+  // =============== 6zb. 品質門檻（CONSTRAINTS.md）：單檔大小、開 App 時「其他項目」比對效能、每個按鈕動作都有處理程式 ===============
+  {
+    const html0 = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'), kb = Math.round(Buffer.byteLength(html0) / 1024);
+    const attrs = [...new Set([...html0.matchAll(/<button[^>]*?\sdata-([a-z][a-z0-9-]*)/g)].map(x => x[1]))], MOD = ['fh', 'fit', 'vax', 'diet'];   // 修飾用（跟著 data-editmem 決定開哪個分頁）
+    const camel = a => a.replace(/-([a-z])/g, (_, c) => c.toUpperCase()), noH = attrs.filter(a => !MOD.includes(a) && ![`'${camel(a)}' in d`, `d.${camel(a)}`, `[data-${a}]`, `dataset.${camel(a)}`, `[data-${a}=`].some(p => html0.includes(p)));
+    page = await newPage({ members: [{ id: 'p', name: '效能', sex: 'm', birth: '1980-01-01', h: 170, w: 70, act: '1.375', goal: 'keep' }], active: 'p' });
+    const perf = await page.evaluate(() => { const L = []; for (let i = 0; i < 30; i++) L.push({ id: 'x' + i, t: '2026-01-01', items: {}, extra: Array.from({ length: 40 }, (_, k) => ({ name: ['其他項目', '細胞外液', '阻抗 5kHz 右上肢', '腰圍(InBody)', '總膽固醇 T-CHO'][k % 5] + k, value: k, unit: '' })) });
+      RKC.clear(); ALIASN = null; const cdpLess = performance.now(); for (const r of L) promoteExtras(r); return Math.round(performance.now() - cdpLess) });
+    await page.close();
+    check(`品質門檻：index.html ${kb} KB ≤ 900 KB；30 份體檢×40 個其他項目比對 ${perf} ms ≤ 100 ms（CPU 沒降速；以前要 1 秒以上）；${attrs.length} 種按鈕動作都有處理程式`,
+      kb <= 900 && perf <= 100 && !noH.length, JSON.stringify({ kb, perf, noH }));
   }
 
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
@@ -1248,6 +1306,10 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   check('GAS：成功才扣額度、失敗退回、額度滿不呼叫 Cloudflare', gasCases.join(' ') === 'ok/1/1 BUSY/0/3 CF_401/0/1 GAS_ERROR/0/1 DAILY_CAP/2/0 NOT_CONFIGURED/0/0', gasCases.join(' '));
 
   await browser.close();
+  // 地板守衛（CONSTRAINTS.md）：結束碼 1＝有降低門檻的改動；2＝沒辦法檢查（不是 git、沒有 origin/main），只提醒不擋
+  { const g = require('child_process').spawnSync(process.execPath, [path.join(ROOT, 'tests', 'floor-guard.mjs')], { cwd: ROOT, encoding: 'utf8' });
+    if (g.status === 2) console.log('（地板守衛沒辦法檢查：' + (g.stderr || '').trim() + '）');
+    else check('地板守衛：沒有刪測試、跳過測試、放寬 CONSTRAINTS.md 門檻或新增 eval／document.write', g.status === 0, (g.stdout || '').trim().split('\n').slice(-3).join(' ')) }
   console.log(results.join('\n'));
   if (errs.length) console.log('\n頁面錯誤：\n' + errs.join('\n'));
   const fail = results.filter(r => r.startsWith('FAIL')).length + errs.length;
