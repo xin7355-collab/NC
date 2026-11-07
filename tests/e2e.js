@@ -1823,6 +1823,34 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zp. 保障健檢：保太多／重複（日額太高、實支實付太多張、手術已足夠、癌症與重大傷病重疊）、依條件建議補什麼；新生兒、75 歲以上、軍人、榮民、低收入或繳不出健保費的建議；匯入畫面「看提示詞」 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    const P = (id, it, o) => ({ id, insurer: '甲人壽', product: '醫療' + id, start: '2015-01-01', payYears: 20, payFreq: '年', prem: 20000, status: 'active', src: 'manual', chk: true, warn: [], t: T(0), items: it, ...o });
+    const D = (n, a) => ({ name: n, kind: 'main', cat: 'hosp_day', amt: a, unit: '元/日', quote: a + ' 元' }), R = n => ({ name: n, kind: 'rider', cat: 'hosp_real', amt: 20, unit: '萬元', quote: '20 萬元' });
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me', job: 'mil', earner: true, inc: 80, debt: 600 },
+        { id: 'k', name: '小寶', sex: 'm', birth: T(100), h: 60, w: 6, act: '1.2', goal: 'keep', role: 'child' }, { id: 'g', name: '阿公', sex: 'm', birth: '1946-03-03', h: 165, w: 60, act: '1.2', goal: 'keep', role: 'parent', job: 'vet' }], active: 'a',
+      ins: { a: [P('h1', [D('住院日額', 2000), R('實支實付'), { name: '手術', kind: 'rider', cat: 'surgery', amt: 10, unit: '倍', quote: '10 倍' }]), P('h2', [D('住院日額', 2000), R('實支實付')]), P('h3', [D('住院日額', 2000), R('實支實付')]),
+          P('c1', [{ name: '重大傷病', kind: 'main', cat: 'critical', amt: 100, unit: '萬元', quote: '100 萬元' }, { name: '癌症', kind: 'rider', cat: 'cancer', amt: 100, unit: '萬元', quote: '100 萬元' }, { name: '壽險', kind: 'rider', cat: 'life', amt: 100, unit: '萬元', quote: '100 萬元' }])] } });
+    const p1 = await page.evaluate(() => { go('ins', 'cov'); const t = $('#covBody').textContent; return { t } });
+    const has = (re) => re.test(p1.t);
+    check('保障健檢「可能保太多」：住院日額 6,000 元/日是目標的 3 倍（門診為主的人日額用不太到）、實支實付 3 張要有副本理賠、手術已有支應不用再加、癌症和重大傷病重疊；保費占年收入的比例',
+      has(/保障健檢/) && has(/住院日額每日 6,000 元：是目標的 3 倍/) && has(/門診/) && has(/實支實付 3 張/) && has(/副本理賠/) && has(/手術已有支應/) && has(/重大傷病通常包含癌症/) && has(/保費約占年收入/), p1.t.slice(p1.t.indexOf('保障健檢'), p1.t.indexOf('保障健檢') + 900));
+    check('保障健檢「建議補強」依條件排順序：主要收入、有負債 → 定期壽險補到目標、意外險、失能扶助；軍人 → 軍保給付（死亡 36～48 個基數、退伍給付）與「最低保障規劃」提示詞',
+      has(/建議補強/) && has(/定期壽險/) && has(/意外險/) && has(/失能扶助/) && has(/軍人保險/) && has(/48 個基數/) && has(/退伍給付/), p1.t.slice(p1.t.indexOf('建議補強'), p1.t.indexOf('建議補強') + 700));
+    const p2 = await page.evaluate(() => { const r = {}; for (const id of ['k', 'g']) { ACT = id; renderAll(); go('ins', 'cov'); r[id] = $('#covBody').textContent } ACT = 'a'; renderAll(); go('ins', 'cov'); return r });
+    check('新生兒（0 歲）：出生前就可以投保、未滿 15 歲壽險只賠喪葬費、先買實支實付與住院醫療、新生兒用媽媽的健保卡（出生 60 日內）；75 歲以上：小額終老（多數到 84 歲）、保留保證續保、長照 2.0、自己準備醫療預備金；榮民：榮民醫院、國軍醫院部分負擔補助、無職業榮民健保費補助、喪葬補助問榮服處',
+      /新生兒/.test(p2.k) && /未滿 15 歲/.test(p2.k) && /喪葬/.test(p2.k) && /60 日/.test(p2.k) && /75 歲以上/.test(p2.g) && /小額終老/.test(p2.g) && /84 歲/.test(p2.g) && /長照 2\.0/.test(p2.g) && /榮民/.test(p2.g) && /部分負擔/.test(p2.g) && /榮民服務處/.test(p2.g),
+      JSON.stringify({ k: p2.k.slice(p2.k.indexOf('保障健檢'), p2.k.indexOf('保障健檢') + 300), g: p2.g.slice(p2.g.indexOf('保障健檢'), p2.g.indexOf('保障健檢') + 300) }));
+    check('沒有保險、低收入、健保費繳不出來：低收入戶健保費政府全額補助、免部分負擔；欠費不鎖卡、可以分期（最多 48 期）、紓困無息貸款；微型保險（壽險、意外 50 萬、實支實付 3 萬）；重大傷病證明免部分負擔；民間急難救助',
+      has(/低收入戶/) && has(/全額補助/) && has(/不鎖卡/) && has(/48 期/) && has(/紓困/) && has(/微型保險/) && has(/重大傷病證明/) && has(/急難救助/), '');
+    const p3 = await page.evaluate(async () => { go('ins', 'pol'); openPolImport(); await new Promise(r => setTimeout(r, 300)); $('#sheetBody [data-show="policy"]').click(); const pre = $('#sheetBody #pv-policy');
+      return { shown: !!pre && !pre.hidden && /保單資料擷取器/.test(pre.textContent), mp: promptMinProt() } });
+    check('匯入畫面按「看提示詞」真的顯示在畫面上（AI 工具分頁也有同一份，不會打開到看不見的那份）；最低保障規劃提示詞也請 AI 找保太多的、考慮新生兒、75 歲以上、軍人、榮民、低收入',
+      p3.shown && /保太多/.test(p3.mp) && /榮民/.test(p3.mp) && /75 歲以上/.test(p3.mp) && /新生兒/.test(p3.mp) && /低收入/.test(p3.mp), JSON.stringify({ shown: p3.shown }));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
