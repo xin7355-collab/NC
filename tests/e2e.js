@@ -165,16 +165,16 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   check('輸入框字級 ≥16px（iOS 不自動放大）', await page.evaluate(() => { const t = document.createElement('textarea'); document.body.appendChild(t); const v = parseFloat(getComputedStyle(t).fontSize); t.remove(); return v >= 16 }));
 
   // =============== 6. 文件一致性 ===============
-  const prompts = await page.evaluate(() => ({ scale: promptScale(), lab: promptLab(), watch: promptWatch(), policy: promptPolicy(), law: PROMPT_LAW, lawdiff: PROMPT_LAWDIFF, insrule: INS_RULE + '\n' + EVID }));
+  const prompts = await page.evaluate(() => ({ scale: promptScale(), lab: promptLab(), watch: promptWatch(), policy: promptPolicy(), law: PROMPT_LAW, lawdiff: PROMPT_LAWDIFF, insrule: INS_RULE + '\n' + EVID, polchk: POLCHK_HEAD, claimprep: CLAIMPREP_HEAD }));
   const md = p => '```text\n' + p + '\n```';
   const pfile = path.join(ROOT, 'PROMPTS.md');
   if (process.argv.includes('--update-prompts')) {
     const doc = fs.readFileSync(pfile, 'utf8').replace(/(## 一、體脂機截圖\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.scale)).replace(/(## 二、體檢報告\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.lab)).replace(/(## 四、手錶／健康 App 截圖\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.watch))
-      .replace(/(## 六、保單匯入（照片／PDF → JSON）\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.policy)).replace(/(### 法令／條例更新審查\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.law)).replace(/(### 法規新舊條文比對\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.lawdiff)).replace(/(### 共同規則與證據分級\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.insrule));
+      .replace(/(## 六、保單匯入（照片／PDF → JSON）\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.policy)).replace(/(### 法令／條例更新審查\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.law)).replace(/(### 法規新舊條文比對\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.lawdiff)).replace(/(### 保單核對（哪裡有錯、去哪裡找）\n\n[^\n]*\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.polchk)).replace(/(### 突發狀況：理賠準備與怎麼問醫師\n\n[^\n]*\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.claimprep)).replace(/(### 共同規則與證據分級\n\n)```text[\s\S]*?\n```/, (m0, h) => h + md(prompts.insrule));
     fs.writeFileSync(pfile, doc); console.log('已更新 PROMPTS.md');
   }
   const doc = fs.readFileSync(pfile, 'utf8');
-  check('PROMPTS.md 與 App 內提示詞一致（體脂機、體檢、手錶、保單、法令審查、法規比對）', doc.includes(md(prompts.scale)) && doc.includes(md(prompts.lab)) && doc.includes(md(prompts.watch)) && doc.includes(md(prompts.policy)) && doc.includes(md(prompts.law)) && doc.includes(md(prompts.lawdiff)) && doc.includes(md(prompts.insrule)), '不一致時執行 node tests/e2e.js --update-prompts');
+  check('PROMPTS.md 與 App 內提示詞一致（體脂機、體檢、手錶、保單、法令審查、法規比對、保單核對、突發狀況理賠準備）', doc.includes(md(prompts.scale)) && doc.includes(md(prompts.lab)) && doc.includes(md(prompts.watch)) && doc.includes(md(prompts.policy)) && doc.includes(md(prompts.law)) && doc.includes(md(prompts.lawdiff)) && doc.includes(md(prompts.insrule)) && doc.includes(md(prompts.polchk)) && doc.includes(md(prompts.claimprep)), '不一致時執行 node tests/e2e.js --update-prompts');
   const selfHead = await page.evaluate(() => selfPrompt(me(), []).split('\n').slice(0, 2).join('\n'));
   check('PROMPTS.md 第五節（自我檢測給 AI）的開頭規則和 App 一致', doc.includes('```text\n' + selfHead + '\n'), '改了 selfPrompt 開頭要同步 PROMPTS.md 第五節');
   await page.close();
@@ -683,7 +683,10 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
 
   // =============== 6r. 字體大小、第一次使用的功能導覽 ===============
   {
-    page = await newPage({ tour: 0, members: [{ id: 't', name: '我', sex: 'f', birth: '1960-01-01', h: 158, w: 55, act: '1.375', goal: 'keep' }], active: 't' });
+    // 用本機 http 開：file:// 的 origin 是 null，無頭 Chromium 重新整理時偶爾丟掉剛寫入的 localStorage（App 沒有任何刪除 localStorage 的程式；iPhone 用的是 https 網址）
+    const srv6r = require('http').createServer((q, res) => { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); res.end(fs.readFileSync(path.join(ROOT, 'index.html'))) });
+    await new Promise(ok => srv6r.listen(0, '127.0.0.1', ok));
+    page = await newPage({ tour: 0, members: [{ id: 't', name: '我', sex: 'f', birth: '1960-01-01', h: 158, w: 55, act: '1.375', goal: 'keep' }], active: 't' }, { url: `http://127.0.0.1:${srv6r.address().port}/` });
     await page.waitForTimeout(1400);
     const t1 = await page.evaluate(() => { const h = $('#tour .tour-hole').getBoundingClientRect(), n = $('#nav button[data-v="dash"]').getBoundingClientRect();
       return { vis: !$('#tour').hidden, n: $('#tour-n').textContent, role: $('#tour').getAttribute('role'), hole: h.left <= n.left && h.right >= n.right && h.top <= n.top && h.bottom >= n.bottom } });
@@ -703,7 +706,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.reload(); await page.waitForTimeout(500);
     const f2 = await page.evaluate(() => getComputedStyle(document.body).fontSize);
     check('字體大小「特大」：全站字放大 1.25 倍（15→18.75px）、重新打開還在；各頁卡片與底部按鈕都沒超出螢幕', f1.body === '18.75px' && f1.h2 === '17.5px' && f1.saved === '"1.25"' && f2 === '18.75px' && fit.every(x => x === 0), JSON.stringify([f1, f2, fit]));
-    await page.close();
+    await page.close(); srv6r.close();
     // 全新使用者：先建立資料，存好後才跑導覽
     page = await newPage({ tour: 0 }); await page.waitForTimeout(700);
     const fr = await page.evaluate(() => ({ sheet: $('#sheet').classList.contains('on'), tab: !!$('#m-name'), tour: !!$('#tour') && !$('#tour').hidden }));
@@ -1512,6 +1515,57 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     const fg2 = require('child_process').spawnSync(process.execPath, [path.join(ROOT, 'tests', 'floor-guard.mjs'), '--scan', 'no-such-file.html'], { cwd: ROOT, encoding: 'utf8' });
     check('記一筆呼吸器紀錄後畫面停在紀錄那裡（不跳回最上面）；輸入法選字時按 Esc 不會關掉視窗；保單清單重畫後按 Esc，焦點回到同一張保單；地板守衛找不到檔案時直接報錯（不會假裝 0 處）',
       g6.vis && g6.still && g7 === 'x1' && fg2.status === 2, JSON.stringify({ g6, g7, fg: fg2.status }));
+    await page.close();
+  }
+
+  // =============== 6zh. 保單核對：每個錯誤附「去哪裡找」、核對清單、複製「核對錯誤」提示詞（匯出的 JSON 可以直接匯回）；缺口列出算不出金額的項目；理賠：突發狀況先選情況 → 勾補充 → 複製提示詞問 AI、問醫師的話 ===============
+  {
+    const td = new Date(), T = n => { const d = new Date(td); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` };
+    const P = (id, o) => ({ id, insurer: '甲人壽', product: '終身壽險', start: '2010-03-01', payYears: 20, payFreq: '年', prem: 30000, status: 'active', src: 'ai', chk: false, warn: [], t: T(0), ...o });
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep' }, { id: 'k', name: '小孩', sex: 'm', birth: '2015-01-01', h: 140, w: 35, act: '1.375', goal: 'keep', role: 'child' }], active: 'a',
+      ins: { a: [P('q1', { product: '甲人壽安心醫療', start: T(10), payYears: 10, prem: 12000, bene: '王大明', note: 'secret-note', items: [{ name: '住院醫療計畫', kind: 'rider', cat: 'hosp_real', amt: 2, unit: '計畫', quote: '計畫二' },
+            { name: '住院日額', kind: 'main', cat: 'hosp_day', amt: 1000, unit: '元/日', wait: 30, quote: '每日 1,000 元' }, { name: '手術附約', kind: 'rider', cat: 'surgery', amt: null, unit: '' }] }),
+          P('q2', { insurer: '乙人壽', start: '1978-03-01', items: [{ name: '身故保險金', kind: 'main', cat: 'life', amt: 100, unit: '萬元', quote: '身故保險金 100 萬元' }] }),
+          P('q3', { insurer: '丙人壽', product: '變額壽險', status: 'reduced', type: 'inv', payAge: 80, payYears: null, holder: '本人', uw: { res: 'excl', excl: '對腰椎疾病不負給付責任', decl: '' }, items: [{ name: '身故', kind: 'main', cat: 'life', amt: 50, unit: '萬元', quote: '身故保險金 50 萬元', code: 'WL' },
+            { name: '住院附約', kind: 'rider', cat: 'hosp_day', amt: 1000, unit: '元/日', quote: '每日 1,000 元', st: 'active', code: 'HR', prem: 2000, renew: 'yes', payEnd: '2030-01-01' }] })] } });
+    const k1 = await page.evaluate(() => { Object.defineProperty(navigator, 'clipboard', { value: { writeText: t => { window.__clip = t; return Promise.resolve() } }, configurable: true });
+      go('ins', 'pol'); const box = $('#polBody details')?.textContent || '', allBtn = !!$('#polBody [data-polchk="all"]');
+      openPol('q1'); const t = $('#sheetBody').textContent, one = !!$('#sheetBody [data-polchk="q1"]'); closeSheet(); return { box, allBtn, t, one } });
+    check('每個錯誤／待核對都附「去哪裡找」：以「計畫」計 → 條款最後的給付表；沒有金額 → 保額欄、實支實付看限額表、手術多半是日額 × 倍數；生效日早於出生 → 保單首頁的被保險人；保單清單上方有「要核對的地方」清單',
+      /📍 去哪裡找：條款最後面的「給付表」/.test(k1.t) && /手術多半是「日額 × 倍數」/.test(k1.t) && /要核對的地方（\d+ 項）/.test(k1.box) && /保單首頁（保險單面頁）的「被保險人」/.test(k1.box) && /甲人壽安心醫療/.test(k1.box) && !/甲人壽 甲人壽安心醫療/.test(k1.box) && k1.allBtn && k1.one,
+      JSON.stringify({ box: k1.box.slice(0, 200), allBtn: k1.allBtn, one: k1.one }));
+    await page.evaluate(() => { const d = $('#polBody details'); if (d) d.open = true; window.__clip = '' });
+    await page.click('#polBody [data-polchk="all"]', { timeout: 3000 }).catch(() => {}); await page.waitForTimeout(200);
+    const k2 = await page.evaluate(() => { const c = window.__clip || '', j = c.slice(c.indexOf('{"type":"kinwell.policy"')); let n = -1; try { n = JSON.parse(j).policies.length } catch (e) {}
+      return { head: /保單資料核對助手/.test(c),計畫: /以「計畫」計.*（App 建議去看：條款最後面的「給付表」/.test(c), birth: /生效日 1978-03-01 早於被保險人/.test(c), n, name: /保單 1：甲人壽安心醫療/.test(c), priv: !/王大明|secret-note|王小明|1984-05-05/.test(c), all: /全部保障項目/.test(c) } });
+    check('「核對錯誤」提示詞：寫出每個問題和 App 建議去看哪裡、請 AI 對照文件寫出原文與正確值、附約沒金額分「本來就沒有」和「沒抄到」；附上和匯入格式相同的 JSON（受益人、備註不附），請 AI 改完整張列出來貼回 App 更新',
+      k2.head && k2.計畫 && k2.birth && k2.n === 3 && k2.name && k2.priv && k2.all, JSON.stringify(k2));
+    const k3 = await page.evaluate(() => { try { const m = me(), p = insFind(m, 'q3'), r = polCheck(polExport(p), m).p;
+      return [r.status, r.type, r.payAge, r.holder, r.uw?.res, r.items.map(c => [c.st, c.code, c.prem, c.renew, c.cat, c.kind, c.payEnd].join('/')).join('|')].join() } catch (e) { return 'ERR ' + e.message } });
+    check('核對提示詞裡的 JSON 匯回 App 不會走樣：狀態、類型、繳到幾歲、要保人、核保結果、每一項的狀態／代碼／保費／續保／類別／主附約／繳費終期都一樣',
+      k3 === 'reduced,inv,80,本人,excl,/WL///life/main/|active/HR/2000/yes/hosp_day/rider/2030-01-01', k3);
+    const k4 = await page.evaluate(() => { go('ins', 'cov'); return $('#covBody').textContent });
+    const k4x = await page.evaluate(() => { const m = me(); insFind(m, 'q2').items.push({ name: '<img src=x onerror="window.__xss=1">', kind: 'rider', cat: 'life', amt: 1, unit: '單位', quote: '1 單位' }); go('ins', 'cov'); renderCov();
+      return { img: !!$('#covBody img'), xss: window.__xss === 1, txt: /另有 \d+ 項金額算不出來（[^）]*<img/.test($('#covBody').textContent) } });
+    await page.waitForTimeout(100);
+    check('保障缺口列出的項目名稱經過 esc()：AI 匯入的名稱含 HTML 也只當文字顯示、不會執行', !k4x.img && !k4x.xss && k4x.txt && !(await page.evaluate(() => window.__xss === 1)), JSON.stringify(k4x));
+    check('保障缺口寫出是哪幾項金額算不出來（例如「住院醫療計畫」以計畫計）；保險公司名已經在商品名稱裡時不重複顯示',
+      /另有 1 項金額算不出來（住院醫療計畫）/.test(k4) && /甲人壽安心醫療：繳費到/.test(k4) && !/甲人壽 甲人壽安心醫療/.test(k4), k4.slice(0, 300));
+    const k5 = await page.evaluate(() => { go('ins', 'clm'); const chips = [...document.querySelectorAll('#scnBody [data-cscn]')].map(b => b.dataset.cscn).join(); document.querySelector('#scnBody [data-cscn="ad"]')?.click();
+      const t = $('#sheetBody').textContent; document.querySelector('#sheetBody [data-scadd="0"]')?.click(); document.querySelector('#sheetBody [data-scadd="2"]')?.click();
+      if ($('#sc-dx')) { $('#sc-dx').value = '肺炎'; $('#sc-note').value = '預計住院 5 天' } window.__clip = ''; $('#sc-ai')?.click();
+      return { chips, t, pressed: document.querySelector('#sheetBody [data-scadd="0"]')?.getAttribute('aria-pressed') } });
+    await page.waitForTimeout(150);
+    const k6 = await page.evaluate(() => { const clip = window.__clip || ''; $('#sc-evt')?.click(); const ty = $('#ev-type')?.value, dx = $('#ev-dx')?.value, note = $('#ev-note')?.value; $('#ev-save')?.click(); const e = clmOf(me())[0];
+      return { clip, ty, dx, note, ev: e ? e.type + ':' + e.dx : '' } });
+    check('理賠「突發狀況」：8 種情況可以選；住院 → 先做的事、問醫師的話（入院出院日、ICD 碼、手術名稱、醫囑）、要拿的文件、你的保單裡用得到的（新保單還在等待期會標出來）、容易漏申請的、常見少賠的原因',
+      k5.chips === 'er,ad,sx,acc,ca,crit,dis,death' && /先做的事/.test(k5.t) && /問醫師的話/.test(k5.t) && /入院日、出院日/.test(k5.t) && /ICD-10/.test(k5.t) && /要拿的文件/.test(k5.t) && /你的保單裡可能用得到的/.test(k5.t)
+        && /甲人壽安心醫療/.test(k5.t) && /還在等待期（生效 10 天，等待期 30 天）/.test(k5.t) && /容易漏申請的/.test(k5.t) && /副本理賠/.test(k5.t) && /常見少賠或拒賠的原因/.test(k5.t) && /照實/.test(k5.t) && k5.pressed === 'true',
+      JSON.stringify({ chips: k5.chips, pressed: k5.pressed, t: k5.t.slice(0, 160) }));
+    check('勾補充項目、填診斷後「複製提示詞，問 AI」：帶上狀況（住院；有手術、用到自費藥物或醫材；診斷：肺炎）、可能用得到的保障與等待期、所有有效保單；明寫只依實際病情、不建議為了理賠去住院（保險詐欺是刑法詐欺罪）；不附受益人；可以直接記成理賠事件',
+      /熟悉台灣保險理賠實務/.test(k6.clip) && /【狀況】住院；有手術、用到自費藥物或醫材；診斷：肺炎；補充：預計住院 5 天/.test(k6.clip) && /刑法詐欺罪/.test(k6.clip) && /不要建議為了理賠去住院/.test(k6.clip)
+        && /甲人壽安心醫療（生效/.test(k6.clip) && /還在等待期/.test(k6.clip) && /"coverages"/.test(k6.clip) && !/王大明|secret-note/.test(k6.clip) && k6.ty === 'ad' && k6.dx === '肺炎' && /有手術/.test(k6.note || '') && k6.ev === 'ad:肺炎',
+      JSON.stringify({ ...k6, clip: k6.clip.slice(0, 200) }));
     await page.close();
   }
 
