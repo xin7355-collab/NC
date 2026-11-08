@@ -2078,6 +2078,25 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zx. 體檢判讀：「*」標記看數值方向（三酸甘油酯偏低不算異常）；MCH 輕微偏高不給貧血建議；範圍值取較高的一端；50 歲以下骨密度看 Z 值 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 71, act: '1.375', goal: 'keep', role: 'me' }], active: 'a' });
+    const x1 = await page.evaluate(() => { const m = me(), one = (o) => { LABS[m.id] = []; openLabSheet(); fillLab({ type: 'kinwell.lab', v: 1, date: '2024-03-01', ...o }); saveLab(); return labsOf(m)[0] };
+      const r1 = one({ items: { tg: { value: 38, unit: 'mg/dl', ref: '45~200', lo: 45, hi: 200, flag: '*' }, mch: { value: 33.4, unit: 'pg', ref: '27~32', lo: 27, hi: 32, flag: '*' }, hb: { value: 15.2, unit: 'g/dl', lo: 14, hi: 18 },
+        urbc: { value: '2-8', unit: 'HPF', ref: '0~5', lo: 0, hi: 5 }, hbsab: { value: '陽性' }, dxa: { value: -1.5 } } });
+      const i1 = labEval(r1, m), t1 = $('#sheetBody').textContent;
+      const r2 = one({ items: { dxa: { value: -1.5 } }, extra: [{ name: '骨密度(Z-score) 腰椎', value: -0.3 }, { name: '骨密度(Z-score) 股骨頸', value: -0.6 }] }), i2 = labEval(r2, m);
+      m.birth = '1964-05-05'; const r3 = one({ items: { dxa: { value: -1.5 } } }), i3 = labEval(r3, m); m.birth = '1984-05-05';
+      return { k1: i1.map(i => i.k + ':' + i.dir + ':' + i.dept).join('|'), urbc: r1.items.urbc?.v, ref: r1.items.urbc?.ref || '', dxa1: i1.find(i => i.k === 'dxa')?.msg || '', tip: /貧血可多吃紅肉/.test(t1), unit: /B型肝炎表面抗體陽性 mIU/.test(t1),
+        z: r2.items.dxaz?.v, i2: i2.map(i => i.k).join(), rk: resolveKey('骨密度(Z-score)'), i3: i3.find(i => i.k === 'dxa')?.lv ?? 0, pr: promptLab() } });
+    check('「*」標記看數值在參考範圍哪一邊：三酸甘油酯 38（下限 45）偏低不算異常，不會寫成「偏高」；MCH 33.4 偏高建議家醫科，血紅素正常不給貧血飲食建議；「陽性」後面不接單位',
+      !/tg:/.test(x1.k1) && /mch:hi:家醫科/.test(x1.k1) && !x1.tip && !x1.unit, JSON.stringify({ k1: x1.k1, tip: x1.tip, unit: x1.unit }));
+    check('檢驗值是範圍（尿沉渣紅血球 2-8 /HPF）取較高的 8 判讀並寫原文，不再只取 2', x1.urbc === 8 && /原文 2-8/.test(x1.ref) && /urbc:hi/.test(x1.k1), JSON.stringify({ urbc: x1.urbc, ref: x1.ref }));
+    check('50 歲以下男性：只有 T 值 -1.5 時提醒看 Z 值（不說骨質缺乏）；有 Z 值（取最低 -0.6）就不算異常；「骨密度(Z-score)」對到 Z 值；60 歲照常用 T 值',
+      /要看 Z 值/.test(x1.dxa1) && x1.z === -0.6 && !/dxa/.test(x1.i2) && x1.rk === 'dxaz' && x1.i3 >= 1 && /dxaz/.test(x1.pr), JSON.stringify({ dxa1: x1.dxa1, z: x1.z, i2: x1.i2, rk: x1.rk, i3: x1.i3 }));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
