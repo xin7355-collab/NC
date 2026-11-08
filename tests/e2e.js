@@ -1905,6 +1905,26 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zs. 一個附約有好幾種給付：提示詞請 AI 每種給付各列一項（各自的類別）、拆開後各算進自己的缺口；編輯時可以「複製這項」再改類別 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me', inc: 80 }], active: 'a' });
+    const s1 = await page.evaluate(() => { const m = me(), L = INS[m.id] || (INS[m.id] = []);
+      const cv = (n, cat, calc) => ({ name: '康富醫療附約：' + n, kind: 'rider', cat, amount: 4, unit: '計畫', quote: '計畫 4', calc });
+      const { p } = polCheck({ insurer: '甲人壽', product: '甲人壽終身壽險', start: '2020-01-01', status: '有效', payFreq: '年', premium: 20000, coverages: [
+        cv('住院日額', 'hosp_day', { amount: 4000, unit: '元/日', perUnit: 1000, formula: '4 × 每計畫 1,000 元/日', quote: '計畫一 住院日額保險金每日 1,000 元', page: 8 }),
+        cv('住院醫療費用', 'hosp_real', { amount: 40, unit: '萬元', perUnit: 10, formula: '4 × 每計畫 10 萬元', quote: '計畫一 每次住院醫療費用限額 10 萬元', page: 8 })] }, m);
+      p.id = 's1'; L.push(p); S.set('ins', INS); renderIns();
+      const S0 = covSum(m), v = (c, per) => S0.filter(x => x.cat === c && !x.nm && x.per === per).reduce((t, x) => t + x.v, 0);
+      openPolEdit('s1'); const before = $$('#pe-cov [data-ci]').length; $('#pe-cov [data-cicp="0"]')?.click(); const after = $$('#pe-cov [data-ci]').length, copied = $$('#pe-cov [data-cf="name"]')[1]?.value || '';
+      $$('#pe-cov [data-cf="cat"]')[1].value = 'surgery'; $('#pe-save').click(); const p2 = insFind(m, 's1');
+      return { day: v('hosp_day', 'day'), real: v('hosp_real', ''), lv: polLv(p, m), before, after, copied, n2: p2.items.length, cats: p2.items.map(c => c.cat).join(), pp: promptPolicy(), ck: POLCHK_HEAD } });
+    check('一個附約有好幾種給付：拆成每種給付一項（住院日額、住院醫療費用各自的類別）→ 各算進自己的缺口（日額 4 × 1,000 = 4,000 元/日、實支實付 4 × 10 萬 = 40 萬）；匯入和核對提示詞都寫明每種給付各列一筆',
+      s1.day === 4000 && s1.real === 400000 && s1.lv === 'ok' && /每一種給付各列一筆/.test(s1.pp) && /每種給付一筆/.test(s1.ck), JSON.stringify({ day: s1.day, real: s1.real, lv: s1.lv }));
+    check('編輯保單時「⧉ 複製這項」：同一個附約的另一種給付，複製後改類別（例如改成手術）再存',
+      s1.before === 2 && s1.after === 3 && /康富醫療附約：住院日額/.test(s1.copied) && s1.n2 === 3 && s1.cats === 'hosp_day,surgery,hosp_real', JSON.stringify({ before: s1.before, after: s1.after, copied: s1.copied, n2: s1.n2, cats: s1.cats }));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
