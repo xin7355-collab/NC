@@ -1957,6 +1957,73 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zu. 手動改的金額蓋過 AI 換算（calc）；重新匯入只改換算／一次給付／給付說明也要列差異；匯入提示詞和檢查規則一致（lump、元/年、元/倍） ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me', inc: 80 }], active: 'a' });
+    // 每張保單各算多少（covSum 明細 L 的 pid），避免別張保單混進總額
+    const u1 = await page.evaluate(async () => { const m = me(), L = INS[m.id] || (INS[m.id] = []), wait = t => new Promise(r => setTimeout(r, t));
+      const vp = (pid, cat, per) => covSum(m).filter(x => x.cat === cat && !x.nm && (per == null || x.per === per)).flatMap(x => x.L).filter(l => l.pid === pid).reduce((t, l) => t + l.v, 0);
+      const fl = id => polFlags(insFind(m, id), m).filter(f => f.lv !== 'info').map(f => f.t).join('|');
+      const { p } = polCheck({ insurer: '甲人壽', product: '甲人壽醫療終身', start: '2020-01-01', status: '有效', payFreq: '年', premium: 10000, coverages: [
+        { name: '醫療主約：住院日額', kind: 'main', cat: 'hosp_day', amount: 10, unit: '計畫', quote: '計畫 10', calc: { amount: 1000, unit: '元/日', perUnit: 100, formula: '10 × 100', quote: '住院醫療保險金日額乘以實際住院日數' } }] }, m);
+      p.id = 'u1'; L.push(p); S.set('ins', INS); renderIns();
+      const b = { day: vp('u1', 'hosp_day', 'day'), fl: fl('u1') };
+      go('ins', 'cov'); await wait(100); const btn = document.querySelector('#covBody [data-gapfix="u1:0"]'), pr = window.prompt;
+      // 存檔失敗（手機空間滿）：金額、單位、原文、換算都要還原
+      const ss = S.set; S.set = () => false; window.prompt = () => '1000元/日'; btn?.click(); S.set = ss; const q0 = insFind(m, 'u1').items[0], fail = [q0.amt, q0.unit, !!q0.calc].join();
+      window.prompt = () => '1000元/日'; document.querySelector('#covBody [data-gapfix="u1:0"]')?.click(); window.prompt = pr;
+      const q = insFind(m, 'u1'), a = { btn: !!btn, fail, day: vp('u1', 'hosp_day', 'day'), fl: fl('u1'), calc: !!q.items[0].calc, unit: q.items[0].unit };
+      openPol('u1'); await wait(150); $('#sheetBody [data-prest="0"]')?.click(); await wait(150);
+      const r = insFind(m, 'u1'), rs = { calc: r.items[0].calc?.amount ?? null, amt: r.items[0].amt, unit: r.items[0].unit };
+      closeSheet(); return { b, a, rs } });
+    check('「✏️ 填金額」手動填的優先：AI 換算對不上（🟠 每單位 100 找不到）→ 填 1000元/日 → 🟠 消失、住院日額每日 +1,000；存檔失敗時金額和換算一起還原；從變更紀錄復原後換算回來',
+      /每單位 100 在給付表原文裡找不到/.test(u1.b.fl) && u1.b.day === 0 && u1.a.btn && u1.a.fail === '10,計畫,true' && u1.a.day === 1000 && !/給付表原文|對不起來/.test(u1.a.fl) && u1.a.calc === false && u1.a.unit === '元/日'
+        && u1.rs.calc === 1000 && u1.rs.amt === 10 && u1.rs.unit === '計畫', JSON.stringify(u1));
+    const u2 = await page.evaluate(async () => { const m = me(), L = INS[m.id], wait = t => new Promise(r => setTimeout(r, t));
+      const vp = (pid, cat) => covSum(m).filter(x => x.cat === cat && !x.nm).flatMap(x => x.L).filter(l => l.pid === pid).reduce((t, l) => t + l.v, 0);
+      const { p } = polCheck({ insurer: '乙人壽', product: '乙人壽醫療附約', start: '2020-01-01', status: '有效', payFreq: '年', premium: 5000, coverages: [
+        { name: '醫療附約：住院日額', kind: 'rider', cat: 'hosp_day', amount: 2, unit: '計畫', quote: '計畫 2', calc: { amount: 1000, unit: '元/日', perUnit: null, formula: '計畫二 = 1,000 元/日', quote: '住院日額 500 1,000 1,500' } },
+        { name: '醫療附約：住院醫療費用', kind: 'rider', cat: 'hosp_real', amount: 2, unit: '計畫', quote: '計畫 2', calc: { amount: 100000, unit: '元', perUnit: null, formula: '計畫二 = 10 萬', quote: '住院醫療費用限額 50,000 100,000 150,000' } }] }, m);
+      p.id = 'u2'; L.push(p); S.set('ins', INS); renderIns();
+      const calcs = () => insFind(m, 'u2').items.map(c => c.calc ? c.calc.amount : '-').join();
+      const s0 = { day: vp('u2', 'hosp_day'), real: vp('u2', 'hosp_real') };
+      openPolEdit('u2'); $('#pe-save').click(); const same = calcs();                       // 什麼都沒改：換算都保留（輸入框是字串 "2"，不能當成改過）
+      openPolEdit('u2'); $$('#pe-cov [data-cf="amt"]')[0].value = '3'; $('#pe-save').click(); const p3 = insFind(m, 'u2');
+      const s1 = { calcs: calcs(), day: vp('u2', 'hosp_day'), real: vp('u2', 'hosp_real'), amt: p3.items[0].amt };
+      openPolEdit('u2'); $('#pe-cov [data-cicp="1"]').click(); $('#pe-save').click(); const cp = calcs();      // 複製出來的是另一種給付：不帶換算
+      openPolEdit('u2'); $('#pe-cov [data-cirm="0"]').click(); $('#pe-save').click(); const rm = calcs();       // 刪掉前面一項：後面那項沒改，換算照樣保留（不能用位置比對）
+      openPolEdit('u2'); $$('#pe-cov [data-cf="unit"]')[0].value = '計畫 '; $('#pe-save').click(); const ws = calcs();   // 單位只多了空白：不算改過
+      closeSheet(); return { s0, same, s1, cp, rm, ws } });
+    check('「編輯」改了金額或單位的項目不再用舊的 AI 換算：2 計畫改成 3 計畫 → 住院日額不再算 1,000（改成待核對），沒改的住院醫療費用照樣 10 萬；沒改就存檔、單位只多空白不會弄丟換算；「⧉ 複製這項」複製出來的不帶換算；刪掉前一項後，沒改的那項換算保留',
+      u2.s0.day === 1000 && u2.s0.real === 100000 && u2.same === '1000,100000' && u2.s1.calcs === '-,100000' && u2.s1.day === 0 && u2.s1.real === 100000 && u2.s1.amt === 3
+        && u2.cp === '-,100000,-' && u2.rm === '100000,-' && u2.ws === '100000,-', JSON.stringify(u2));
+    // 重新匯入：只改了換算（元/次 → 元/年）也要列差異、預設更新
+    const pol = calc => ({ type: 'kinwell.policy', v: 1, policies: [{ insurer: '丙人壽', product: '丙人壽癌症附約', start: '2021-03-01', status: '有效', payFreq: '年', premium: 3000, coverages: [
+      { name: '癌症附約：癌症治療', kind: 'rider', cat: 'cancer', amount: 1, unit: '單位', quote: '1 單位', calc: { perUnit: null, formula: '1 單位', quote: '每次 40,000 元；每年 48,000 元', ...calc } }] }] });
+    await page.evaluate(J => { const m = me(), { p } = polCheck(J.policies[0], m); p.id = 'u3'; INS[m.id].push(p); S.set('ins', INS); renderIns(); go('ins', 'pol'); openPolImport() }, pol({ amount: 40000, unit: '元/次' }));
+    await page.waitForTimeout(200); await page.fill('#pi-in', JSON.stringify(pol({ amount: 48000, unit: '元/年' }))); await page.click('#pi-go'); await page.waitForTimeout(300);
+    const u3 = await page.evaluate(() => ({ on: $('#pi-out [data-pi]')?.checked, mode: $('#pi-out [data-pimode]')?.value, out: $('#pi-out').textContent }));
+    await page.click('#pi-save'); await page.waitForTimeout(300);
+    const u4 = await page.evaluate(() => { const m = me(), S0 = covSum(m), v = per => S0.filter(x => x.cat === 'cancer' && !x.nm && x.per === per).flatMap(x => x.L).filter(l => l.pid === 'u3').reduce((t, l) => t + l.v, 0);
+      const it = c => ({ name: '甲：一次金', cat: 'disability', amt: 50, unit: '萬元', ...c }), d = polDiff({ items: [it({ limit: '', lump: false })] }, { items: [it({ limit: '每次最高 10 萬', lump: true, calc: { amount: 500000, unit: '元' } })] }).join('｜');
+      const d2 = polDiff({ items: [it({ calc: { amount: 500000, unit: '元', perUnit: 10, multiplier: 1 } })] }, { items: [it({ calc: { amount: 500000, unit: '元', perUnit: 10, multiplier: 2 } })] }).join('｜');
+      const d3 = polDiff({ items: [it({ calc: { amount: 500000, unit: '元' } })] }, { items: [it({})] }).join('｜');
+      return { year: v('year'), time: v('time'), n: insOf(m).filter(p => p.product === '丙人壽癌症附約').length, d, d2, d3 } });
+    check('重新匯入只改了換算（每次 4 萬 → 每年 4.8 萬）：預覽列出差異、預設勾「用新資料更新這張」，匯入後這項算在每年；換算的每單位、倍數、新增或拿掉換算、一次給付、給付說明改了也列差異',
+      u3.on === true && u3.mode === 'upd' && /「癌症附約：癌症治療」換算 4 萬\/次 → 4\.8 萬\/年/.test(u3.out) && !/內容一樣/.test(u3.out) && u4.year === 48000 && u4.time === 0 && u4.n === 1
+        && /一次給付/.test(u4.d) && /給付說明/.test(u4.d) && /新增換算/.test(u4.d) && /倍數 1 → 2/.test(u4.d2) && /拿掉換算/.test(u4.d3), JSON.stringify({ u3: { ...u3, out: u3.out.slice(0, 300) }, u4 }));
+    // 提示詞和檢查一致：一次給付填 lump、每年給付寫元/年、看手術表的倍數寫元/倍（不加進總額）
+    const u5 = await page.evaluate(() => { const m = me(), { p } = polCheck({ insurer: '丁人壽', product: '丁人壽失能險', start: '2020-01-01', status: '有效', payFreq: '年', premium: 3000, coverages: [
+        { name: '失能險：失能保險金', cat: 'disability', amount: 50, unit: '萬元', lump: true, quote: '50 萬元' },
+        { name: '醫療附約：住院手術', kind: 'rider', cat: 'surgery', amount: 1, unit: '計畫', quote: '計畫 1', calc: { amount: 1000, unit: '元/倍', perUnit: null, formula: '日額 1,000 元 × 附表手術倍數', quote: '住院日額 1,000 元乘以附表所載倍數' } }] }, m);
+      p.id = 'u5'; INS[m.id].push(p); S.set('ins', INS); const S0 = covSum(m), fl = polFlags(p, m).map(f => f.lv + ':' + f.t).join('|');
+      return { fl, sx: S0.filter(x => x.cat === 'surgery' && !x.nm).flatMap(x => x.L).filter(l => l.pid === 'u5').length, nmx: S0.filter(x => x.cat === 'surgery' && x.nm).flatMap(x => x.L).filter(l => l.pid === 'u5').length, pp: promptPolicy(), ck: POLCHK_HEAD } });
+    check('匯入、核對提示詞都寫：一次給付的失能／長照填 "lump": true、每年給付寫「元/年」、依手術倍數表的寫「元/倍」；照提示詞匯入的一次給付失能險不會被問「每月還是一次」，元/倍的換算不加進總額',
+      /"lump":\s*true/.test(u5.pp) && /"lump":\s*true/.test(u5.ck) && /元\/年/.test(u5.pp) && /元\/年/.test(u5.ck) && /元\/倍/.test(u5.pp) && /元\/倍/.test(u5.ck)
+        && !/每月還是一次/.test(u5.fl) && u5.sx === 0 && u5.nmx === 1 && !/元倍/.test(u5.fl), JSON.stringify({ fl: u5.fl, sx: u5.sx, nmx: u5.nmx }));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
