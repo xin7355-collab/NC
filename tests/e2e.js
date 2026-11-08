@@ -1925,6 +1925,38 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zt. 換算驗算：條款國字數字（十萬、一千二百、百分之一）、倍數（日額 × 10 倍）、每單位另附原文、萬元保額、非單位項目的換算（主約保額 × 1% 每月）；失能／長照沒寫每月還是一次 → 提醒＋一鍵選 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me', inc: 80, earner: true }], active: 'a' });
+    const t1 = await page.evaluate(() => { const m = me(), L = INS[m.id] || (INS[m.id] = []);
+      const cv = (name, cat, amount, unit, calc) => ({ name, kind: 'rider', cat, amount, unit, quote: `${name} ${amount}${unit}`, calc });
+      const { p } = polCheck({ insurer: '甲人壽', product: '甲人壽綜合保險', start: '2020-01-01', status: '有效', payFreq: '年', premium: 20000, coverages: [
+        cv('癌症附約：罹患癌症', 'cancer', 6, '單位', { amount: 600000, unit: '元', perUnit: 100000, formula: '6 × 十萬', quote: '每一保險單位新台幣十萬元' }),
+        cv('癌症附約：癌症住院', 'cancer', 6, '單位', { amount: 7200, unit: '元/日', perUnit: 1200, formula: '6 × 一千二百', quote: '每一保險單位每日新台幣一千二百元' }),
+        cv('醫療主約：住院手術', 'surgery', 10, '計畫', { amount: 10000, unit: '元/次', perUnit: 100, multiplier: 10, formula: '10 × 100 × 10 倍', quote: '住院醫療保險金日額的十倍', perUnitQuote: '每一計畫日額新臺幣 100 元' }),
+        cv('醫療主約：住院日額', 'hosp_day', 10, '計畫', { amount: 1000, unit: '元/日', perUnit: 100, formula: '10 × 100', quote: '住院醫療保險金日額乘以實際住院日數', perUnitQuote: '每一計畫日額新臺幣 100 元' }),
+        cv('附加條款：殘廢生活扶助', 'disability', 5000000, '元', { amount: 50000, unit: '元/月', perUnit: 0.01, formula: '500 萬 × 1%', quote: '主保險契約保險金額的百分之一按月給付' }),
+        cv('重大傷病附約', 'critical', 100, '萬元', { amount: 250000, unit: '元', perUnit: 0.25, formula: '100 萬 × 25%', quote: '保險金額的百分之二十五' }),
+        cv('倍數對不上', 'surgery', 10, '計畫', { amount: 9000, unit: '元/次', perUnit: 100, multiplier: 10, formula: '?', quote: '日額的十倍', perUnitQuote: '每一計畫日額新臺幣 100 元' }),
+        { name: '失能照護附約', kind: 'rider', cat: 'disability', amount: 40000, unit: '元', quote: '失能照護附約 40,000 元' }] }, m);
+      p.id = 'c1'; L.push(p); S.set('ins', INS); renderIns();
+      const sum = () => { const S0 = covSum(m), v = (c, per) => S0.filter(x => x.cat === c && !x.nm && x.per === per).reduce((t, x) => t + x.v, 0);
+        return [v('cancer', ''), v('cancer', 'day'), v('surgery', 'time'), v('hosp_day', 'day'), v('disability', 'month'), v('critical', '')].join() };
+      const fl = () => polFlags(p, m).filter(f => f.lv !== 'info').map(f => f.lv + ':' + f.t).join('|'), before = { sum: sum(), fl: fl() };
+      openPol('c1'); const btn = !!$('#sheetBody [data-pfix="c_month"]'), btn2 = !!$('#sheetBody [data-pfix="c_lump"]'); closeSheet();
+      const ok = polFix(m, p, 'c_month', 7); const after = { sum: sum(), fl: fl(), unit: p.items[7].unit };
+      const q = polCheck({ insurer: '乙', product: '乙', coverages: [{ name: 'x', cat: 'disability', amount: 1, unit: '萬元', quote: '1 萬元', calc: { amount: 1, unit: '萬元/月', perUnit: 1, multiplier: 1, perUnitQuote: 'a', formula: 'f', quote: 'q' } }] }, m).p.items[0].calc;
+      return { before, btn, btn2, ok, after, keep: [q.multiplier, q.perUnitQuote].join(), pp: promptPolicy(), ck: POLCHK_HEAD } });
+    check('換算驗算看得懂條款的國字數字和百分比、支援倍數與每單位另附原文：十萬、一千二百、日額 × 十倍、主約保額的百分之一（每月 5 萬）、100 萬元 × 百分之二十五 → 都算進保障；倍數算錯的照樣待核對、不算',
+      t1.before.sum === '600000,7200,10000,1000,50000,250000' && !/罹患癌症|癌症住院|住院手術|住院日額|殘廢生活扶助|重大傷病/.test(t1.before.fl) && /chk:「倍數對不上」AI 算的 9,000 元\/次 和 10 × 100 × 10 對不起來/.test(t1.before.fl) && t1.keep === '1,a',
+      JSON.stringify(t1.before));
+    check('失能扶助、長照的給付沒寫每月還是一次 → 待核對＋一鍵「每月給付」「一次給付」；選每月 → 單位改成元/月、算進每月的失能扶助',
+      /chk:「失能照護附約」沒寫是每月還是一次給付/.test(t1.before.fl) && t1.btn && t1.btn2 && t1.ok && t1.after.unit === '元/月' && t1.after.sum.split(',')[4] === '90000' && !/每月還是一次/.test(t1.after.fl), JSON.stringify(t1.after));
+    check('匯入提示詞：calc 可以寫倍數（multiplier）、每單位另附原文（perUnitQuote）、百分比寫成小數；失能、長照的給付寫清楚每月（元/月）還是一次',
+      /multiplier/.test(t1.pp) && /perUnitQuote/.test(t1.pp) && /小數/.test(t1.pp) && /元\/月/.test(t1.pp) && /multiplier/.test(t1.ck), '');
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
