@@ -2024,6 +2024,23 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zv. 失能扶助、長照「每年給付」換算成每月（÷ 12）一起加總，明細寫出換算；一次給付的照舊不算每月 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me', inc: 80, earner: true }], active: 'a' });
+    const u1 = await page.evaluate(() => { const m = me(), L = INS[m.id] || (INS[m.id] = []);
+      const { p } = polCheck({ insurer: '甲人壽', product: '甲人壽失能照護終身保險', start: '2020-01-01', status: '有效', payFreq: '年', premium: 10000, coverages: [
+        { name: '失能照護：失能安養扶助保險金', kind: 'main', cat: 'disability', amount: 10000, unit: '元', quote: '10,000 元', calc: { amount: 120000, unit: '元/年', perUnit: 12, formula: '1 萬 × 12 倍，每年', quote: '保險金額的十二倍' } },
+        { name: '失能照護：一至六級失能保險金', kind: 'main', cat: 'disability', amount: 500000, unit: '元', quote: '500,000 元', lump: true },
+        { name: '失能照護附約', kind: 'rider', cat: 'disability', amount: 30000, unit: '元/月', quote: '30,000 元' },
+        { name: '雙重照護：特定傷病扶助保險金', kind: 'main', cat: 'ltc', amount: 40, unit: '萬元', quote: '40 萬', calc: { amount: 40000, unit: '元/年', perUnit: 0.1, formula: '40 萬 × 10%，每年', quote: '保險金額的百分之十' } }] }, m);
+      p.id = 'y1'; L.push(p); S.set('ins', INS); renderIns();
+      const G = covGap(m), d = G.find(g => g.k === 'disability'), l = G.find(g => g.k === 'ltc'); openGapDetail('disability'); const t = $('#sheetBody').textContent;
+      return { d: d.have, l: l.have, inv: Math.abs(d.inL.reduce((a, x) => a + x.v, 0) - d.have) < 1e-6, t: /每年 12 萬 ÷ 12/.test(t) && /算 1 萬\/月/.test(t) && /一至六級失能保險金/.test(t) } });
+    check('失能扶助、長照每年給付的 ÷ 12 換算成每月一起加總（每年 12 萬 → 每月 1 萬，加每月 3 萬 ＝ 4 萬；長照每年 4 萬 → 每月 3,333）；明細寫出「每年 12 萬 ÷ 12」；一次給付的照舊列在沒算進去',
+      u1.d === 40000 && Math.round(u1.l) === 3333 && u1.inv && u1.t, JSON.stringify(u1));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);

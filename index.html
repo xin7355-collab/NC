@@ -4478,7 +4478,7 @@ function flagsHTML(F,pid){if(!F.length)return'';const o={err:0,chk:1,info:2},n=l
 const GAPK=[{k:'life',t:'壽險（身故）',u:'萬',cats:['life'],pers:[''],s:'壽險',core:1},{k:'accident',t:'意外身故／失能',u:'萬',cats:['accident'],pers:[''],s:'意外險',core:1},
   {k:'hosp_real',t:'實支實付醫療（每次限額）',u:'萬',cats:['hosp_real'],pers:['','time'],s:'實支實付',core:1},{k:'hosp_day',t:'住院日額（每日）',u:'元',cats:['hosp_day'],pers:['day'],s:'住院日額'},
   {k:'cancer',t:'癌症（一次金）',u:'萬',cats:['cancer'],pers:[''],s:'癌症一次金'},{k:'critical',t:'重大疾病／重大傷病（一次金）',u:'萬',cats:['critical'],pers:[''],s:'重大疾病'},
-  {k:'disability',t:'失能扶助（每月）',u:'元',sfx:'/月',cats:['disability'],pers:['month'],s:'失能扶助'},{k:'ltc',t:'長期照顧（每月）',u:'元',sfx:'/月',cats:['ltc'],pers:['month'],s:'長照'}];
+  {k:'disability',t:'失能扶助（每月）',u:'元',sfx:'/月',cats:['disability'],pers:['month','year'],conv:{year:1/12},s:'失能扶助'},{k:'ltc',t:'長期照顧（每月）',u:'元',sfx:'/月',cats:['ltc'],pers:['month','year'],conv:{year:1/12},s:'長照'}];
 // 失能扶助（每月）＝照顧費約 3 萬（外籍看護薪資、就業安定費、食宿、保險）＋主要收入者月收入的一半（收入中斷）；長照（每月）＝照顧費約 3 萬，40 歲起算（長照 2.0／3.0 只補一部分）
 function gapDef(m){const a=ageOf(m),inc=num(m.inc)||0,debt=num(m.debt)||0,er=!!m.earner||inc>0,half=er&&inc?Math.round(inc*1e4/12*.5/1e3)*1e3:0,
     D={hosp_real:[20],hosp_day:[2000],cancer:[50],critical:[50],
@@ -4492,8 +4492,9 @@ const GST={ok:['足夠','ok'],low:['不足','warn'],none:['沒有','bad'],other:
 const PERW={'':'一次給付',day:'每日',time:'每次',year:'每年',month:'每月',x:'倍數'};
 function covGap(m){const S0=covSum(m),T=obj(m.covT),D=gapDef(m);
   const G=GAPK.map(g=>{const E=S0.filter(s=>g.cats.includes(s.cat)),M=g.pers?E.filter(s=>!s.nm&&g.pers.includes(s.per)):[],oth=E.filter(s=>!M.includes(s)).reduce((a,s)=>a+s.n,0),othN=E.filter(s=>!M.includes(s)).flatMap(s=>s.nn||[]),othR=E.filter(s=>!M.includes(s)).flatMap(s=>s.rf||[]),
-      inL=M.flatMap(s=>s.L),othL=E.filter(s=>!M.includes(s)).flatMap(s=>s.L.map(x=>({...x,why:x.why||(g.pers?`給付方式是${PERW[s.per]||'一次給付'}，這一列只算${g.pers.map(q=>PERW[q]).join('、')}`:'')}))),exL=(S0.X||[]).filter(x=>g.cats.includes(x.cat)),
-      have=M.reduce((a,s)=>a+s.v,0)/(g.u==='萬'?1e4:1),user=T[g.k]!=null&&T[g.k]!=='',[d0,why]=D[g.k]||[null],tg=user?num(T[g.k]):d0;
+      inL=M.flatMap(s=>s.L.map(x=>g.conv?.[s.per]?{...x,v:x.v*g.conv[s.per],per:'month',how:[...(x.how||[]),`每年 ${money(x.v)} ÷ 12`]}:x)),othL=E.filter(s=>!M.includes(s)).flatMap(s=>s.L.map(x=>({...x,why:x.why||(g.pers?`給付方式是${PERW[s.per]||'一次給付'}，這一列只算${g.pers.map(q=>PERW[q]).join('、')}`:'')}))),exL=(S0.X||[]).filter(x=>g.cats.includes(x.cat)),
+      have=M.reduce((a,s)=>a+s.v*(g.conv?.[s.per]??1),0)/(g.u==='萬'?1e4:1),   // 失能、長照：每年給付 ÷ 12 換成每月
+user=T[g.k]!=null&&T[g.k]!=='',[d0,why]=D[g.k]||[null],tg=user?num(T[g.k]):d0;
     const st=tg===0?'na':tg==null?(E.length?'has':'adv'):have>=tg?'ok':have>0?'low':oth?'other':'none';
     return{...g,have,tg,st,user,why:user?'自訂目標':why||'',un:E.reduce((a,s)=>a+s.un,0),er:E.reduce((a,s)=>a+s.er,0),oth,othN,othR,inL,othL,exL}});
   const by=k=>G.find(g=>g.k===k);
