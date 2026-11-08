@@ -288,12 +288,13 @@ D. JSON：我會把你的整段回覆貼回 App（打開保單按「📥 貼回 
 6. pay 給付方式：daily＝每日 × 天數、expense＝依收據實支實付、lump＝一次給付、table＝依手術表或倍數表、ratio＝依失能等級比例、waiver＝豁免保費。
 7. perUnit：以「單位」「計畫」計時，每單位或這個計畫的金額與單位，例如 {"amt":1000,"unit":"元/日"}；limit：每次（每次住院）最高給付金額（元）；sub：實支實付的分項限額，例如 [{"name":"病房費","amt":2000,"unit":"元/日"},{"name":"雜費","amt":100000,"unit":"元/次"},{"name":"手術費","amt":50000,"unit":"元/次"}]；maxDays：每次住院最多給付幾天。
 8. icuX：住加護病房或燒燙傷病房時，日額是平常的幾倍（例如 2）；outSx：門診手術的給付比例（例如 0.5，不賠填 0）；inSitu：原位癌（零期）的給付比例（例如 0.1）。
+8-1. stepDay、stepX：第幾天起日額變成幾倍（例如「第 31 天起按日額的 2 倍」填 31、2）；sameStay：出院後幾天內因同一原因再住院算同一次住院（例如 14）；yearMax：每保單年度最多給付幾次（例如門診手術每年 10 次）；sxHighest：同一次手術、同一部位做兩項以上只給付最高一項填 true；sxDef：條款的「手術」定義是全民健康保險醫療服務給付項目及支付標準第二部第二章第七節（俗稱 2-2-7）填 "227"。
 9. waitIll：疾病的等待期天數；waitAcc：意外的等待期天數（沒有就填 0）；accOnly：只賠意外傷害填 true；outpatient：門診（沒住院）也賠填 true；copyClaim：可以用收據副本申請填 true；maxAge：最高續保或保障到幾歲。
 10. excl：除外責任，逐條摘要（每條 40 字內，附條號）。
 11. 身分證字號、保單號碼、姓名一律不要輸出；看不清楚或缺頁的寫進 unreadable，不要猜。
 
 【輸出格式】
-{"type":"kinwell.terms","v":1,"ver":null,"product":null,"rules":[{"name":null,"pay":null,"perUnit":null,"limit":null,"sub":[],"maxDays":null,"icuX":null,"outSx":null,"inSitu":null,"waitIll":null,"waitAcc":null,"accOnly":null,"outpatient":null,"copyClaim":null,"maxAge":null,"excl":[],"quote":null,"clause":null,"extra":false}],"unreadable":[]}
+{"type":"kinwell.terms","v":1,"ver":null,"product":null,"rules":[{"name":null,"pay":null,"perUnit":null,"limit":null,"sub":[],"maxDays":null,"icuX":null,"outSx":null,"inSitu":null,"waitIll":null,"waitAcc":null,"accOnly":null,"outpatient":null,"copyClaim":null,"maxAge":null,"stepDay":null,"stepX":null,"sameStay":null,"yearMax":null,"sxHighest":null,"sxDef":null,"excl":[],"quote":null,"clause":null,"extra":false}],"unreadable":[]}
 ```
 
 ### 保單條款審查（最後附條款規則 JSON）
@@ -302,7 +303,7 @@ D. JSON：我會把你的整段回覆貼回 App（打開保單按「📥 貼回 
 
 ```text
 7. 最後把每個保障項目的給付規則整理成下面格式的 JSON，放在回覆最後（App 會存進「條款規則」，理賠試算會用）：條款上找不到的欄位填 null，不要推算；每條附 quote（逐字原文）和 clause（條號）。pay：daily＝每日 × 天數、expense＝依收據實支實付、lump＝一次給付、table＝依手術表或倍數表、ratio＝依失能等級比例、waiver＝豁免保費；perUnit：以單位或計畫計時每單位的金額，例如 {"amt":1000,"unit":"元/日"}；limit：每次最高給付（元）；sub：實支實付的分項限額；maxDays：每次住院最多給付幾天；icuX：加護病房是平常的幾倍；outSx：門診手術給付比例；inSitu：原位癌給付比例；waitIll、waitAcc：疾病、意外的等待期天數；accOnly：只賠意外填 true；outpatient：門診也賠填 true；copyClaim：可以用收據副本填 true；maxAge：最高續保或保障到幾歲；excl：除外責任摘要（每條 40 字內，附條號）。
-{"type":"kinwell.terms","v":1,"ver":null,"product":null,"rules":[{"name":null,"pay":null,"perUnit":null,"limit":null,"sub":[],"maxDays":null,"icuX":null,"outSx":null,"inSitu":null,"waitIll":null,"waitAcc":null,"accOnly":null,"outpatient":null,"copyClaim":null,"maxAge":null,"excl":[],"quote":null,"clause":null,"extra":false}],"unreadable":[]}
+{"type":"kinwell.terms","v":1,"ver":null,"product":null,"rules":[{"name":null,"pay":null,"perUnit":null,"limit":null,"sub":[],"maxDays":null,"icuX":null,"outSx":null,"inSitu":null,"waitIll":null,"waitAcc":null,"accOnly":null,"outpatient":null,"copyClaim":null,"maxAge":null,"stepDay":null,"stepX":null,"sameStay":null,"yearMax":null,"sxHighest":null,"sxDef":null,"excl":[],"quote":null,"clause":null,"extra":false}],"unreadable":[]}
 回覆太長被截斷時，我會說「繼續」：請從 JSON 的開頭重新輸出完整的 JSON。
 ```
 

@@ -312,6 +312,18 @@ table.imap td.er{color:var(--red);font-weight:800}table.imap td.gp1{color:var(--
 .tour-nav{display:flex;gap:8px;align-items:center;margin-top:12px}.tour-nav .sub{flex:1;margin:0!important;color:var(--mute)!important}
 .lrow.wide textarea.refin{flex:1 1 100%;width:100%;min-height:70px;padding:8px 10px;font-family:inherit}
 .gapwhy{background:none;border:0;color:var(--cyan);font:inherit;font-size:13px;font-weight:600;padding:4px 2px;min-height:28px;cursor:pointer}.gapwhy:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:6px}
+.mkov{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column;max-width:none}
+.mkov[hidden]{display:none}
+.mkhd{display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 14px 8px;border-bottom:1px solid var(--line)}
+.mkhd h3{flex:1;margin:0;font-size:calc(17px*var(--fz))}
+.mkpad{padding:14px 16px;overflow:auto;flex:1}
+.mkstage{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;background:#000;min-height:0}
+.mkstage canvas{display:block;margin:0 auto;touch-action:none;max-width:none}
+.mkstage.pan canvas{touch-action:auto}
+.mkbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+.mkbar .btn.sm,.mkbar .seg button{min-height:44px;min-width:44px}
+.mkthumbs{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.mkthumbs img{width:88px;height:88px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -447,6 +459,7 @@ table.imap td.er{color:var(--red);font-weight:800}table.imap td.gp1{color:var(--
 </nav>
 
 <div class="sheet" id="sheet"><div class="sheet-bg" data-close></div><div class="sheet-panel" role="dialog" tabindex="-1"><div class="grab"></div><div id="sheetBody"></div></div></div>
+<div class="mkov" id="mkov" role="dialog" aria-modal="true" aria-label="遮住照片上的個資" hidden></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="importFile" accept="application/json,.json" hidden>
 <button id="updBar" hidden onclick="location.reload()">有新版本，點這裡更新</button>
@@ -3425,6 +3438,7 @@ function parseAI(text){
 }
 function aiBox(kind){const what=kind==='scale'?'體脂機 App 截圖':kind==='watch'?'手錶或健康 App 的「週平均」截圖':'體檢報告照片或截圖';return `<details class="box ai"><summary>🤖 AI 截圖匯入（推薦）</summary>
   <ol class="steps"><li>按「複製提示詞」</li><li>打開 ChatGPT／Gemini／Claude，貼上提示詞並附上${what}</li><li>複製 AI 回覆的整段 JSON，貼到下方</li><li>按「解析並填入表單」，核對紅框數字後儲存</li></ol>
+  <button class="btn ghost sm" data-mask style="margin:0 0 8px;width:100%">🖍 先遮住照片上的個資（姓名、身分證、病歷號）</button>
   <div class="row2" style="margin:0 0 8px"><button class="btn sm" data-copy="${kind}" style="flex:1">📋 複製提示詞</button><button class="btn ghost sm" data-show="${kind}">查看</button></div>
   <pre class="prompt" id="pv-${kind}" hidden></pre>
   <textarea id="ai-in" placeholder="把 AI 回覆的 JSON 貼在這裡" autocapitalize="off" autocomplete="off" spellcheck="false"></textarea>
@@ -4271,8 +4285,8 @@ const calcV=x=>{const u=unitInfo(x.unit);return money(x.amount*(u.mul||1))+(u.pe
 const money=v=>v>=1e4&&v%1e3===0?`${+(v/1e4).toFixed(1)} 萬`:`${Math.round(v).toLocaleString()} 元`,ntd=v=>`${Math.round(v).toLocaleString()} 元`;   // 保障金額用「萬」好讀；保費一律用「元」
 const birthY=m=>+String(m.birth||'').slice(0,4)||new Date().getFullYear()-Math.floor(ageOf(m));
 // 個資：身分證字號、手機號碼一律刪掉（AI 照抄時的第二道防線）
-const TWID=/[A-Z][12]\d{8}/g,TWPH=/09\d{2}-?\d{3}-?\d{3}/g;
-function insScrub(v,W){let s=String(v??'');if(new RegExp(TWID.source).test(s)){s=s.replace(TWID,'＊＊＊');W.add('偵測到身分證字號，已自動刪除')}if(new RegExp(TWPH.source).test(s)){s=s.replace(TWPH,'＊＊＊');W.add('偵測到電話號碼，已自動刪除')}
+const TWID=/[A-Z][1289]\d{8}/g,TWPH=/09\d{2}[-\s]?\d{3}[-\s]?\d{3}/g,TWEM=/[\w.+-]+@[\w-]+(\.[\w-]+)+/g;   // 身分證、新式外來人口統一證號（第二碼 8、9）、手機、Email
+function insScrub(v,W){let s=String(v??'');if(new RegExp(TWID.source).test(s)){s=s.replace(TWID,'＊＊＊');W.add('偵測到身分證字號，已自動刪除')}if(new RegExp(TWPH.source).test(s)){s=s.replace(TWPH,'＊＊＊');W.add('偵測到電話號碼，已自動刪除')}if(new RegExp(TWEM.source).test(s)){s=s.replace(TWEM,'＊＊＊');W.add('偵測到 Email，已自動刪除')}
   if(/\d{10,}/.test(s)){s=s.replace(/\d{10,}/g,d=>'＊＊＊'+d.slice(-4));W.add('偵測到完整保單號碼，只留末 4 碼')}return s}   // 10 碼以上的連續數字（保單號碼）；金額不會這麼長
 // 防 AI 讀錯：金額一定要出現在 AI 抄的原文裡（萬元換算、千分位、全形數字都接受）；原文是國字數字時請人工核對
 function numInQuote(a,u,q){q=String(q||'').replace(/[０-９]/g,d=>String.fromCharCode(d.charCodeAt(0)-65248)).replace(/[,，\s]/g,'');if(!q||a==null)return null;
@@ -4548,6 +4562,15 @@ function openGapDetail(k){const m=me(),g=covGap(m).find(x=>x.k===k);if(!g)return
     <div class="h4">⚪ 不算保障（${g.exL.length} 項）</div>${g.exL.map(row).join('')||'<div class="sub">沒有</div>'}
     <p class="note">算法：只算分類是「${g.cats.map(c=>INSCATK[c]).join('、')}」的項目，保單要有效、已生效、還沒到期；${g.pers?`只加${g.pers.map(q=>PERW[q]).join('、')}的金額，萬元換成元；以計畫／單位計的要匯入條款或按 ✏️ 填金額才算。`:'這一類依條款（失能等級、長照狀態）給付，不加總金額。'}點一項會打開那張保單。分類錯了（例如意外身故被分成壽險）就打開保單按「編輯」改類別；漏了的保單到「保單」匯入。</p>
     <button class="btn ghost" data-gapedit style="margin-top:6px">🎯 調整目標、年收入、負債</button>`)}
+/* 保險公司理賠捷徑：官網網域、客服電話都是 2026-11 用網路搜尋找得到出處的才放；理賠申請書一律連到搜尋（官網改版也不會失效） */
+const INSURERS=[['國泰人壽',/國泰人壽|國泰人|cathay ?life/i,'https://www.cathaylife.com.tw',''],['富邦人壽',/富邦人壽|fubon ?life/i,'https://www.fubon.com/life/','0809-000-550','https://www.fubon.com/life/edmprod/digital_claims/index.html'],
+  ['南山人壽',/南山人壽|南山人|nan ?shan/i,'https://www.nanshanlife.com.tw',''],['新光人壽',/新光人壽|新壽|shin ?kong/i,'https://www.skl.com.tw','0800-031-115'],['台灣人壽',/台灣人壽|臺灣人壽|taiwan ?life/i,'','0800-099-850'],
+  ['凱基人壽',/凱基人壽|中國人壽|kgi/i,'','0800-098-889'],['保誠人壽',/保誠人壽|prudential|pca ?life/i,'https://www.pcalife.com.tw',''],['安達人壽',/安達人壽|chubb/i,'https://life.chubb.com/tw-zh/',''],
+  ['全球人壽',/全球人壽|transglobe/i,'https://www.transglobe.com.tw',''],['遠雄人壽',/遠雄人壽|遠雄/i,'https://www.fglife.com.tw',''],['宏泰人壽',/宏泰人壽|宏泰/i,'','0800-068268'],
+  ['三商美邦人壽',/三商美邦|美邦人壽|mercuries/i,'',''],['安聯人壽',/安聯人壽|allianz/i,'','']];
+const insurerOf=n=>{const t=String(n||'');const x=INSURERS.find(r=>r[1].test(t));return x?{n:x[0],web:x[2],tel:x[3],claim:x[4]||''}:t.trim()?{n:t.trim().slice(0,20),web:'',tel:'',claim:''}:null};
+function insLinks(p,small){const o=insurerOf(p.insurer||p.product);if(!o)return'';const q=encodeURIComponent(o.n+' 理賠申請書 下載'),a=(h,t)=>`<a class="btn ghost sm" href="${esc(h)}" target="_blank" rel="noopener noreferrer" style="width:auto;margin:6px 6px 0 0;min-height:44px;display:inline-flex;align-items:center">${t}</a>`;
+  return `<div style="display:flex;flex-wrap:wrap${small?';margin-top:2px':''}">${a('https://www.google.com/search?q='+q,`🔎 搜尋${esc(o.n)}理賠申請書`)}${o.claim?a(o.claim,'📱 線上理賠'):''}${o.web?a(o.web,'🏢 官網'):''}${o.tel?a('tel:'+o.tel.replace(/-/g,''),'📞 '+esc(o.tel)):''}</div>`}
 /* 實支實付的收據正本／副本：2024/7/1 起新契約回歸損害填補（只能正本，多張用「理賠差額證明」只賠差額）；之前的契約（含每年續保的一年期附約）照原條款。
    v：copy 可用副本、orig 限正本、? 不確定；src：條款／條款規則／推定（依生效日） */
 const REAL_NEW='2024-07-01',isReal=c=>c.cat==='hosp_real'||(c.cat==='acc_med'&&covUnit(c).per!=='day');
@@ -4762,6 +4785,7 @@ function openPol(id){const m=me(),p=insFind(m,id);if(!p)return;const pe=payEnd(p
     ${p.chk?'<div class="sub" style="margin:10px 0;color:var(--lime)">✅ 已對照保單核對</div>':'<button class="btn" id="pd-chk" style="margin:12px 0 0">✅ 我已對照保單核對無誤</button>'}
     <div class="row2" style="margin-top:10px"><button class="btn danger" id="pd-del" style="flex:0 0 30%">刪除</button><button class="btn ghost" id="pd-edit">編輯</button></div>
     ${MEM.length>1?`<button class="btn ghost sm" data-pfix="move" data-ppol="${esc(p.id)}" style="margin-top:8px">👥 移到其他家人（放錯被保險人時）</button>`:''}
+    <div class="h4">📄 理賠申請</div>${insLinks(p)}<p class="note" style="margin-top:6px">申請書以保險公司最新版為準；很多公司也可以用 App、官網線上理賠或「保險理賠醫起通」合作醫院直接申請。官網和電話是 2026 年 11 月查到的，改了請用搜尋。</p>
     <div class="h4">🤖 請 AI 幫忙</div><div class="sub" style="line-height:1.7">複製提示詞 → 貼給你的 AI（ChatGPT、Gemini、Claude），附上保單文件 → AI 回覆後整段複製 → 回到這裡按「📥 貼回」</div>
     <button class="btn ai" data-polchk="${esc(p.id)}" style="margin-top:8px">${F.some(f=>f.lv==='err'||f.lv==='chk')?'📋 複製「核對錯誤」提示詞：AI 對照文件告訴你哪裡要改':'📋 複製「核對」提示詞：請 AI 對照文件再確認一次'}</button>
     <button class="btn ghost" data-polchkin="${esc(p.id)}" style="margin-top:8px">📥 貼回 AI 的核對結果（更新這張保單）</button>
@@ -4846,11 +4870,65 @@ function aiSplit(t){t=String(t||'');const k=t.search(/\{\s*"type"\s*:\s*"kinwell
   if(b<0)b=t.lastIndexOf('}')+1;const rest=(t.slice(0,a)+'\n'+(b>a?t.slice(b):'')).replace(/```(?:json)?/gi,'').trim();return{json:b>a?t.slice(a,b):t.slice(a),rest}}
 function parseAIJSON(t){const r=aiSplit(t);if(!r)throw new Error('找不到 JSON：請把 AI 回覆的整段大括號 { … } 貼上');
   try{return JSON.parse(r.json)}catch(e){throw new Error('JSON 格式壞掉（常見是 AI 回覆被截斷）：請 AI「重新輸出完整 JSON」再貼一次')}}
+/* ===== 照片遮罩：送給 AI 前先把姓名、身分證、病歷號、保單號碼塗黑。只在這支手機處理、不上傳；重新存成 JPEG 也會去掉拍照時間地點（EXIF）。
+   一次只開一張（長邊縮到 2000 px，避免 iPhone 記憶體不夠），框存成照片座標，匯出時直接塗在像素上（黑框蓋掉的字無法還原） ===== */
+const MK_MAX=2000,MK_Z=[1,1.5,2,3];let MK=null;
+function mkInert(on){if(on){MK.inert=[...document.querySelectorAll('body>header,body>section.view,body>nav,#sheet')].filter(el=>!el.inert);MK.inert.forEach(el=>el.inert=true)}else if(MK?.inert){MK.inert.forEach(el=>el.inert=false);MK.inert=null}}
+function openMask(){if(MK)return;const ov=$('#mkov');MK={files:[],i:0,rects:[],hist:[],out:[],zoom:0,pan:false,img:null,drag:null,ret:document.activeElement};ov.hidden=false;mkInert(true);mkPick()}
+function closeMask(){const ov=$('#mkov');if(!ov||!MK)return;mkInert(false);(MK.urls||[]).forEach(u=>URL.revokeObjectURL(u));const r=MK.ret;ov.hidden=true;ov.innerHTML='';MK=null;if(r&&r.isConnected)r.focus({preventScroll:true})}
+const mkHead=t=>`<div class="mkhd"><h3>${t}</h3><button class="x" data-mkx aria-label="關閉">✕</button></div>`;
+function mkPick(){$('#mkov').innerHTML=mkHead('🖍 遮住照片上的個資')+`<div class="mkpad">
+  <p class="sub" style="line-height:1.7;margin-top:0">照片只在這支手機處理，不會上傳。遮好後按「分享」存到相簿，再附給 ChatGPT／Gemini／Claude。</p>
+  <div class="bl">要遮的：姓名、身分證字號、生日、病歷號、保單號碼（留末 4 碼就好）、地址、電話、條碼和 QR code</div>
+  <div class="bl">不要遮：保險公司、商品名稱、保額、日期、條款文字、檢驗數值（AI 要讀）</div>
+  <button class="btn" data-mkpick style="margin-top:14px">📷 選照片（可以多張）</button><input type="file" id="mkFile" accept="image/*" multiple hidden></div>`;
+  $('#mkFile').onchange=e=>{const f=[...e.target.files].filter(x=>/^image\//.test(x.type)).slice(0,20);e.target.value='';if(!f.length)return toast('請選照片');MK.files=f;MK.i=0;MK.out=[];mkLoad()};$('#mkov [data-mkx]').focus()}
+function mkLoad(){const f=MK.files[MK.i],u=URL.createObjectURL(f),im=new Image();
+  im.onload=()=>{const k=Math.min(1,MK_MAX/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement('canvas');c.width=Math.round(im.naturalWidth*k);c.height=Math.round(im.naturalHeight*k);
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);MK.img=c;MK.rects=[];MK.hist=[];MK.zoom=0;MK.drag=null;mkEdit()};
+  im.onerror=()=>{URL.revokeObjectURL(u);toast('這張照片打不開（格式不支援），跳過');mkNext(true)};im.src=u}
+function mkEdit(){const n=MK.files.length,last=MK.i>=n-1;$('#mkov').innerHTML=mkHead(`🖍 遮個資（第 ${MK.i+1}／${n} 張）`)+`<div class="mkstage${MK.pan?' pan':''}" id="mkStage"><canvas id="mkCv" role="img" aria-label="照片：在上面拖曳手指畫黑框"></canvas></div>
+  <div class="mkbar"><div class="seg" style="flex:1 1 100%"><button data-mkmode="draw" class="${MK.pan?'':'on'}" aria-pressed="${!MK.pan}">▭ 畫黑框</button><button data-mkmode="pan" class="${MK.pan?'on':''}" aria-pressed="${MK.pan}">✋ 移動畫面</button></div>
+   <button class="btn ghost sm" data-mkzoom="-1" aria-label="縮小"${MK.zoom?'':' disabled'}>－</button><span class="sub" id="mkZ" style="min-width:44px;text-align:center">${Math.round(MK_Z[MK.zoom]*100)}%</span><button class="btn ghost sm" data-mkzoom="1" aria-label="放大"${MK.zoom<MK_Z.length-1?'':' disabled'}>＋</button>
+   <button class="btn ghost sm" data-mkundo>↶ 復原</button><button class="btn ghost sm" data-mkclear>清除</button><span class="sub" id="mkInfo" aria-live="polite">${MK.rects.length} 個框</span>
+   <button class="btn" data-mknext style="flex:1 1 100%">${last?`✅ 完成，準備分享 ${n} 張`:'這張好了，下一張 ›'}</button></div>`;
+  const cv=$('#mkCv');cv.width=MK.img.width;cv.height=MK.img.height;mkFit();mkDraw();
+  const pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height]};
+  cv.onpointerdown=e=>{if(MK.pan)return;e.preventDefault();cv.setPointerCapture?.(e.pointerId);const[x,y]=pt(e);MK.drag=[x,y,x,y]};
+  cv.onpointermove=e=>{if(!MK.drag)return;const[x,y]=pt(e);MK.drag[2]=x;MK.drag[3]=y;mkDraw()};
+  cv.onpointerup=cv.onpointercancel=e=>{const d=MK.drag;MK.drag=null;if(!d)return;const x=Math.min(d[0],d[2]),y=Math.min(d[1],d[3]),w=Math.abs(d[2]-d[0]),h=Math.abs(d[3]-d[1]),mn=Math.max(6,cv.width*.008);
+    if(w>=mn&&h>=mn){MK.hist.push(MK.rects.slice());MK.rects.push([x,y,w,h].map(Math.round))}mkDraw();mkInfo()}}
+function mkFit(){const st=$('#mkStage'),cv=$('#mkCv');if(!st||!cv)return;const W=st.clientWidth||320,H=st.clientHeight||400,fit=Math.min(W/cv.width,H/cv.height,1)||1;cv.style.width=Math.round(cv.width*fit*MK_Z[MK.zoom])+'px'}
+function mkDraw(final){const cv=$('#mkCv');if(!cv)return;const x=cv.getContext('2d');x.drawImage(MK.img,0,0);x.fillStyle='#000';for(const r of MK.rects)x.fillRect(...r);
+  const d=MK.drag;if(d&&!final){x.fillStyle='rgba(0,0,0,.75)';x.fillRect(Math.min(d[0],d[2]),Math.min(d[1],d[3]),Math.abs(d[2]-d[0]),Math.abs(d[3]-d[1]));x.strokeStyle='#22e4ff';x.lineWidth=Math.max(2,cv.width/300);x.strokeRect(Math.min(d[0],d[2]),Math.min(d[1],d[3]),Math.abs(d[2]-d[0]),Math.abs(d[3]-d[1]))}}
+const mkInfo=()=>{const e=$('#mkInfo');if(e)e.textContent=MK.rects.length+' 個框'};
+function mkNext(skip){const go=()=>{if(MK.i<MK.files.length-1){MK.i++;mkLoad()}else mkDone()};if(skip)return go();
+  mkDraw(true);$('#mkCv').toBlob(b=>{if(!MK)return;if(!b){toast('存不起來（記憶體不夠）：請少選幾張再試');return}MK.out.push(new File([b],`kinwell-masked-${MK.out.length+1}.jpg`,{type:'image/jpeg'}));MK.img=null;go()},'image/jpeg',.9)}
+function mkDone(){const n=MK.out.length;if(!n){toast('沒有可以分享的照片');return mkPick()}const U=MK.out.map(f=>URL.createObjectURL(f));MK.urls=U;$('#mkov').innerHTML=mkHead('✅ 遮好了')+`<div class="mkpad">
+  <p class="sub" style="margin-top:0">${n} 張照片已經把黑框塗在照片上（拍照時間地點也拿掉了），原本的照片沒有改動。</p><div class="mkthumbs">${U.map((u,i)=>`<img src="${u}" alt="遮好的第 ${i+1} 張">`).join('')}</div>
+  <button class="btn" data-mkshare>📤 分享 ${n} 張（存到相簿或傳給 AI）</button><button class="btn ghost" data-mkagain style="margin-top:8px">再選其他照片</button>
+  <p class="note">分享時選「儲存影像」存到相簿，或直接選 AI 的 App。之後在 AI 對話裡附上這些照片，不要附原本的照片。</p></div>`;$('#mkov [data-mkshare]').focus()}
+async function mkShare(){const F=MK.out;try{if(navigator.canShare?.({files:F})){await navigator.share({files:F});return}}catch(e){if(e.name==='AbortError')return}
+  for(const f of F){const a=document.createElement('a'),u=URL.createObjectURL(f);a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}toast('已下載 '+F.length+' 張')}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-mask],[data-mkpick],[data-mkx],[data-mkmode],[data-mkzoom],[data-mkundo],[data-mkclear],[data-mknext],[data-mkshare],[data-mkagain]');if(!t)return;
+  if(t.matches('[data-mask]')){e.preventDefault();return openMask()}if(!MK)return;
+  if(t.matches('[data-mkx]'))return closeMask();
+  if(t.matches('[data-mkpick]'))return $('#mkFile')?.click();
+  if(t.matches('[data-mkmode]')){MK.pan=t.dataset.mkmode==='pan';return mkEdit()}
+  if(t.matches('[data-mkzoom]')){MK.zoom=Math.max(0,Math.min(MK_Z.length-1,MK.zoom+(+t.dataset.mkzoom)));return mkEdit()}
+  if(t.matches('[data-mkundo]')){if(!MK.hist.length)return toast('沒有可以復原的');MK.rects=MK.hist.pop();mkDraw();return mkInfo()}
+  if(t.matches('[data-mkclear]')){if(MK.rects.length){MK.hist.push(MK.rects.slice());MK.rects=[]}mkDraw();return mkInfo()}
+  if(t.matches('[data-mknext]'))return mkNext();
+  if(t.matches('[data-mkshare]'))return mkShare();
+  if(t.matches('[data-mkagain]')){(MK.urls||[]).forEach(u=>URL.revokeObjectURL(u));MK.urls=null;MK.out=[];MK.files=[];return mkPick()}});
+document.addEventListener('keydown',e=>{if(MK&&e.key==='Escape'&&!e.isComposing)closeMask()});
+addEventListener('resize',()=>{if(MK&&$('#mkCv'))mkFit()});
 function openPolImport(o={}){const m=me(),cp=o.chk&&o.chk!=='all'?insFind(m,o.chk):null;openSheet((o.chk?sheetHead('📥 貼回 AI 的核對結果',cp?esc(polName(cp)):`${esc(m.name)} 的保單`)+`
     <div class="bl" style="margin-top:6px">① 在 AI 的對話裡，把它的回覆整段複製（前面的問題清單一起複製也可以，App 只讀最後的 JSON）</div><div class="bl">② 貼到下面，按「解析並核對」：App 會認出是哪一張保單、列出哪裡不同</div><div class="bl">③ 確認後按「匯入勾選的保單」才會更新；舊版存進變更紀錄，可以復原</div>`
     :sheetHead('📷 用 AI 匯入保單',`預設匯入到：${esc(m.name)}（下一步可以改）`)+`
     <label style="margin-top:6px">這批文件是</label><div class="seg" id="pi-kind"><button data-v="pol" class="on">已投保的保單</button><button data-v="quote">建議書／DM（還沒買）</button></div>
     <div class="bl" style="margin-top:10px">① 按「複製提示詞」</div><div class="bl">② 打開 ChatGPT／Gemini／Claude，貼上提示詞，再附上保單照片、保單條款或保單明細表（可以多張、多張保單）</div><div class="bl">③ 把 AI 回的 JSON 整段貼到下面，按「解析並核對」</div>
+    <button class="btn ghost sm" data-mask style="margin-top:8px;width:100%">🖍 先遮住照片上的個資（姓名、身分證、保單號碼）</button>
     <div class="row2" style="margin-top:10px"><button class="btn ghost" data-copy="policy">📋 複製提示詞</button><button class="btn ghost" data-show="policy">看提示詞</button></div><pre class="prompt" id="pv-policy" hidden></pre>`)+`
     <label>${o.chk?'貼上 AI 的回覆':'貼上 AI 回的 JSON'}</label><textarea id="pi-in" placeholder='${o.chk?'把 AI 的整段回覆貼在這裡':'{"type":"kinwell.policy","v":1,"policies":[…]}'}'></textarea>
     <button class="btn" id="pi-go" style="margin-top:10px">解析並核對</button><div id="pi-out"></div>
@@ -4992,7 +5070,7 @@ function termRule(r,W){if(!r||typeof r!=='object')return null;const str=(v,n)=>t
   const name=str(r.name,40);if(!name)return null;const pu=r.perUnit&&typeof r.perUnit==='object'?{amt:nb(r.perUnit.amt,0,1e8),unit:str(r.perUnit.unit,12)}:null;
   return{name,pay:['daily','expense','lump','table','ratio','waiver'].includes(r.pay)?r.pay:null,perUnit:pu&&pu.amt!=null?pu:null,limit:nb(r.limit,0,1e8),
     sub:(Array.isArray(r.sub)?r.sub:[]).filter(x=>x&&typeof x==='object').slice(0,10).map(x=>({name:str(x.name,20),amt:nb(x.amt,0,1e8),unit:str(x.unit,12)})).filter(x=>x.name&&x.amt!=null),
-    maxDays:nb(r.maxDays,1,3650),icuX:nb(r.icuX,1,5),outSx:nb(r.outSx,0,1),inSitu:nb(r.inSitu,0,1),waitIll:nb(r.waitIll,0,730),waitAcc:nb(r.waitAcc,0,730),accOnly:bool(r.accOnly),outpatient:bool(r.outpatient),copyClaim:bool(r.copyClaim),maxAge:nb(r.maxAge,1,120),
+    maxDays:nb(r.maxDays,1,3650),icuX:nb(r.icuX,1,5),outSx:nb(r.outSx,0,1),inSitu:nb(r.inSitu,0,1),waitIll:nb(r.waitIll,0,730),waitAcc:nb(r.waitAcc,0,730),accOnly:bool(r.accOnly),outpatient:bool(r.outpatient),copyClaim:bool(r.copyClaim),maxAge:nb(r.maxAge,1,120),stepDay:nb(r.stepDay,2,3650),stepX:nb(r.stepX,1,10),sameStay:nb(r.sameStay,1,365),yearMax:nb(r.yearMax,1,365),sxHighest:bool(r.sxHighest),sxDef:/^227$|第二部第二章第七節|2-2-7/.test(String(r.sxDef??''))?'227':null,
     excl:(Array.isArray(r.excl)?r.excl:[]).map(x=>typeof x==='string'?x:x&&typeof x.text==='string'?x.text+(typeof x.clause==='string'?'（'+x.clause+'）':''):'').slice(0,12).map(x=>insScrub(x.trim(),W).slice(0,80)).filter(Boolean),
     quote:str(r.quote,300),clause:str(r.clause,30),extra:r.extra===true}}
 function termsCheck(d,p){const W=new Set(),E=[],o=obj(d);if(!Array.isArray(o.rules))E.push('JSON 裡沒有 rules（條款規則）：請 AI 照提示詞的格式重新輸出');
@@ -5008,7 +5086,7 @@ function cleanTerms(x){if(!x||typeof x!=='object')return null;const W=new Set(),
   return{ver:typeof x.ver==='string'?x.ver.slice(0,80):'',product:typeof x.product==='string'?x.product.slice(0,60):'',t:/^\d{4}-\d{2}-\d{2}$/.test(String(x.t))?x.t:todayS(),rules,warn:(Array.isArray(x.warn)?x.warn:[]).filter(w=>typeof w==='string').slice(0,30).map(w=>w.slice(0,160))}}
 const termSum=r=>[r.pay&&({daily:'每日給付',expense:'依收據實支',lump:'一次給付',table:'依手術表或倍數表',ratio:'依失能等級比例',waiver:'豁免保費'})[r.pay],r.perUnit&&`每單位 ${r.perUnit.amt.toLocaleString()} ${r.perUnit.unit}`,r.sub?.length&&r.sub.map(x=>`${x.name} ${x.amt.toLocaleString()} ${x.unit}`).join('、'),
   r.limit!=null&&`上限 ${ntd(r.limit)}`,r.maxDays&&`每次最多 ${r.maxDays} 天`,r.icuX>1&&`加護病房 ${r.icuX} 倍`,r.outSx!=null&&`門診手術 ${Math.round(r.outSx*100)}%`,r.inSitu!=null&&`原位癌 ${Math.round(r.inSitu*100)}%`,r.waitIll!=null&&`疾病等待期 ${r.waitIll} 天`,
-  r.accOnly&&'只賠意外',r.outpatient&&'門診也賠',r.copyClaim&&'可以用收據副本',r.clause].filter(Boolean).join('・')||'（條款沒寫給付細節）';
+  r.stepDay&&r.stepX>1&&`第 ${r.stepDay} 天起 × ${r.stepX}`,r.sameStay&&`出院 ${r.sameStay} 天內同病再住院算同一次`,r.yearMax&&`每保單年度最多 ${r.yearMax} 次`,r.sxHighest&&'同次同部位只賠最高一項',r.sxDef==='227'&&'手術依健保 2-2-7',r.accOnly&&'只賠意外',r.outpatient&&'門診也賠',r.copyClaim&&'可以用收據副本',r.clause].filter(Boolean).join('・')||'（條款沒寫給付細節）';
 const TERMS_HEAD=`你是「保單條款規則擷取器」。我會附上下面這張保單的條款 PDF 或照片（主約和附約條款都可以）。你的任務只有「把條款上寫的給付規則抄成 JSON」，不要分析、不要用一般保險常識補。
 
 【規則】
@@ -5020,12 +5098,13 @@ const TERMS_HEAD=`你是「保單條款規則擷取器」。我會附上下面�
 6. pay 給付方式：daily＝每日 × 天數、expense＝依收據實支實付、lump＝一次給付、table＝依手術表或倍數表、ratio＝依失能等級比例、waiver＝豁免保費。
 7. perUnit：以「單位」「計畫」計時，每單位或這個計畫的金額與單位，例如 {"amt":1000,"unit":"元/日"}；limit：每次（每次住院）最高給付金額（元）；sub：實支實付的分項限額，例如 [{"name":"病房費","amt":2000,"unit":"元/日"},{"name":"雜費","amt":100000,"unit":"元/次"},{"name":"手術費","amt":50000,"unit":"元/次"}]；maxDays：每次住院最多給付幾天。
 8. icuX：住加護病房或燒燙傷病房時，日額是平常的幾倍（例如 2）；outSx：門診手術的給付比例（例如 0.5，不賠填 0）；inSitu：原位癌（零期）的給付比例（例如 0.1）。
+8-1. stepDay、stepX：第幾天起日額變成幾倍（例如「第 31 天起按日額的 2 倍」填 31、2）；sameStay：出院後幾天內因同一原因再住院算同一次住院（例如 14）；yearMax：每保單年度最多給付幾次（例如門診手術每年 10 次）；sxHighest：同一次手術、同一部位做兩項以上只給付最高一項填 true；sxDef：條款的「手術」定義是全民健康保險醫療服務給付項目及支付標準第二部第二章第七節（俗稱 2-2-7）填 "227"。
 9. waitIll：疾病的等待期天數；waitAcc：意外的等待期天數（沒有就填 0）；accOnly：只賠意外傷害填 true；outpatient：門診（沒住院）也賠填 true；copyClaim：可以用收據副本申請填 true；maxAge：最高續保或保障到幾歲。
 10. excl：除外責任，逐條摘要（每條 40 字內，附條號）。
 11. 身分證字號、保單號碼、姓名一律不要輸出；看不清楚或缺頁的寫進 unreadable，不要猜。
 
 【輸出格式】
-{"type":"kinwell.terms","v":1,"ver":null,"product":null,"rules":[{"name":null,"pay":null,"perUnit":null,"limit":null,"sub":[],"maxDays":null,"icuX":null,"outSx":null,"inSitu":null,"waitIll":null,"waitAcc":null,"accOnly":null,"outpatient":null,"copyClaim":null,"maxAge":null,"excl":[],"quote":null,"clause":null,"extra":false}],"unreadable":[]}`;
+{"type":"kinwell.terms","v":1,"ver":null,"product":null,"rules":[{"name":null,"pay":null,"perUnit":null,"limit":null,"sub":[],"maxDays":null,"icuX":null,"outSx":null,"inSitu":null,"waitIll":null,"waitAcc":null,"accOnly":null,"outpatient":null,"copyClaim":null,"maxAge":null,"stepDay":null,"stepX":null,"sameStay":null,"yearMax":null,"sxHighest":null,"sxDef":null,"excl":[],"quote":null,"clause":null,"extra":false}],"unreadable":[]}`;
 function promptTerms(p){return `${TERMS_HEAD}
 
 【保單】（App 整理；請在條款裡找每個保障項目對應的條文）
@@ -5154,10 +5233,10 @@ const CLAIM_SCN=[
   add:['有手術','住加護病房','用到自費藥物或醫材','住單人房（病房差額）','出院後要復健或在家休養','意外造成']},
  {k:'sx',ic:'🩺',n:'手術（住院或門診）',ev:'sx',cats:['surgery','hosp_real','hosp_day','acc_med'],
   now:['手術前問清楚術式、要不要住院、有沒有自費醫材；手術同意書留一份影本'],
-  dr:['「手術名稱和術式是什麼？請完整寫在診斷證明書，不要只寫簡稱。」','「這是住院手術還是門診手術？」','「有用到自費醫材嗎（例如人工水晶體、塗藥支架）？價格多少？健保有給付的選項嗎？」','「需要病理切片嗎？報告可以給我一份嗎？」'],
-  docs:['診斷證明書（寫手術名稱與日期）','手術紀錄或手術同意書（保險公司要求時）','醫療費用收據（正本）與費用明細'],
+  dr:['「手術名稱和術式是什麼？請完整寫在診斷證明書，不要只寫簡稱。」','「這是住院手術還是門診手術？」','「這次的健保手術代碼是什麼？是在支付標準第二部第二章第七節的『手術』，還是『處置』『檢查』？」','「有用到自費醫材嗎（例如人工水晶體、塗藥支架）？價格多少？健保有給付的選項嗎？」','「需要病理切片嗎？報告可以給我一份嗎？」'],
+  docs:['診斷證明書（寫手術名稱、日期和健保手術代碼）','手術紀錄或手術同意書（保險公司要求時）','醫療費用收據（正本）與費用明細'],
   miss:['手術保險金照「手術名稱」對照條款的手術表給倍數：名稱寫完整很重要','門診手術有些保單也賠（有些打折）','自費醫材可以用實支實付的雜費申請（有限額）'],
-  pit:['新式手術不在手術表上時，看條款有沒有「其他手術」或「新型手術」的約定','門診手術、住院手術的給付可能不同'],
+  pit:['保單的「手術」多半是指健保支付標準第二部第二章第七節（俗稱 2-2-7）列的手術：內視鏡息肉切除、拔智齒、部分雷射或處置不一定算，以條款定義和手術代碼為準','同一次手術、同一部位做好幾項，很多保單只賠倍數最高的一項；門診手術常有每年次數上限','新式手術不在手術表上時，看條款有沒有「其他手術」或「新型手術」的約定','門診手術、住院手術的給付可能不同'],
   add:['住院手術','門診手術','用到自費醫材','有病理切片','意外造成']},
  {k:'acc',ic:'🦴',n:'意外受傷（骨折、車禍、跌倒）',ev:'acc',cats:['acc_med','accident','disability','hosp_day','hosp_real','surgery'],
   now:['拍照留存現場和傷口','車禍先報警（110），之後申請交通事故證明','上班或上下班途中受傷：問公司能不能申請勞保職災給付'],
@@ -5196,9 +5275,9 @@ const CLAIM_SCN=[
   add:['意外身故','疾病身故','在國外過世']}];
 /* 理賠試算：依匯入的保單，逐項判斷「會賠／可能會賠／不賠」，算得出來的估金額。App 粗估、不是保險公司核定，以條款為準。
    住院日額＝每日 × 天數；實支實付、意外醫療＝依收據，不超過上限；手術、重大疾病、失能、長照要看條款（只寫上限）；疾病有等待期，意外通常沒有 */
-const CE_FORM={er:{f:['cost','self'],ch:['acc','sxOut'],chl:{sxOut:'有縫合或門診手術'}},ad:{f:['days','icu','cost','self'],ch:['acc','sx']},sx:{f:['days','cost','self'],ch:['acc','sxOut']},acc:{f:['days','icu','cost','self'],ch:['sx','sxOut']},
+const CE_FORM={er:{f:['cost','self'],ch:['acc','sxOut'],chl:{sxOut:'有縫合或門診手術'}},ad:{f:['days','icu','cost','self'],ch:['acc','sx','readmit']},sx:{f:['days','cost','self'],ch:['acc','sxOut']},acc:{f:['days','icu','cost','self'],ch:['sx','sxOut']},
   ca:{f:['days','cost','self'],ch:['sx','inSitu']},crit:{f:['days','icu','cost','self'],ch:['sx']},dis:{f:[],ch:['acc']},death:{f:[],ch:['acc']}};
-const CE_CHIP={acc:'意外造成',sx:'有手術',sxOut:'門診手術（沒住院）',inSitu:'原位癌（零期）'};
+const CE_CHIP={readmit:'出院不久又因同一原因住院',acc:'意外造成',sx:'有手術',sxOut:'門診手術（沒住院）',inSitu:'原位癌（零期）'};
 function claimItem(p,c,e){const tr=termsRule(p,c),cl=tr?.clause?`（依條款${tr.clause}）`:tr?'（依條款）':'';let u=covUnit(c),b=c.amt!=null?c.amt*(u.mul||1):null;
   {const ck=c.calc&&u.nm!=='waiver'?calcChk(c):null;if(ck?.ok){const pi=unitInfo(ck.unit);b=ck.a*(pi.mul||1);u={...pi,nm:''}}else if(ck)b=null;
    else if(u.nm==='unit'&&tr?.perUnit){const pi=unitInfo(tr.perUnit.unit);b=(c.amt||1)*tr.perUnit.amt*(pi.mul||1);u={...pi,nm:''}}}
@@ -5223,8 +5302,10 @@ function claimItem(p,c,e){const tr=termsRule(p,c),cl=tr?.clause?`（依條款${t
   if(b==null)return R('maybe',null,p.cur&&!p.fx&&c.amt!=null?`${curN(p.cur)}保單：${covAmt(c)}（${curN(p.cur)}），打開保單填匯率才能換成台幣`:'保單沒有寫金額：看保單或條款');
   if(u.nm==='x')return R('maybe',null,`${c.amt} ${c.unit}：日額 × 倍數，看條款的倍數表${tr?.clause?'（'+tr.clause+'）':''}`);
   if(u.nm)return R('maybe',null,`以「${c.unit}」計：看條款的給付表換算${tr?'':'（匯入條款後可以算）'}`);
-  const perDay=(t='')=>{if(e.days){const dd=tr?.maxDays?Math.min(e.days,tr.maxDays):e.days,ic=Math.min(e.icu||0,dd),xx=tr?.icuX>1&&ic?b*(tr.icuX-1)*ic:0,a=b*dd+xx;
-      return R(v0,a,`${t}每日 ${money(b)} × ${dd} 天${xx?` ＋ 加護病房 ${ic} 天再加 ${tr.icuX-1} 倍`:''} ≈ ${ntd(a)}${dd<e.days?`（條款每次最多 ${tr.maxDays} 天）`:''}${tr?cl:''}`)}return R('maybe',null,`${t}每日 ${money(b)}，乘上住院天數`)};
+  const perDay=(t='')=>{if(e.readmit)why.push(tr?.sameStay?`條款：出院 ${tr.sameStay} 天內因同一原因再住院算同一次：每次最多天數要和上次合併算${cl}`:'出院後不久因同一原因再住院，很多保單算同一次住院（常見 14 天內）：每次最多天數合併算，看條款');
+    if(e.days){const dd=tr?.maxDays?Math.min(e.days,tr.maxDays):e.days,ic=Math.min(e.icu||0,dd),xx=tr?.icuX>1&&ic?b*(tr.icuX-1)*ic:0,sn=tr?.stepDay&&tr.stepX>1&&dd>=tr.stepDay?dd-tr.stepDay+1:0,sx2=sn?b*(tr.stepX-1)*sn:0,a=b*dd+xx+sx2;   // 第 N 天起日額加倍
+      if(!tr?.stepDay&&dd>30)why.push('住院超過 30 天：有些保單第 31 天起日額加倍（看條款）');
+      return R(v0,a,`${t}每日 ${money(b)} × ${dd} 天${xx?` ＋ 加護病房 ${ic} 天再加 ${tr.icuX-1} 倍`:''}${sx2?` ＋ 第 ${tr.stepDay} 天起 ${sn} 天再加 ${tr.stepX-1} 倍`:''} ≈ ${ntd(a)}${dd<e.days?`（條款每次最多 ${tr.maxDays} 天）`:''}${tr?cl:''}`)}return R('maybe',null,`${t}每日 ${money(b)}，乘上住院天數`)};
   switch(cat){
    case 'hosp_day':if(u.per==='day'){if(e.icu&&!(tr?.icuX>1))why.push('住加護病房：有些保單另外加倍（看條款）');return perDay()}return R('maybe',null,`${covAmt(c)}：看條款怎麼給付`);
    case 'hosp_real':case 'acc_med':{if(u.per==='day')return e.hosp?perDay():R('maybe',null,`每日 ${money(b)}（住院才有）`);
@@ -5237,7 +5318,9 @@ function claimItem(p,c,e){const tr=termsRule(p,c),cl=tr?.clause?`（依條款${t
      const lim=tr?.limit??b,op=tr?.outpatient&&!e.hosp?'（條款：門診也賠）':'';
      if(e.bill){const a=Math.min(e.bill,lim);return R(v0,a,`依收據實支：收據 ${ntd(e.bill)}，上限 ${money(lim)} → ≈ ${ntd(a)}${cat==='hosp_real'&&!tr?'（實際依病房、雜費、手術費各項限額）':''}${op}${tr?cl:''}`)}
      return R(v0,null,`依收據實支，上限 ${money(lim)}（填收據金額就能估）${op}${tr?cl:''}`)}
-   case 'surgery':if(e.sxOut&&!e.hosp&&tr?.outSx==null)why.push('門診手術：有些保單打折或不賠');return R('maybe',null,`依手術名稱對照條款的手術表（比例或倍數），最多約 ${money(b)}${tr?.clause?'（'+tr.clause+'）':''}`);
+   case 'surgery':if(e.sxOut&&!e.hosp&&tr?.outSx==null)why.push('門診手術：有些保單打折或不賠');
+     why.push(tr?.sxDef==='227'?`條款：「手術」是指健保支付標準第二部第二章第七節（2-2-7）列的手術：請醫師在診斷證明書寫手術名稱和健保手術代碼${cl}`:'保單的「手術」多半是指健保支付標準第二部第二章第七節（俗稱 2-2-7）列的手術：內視鏡息肉切除、拔智齒、部分雷射或處置不一定算，請醫師寫手術代碼、對照條款定義');
+     if(tr?.sxHighest)why.push(`條款：同一次手術、同一部位做兩項以上，只賠倍數最高的一項${cl}`);if(tr?.yearMax)why.push(`條款：每保單年度最多 ${tr.yearMax} 次：今年已經申請過的要扣掉${cl}`);return R('maybe',null,`依手術名稱對照條款的手術表（比例或倍數），最多約 ${money(b)}${tr?.clause?'（'+tr.clause+'）':''}`);
    case 'cancer':if(u.per==='day')return e.hosp?perDay('癌症住院'):R('maybe',null,`癌症住院每日 ${money(b)}，乘上住院天數`);
      if(e.inSitu){if(tr?.inSitu!=null){const a=b*tr.inSitu;return R(v0,a,`原位癌依條款給付 ${Math.round(tr.inSitu*100)}% ≈ ${ntd(a)}${cl}`)}return R('maybe',null,`原位癌常打折：最高 ${money(b)}，看條款的比例`)}
      return R(v0,b,`${money(b)}（初次罹癌以病理報告日期為準${tr?.inSitu!=null?`；原位癌只給 ${Math.round(tr.inSitu*100)}%`:'；原位癌常打折'}）`);
@@ -5248,10 +5331,10 @@ function claimItem(p,c,e){const tr=termsRule(p,c),cl=tr?.clause?`（依條款${t
    case 'life':return R(v0,b,`身故保險金 ${money(b)}`)}
   return null}
 function claimEst(m,x){const d=/^\d{4}-\d{2}-\d{2}$/.test(String(x.d||''))?x.d:todayS(),dn=num(x.days),days=dn==null?0:Math.max(0,Math.floor(dn)),icu=Math.min(days,Math.max(0,Math.floor(num(x.icu)||0))),bill=Math.max(0,num(x.cost)||0)+Math.max(0,num(x.self)||0);
-  const k=x.k,acc=!!x.acc||k==='acc',sx=!!x.sx||k==='sx',sxOut=!!x.sxOut,inSitu=!!x.inSitu,hosp=days>0||(dn==null&&(['ad','crit'].includes(k)||(k==='sx'&&!sxOut))),dx=String(x.dx||''),age=+d.slice(0,4)-birthY(m);
+  const k=x.k,readmit=!!x.readmit,acc=!!x.acc||k==='acc',sx=!!x.sx||k==='sx',sxOut=!!x.sxOut,inSitu=!!x.inSitu,hosp=days>0||(dn==null&&(['ad','crit'].includes(k)||(k==='sx'&&!sxOut))),dx=String(x.dx||''),age=+d.slice(0,4)-birthY(m);
   const L=insOf(m).filter(p=>p.status!=='quote'),nReal=realPols(m,d).length,out=[];let sum=0,nY=0,nM=0,nN=0;
   for(const p of L){const live=polLive(p,d),pw=[],its=[];
-    for(const c of p.items||[]){const r=claimItem(p,c,{k,d,age,days,icu,bill,hosp,acc,sx,sxOut,inSitu,nReal,live});if(r)its.push(r)}
+    for(const c of p.items||[]){const r=claimItem(p,c,{k,d,age,days,icu,bill,hosp,acc,sx,sxOut,inSitu,nReal,live,readmit});if(r)its.push(r)}
     if(!its.length)continue;if(!p.chk)pw.push('保單還沒核對：金額以保單為準');if(p.type==='grp')pw.push('團體保險：事故時還在職才有，離職後就沒有');if(p.uw?.excl)pw.push(`有除外約定「${p.uw.excl}」：確認這次不在除外範圍`);
     if(p.start&&dx)for(const c of condActive(m)){const parts=c.name.replace(/（.*?）/g,'').split('／').filter(z=>z.length>=2);if(c.y&&+c.y<+p.start.slice(0,4)&&parts.some(pt=>dx.includes(pt)||pt.includes(dx)))pw.push(`既往症：「${c.name}」${c.y} 年確診，早於這張保單生效；投保時有據實告知、沒被除外，通常照條款理賠`)}
     out.push({p,pw,its});for(const r of its){if(r.v==='yes'){nY++;if(r.amt)sum+=r.amt}else if(r.v==='maybe')nM++;else nN++}}
@@ -5260,7 +5343,7 @@ function ceHTML(R){const ic={yes:'✅',maybe:'🟠',no:'⛔'},lab={yes:'會賠',
   if(!R.out.length)return '<div class="sub">你的保單裡沒有這種情況用得到的保障（或還沒匯入保單）。健保、勞保、公司的團體保險也可能有給付：可以按「問 AI」。</div>';
   const L=R.out.map(x=>({...x,its:[...x.its].sort((a,b)=>o[a.v]-o[b.v])})).sort((a,b)=>o[a.its[0].v]-o[b.its[0].v]);
   return `<div class="hl" style="margin:6px 0 10px"><b>${R.nY?`✅ 會賠 ${R.nY} 項${R.sum?`，App 估算約 ${ntd(R.sum)}`:''}`:'App 算不出確定會賠的項目'}</b>${R.nM?`<br>🟠 可能會賠 ${R.nM} 項：要看條款或補資料`:''}${R.nN?`<br>⛔ 不賠 ${R.nN} 項（原因在下面）`:''}${R.nNoT?`<br>📜 ${R.nNoT} 張保單還沒匯入條款：匯入後試算會更準（打開保單 →「條款規則」）`:''}</div>`+(R.ro?`<div class="cdet" style="white-space:pre-line">${esc(R.ro)}</div>`:'')+
-    L.map(({p,pw,its})=>`<div class="cdet"><b>${esc(polName(p))}</b>${pw.map(w=>`<div class="sub" style="color:var(--amber)">⚠️ ${esc(w)}</div>`).join('')}${its.map(r=>`<div style="margin-top:8px"><span class="tg ${cl[r.v]}">${ic[r.v]} ${lab[r.v]}</span> ${esc(r.c.name)}${r.terms?' <span class="tg">📜 依條款</span>':''}<div class="sub">${esc(r.txt)}</div>${r.why.map(w=>`<div class="sub" style="color:var(--amber)">⚠️ ${esc(w)}</div>`).join('')}</div>`).join('')}</div>`).join('')+
+    L.map(({p,pw,its})=>`<div class="cdet"><b>${esc(polName(p))}</b>${its.some(r=>r.v!=='no')?insLinks(p,1):''}${pw.map(w=>`<div class="sub" style="color:var(--amber)">⚠️ ${esc(w)}</div>`).join('')}${its.map(r=>`<div style="margin-top:8px"><span class="tg ${cl[r.v]}">${ic[r.v]} ${lab[r.v]}</span> ${esc(r.c.name)}${r.terms?' <span class="tg">📜 依條款</span>':''}<div class="sub">${esc(r.txt)}</div>${r.why.map(w=>`<div class="sub" style="color:var(--amber)">⚠️ ${esc(w)}</div>`).join('')}</div>`).join('')}</div>`).join('')+
     '<p class="note">App 依你匯入的保單資料粗估，不是保險公司的核定；以保單條款和理賠申請書為準。要確認就按「問 AI」並附上條款。</p>'}
 const EVT2SCN={op:'er',er:'er',ad:'ad',sx:'sx',acc:'acc',ca:'ca'};
 const evtEstInput=(m,e)=>{const t=String((e.dx||'')+(e.note||''));return{k:EVT2SCN[e.type],d:e.d,days:e.end?Math.max(0,dSign(e.end,e.d)):(e.type==='ad'||e.type==='sx'?null:0),cost:e.cost,acc:e.type==='acc'||/意外|車禍|跌倒|骨折|撞|摔/.test(t),sx:e.type==='sx'||/手術|開刀/.test(t),dx:e.dx||''}};
@@ -5383,7 +5466,7 @@ Object.assign(PROMPTS,{policy:promptPolicy,minprot:promptMinProt,law:()=>PROMPT_
 function renderTool(){const m=me(),el=$('#toolBody');if(!el)return;const L=insOf(m);
   const card=(k,t,d,extra='')=>`<div class="card"><h2>${t}</h2><div class="sub" style="line-height:1.7">${d}</div>${extra}<div class="row2" style="margin-top:10px"><button class="btn ghost" data-copy="${k}">📋 複製提示詞</button><button class="btn ghost" data-show="${k}">看內容</button></div><pre class="prompt" id="pv-${k}" hidden></pre></div>`;
   el.innerHTML=`<p class="note" style="margin:0 0 12px">不串接任何 AI API、不用付費金鑰：複製提示詞（會附上已去識別化的資料）→ 貼給你自己的 ChatGPT／Gemini／Claude。AI 的回答只是參考，金額、資格、條款以正式文件為準。</p>`+
-    card('policy','📷 保單匯入','把保單照片、條款或保單明細表讀成 JSON；貼回「保單 → 用 AI 匯入」，App 會逐項核對金額有沒有在原文裡。')+
+    card('policy','📷 保單匯入','把保單照片、條款或保單明細表讀成 JSON；貼回「保單 → 用 AI 匯入」，App 會逐項核對金額有沒有在原文裡。','<button class="btn ghost sm" data-mask style="margin-top:8px">🖍 先遮住照片上的個資</button>')+
     `<div class="card"><h2>🔍 保單條款審查</h2><div class="sub">選一張保單，複製提示詞後連同條款 PDF 一起給 AI：逐條整理給付條件、等待期、除外責任、續保、爭議文字。AI 回覆後：打開那張保單按「📥 貼回 AI 的審查結果」，審查文字和條款規則會存在保單裡。</div>${L.length?L.map(p=>`<button class="rec" data-polai="${esc(p.id)}"><div class="m"><b>${esc(p.insurer)}・${esc(p.product)}</b><small>複製這張的審查提示詞</small></div><span class="chev">📋</span></button>`).join(''):'<div class="sub" style="margin-top:8px">先匯入保單</div>'}</div>`+
     card('minprot','🛡 全家最低保障規劃','依全家每個人的身分（軍、公、教、勞、農、漁、自營、家管、退休、學生…）先盤點社會保險，再看商業保險的缺口、重複與優先順序，給不同預算的方案。',`<div class="sub" style="margin-top:6px">身分、家庭角色在「⚙️ 設定 → 基本資料」填。${MEM.some(z=>!z.job)?'<span style="color:var(--amber)">還有家人沒填身分</span>':''}</div>`)+
     card('compare','⚖️ 保險商品比較','附上業務給的 DM、建議書或條款：比較保障、條款、保費，並對照你現有的保障找重複與缺口（不給單一總分）。')+
@@ -5466,7 +5549,7 @@ function packData(id){const ms=id?MEM.filter(m=>m.id===id):MEM,ids=new Set(ms.ma
   if(!id){d.img=Object.fromEntries(Object.entries(IMG).filter(([,v])=>/^https:/.test(v)));d.gas=GAS}return d}
 const b64=u8=>{let s='';for(let i=0;i<u8.length;i+=8192)s+=String.fromCharCode(...u8.subarray(i,i+8192));return btoa(s)},ub64=s=>Uint8Array.from(atob(String(s)),c=>c.charCodeAt(0));
 async function pwKey(pw,salt,iter){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:iter,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
-async function encPack(d,pw){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),iter=210000,key=await pwKey(pw,salt,iter);
+async function encPack(d,pw){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),iter=600000,key=await pwKey(pw,salt,iter);   // OWASP 2023 建議 PBKDF2-SHA256 60 萬次；舊備份的次數存在檔案裡，照樣能解
   const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(d))));return{app:APP_ID,v:3,enc:'AES-GCM',kdf:'PBKDF2-SHA256',iter,kind:d.kind,salt:b64(salt),iv:b64(iv),data:b64(ct)}}
 async function decPack(e,pw){const iter=Math.min(2e6,Math.max(1e5,num(e.iter)||210000)),key=await pwKey(pw,ub64(e.salt),iter);
   return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(e.iv)},key,ub64(e.data))))}

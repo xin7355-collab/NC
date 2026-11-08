@@ -2123,6 +2123,65 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zz. 照片遮罩（塗黑後分享、去 EXIF）、理賠規則（第 31 天起加倍、同次住院合併、年度次數、同部位擇高、2-2-7）、保險公司理賠捷徑、Email／新式證號、加密 60 萬次 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me', inc: 80 }], active: 'a' });
+    // 合成照片：白底，右下角一塊紅色（遮罩只塗左上）
+    const png = await page.evaluate(() => { const c = document.createElement('canvas'); c.width = 400; c.height = 300; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, 400, 300); x.fillStyle = '#f00'; x.fillRect(250, 180, 150, 120); return c.toDataURL('image/png').split(',')[1] });
+    const buf = Buffer.from(png, 'base64');
+    await page.evaluate(() => { openPolImport() });
+    const entry = await page.evaluate(() => !!document.querySelector('#sheetBody [data-mask]'));
+    await page.click('#sheetBody [data-mask]');
+    await page.waitForSelector('#mkFile', { state: 'attached' });
+    const inertOn = await page.evaluate(() => $('#sheet').inert && $('#nav').inert);
+    await page.setInputFiles('#mkFile', [{ name: 'p1.png', mimeType: 'image/png', buffer: buf }, { name: 'p2.png', mimeType: 'image/png', buffer: buf }]);
+    await page.waitForSelector('#mkCv');
+    const drag = async (fx0, fy0, fx1, fy1) => { const b = await page.locator('#mkCv').boundingBox(); await page.mouse.move(b.x + b.width * fx0, b.y + b.height * fy0); await page.mouse.down(); await page.mouse.move(b.x + b.width * (fx0 + fx1) / 2, b.y + b.height * (fy0 + fy1) / 2, { steps: 3 }); await page.mouse.move(b.x + b.width * fx1, b.y + b.height * fy1, { steps: 3 }); await page.mouse.up() };
+    await drag(0.05, 0.05, 0.5, 0.5);
+    const r1 = await page.evaluate(() => MK.rects.length);
+    await page.click('[data-mkundo]'); const r0 = await page.evaluate(() => MK.rects.length);
+    await drag(0.05, 0.05, 0.5, 0.5); await page.click('[data-mknext]');
+    await page.waitForFunction(() => MK && MK.i === 1 && document.querySelector('#mkCv'));
+    await drag(0.1, 0.1, 0.4, 0.4); await page.click('[data-mknext]'); await page.waitForSelector('[data-mkshare]');
+    await page.evaluate(() => { window.__sh = null; navigator.canShare = () => true; navigator.share = async o => { window.__sh = o } });
+    await page.click('[data-mkshare]'); await page.waitForFunction(() => window.__sh);
+    const m1 = await page.evaluate(async () => { const o = window.__sh, f = o.files[0], bm = await createImageBitmap(f), c = document.createElement('canvas'); c.width = bm.width; c.height = bm.height; const x = c.getContext('2d'); x.drawImage(bm, 0, 0);
+      const px = (a, b) => [...x.getImageData(Math.round(bm.width * a), Math.round(bm.height * b), 1, 1).data].slice(0, 3);
+      return { n: o.files.length, title: 'title' in o, type: f.type, name: f.name, black: px(0.25, 0.25), white: px(0.15, 0.85), red: px(0.85, 0.85), black2: (await (async () => { const g = await createImageBitmap(o.files[1]); const c2 = document.createElement('canvas'); c2.width = g.width; c2.height = g.height; const y = c2.getContext('2d'); y.drawImage(g, 0, 0); return [...y.getImageData(Math.round(g.width * .25), Math.round(g.height * .25), 1, 1).data].slice(0, 3) })()) } });
+    await page.click('[data-mkx]');
+    const inertOff = await page.evaluate(() => !$('#sheet').inert && $('#nav').inert && $('#mkov').hidden && MK === null);   // 匯入視窗還開著：導覽列照舊不能點，視窗恢復可以操作
+    check('照片遮罩：保單匯入畫面有「先遮住照片上的個資」；畫黑框、復原、兩張照片逐張畫框、分享遮好的 JPEG（只帶檔案不帶 title）；黑框蓋住的地方是黑色、其他地方不變；關閉後畫面恢復可以操作',
+      entry && inertOn && r1 === 1 && r0 === 0 && m1.n === 2 && !m1.title && m1.type === 'image/jpeg' && /^kinwell-masked-1\.jpg$/.test(m1.name) && m1.black.every(v => v < 30) && m1.white.every(v => v > 225) && m1.red[0] > 200 && m1.red[1] < 60 && m1.black2.every(v => v < 30) && inertOff,
+      JSON.stringify({ entry, inertOn, r1, r0, m1, inertOff }));
+    const z1 = await page.evaluate(() => { closeSheet(); openLabSheet(); const lab = !!document.querySelector('#sheetBody [data-mask]'); closeSheet(); go('ins', 'tool'); renderTool(); return lab && !!document.querySelector('#toolBody [data-mask]') });
+    check('體檢、體脂的 AI 匯入和 AI 工具頁也有「先遮住照片上的個資」', z1, '');
+    // 理賠規則
+    const c1 = await page.evaluate(() => { const m = me(), L = INS[m.id] || (INS[m.id] = []), W = new Set();
+      const mk = (id, ins, cov, rule) => { const { p } = polCheck({ insurer: ins, product: ins + '醫療保險', start: '2015-01-01', status: '有效', payFreq: '年', premium: 3000, coverages: [cov] }, m); p.id = id; p.chk = true; if (rule) p.terms = { rules: [termRule(rule, W)] }; L.push(p); return p };
+      const A = mk('t1', '富邦人壽', { name: '住院日額保險金', kind: 'rider', cat: 'hosp_day', amount: 2000, unit: '元/日', quote: '2,000 元' }, { name: '住院日額保險金', pay: 'daily', stepDay: 31, stepX: 2, sameStay: 14, maxDays: 365, clause: '第八條' });
+      const B = mk('t2', '某某人壽', { name: '手術保險金', kind: 'rider', cat: 'surgery', amount: 1000, unit: '元/日', quote: '1,000 元' }, { name: '手術保險金', pay: 'table', sxDef: '全民健康保險醫療服務給付項目及支付標準第二部第二章第七節', sxHighest: true, yearMax: 10, clause: '第九條' });
+      const C = mk('t3', '乙人壽', { name: '住院醫療日額', kind: 'rider', cat: 'hosp_day', amount: 1000, unit: '元/日', quote: '1,000 元' }, null);
+      S.set('ins', INS);
+      const e1 = claimEst(m, { k: 'ad', d: todayS(), days: 40, readmit: true }), ia = e1.out.find(o => o.p.id === 't1').its[0], ic = e1.out.find(o => o.p.id === 't3').its[0];
+      const e2 = claimEst(m, { k: 'sx', d: todayS(), sx: true }), ib = e2.out.find(o => o.p.id === 't2').its[0];
+      openClaimPrep('sx'); const sxT = $('#sheetBody').textContent; closeSheet(); openClaimPrep('ad'); const adT = $('#sheetBody').textContent; closeSheet();
+      openPol('t1'); const pa = $('#sheetBody').innerHTML; closeSheet(); openPol('t2'); const pb = $('#sheetBody').innerHTML; closeSheet();
+      return { amt: ia.amt, txt: ia.txt, why: ia.why.join('|'), cwhy: ic.why.join('|'), sw: ib.why.join('|'), ts: termSum(A.terms.rules[0]) + '｜' + termSum(B.terms.rules[0]), sxDef: B.terms.rules[0].sxDef, sxT: /2-2-7/.test(sxT) && /健保手術代碼/.test(sxT), adT: /出院不久又因同一原因住院/.test(adT),
+        pa, pb, ce: /理賠申請書/.test(ceHTML(e1)), tp: promptTerms(A) } });
+    check('理賠試算：條款「第 31 天起 × 2」住 40 天＝2,000 × 40 ＋ 10 天再加 1 倍＝100,000；出院 14 天內同病再住院提醒合併算；沒匯入條款的住超過 30 天提醒看條款',
+      c1.amt === 100000 && /第 31 天起 10 天再加 1 倍/.test(c1.txt) && /出院 14 天內因同一原因再住院算同一次/.test(c1.why) && /第 31 天起日額加倍（看條款）/.test(c1.cwhy) && /很多保單算同一次住院/.test(c1.cwhy), JSON.stringify({ amt: c1.amt, txt: c1.txt, why: c1.why, cwhy: c1.cwhy }));
+    check('手術：條款寫健保第二部第二章第七節 → 存成 2-2-7、試算寫手術代碼；同部位只賠最高一項、每保單年度 10 次；條款規則摘要列出；手術情境的問醫師與常見少賠提到 2-2-7 和健保手術代碼；住院情境可以勾「出院不久又因同一原因住院」',
+      c1.sxDef === '227' && /2-2-7/.test(c1.sw) && /只賠倍數最高的一項/.test(c1.sw) && /每保單年度最多 10 次/.test(c1.sw) && /第 31 天起 × 2/.test(c1.ts) && /出院 14 天內同病再住院算同一次/.test(c1.ts) && /每保單年度最多 10 次/.test(c1.ts) && /手術依健保 2-2-7/.test(c1.ts) && c1.sxT && c1.adT && /stepDay/.test(c1.tp) && /sxDef/.test(c1.tp),
+      JSON.stringify({ sxDef: c1.sxDef, sw: c1.sw, ts: c1.ts, sxT: c1.sxT, adT: c1.adT }));
+    check('保險公司理賠捷徑：富邦有搜尋理賠申請書、線上理賠、官網、客服電話；不在清單的公司只有搜尋；理賠試算的每張保單也有',
+      /google\.com\/search\?q=%E5%AF%8C%E9%82%A6%E4%BA%BA%E5%A3%BD/.test(c1.pa) && /digital_claims/.test(c1.pa) && /href="https:\/\/www\.fubon\.com\/life\/"/.test(c1.pa) && /tel:0809000550/.test(c1.pa) && /target="_blank" rel="noopener noreferrer"/.test(c1.pa)
+        && /搜尋某某人壽理賠申請書/.test(c1.pb) && !/🏢 官網/.test(c1.pb) && !/tel:/.test(c1.pb) && c1.ce, '');
+    const s1 = await page.evaluate(async () => { const W = new Set(), t = insScrub('聯絡 test.user@example.com 證號 A812345678 身分證 B123456789', W); const e = await encPack({ a: 1 }, 'pw-123456'), d = await decPack(e, 'pw-123456'); return { t, w: [...W].join('|'), iter: e.iter, ok: d && d.a === 1 } });
+    check('去識別化多遮 Email 和新式外來人口統一證號；加密備份 PBKDF2 改成 60 萬次，解得回來',
+      !/@/.test(s1.t) && !/A812345678/.test(s1.t) && !/B123456789/.test(s1.t) && /Email/.test(s1.w) && s1.iter === 600000 && s1.ok, JSON.stringify(s1));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
