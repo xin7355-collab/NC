@@ -2041,6 +2041,43 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zw. 限女性的給付男性不算；擇一給付只算一次（自動提醒＋一鍵）；B 型身故＝保額＋帳戶價值；每日給付不同情況分開列 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me', inc: 80, earner: true }], active: 'a' });
+    const w1 = await page.evaluate(() => { const m = me(), L = INS[m.id] || (INS[m.id] = []);
+      const mk = (id, r) => { const { p } = polCheck({ insurer: '甲人壽', start: '2020-01-01', status: '有效', payFreq: '年', premium: 10000, ...r }, m); p.id = id; L.push(p); return p };
+      mk('w1', { product: '甲人壽一年定期防癌保險', coverages: [
+        { name: '防癌附約：義乳重建保險金', kind: 'rider', cat: 'cancer', amount: 36, unit: '萬元', quote: '36 萬' },
+        { name: '防癌附約：初次罹癌保險金', kind: 'rider', cat: 'cancer', amount: 30, unit: '萬元', quote: '30 萬' },
+        { name: '防癌附約：癌症住院保險金', kind: 'rider', cat: 'cancer', amount: 2000, unit: '元/日', quote: '2,000 元' },
+        { name: '防癌附約：癌症出院療養保險金', kind: 'rider', cat: 'cancer', amount: 3600, unit: '元/日', quote: '3,600 元' },
+        { name: '防癌附約：癌症門診保險金', kind: 'rider', cat: 'cancer', amount: 3600, unit: '元/日', quote: '3,600 元' }] });
+      const p2 = mk('w2', { product: '甲人壽重大傷病終身保險', coverages: [
+        { name: '重大疾病保險金', kind: 'main', cat: 'critical', amount: 100, unit: '萬元', quote: '100 萬' },
+        { name: '重大傷病保險金', kind: 'main', cat: 'critical', amount: 100, unit: '萬元', quote: '100 萬' }] });
+      const p3 = mk('w3', { product: '甲人壽變額萬能壽險', accountValue: 55000, accountValueDate: '2026-02-24', coverages: [
+        { name: '身故保險金', kind: 'main', cat: 'life', amount: 500, unit: '萬元', quote: '500 萬', plusAV: true }] });
+      S.set('ins', INS); renderIns();
+      const G = () => Object.fromEntries(covGap(m).map(g => [g.k, g.have])), g0 = G(), ca = covGap(m).find(g => g.k === 'cancer');
+      const f2 = polFlags(p2, m).map(f => f.t).join('|'), btn = PFIX.some(([re, a]) => a === 'c_oneof' && polFlags(p2, m).some(f => re.test(f.t)));
+      polFix(m, p2, 'c_oneof', 0); const g1 = G(), cr = covGap(m).find(g => g.k === 'critical');
+      const avOff = (delete p3.av, G().life), f3 = polFlags(p3, m).map(f => f.t).join('|');
+      go('ins', 'cov'); renderCov(); const cov = $('#covBody').textContent;
+      m.sex = 'f'; const gf = G().cancer;
+      return { c0: g0.cancer, ex: ca.exL.map(x => x.why).join('|'), cr0: g0.critical, f2, btn, cr1: g1.critical, crx: cr.exL.map(x => x.why).join('|'), life: g0.life, avOff, f3, gf,
+        day: /各項合計/.test(cov) && /看單項：住院 2,000 元療養 3,600 元門診 3,600 元/.test(cov), pp: promptPolicy(), ck: POLCHK_HEAD, dif: polDiff({ items: [{ name: 'x', cat: 'life', amt: 1, unit: '萬元' }] }, { items: [{ name: 'x', cat: 'life', amt: 1, unit: '萬元', plusAV: true, oneOf: 'g', sex: 'f' }] }).join('|') } });
+    check('限女性的給付（義乳重建）男性被保險人不算進癌症、寫原因；改成女性才算',
+      w1.c0 === 30 && /限女性被保險人/.test(w1.ex) && w1.gf === 66, JSON.stringify({ c0: w1.c0, ex: w1.ex, gf: w1.gf }));
+    check('同一張保單重大疾病、重大傷病各 100 萬：提醒可能重複算＋「擇一給付」按鈕；按了只算 100 萬，另一項寫「擇一給付，不重複算」',
+      w1.cr0 === 200 && /會重複算/.test(w1.f2) && w1.btn && w1.cr1 === 100 && /擇一給付/.test(w1.crx), JSON.stringify({ cr0: w1.cr0, f2: w1.f2, btn: w1.btn, cr1: w1.cr1, crx: w1.crx }));
+    check('B 型身故＝保額 500 萬＋帳戶價值 5.5 萬＝505.5 萬；沒填帳戶價值先算 500 萬並提醒',
+      Math.abs(w1.life - 505.5) < 1e-9 && w1.avOff === 500 && /還沒填帳戶價值/.test(w1.f3), JSON.stringify({ life: w1.life, avOff: w1.avOff, f3: w1.f3 }));
+    check('癌症每日給付顯示「各項合計」，並分開列住院、療養、門診（不同情況不會同一天都領）', w1.day, '');
+    check('匯入、核對提示詞有 sex、oneOf、plusAV、accountValue；重新匯入時這些改了也列差異',
+      [w1.pp, w1.ck].every(t => /"sex"/.test(t) && /oneOf/.test(t) && /plusAV/.test(t) && /accountValue/.test(t)) && /加計帳戶價值/.test(w1.dif) && /擇一給付/.test(w1.dif) && /限定性別/.test(w1.dif), w1.dif);
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
