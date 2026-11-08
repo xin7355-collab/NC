@@ -2097,6 +2097,32 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zy. 實支實付收據正本／副本：2024/7/1 以後的新契約推定限正本、舊保單（一年期續保）提醒不要斷、張數與申請順序、提示詞 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me', inc: 80 }], active: 'a' });
+    const y1 = await page.evaluate(() => { const m = me(), L = INS[m.id] || (INS[m.id] = []);
+      const mk = (id, start, ins, c) => { const { p } = polCheck({ insurer: ins, product: ins + '醫療保險', start, status: '有效', payFreq: '年', premium: 3000, coverages: [{ name: '住院醫療費用保險金', kind: 'rider', cat: 'hosp_real', amount: 10, unit: '萬元/次', quote: '10 萬', ...c }] }, m); p.id = id; L.push(p); return p };
+      const A = mk('ra', '2019-01-01', '甲人壽', { renewable: '不保證續保' }), B = mk('rb', '2020-01-01', '乙人壽', { claimDoc: '可用副本' }), C = mk('rc', '2025-03-01', '丙人壽', {}), D = mk('rd', '2025-06-01', '丁人壽', { claimDoc: 'orig' });
+      S.set('ins', INS); renderIns();
+      const rp = realPols(m).map(x => x.p.id + ':' + x.v).join(), G = covGap(m), ck = covCheckup(m, G), html = checkupHTML(m, G);
+      const R = claimEst(m, { k: 'ad', d: todayS(), days: 3 }), ce = ceHTML(R);
+      openPolEdit('rb'); const sel = !!document.querySelector('#pe-cov [data-cf="claimDoc"]') && document.querySelector('#pe-cov [data-cf="claimDoc"]').value; closeSheet();
+      return { rp, O: ck.O.map(x => x[0]).join('|'), N: ck.N.map(x => x.join('：')).join('|'), gd: GUIDE_OF(m).includes('real') && /理賠差額證明/.test(html) && /3＋1/.test(html),
+        fa: polFlags(A, m).map(f => f.lv + ':' + f.t).join('|'), fc: polFlags(C, m).map(f => f.lv + ':' + f.t).join('|'), lvc: polLv(C, m), ro: R.ro, ce: /收據正本給/.test(ce),
+        sel, dif: polDiff({ items: [{ name: 'x', cat: 'hosp_real', amt: 1, unit: '萬元' }] }, { items: [{ name: 'x', cat: 'hosp_real', amt: 1, unit: '萬元', claimDoc: 'copy' }] }).join('|'), pp: promptPolicy(), ckp: POLCHK_HEAD } });
+    check('實支實付收據：條款寫可用副本 → 副本；2024/7/1 以後生效 → 推定限正本；以前又沒寫 → 不確定；編輯畫面可以選',
+      y1.rp === 'ra:?,rb:copy,rc:orig,rd:orig' && y1.sel === 'copy', JSON.stringify({ rp: y1.rp, sel: y1.sel }));
+    check('保障健檢：4 張實支實付列出可用副本、限正本、不確定各幾張；2 張 2024/7/1 以前的提醒不要斷掉（不保證續保的點名）；身分說明多一段「實支實付：收據正本、副本、張數」',
+      /實支實付 4 張（可用副本 1、限正本 2、不確定 1）/.test(y1.O) && /2 張 2024\/7\/1 以前的實支實付/.test(y1.N) && /甲人壽醫療保險」不保證續保/.test(y1.N) && y1.gd, JSON.stringify({ O: y1.O, N: y1.N, gd: y1.gd }));
+    check('單張保單：舊的寫「每年續保照原條款、斷掉重買只能正本」，新的寫「只能用收據正本理賠」；都是參考，不會變成待核對',
+      /info:「住院醫療費用保險金」2024\/7\/1 以前的實支實付：看條款能不能用收據副本/.test(y1.fa) && /info:「住院醫療費用保險金」2024\/7\/1 以後的實支實付：只能用收據正本理賠/.test(y1.fc) && y1.lvc === 'ok', JSON.stringify({ fa: y1.fa, fc: y1.fc, lvc: y1.lvc }));
+    check('理賠試算：好幾張實支實付時寫申請順序（正本給限正本的、副本給可用副本的、其他限正本拿差額證明、不確定的看條款）',
+      /收據正本給 「丙人壽醫療保險」/.test(y1.ro) && /「乙人壽醫療保險」 可以用醫院蓋章的收據副本/.test(y1.ro) && /「丁人壽醫療保險」 也限正本/.test(y1.ro) && /❔ 「甲人壽醫療保險」/.test(y1.ro) && y1.ce, y1.ro);
+    check('匯入、核對提示詞有 claimDoc；重新匯入時收據正本／副本改了列差異',
+      /"claimDoc"/.test(y1.pp) && /"claimDoc"/.test(y1.ckp) && /收據：不明 → 可用副本/.test(y1.dif), y1.dif);
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);

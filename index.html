@@ -4309,8 +4309,8 @@ function polCheck(r,m,manual){const W=new Set(),E=[],str=(v,n)=>insScrub(typeof 
     const it={name,kind:c.kind==='rider'?'rider':'main',cat,amt:num(c.amount??c.amt),unit:str(c.unit,12),limit:nx(c.limit,60),wait:num(c.waitingDays??c.wait),
       renew:RENEW.some(x=>x[0]===rn&&rn)?rn:/不保證|非保證/.test(rn)?'no':/保證/.test(rn)?'guar':/^(yes|true|可)/i.test(rn)?'yes':'',maxAge:num(c.maxAge),endDate:parseYMD(c.endDate,1)||'',excl:nx(c.exclusions??c.excl,200),quote:nx(c.quote,240),page:num(c.page),code:str(c.code,16),st:stParse(c.status??c.st,''),start:parseYMD(c.start,1)||'',payEnd:parseYMD(c.payEnd,1)||'',prem:num(c.premium??c.prem),
       calc:(x=>{if(!x||typeof x!=='object')return null;const a=num(x.amount??x.amt);return a>0?{amount:a,unit:str(x.unit,12),perUnit:num(x.perUnit),multiplier:num(x.multiplier),perUnitQuote:nx(x.perUnitQuote,200),formula:nx(x.formula,80),quote:nx(x.quote,200),page:num(x.page)}:null})(c.calc),lump:!!c.lump,
-      sex:(x=>/^(f|female|女)/i.test(x)?'f':/^(m|male|男)/i.test(x)?'m':'')(String(c.sex??'')),oneOf:str(c.oneOf,20),plusAV:c.plusAV===true||c.plusAV==='true'};
-    for(const k of['sex','oneOf','plusAV'])if(!it[k])delete it[k];
+      sex:(x=>/^(f|female|女)/i.test(x)?'f':/^(m|male|男)/i.test(x)?'m':'')(String(c.sex??'')),claimDoc:(x=>/^copy$|副本|影本/i.test(x)?'copy':/^orig$|正本/i.test(x)?'orig':'')(String(c.claimDoc??'')),oneOf:str(c.oneOf,20),plusAV:c.plusAV===true||c.plusAV==='true'};
+    for(const k of['sex','oneOf','plusAV','claimDoc'])if(!it[k])delete it[k];
     if(it.payEnd){const b=String(m.birth||''),ag=/^\d{4}-\d{2}-\d{2}$/.test(b)?Math.floor(dSign(it.payEnd,b)/365.25):null;   // 繳費終期其實是保障到期日（和到期日同月、或繳到 100 歲以上）
       if(it.endDate&&it.payEnd.slice(0,7)===it.endDate.slice(0,7)||p.endDate&&it.payEnd.slice(0,7)===p.endDate.slice(0,7)||ag!=null&&ag>=100){if(!it.endDate)it.endDate=it.payEnd;it.payEnd=''}}
     if(it.amt!=null&&it.amt<0){W.add(`「${name}」金額是負數，已清空`);it.amt=null}
@@ -4346,7 +4346,7 @@ function polDiff(a,b){const D=[],f=(k,t,fm=v=>v==null||v===''?'—':v)=>{if(Stri
     if((o.st||'')!==(c.st||''))D.push(`「${c.name}」狀態：${stS(o.st)||'同整張保單'} → ${stS(c.st)||'同整張保單'}`);if(String(o.prem??'')!==String(c.prem??''))D.push(`「${c.name}」保費 ${pf(o.prem)} → ${pf(c.prem)}`);
     {const x=o.calc,y=c.calc;if(x&&!y)D.push(`「${c.name}」拿掉換算（原本 ${calcV(x)}）`);else if(!x&&y)D.push(`「${c.name}」新增換算 ${calcV(y)}`);
       else if(x&&y){if(x.amount!==y.amount||(x.unit||'')!==(y.unit||''))D.push(`「${c.name}」換算 ${calcV(x)} → ${calcV(y)}`);if((x.perUnit??'')!==(y.perUnit??''))D.push(`「${c.name}」換算的每單位 ${pf(x.perUnit)} → ${pf(y.perUnit)}`);if((x.multiplier??'')!==(y.multiplier??''))D.push(`「${c.name}」換算的倍數 ${pf(x.multiplier)} → ${pf(y.multiplier)}`)}}
-    if((o.sex||'')!==(c.sex||''))D.push(`「${c.name}」限定性別：${({f:'女性',m:'男性'})[o.sex]||'不限'} → ${({f:'女性',m:'男性'})[c.sex]||'不限'}`);if((o.oneOf||'')!==(c.oneOf||''))D.push(`「${c.name}」擇一給付：${o.oneOf||'—'} → ${c.oneOf||'—'}`);if(!!o.plusAV!==!!c.plusAV)D.push(`「${c.name}」加計帳戶價值：${o.plusAV?'是':'否'} → ${c.plusAV?'是':'否'}`);
+    if((o.sex||'')!==(c.sex||''))D.push(`「${c.name}」限定性別：${({f:'女性',m:'男性'})[o.sex]||'不限'} → ${({f:'女性',m:'男性'})[c.sex]||'不限'}`);if((o.oneOf||'')!==(c.oneOf||''))D.push(`「${c.name}」擇一給付：${o.oneOf||'—'} → ${c.oneOf||'—'}`);if((o.claimDoc||'')!==(c.claimDoc||''))D.push(`「${c.name}」收據：${({copy:'可用副本',orig:'限正本'})[o.claimDoc]||'不明'} → ${({copy:'可用副本',orig:'限正本'})[c.claimDoc]||'不明'}`);if(!!o.plusAV!==!!c.plusAV)D.push(`「${c.name}」加計帳戶價值：${o.plusAV?'是':'否'} → ${c.plusAV?'是':'否'}`);
     if(!!o.lump!==!!c.lump)D.push(`「${c.name}」一次給付：${o.lump?'是':'否'} → ${c.lump?'是':'否'}`);if((o.limit||'')!==(c.limit||''))D.push(`「${c.name}」給付說明 ${o.limit||'—'} → ${c.limit||'—'}`);
     if((o.payEnd||'')!==(c.payEnd||''))D.push(`「${c.name}」繳費終期 ${o.payEnd||'—'} → ${c.payEnd||'—'}`);if((o.start||'')!==(c.start||''))D.push(`「${c.name}」始期 ${o.start||'—'} → ${c.start||'—'}`);if((o.code||'')!==(c.code||''))D.push(`「${c.name}」險種代碼 ${o.code||'—'} → ${c.code||'—'}`)}
   for(const[k,c]of A)if(!B.has(k)&&!mv.has(k))D.push(`移除「${c.name}」`);
@@ -4440,6 +4440,9 @@ function polAudit(p,m){const F=[],add=(lv,k,t,fix,ci)=>F.push({lv,k,t,fix,ci}),Y
         else{const q=numInQuote(amt,c.unit,c.quote);if(q==='cn')add('chk','v',`${n}原文是國字數字`,`對照原文確認金額 ${amt} ${c.unit||''}。`,i);
           else if(!q)add('err','v',`${n}的金額 ${amt} 在原文裡找不到`,`對照保單${c.page?`第 ${c.page} 頁`:''}：AI 常把萬／元、每日／每次讀錯。按「編輯」改金額，確認後按「我已核對」。`,i)}}}
     {const sx=itemSex(c);if(sx&&(m.sex==='f'||m.sex==='m')&&m.sex!==sx)add('info','d',`${n}限${sx==='f'?'女性':'男性'}被保險人：不算進保障`,'條款寫只給付女性（或男性）被保險人，這位家人領不到，不用改；性別填錯的話到「設定」改。',i)}
+    if(isReal(c)&&(p.items||[]).findIndex(isReal)===i&&polLive(p)){const rd=realDoc(p,c),st=c.start||p.start||'';
+      if(st&&st<REAL_NEW&&rd.v!=='orig')add('info','d',`${n}2024/7/1 以前的實支實付${rd.v==='copy'?'（可以用收據副本）':'：看條款能不能用收據副本'}`,`每年續保照原條款；停效、解約、主約解約或減額繳清後再買，就是新契約、只能用正本理賠。${c.renew==='no'?'這項不保證續保：保險公司可以不續保。':''}${rd.v==='?'?'條款寫「副本」「影本」「其他保險已給付者仍予給付」多半是可用副本：按「編輯」→ 這一項的「更多」選「實支實付收據」。':''}`,i);
+      else if(rd.v==='orig'&&rd.src==='依生效日推定')add('info','d',`${n}2024/7/1 以後的實支實付：只能用收據正本理賠`,'同一筆費用有好幾張實支實付時，其他家要拿這家開的「理賠差額證明」申請差額；合計最多賠到實際花費。',i)}
     if(c.plusAV&&!(p.av>0))add('info','d',`${n}身故＝保額＋保單帳戶價值：還沒填帳戶價值，先只算保額`,'看最近一期的投資型保單對帳單或保險公司 App 的「保單帳戶價值」，按「編輯」填上（帳戶價值會跟著淨值變動）。',i);
     if(!c.oneOf&&['critical','cancer'].includes(c.cat)&&amt!=null&&!u.nm&&!u.per){const j=(p.items||[]).findIndex((z,k)=>k!==i&&z.cat===c.cat&&!z.oneOf&&z.amt===c.amt&&(z.unit||'')===(c.unit||''));
       if(j>=0&&j>i)add('info','d',`${n}和「${p.items[j].name}」金額一樣、都算進${INSCATK[c.cat]}：條款如果寫領了一項就不再給付另一項，會重複算`,'看條款的「給付」或「契約終止」條文：寫「給付後本契約效力即行終止」或「僅給付其中一項」的，按「擇一給付」只算一次；兩項可以都領的，不用改。',i)}
@@ -4545,21 +4548,38 @@ function openGapDetail(k){const m=me(),g=covGap(m).find(x=>x.k===k);if(!g)return
     <div class="h4">⚪ 不算保障（${g.exL.length} 項）</div>${g.exL.map(row).join('')||'<div class="sub">沒有</div>'}
     <p class="note">算法：只算分類是「${g.cats.map(c=>INSCATK[c]).join('、')}」的項目，保單要有效、已生效、還沒到期；${g.pers?`只加${g.pers.map(q=>PERW[q]).join('、')}的金額，萬元換成元；以計畫／單位計的要匯入條款或按 ✏️ 填金額才算。`:'這一類依條款（失能等級、長照狀態）給付，不加總金額。'}點一項會打開那張保單。分類錯了（例如意外身故被分成壽險）就打開保單按「編輯」改類別；漏了的保單到「保單」匯入。</p>
     <button class="btn ghost" data-gapedit style="margin-top:6px">🎯 調整目標、年收入、負債</button>`)}
+/* 實支實付的收據正本／副本：2024/7/1 起新契約回歸損害填補（只能正本，多張用「理賠差額證明」只賠差額）；之前的契約（含每年續保的一年期附約）照原條款。
+   v：copy 可用副本、orig 限正本、? 不確定；src：條款／條款規則／推定（依生效日） */
+const REAL_NEW='2024-07-01',isReal=c=>c.cat==='hosp_real'||(c.cat==='acc_med'&&covUnit(c).per!=='day');
+function realDoc(p,c){const tr=termsRule(p,c),st=c.start||p.start||'';
+  if(c.claimDoc==='copy'||(!c.claimDoc&&tr?.copyClaim===true))return{v:'copy',t:'可以用收據副本',src:c.claimDoc?'保單資料':'條款規則'};
+  if(c.claimDoc==='orig')return{v:'orig',t:'限收據正本',src:'保單資料'};
+  if(st&&st>=REAL_NEW)return{v:'orig',t:'限收據正本（2024/7/1 以後的新契約）',src:'依生效日推定'};
+  return{v:'?',t:st?'2024/7/1 以前的契約：看條款有沒有「副本理賠」':'沒有生效日：看條款能不能用副本',src:''}}
+// 每張保單一筆（同一張的多項實支實付給付算一張）
+const realPols=(m,d)=>{const o=new Map();for(const p of insOf(m).filter(p=>polLive(p,d)))for(const c of p.items||[])if(isReal(c)&&!itemOff(p,c)&&!o.has(p.id))o.set(p.id,{p,c,...realDoc(p,c),old:(c.start||p.start||'')<REAL_NEW&&!!(c.start||p.start)});return[...o.values()]};
+// 好幾張實支實付時，同一筆醫療費用怎麼申請
+function realOrder(m,d){const L=realPols(m,d);if(L.length<2)return'';const nm=x=>`「${polName(x.p)}」`,O=L.filter(x=>x.v==='orig'),C=L.filter(x=>x.v==='copy'),U=L.filter(x=>x.v==='?');
+  return['🧾 有 '+L.length+' 張實支實付，同一筆醫療費用這樣申請：',O.length?`① 收據正本給 ${nm(O[0])}（限正本），請它理賠後開「收據正本留存證明」或「理賠差額證明」`:`① 收據正本先給任一家（例如 ${nm(L[0])}）`,
+    C.length?`② ${C.map(nm).join('、')} 可以用醫院蓋章的收據副本各自申請`:'',O.length>1?`③ ${O.slice(1).map(nm).join('、')} 也限正本：拿差額證明申請「還沒賠到的差額」，所有限正本的合計最多賠到實際花費`:'',
+    U.length?`❔ ${U.map(nm).join('、')} 不確定能不能用副本：看條款，或打電話問保險公司`:''].filter(Boolean).join('\n')}
 /* 保障健檢：保太多／重複、已經夠、建議補強（依年齡、收入、負債、病史、身分）、要注意的狀況；只當參考，不推銷 */
 function covCheckup(m,G){const a=ageOf(m),inc=num(m.inc)||0,by=k=>G.find(g=>g.k===k),O=[],K=[],A=[],N=[],live=insOf(m).filter(p=>polLive(p)),
     nPol=cat=>live.filter(p=>(p.items||[]).some(c=>c.cat===cat&&!itemOff(p,c))).length,fm=(g,v)=>g.u==='萬'?`${(+v.toFixed(1)).toLocaleString()} 萬`:`${Math.round(v).toLocaleString()} 元${g.sfx||''}`,x=(g)=>+(g.have/g.tg).toFixed(1);
   const D=by('hosp_day'),R=by('hosp_real'),L=by('life'),AC=by('accident'),CA=by('cancer'),CR=by('critical'),DI=by('disability'),LT=by('ltc'),earner=!!m.earner||inc>0;
   if(D.tg>0&&D.have>=2*D.tg)O.push([`住院日額每日 ${fm(D,D.have)}：是目標的 ${x(D)} 倍`,'日額是補住院時的病房差額、看護和收入損失。現在很多治療改成門診或短天數住院，平常以門診為主的人，日額保太高多半用不到；有實支實付時每日 2,000～3,000 元通常夠。不用再加，之後續保或調整時可以考慮降低。']);
-  const nR=nPol('hosp_real');if(nR>=3)O.push([`實支實付 ${nR} 張`,`同一張收據要每張都賠，條款要有「副本理賠」；不接受副本的只賠一張。先確認每張的條款，不要再加第 ${nR+1} 張。`]);
+  const RP=realPols(m),nR=RP.length,nC=RP.filter(x=>x.v==='copy').length,nO=RP.filter(x=>x.v==='orig').length,nU=nR-nC-nO;
+  if(nR>=3||nO>=2)O.push([`實支實付 ${nR} 張（可用副本 ${nC}、限正本 ${nO}${nU?`、不確定 ${nU}`:''}）`,`限正本的保單（2024/7/1 以後買的都是）好幾張時，同一筆醫療費用合計最多賠到實際花費：第一家用收據正本賠，其他家拿「理賠差額證明」只賠差額，保費等於多繳。可用副本的舊保單才能各自用同一張收據申請。${nU?'不確定的看條款有沒有「副本理賠」。':''}不要再加第 ${nR+1} 張。`]);
   else if(R.tg>0&&R.have>=2*R.tg)O.push([`實支實付每次 ${fm(R,R.have)}：是目標的 ${x(R)} 倍`,'一般住院、手術的自費額度通常用不到這麼多：不用再加。']);
   const sx=nPol('surgery');if(sx)K.push(['手術已有支應：不用再加手術險','實支實付的手術費限額＋手術險（日額 × 倍數）已經可以支應一般手術；門診手術看條款有沒有賠。']);else if(R.st==='ok')K.push(['實支實付已包含手術費：不一定要另外買手術險','實支實付通常有手術費限額；門診手術看條款。']);
+  {const OL=RP.filter(x=>x.old&&x.v!=='orig');if(OL.length)N.push([`${OL.length} 張 2024/7/1 以前的實支實付${OL.some(x=>x.v==='copy')?'（可以用收據副本）':''}：不要讓它斷掉`,`每年續保是延續原來的契約，照原條款（可用副本、不受新的張數規定影響）。停效太久、解約、主約解約或減額繳清（附約通常跟著終止）、到最高續保年齡、不保證續保被拒絕續保，斷掉後再買就是新契約：只能正本理賠、要重新核保。${OL.filter(x=>x.c.renew==='no').map(x=>`「${polName(x.p)}」不保證續保，保險公司可以不續保。`).join('')}`])}
   if(CA.have>0&&CR.st==='ok')O.push(['癌症一次金和重大傷病都有','重大傷病通常包含癌症（看條款的定義）：再加癌症險可能重疊，先比對兩邊的給付。']);
   if(L.tg>0&&L.have>=2*L.tg)O.push([`壽險 ${fm(L,L.have)}：是目標的 ${x(L)} 倍`,'超過家人需要的部分，保費可以挪去醫療、失能或退休準備。']);
   if(a<15&&L.have>0)O.push(['未滿 15 歲有壽險','未滿 15 歲身故只賠喪葬費用（上限是遺產稅喪葬費扣除額的一半，約 60 多萬；保險法第 107 條），保額寫再高也一樣：小孩以醫療、意外為主。']);
   if(AC.tg>0&&AC.have>=2*AC.tg)O.push([`意外身故 ${fm(AC,AC.have)}：是目標的 ${x(AC)} 倍`,'意外只是身故原因的一部分；超過的部分不如補壽險或失能。']);
   {const ann=live.filter(p=>polPaying(p)).reduce((t,p)=>t+polAnnual(p),0);if(inc&&ann){const r=ann/(inc*1e4);(r>.1?O:K).push([`保費約占年收入 ${(r*100).toFixed(1)}%`,r>.1?'建議 10% 以內（雙十原則）：先檢查上面重複、保太多的。':'在 10% 以內（雙十原則）。'])}}
   if(D.have>0||R.have>0)N.push(['以門診為主的話','一般門診（感冒、慢性病回診、拿藥）商業保險多半不賠，靠健保；所以住院日額、病房費不用保太高，錢放在實支實付（含門診手術）、重大傷病一次金比較用得到。']);
-  if(['none','low','other'].includes(R.st))A.push(['實支實付醫療（最優先）',`健保不給付的自費藥材、手術、病房差額靠它；每次限額 ${R.tg||20} 萬左右，選有門診手術、副本理賠、保證續保的。`]);
+  if(['none','low','other'].includes(R.st))A.push(['實支實付醫療（最優先）',`健保不給付的自費藥材、手術、病房差額靠它；每次限額 ${R.tg||20} 萬左右，選有門診手術、保證續保的（2024/7/1 以後的新保單都只能用收據正本理賠，已經有實支實付時，新買的只賠差額）。`]);
   if(a>=18&&a<75&&(AC.tg>0?['none','low'].includes(AC.st):!AC.have))A.push(['意外險（含意外醫療）','保費低、不太看健康狀況：意外身故、失能和意外醫療一起保。']);
   if(earner&&L.tg>0&&['none','low'].includes(L.st))A.push([`定期壽險補到 ${fm(L,L.tg)}`,`家人靠你的收入${num(m.debt)?'、還有負債':''}：用定期壽險保到孩子獨立、房貸還完，比終身壽險便宜很多；現在有 ${fm(L,L.have)}。`]);
   if(!CR.have&&!CA.have&&a<75)A.push(['重大傷病（或重大疾病）一次金','罹患癌症、中風、心肌梗塞這類重病時，補收入中斷和自費治療；一次領，用途自由。']);
@@ -4589,8 +4609,16 @@ const GUIDE={
  baby:['👶 新生兒、小孩',['出生前（懷孕時）就可以投保「胎兒保單」，出生後馬上有保障；出生後才買，先天性疾病可能被除外或拒保。','先買實支實付、住院醫療（日額不用高）、意外醫療；有預算再加重大傷病或癌症。','壽險不是重點：未滿 15 歲身故只賠喪葬費用（上限是遺產稅喪葬費扣除額的一半，約 60 多萬；保險法第 107 條）。','健保：新生兒出生 60 日內還沒辦好加保時，可以用媽媽的健保卡就醫；記得去辦加保。','父母的保障（壽險、失能、實支實付）比小孩的保險更重要：父母出事，小孩的保費也繳不下去。']],
  old:['👴 75 歲以上（新保單買不到時）',['多數商業保險 70～75 歲以後不能新買：先保留現有保證續保、終身的醫療險，不要解約。','小額終老保險：多數免體檢、投保年齡到 84 歲（看商品），保額最高 90 萬、最多 4 張，主要準備喪葬和身後費用。','長照 2.0：65 歲以上失能（原住民 55 歲以上、失智 50 歲以上）可以申請居家照顧、日間照顧、交通接送、輔具，撥 1966。','健保：重大傷病證明（例如癌症、洗腎）那個病免部分負擔；部分縣市補助長者或中低收入長者的健保費，問區公所。','自己準備「醫療預備金」：把原本要繳的保費存起來，自費醫材、看護都用得到。','經濟有困難：中低收入老人生活津貼、急難救助、醫療補助（區公所、社會局；醫院社工室可以協助）。']],
  poor:['🤝 沒有保險、低收入、健保費繳不出來',['低收入戶：健保費由政府全額補助、就醫免部分負擔；中低收入戶健保費補助一半（部分縣市再補）。','健保費繳不出來：經濟弱勢欠費不鎖卡、照常就醫（欠費還是要繳）；欠費 2,000 元以上可以申請分期，最多 48 期；符合經濟困難認定的可以向健保紓困基金申請無息貸款；健保署也可以轉介公益團體代繳，找健保署各區業務組。','重大傷病證明（癌症、洗腎、罕見疾病等）：那個病的門診、住院免部分負擔。','微型保險：低收入、中低收入、身心障礙、原住民、新住民、農漁民等可以投保，一年期壽險、意外險各最高 50 萬、實支實付最高 3 萬，保費很低（資格和年齡看保險公司）。','急難救助、醫療補助：區公所、社會局；民間有家扶、紅十字會、慈濟等慈善團體，醫院社工室可以協助申請。','勞保、國保：有加保就有失能、死亡、喪葬給付；沒有工作的 25～65 歲通常在國民年金。']],
+ real:['🧾 實支實付：收據正本、副本、張數',[
+  '【正本、副本】實支實付是看收據賠實際花的錢。限正本：要交醫院收據正本，正本只有一份。可用副本：條款有「副本理賠」約定，交醫院蓋章的收據副本（影本、抄本）也能申請，好幾張保單可以各自用同一筆費用申請。',
+  '【2024/7/1 起的新契約】金管會修正商品審查規定，實支實付回歸「損害填補原則」：新賣的只能用收據正本，所有保單加起來最多賠到實際醫療費用。有好幾張時，第一家理賠後開「收據正本留存證明」或「理賠差額證明」，其他家只賠還沒賠到的差額；保險公司不能要你先去別家申請，被推託可以向金管會保險局申訴。',
+  '【舊保單】新規定不溯及既往：2024/7/1 以前買的、條款可以用副本的，續保後照原條款。',
+  '【張數】2019 年 11 月 8 日起（金管會副本理賠控管措施）每位被保險人的實支實付以 3 張為限，醫療和傷害醫療分開算，有自負額的商品可以另外再加 1 張；規定前已經超過 3 張的有效契約，續保時不受影響。2024/7/1 新制後，有的資料說張數改由保險公司核保決定、有的說 3＋1 還在，說法不一致：投保前問保險公司。新制下多買幾張也只賠差額，張數的意義已經不大。',
+  '【一年期附約】每年續保是延續原來的契約，不是新買：2024/7/1 以前投保的，只要一直續保，就維持原條款（可用副本、已超過 3 張的也不受影響）。會斷掉的情況：忘了繳費停效太久、自己解約、主約解約或減額繳清（附約通常跟著終止）、到最高續保年齡、不保證續保被保險公司拒絕續保或商品停售。斷掉後再買就是新契約：只能正本、要重新核保、看當時的張數規定。',
+  '【申請順序】同時有限正本和可用副本的：收據正本先給限正本的那一家，請它開證明；可用副本的拿醫院蓋章的副本各自申請；其他限正本的拿差額證明申請差額。醫院可以多開收據副本和診斷證明（要收費）。',
+  '【投保時要告知】已經有其他實支實付卻沒告知，有些條款會改成按日額給付：投保時據實告知已有的實支實付。法規與條款以金管會最新公告和你的保單為準。']],
  budget:['💰 預算有限的最低保險組合',['原則：先保大、後保小（先保會讓家裡經濟垮掉的風險）；先保障、後儲蓄；定期險比終身險便宜很多，預算有限不買儲蓄險、終身險。','① 意外險：意外身故、失能 200～500 萬，附意外醫療實支實付 3～5 萬（保費看職業等級，常見一年一、兩千元起）。','② 實支實付醫療：1 個計畫，每次雜費限額 10～20 萬，補健保不給付的自費醫材、手術、藥。','③ 定期壽險：有家人要養或有房貸才買，100～300 萬，保到責任結束（孩子獨立、房貸還完）。','④ 重大傷病或癌症一次金：50～100 萬，生重病時先有一筆錢。','省錢做法：先看公司或國軍的團體保險；網路投保通常比較便宜；主約選低額度、預算放在定期附約時要知道附約跟著主約，主約停效附約也沒有；定期險年紀越大保費越高。','保費是估計，會隨年齡、性別、職業等級變動；可以按下面的提示詞，填預算請 AI 依你的身分排方案。']]};
-const GUIDE_OF=m=>{const a=ageOf(m),j=m.job||'';return[(j==='mil'||j==='vet')&&'milvet',(j==='civ'||j==='tea')&&'civ',(j==='lab'||j==='self')&&'lab',(j==='farm'||j==='fish')&&'farm',(j==='home'||j==='none')&&'nhi',j==='stu'&&'stu',j==='ret'&&'ret',a<6&&'baby',a>=70&&'old',!insOf(m).some(p=>polLive(p))&&'poor','budget'].filter(Boolean)};
+const GUIDE_OF=m=>{const a=ageOf(m),j=m.job||'';return[(j==='mil'||j==='vet')&&'milvet',(j==='civ'||j==='tea')&&'civ',(j==='lab'||j==='self')&&'lab',(j==='farm'||j==='fish')&&'farm',(j==='home'||j==='none')&&'nhi',j==='stu'&&'stu',j==='ret'&&'ret',a<6&&'baby',a>=70&&'old',!insOf(m).some(p=>polLive(p))&&'poor',realPols(m).length&&'real','budget'].filter(Boolean)};
 function checkupHTML(m,G){const{O,K,A,N}=covCheckup(m,G),rel=GUIDE_OF(m),jb=(JOBS.find(x=>x[0]&&x[0]===m.job)||[])[1];
   const li=x=>`<div class="bl"><b>${esc(x[0])}</b><br><span class="sub">${esc(x[1])}</span></div>`,sec=(t,L)=>L.length?`<div class="h4">${t}（${L.length}）</div>${L.map(li).join('')}`:'';
   const gd=(k,open)=>{const[t,L]=GUIDE[k];return `<details class="box"${open?' open':''}><summary>${t}</summary><div class="sub" style="line-height:1.7;padding-bottom:12px">${L.map(x=>'・'+esc(x)).join('<br>')}</div></details>`};
@@ -4616,7 +4644,7 @@ ${G.map(g=>`- ${g.t}：有 ${g.pers?(g.u==='萬'?(+g.have.toFixed(1))+' 萬':Mat
 2. 這些制度補不到的自費與收入風險（病房差額、自費醫材與手術、標靶藥、看護、收入中斷），每項估一個常見金額範圍。
 3. 依預算排出最低保險組合：險種、建議額度、估計年繳保費（標明是估計，會隨年齡、性別、職業等級變動）、為什麼。原則：先保大後保小、先保障後儲蓄、定期優於終身。
 4. 現有保障裡保太多、可以不用再加或續保時可以降低的。
-5. 投保前要問業務員或保險公司的問題（職業等級、戰爭或軍事行動等除外條款、是否保證續保、副本理賠、等待期）。
+5. 投保前要問業務員或保險公司的問題（職業等級、戰爭或軍事行動等除外條款、是否保證續保、收據要正本還是可以用副本（2024/7/1 以後的新實支實付只能正本）、等待期）。
 6. 你不確定、可能過時的資訊列在最後。`}
 const premGauge=(r,lab)=>r==null?'':`<div class="row" style="margin:12px 0 0"><span>${esc(lab)}</span><span class="tg ${r>.2?'bad':r>.1?'warn':'ok'}">${(r*100).toFixed(1)}%</span></div><div class="pgauge" role="img" aria-label="${esc(lab)} ${(r*100).toFixed(1)}%"><i style="left:${Math.min(100,r/.3*100).toFixed(1)}%"></i></div><div class="pgl"><span>0</span><span>10%</span><span>20%</span><span>30%+</span></div>`;
 // 保障到幾歲：每一類一條，顏色變淡＝這一類有部分保障已經到期；最後一列「繳費」＝還要繳到幾歲
@@ -4690,7 +4718,7 @@ function renderCov(){const m=me(),el=$('#covBody');if(!el)return;const L=insOf(m
     ${tl?`<div class="card"><h2>保障到幾歲</h2>${tl}<p class="note">顏色變淡＝這一類有部分保障已經到期；「終身」依保單或商品名稱判斷，「？」＝保單沒寫保到幾歲；「繳費」＝還要繳到幾歲。以保單條款為準。</p></div>`:''}
     ${Q.length?`<div class="card"><h2>如果加買候選商品</h2>${Q.map(q=>{const after=covSum(m,todayS(),[q]),rows=[];for(const x of after){if(x.nm)continue;const b0=sum.find(y=>!y.nm&&y.cat===x.cat&&y.per===x.per);if(b0&&Math.abs(b0.v-x.v)<1)continue;
         rows.push(`<div class="row" style="padding:7px 0;border-top:1px solid var(--line);gap:8px"><span style="min-width:0">${INSCATK[x.cat]}</span><span style="text-align:right">${b0?money(b0.v)+PERT[b0.per]:'沒有'} → <b>${money(x.v)}${PERT[x.per]}</b> <span class="tg ${b0?'':'ok'}">${b0?'加碼（和現有重複）':'補缺口'}</span></span></div>`)}
-        const wn=[...(q.items||[]).filter(c=>c.renew==='no').map(c=>`「${c.name}」不保證續保`),...((q.items||[]).some(c=>c.cat==='hosp_real')&&sum.some(x=>x.cat==='hosp_real')?['已經有實支實付：第二張要有「副本理賠」約定才能兩張都賠']:[])];
+        const wn=[...(q.items||[]).filter(c=>c.renew==='no').map(c=>`「${c.name}」不保證續保`),...((q.items||[]).some(c=>c.cat==='hosp_real')&&sum.some(x=>x.cat==='hosp_real')?['已經有實支實付：新買的只能用收據正本理賠（2024/7/1 新制），同一筆費用只賠差額']:[])];
         return `<div class="cdet"><b>${esc(q.insurer)}・${esc(q.product)}</b><div class="sub">年繳 ${ntd(polAnnual(q))}（${esc(m.name)}每年 ${ntd(tot)} → ${ntd(tot+polAnnual(q))}）</div>${rows.join('')||'<div class="sub">沒有讀到可以加總的保障金額</div>'}${wn.map(w=>`<div class="sub" style="color:var(--amber)">⚠️ ${esc(w)}</div>`).join('')}</div>`}).join('')}
       <p class="note">只比較讀到的保障金額；等待期、除外、給付方式這些條款差異，請用「AI 工具 → 保險商品比較」逐條看。</p></div>`:''}
     <div class="card"><h2>到期與續保倒數（15 年內）</h2>${end.length?end.map(r=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);gap:10px"><span style="min-width:0">${esc(r.t)}</span><span class="tg${r.y-new Date().getFullYear()<=1?' warn':''}" style="flex:0 0 auto">${esc(r.when)}</span></div>`).join(''):'<div class="sub">15 年內沒有到期的保障（或保單沒寫到期／續保年齡）</div>'}
@@ -4776,8 +4804,9 @@ function openPolEdit(id){const m=me(),p0=id?insFind(m,id):null,p=p0?JSON.parse(J
       <div><label>等待期（天）</label><input data-cf="wait" inputmode="numeric" value="${esc(c.wait??'')}"></div><div><label>最高到幾歲</label><input data-cf="maxAge" inputmode="numeric" value="${esc(c.maxAge??'')}"></div></div>
     <label>續保</label><select data-cf="renew">${RENEW.map(([k,t])=>`<option value="${k}"${(c.renew||'')===k?' selected':''}>${t}</option>`).join('')}</select>
     <label>原文（選填）</label><input data-cf="quote" value="${esc(c.quote||'')}" maxlength="240">
-    <details class="box"${c.code||c.st||c.start||c.payEnd||(c.prem!=null&&c.prem!=='')?' open':''}><summary>更多：險種代碼、狀態、保費、始期、繳費終期</summary><div class="grid2" style="padding-bottom:10px">
+    <details class="box"${c.code||c.st||c.start||c.payEnd||c.claimDoc||(c.prem!=null&&c.prem!=='')?' open':''}><summary>更多：險種代碼、狀態、實支實付收據、保費、始期、繳費終期</summary><div class="grid2" style="padding-bottom:10px">
       <div><label>險種代碼</label><input data-cf="code" value="${esc(c.code||'')}" maxlength="16"></div><div><label>這項的狀態</label><select data-cf="st">${[['','同整張保單'],...POL_ST.filter(x=>x[0]!=='quote')].map(x=>`<option value="${x[0]}"${(c.st||'')===x[0]?' selected':''}>${x[2]||x[1]}</option>`).join('')}</select></div>
+      <div><label>實支實付收據</label><select data-cf="claimDoc">${[['','不明'],['copy','可用副本'],['orig','限正本']].map(([k,t])=>`<option value="${k}"${(c.claimDoc||'')===k?' selected':''}>${t}</option>`).join('')}</select></div><div></div>
       <div><label>每期保費（元）</label><input data-cf="prem" inputmode="decimal" value="${esc(c.prem??'')}"></div><div><label>投保始期</label><input type="date" data-cf="start" value="${esc(c.start||'')}"></div>
       <div><label>繳費終期</label><input type="date" data-cf="payEnd" value="${esc(c.payEnd||'')}"></div></div></details></div>`;
   openSheet(sheetHead(p0?'編輯保單':'手動新增保單',`被保險人：${esc(m.name)}`)+`
@@ -4867,7 +4896,7 @@ function promptPolicy(){return `你是「保單資料擷取器」。我會附上
 6. premium 填文件上整張保單的「每期保費」，payFreq 只填繳別（年繳、半年繳、季繳、月繳、躉繳），不是繳費方式：銀行轉帳、信用卡、自行繳費填 payMethod；不要換算成年繳。payYears 填繳費年期（例如 20 年期填 20）；文件寫「繳至 X 歲」就把 X 填在 payToAge，payYears 填 null，不要自己換算。currency 填保單幣別（台幣 TWD、美元 USD、澳幣 AUD、人民幣 CNY、歐元 EUR、日圓 JPY），文件沒寫就填 null；外幣保單的金額、保費照外幣抄，不要換算成台幣。
 7. status 照文件寫（例如 有效、正常繳費、繳費期滿、減額繳清、展期定期、豁免保費、停效、解約、滿期、終止）。減額繳清、展期定期、豁免保費的保單不用再繳：premium 填 0、payFreq 填 null；amount 填減額（或展期）後現在的保額，原本的保額寫進 notes。
 8. 保單健診表或明細表上，每一項險種（主約、附約）各有一列時：險種代碼填 code、這一項自己的狀態填 coverages 的 status、投保始期填 start、繳費終期填 payEnd（最後一次繳費的日期；「保險期間」「保障終期」「滿期日」是保障到哪一天，填 coverages 的 endDate，不要填進 payEnd）、這一項的每期保費填 coverages 的 premium。
-9. cat 只能用下面的代號；判斷不出來就填 "other"，不要硬分類。名稱有「傷害」的醫療給付（例如傷害醫療保險金、傷害住院日額；名稱同時有「疾病」的不算）用 acc_med，不要用 hosp_day、hosp_real、surgery；燒燙傷保險金用 other。主約 kind 填 "main"，附約填 "rider"。一張保單或一個附約有好幾種給付（例如住院醫療附約裡有住院日額、加護病房、住院醫療費用、手術、出院療養）：每一種給付各列一筆 coverages，name 寫「附約名稱：給付名稱」（例如「康富醫療附約：手術保險金」），各自選 cat，金額和單位照給付表（以計畫、單位計的用 calc 換算）；不要把整個附約只列成一筆，不然 App 只會算進一種保障。只限女性（例如義乳重建、子宮或卵巢相關）或只限男性被保險人的給付，填 "sex": "f" 或 "m"；同一張保單裡領了一項就不再給付另一項的（例如條款寫「給付重大疾病或重大傷病保險金其中一項後本契約終止」），這幾項填相同的 "oneOf"（例如 "重大"），App 只算一次；投資型、萬能保單寫了保單帳戶價值的，填 accountValue（元）和 accountValueDate，身故保險金是「保額＋保單帳戶價值」（B 型、D 型）的那一項填 "plusAV": true（amount 只填保額）。
+9. cat 只能用下面的代號；判斷不出來就填 "other"，不要硬分類。名稱有「傷害」的醫療給付（例如傷害醫療保險金、傷害住院日額；名稱同時有「疾病」的不算）用 acc_med，不要用 hosp_day、hosp_real、surgery；燒燙傷保險金用 other。主約 kind 填 "main"，附約填 "rider"。一張保單或一個附約有好幾種給付（例如住院醫療附約裡有住院日額、加護病房、住院醫療費用、手術、出院療養）：每一種給付各列一筆 coverages，name 寫「附約名稱：給付名稱」（例如「康富醫療附約：手術保險金」），各自選 cat，金額和單位照給付表（以計畫、單位計的用 calc 換算）；不要把整個附約只列成一筆，不然 App 只會算進一種保障。只限女性（例如義乳重建、子宮或卵巢相關）或只限男性被保險人的給付，填 "sex": "f" 或 "m"；同一張保單裡領了一項就不再給付另一項的（例如條款寫「給付重大疾病或重大傷病保險金其中一項後本契約終止」），這幾項填相同的 "oneOf"（例如 "重大"），App 只算一次；投資型、萬能保單寫了保單帳戶價值的，填 accountValue（元）和 accountValueDate，身故保險金是「保額＋保單帳戶價值」（B 型、D 型）的那一項填 "plusAV": true（amount 只填保額）。實支實付（住院醫療費用、意外醫療費用）條款寫可以用收據副本、影本申請，或「已獲其他保險給付仍予給付」的填 "claimDoc": "copy"；寫要收據正本、或「以實際支出為限、扣除其他保險已給付」的填 "orig"；條款沒寫填 null。
 10. 保險公司欄位空白、但商品名稱裡有公司名（例如「○○人壽△△終身壽險」）：insurer 填商品名稱裡的公司名。
 11. policyType：文件寫投資型、變額、萬能 → "投資型"；團體保險、團險 → "團體"；旅行平安險 → "旅平"；其他填 null。
 12. 身分證字號、完整保單號碼、姓名、電話、地址一律不要輸出（quote、notes 也一樣：姓名改成「被保險人」「要保人」）；保單號碼只填末 4 碼（policyNoLast4）。被保險人只寫稱謂（insuredHint，例如「本人」「配偶」「長子」）。要保人（holderHint）和受益人（beneficiary）照文件寫，可以寫姓名（只存在使用者的手機，App 給 AI 的提示詞會自動換成關係）：要保人和被保險人是同一人填「本人」；受益人寫姓名或「法定繼承人」，有比例就寫比例，身故和生存（滿期）受益人不同時寫成「身故：王小明 50%、王小華 50%；生存：本人」。
@@ -4880,7 +4909,7 @@ function promptPolicy(){return `你是「保單資料擷取器」。我會附上
 life＝壽險／身故保險金、accident＝意外身故或失能、acc_med＝意外醫療（實支或日額）、hosp_day＝住院日額（病房費、住院醫療保險金每日）、hosp_real＝住院醫療費用實支實付（雜費限額）、surgery＝手術（含門診手術）、cancer＝癌症（初次罹癌、癌症住院、化療放療）、critical＝重大疾病／重大傷病一次金、disability＝失能扶助／失能保險金、ltc＝長期照顧、waiver＝豁免保費、other＝其他
 
 【輸出格式】
-{"type":"kinwell.policy","v":1,"policies":[{"insurer":null,"product":null,"policyType":null,"policyNoLast4":null,"insuredHint":null,"holderHint":null,"beneficiary":null,"start":null,"payYears":null,"payToAge":null,"payFreq":null,"payMethod":null,"premium":null,"currency":null,"status":null,"endDate":null,"endAge":null,"uwResult":null,"uwExclusion":null,"uwDeclared":null,"accountValue":null,"accountValueDate":null,"coverages":[{"name":null,"code":null,"kind":"main","cat":"other","status":null,"start":null,"payEnd":null,"premium":null,"amount":null,"unit":null,"limit":null,"waitingDays":null,"renewable":null,"maxAge":null,"endDate":null,"exclusions":null,"quote":null,"page":null,"calc":null,"lump":null,"sex":null,"oneOf":null,"plusAV":null}],"notes":null}],"unreadable":[]}`}
+{"type":"kinwell.policy","v":1,"policies":[{"insurer":null,"product":null,"policyType":null,"policyNoLast4":null,"insuredHint":null,"holderHint":null,"beneficiary":null,"start":null,"payYears":null,"payToAge":null,"payFreq":null,"payMethod":null,"premium":null,"currency":null,"status":null,"endDate":null,"endAge":null,"uwResult":null,"uwExclusion":null,"uwDeclared":null,"accountValue":null,"accountValueDate":null,"coverages":[{"name":null,"code":null,"kind":"main","cat":"other","status":null,"start":null,"payEnd":null,"premium":null,"amount":null,"unit":null,"limit":null,"waitingDays":null,"renewable":null,"maxAge":null,"endDate":null,"exclusions":null,"quote":null,"page":null,"calc":null,"lump":null,"sex":null,"oneOf":null,"plusAV":null,"claimDoc":null}],"notes":null}],"unreadable":[]}`}
 
 /* ---------- 理賠：醫療事件 → 有效保單裡可能適用的保障（等待期、保單狀態、待核對）→ 文件清單 → 每張保單的申請進度；AI 分析只當參考 ---------- */
 const plusYears=(d,n)=>{const x=new Date(d+'T00:00');x.setFullYear(x.getFullYear()+n);return ymd(x)};
@@ -5038,7 +5067,7 @@ function openTermsImport(pid,o={}){const m=me(),p=insFind(m,pid);if(!p)return;co
 // 匯出成和「保單匯入」相同的格式（AI 改完可以直接貼回來更新，appId 讓 App 認出是哪一張）；備註、投保時告知不附，受益人只附關係（寫姓名的不附）
 const polExport=p=>({appId:p.id,insurer:p.insurer,product:p.product,policyType:p.type?(POL_TYPE.find(x=>x[0]===p.type)||[0,null])[1]:null,policyNoLast4:p.no4||null,insuredHint:p.hint||null,holderHint:relOf(p,p.holder),beneficiary:relOf(p,p.bene),start:p.start||null,payYears:p.payYears??null,payToAge:p.payAge??null,payFreq:p.payFreq||null,payMethod:p.payBy||null,premium:p.prem??null,currency:p.cur||'TWD',
   status:stS(p.status)||null,endDate:p.endDate||null,endAge:p.endAge??null,uwResult:p.uw?.res||null,uwExclusion:p.uw?.excl||null,accountValue:p.av??null,accountValueDate:p.avDate||null,
-  coverages:(p.items||[]).map(c=>({name:c.name,code:c.code||null,kind:c.kind==='rider'?'rider':'main',cat:c.cat,status:c.st?stS(c.st):null,start:c.start||null,payEnd:c.payEnd||null,premium:c.prem??null,amount:c.amt??null,unit:c.unit||null,limit:c.limit||null,waitingDays:c.wait??null,renewable:c.renew||null,maxAge:c.maxAge??null,endDate:c.endDate||null,exclusions:c.excl||null,quote:c.quote||null,page:c.page??null,calc:c.calc||null,...(c.lump?{lump:true}:{}),...(c.sex?{sex:c.sex}:{}),...(c.oneOf?{oneOf:c.oneOf}:{}),...(c.plusAV?{plusAV:true}:{})}))});
+  coverages:(p.items||[]).map(c=>({name:c.name,code:c.code||null,kind:c.kind==='rider'?'rider':'main',cat:c.cat,status:c.st?stS(c.st):null,start:c.start||null,payEnd:c.payEnd||null,premium:c.prem??null,amount:c.amt??null,unit:c.unit||null,limit:c.limit||null,waitingDays:c.wait??null,renewable:c.renew||null,maxAge:c.maxAge??null,endDate:c.endDate||null,exclusions:c.excl||null,quote:c.quote||null,page:c.page??null,calc:c.calc||null,...(c.lump?{lump:true}:{}),...(c.sex?{sex:c.sex}:{}),...(c.oneOf?{oneOf:c.oneOf}:{}),...(c.plusAV?{plusAV:true}:{}),...(c.claimDoc?{claimDoc:c.claimDoc}:{})}))});
 const POLCHK_HEAD=`你是「保單資料核對助手」。下面是 App 從我的保單文件整理出來的資料，以及 App 自動檢查出的問題（🔴 錯誤＝資料互相矛盾；🟠 待核對＝要對照原本的文件）。我會附上保單首頁、附約明細、保單健診表、繳費通知或保險存摺的照片或 PDF。
 
 【規則】
@@ -5048,7 +5077,7 @@ const POLCHK_HEAD=`你是「保單資料核對助手」。下面是 App 從我�
 4. 以「計畫」「單位」計的：從條款的給付表找出每個計畫或每單位的金額，算出實際金額並寫出算式（例如 2 單位 × 每單位 1,000 元/日 = 2,000 元/日）；JSON 裡寫在這一項的 calc：{"amount","unit","perUnit","multiplier"（倍數，沒有填 null）,"perUnitQuote"（每單位那句原文）,"formula","quote"（給付表原文）,"page"}，比例用小數，amount、unit 照保單原本寫的（例如 2、計畫）。條款寫每年給付的（「每年」「每屆保單週年日」）calc.unit 寫「元/年」，不要寫「元/次」；給付是「保險金額或日額 × 附表手術倍數」、倍數看手術項目而定的，calc.unit 寫「元/倍」（amount 填每 1 倍的金額），固定倍數（例如日額的 10 倍）才用 multiplier。失能扶助、長照一次給付的，unit 照寫「元」或「萬元」，另外填 "lump": true；每月給付的 unit 寫「元/月」。一個附約有好幾種給付（住院日額、住院醫療費用、手術、加護病房…）的，拆成每種給付一筆（name「附約名稱：給付名稱」、各自的 cat），App 才會各算進對的保障。
 5. 身分證字號、完整保單號碼、姓名、電話、地址一律不要輸出；quote 裡有姓名的，改成「被保險人」「要保人」。
 6. 欄位寫法：payFreq 只填繳別（年繳、半年繳、季繳、月繳、躉繳），不是繳費方式；銀行轉帳、信用卡、自行繳費填 payMethod。減額繳清、展期定期、豁免保費、繳費期滿的保單已經不用繳：premium 填 0、payFreq 填 null，不用再問繳別；amount 填減額（或展期）後現在的保額。holderHint（要保人）、beneficiary（受益人）照文件寫，可以寫姓名（只存在使用者的手機）：要保人和被保險人是同一人填「本人」；受益人寫姓名或「法定繼承人」，有比例就寫比例。currency 照保單的幣別（TWD、USD…），外幣的金額照外幣抄、不要換算。
-7. 最後輸出一個 JSON（格式和下面相同），只放有改動的保單；appId 原樣保留（App 用它認出是哪一張）；每張保單要列出全部保障項目（沒改的照原樣抄），因為 App 會用它更新整張；沒把握的欄位填 null，每個金額都要附 quote（逐字原文）。只限女性或男性被保險人的給付填 "sex": "f" 或 "m"；領了一項就不再給付另一項的，這幾項填相同的 "oneOf"（App 只算一次）；身故是保額＋帳戶價值（B 型、D 型）的填 "plusAV": true，帳戶價值寫在保單的 accountValue、accountValueDate。renewable 用代號：guar＝保證續保、yes＝可續保但不保證、no＝不保證續保。
+7. 最後輸出一個 JSON（格式和下面相同），只放有改動的保單；appId 原樣保留（App 用它認出是哪一張）；每張保單要列出全部保障項目（沒改的照原樣抄），因為 App 會用它更新整張；沒把握的欄位填 null，每個金額都要附 quote（逐字原文）。只限女性或男性被保險人的給付填 "sex": "f" 或 "m"；領了一項就不再給付另一項的，這幾項填相同的 "oneOf"（App 只算一次）；身故是保額＋帳戶價值（B 型、D 型）的填 "plusAV": true，帳戶價值寫在保單的 accountValue、accountValueDate。實支實付條款可以用收據副本申請的填 "claimDoc": "copy"，限正本的填 "orig"。renewable 用代號：guar＝保證續保、yes＝可續保但不保證、no＝不保證續保。
 
 【輸出】
 A. 問題清單：保單｜問題｜去哪裡找（文件、頁、欄位）｜文件上寫的（原文）｜正確的值
@@ -5114,13 +5143,13 @@ const CLAIM_SCN=[
   dr:['「請幫我開診斷證明書，寫上診斷、到院和離院的時間。」','「這次是疾病還是意外受傷？請照實寫在診斷證明上。」','「有做縫合、復位、清創這些處置嗎？請把處置名稱寫進去。」','「需要留院觀察或住院嗎？原因是什麼？」'],
   docs:['診斷證明書','醫療費用收據（正本）與費用明細','意外：事故證明（車禍要交通事故證明）'],
   miss:['意外險的「傷害醫療」通常門診、急診也賠（看條款）','縫合、清創有些保單算「門診手術」','車禍受傷可以另外申請強制汽機車責任保險（強制險）'],
-  pit:['實支實付多半要「住院」才賠，急診只有部分保單或意外才賠','收據正本只有一份：有好幾張保單時，先問有沒有「副本理賠」約定，或請醫院加開證明'],
+  pit:['實支實付多半要「住院」才賠，急診只有部分保單或意外才賠','收據正本只有一份：2024/7/1 以後買的實支實付只能用正本，其他家要拿第一家開的「理賠差額證明」申請差額；以前買的看條款有沒有「副本理賠」'],
   add:['意外造成','有縫合或處置','留院觀察','後來轉住院','用到自費項目']},
  {k:'ad',ic:'🏥',n:'住院',ev:'ad',cats:['hosp_day','hosp_real','surgery','acc_med'],
   now:['住院期間的收據、費用明細全部留著','出院前 1–2 天先跟護理站或櫃台預約診斷證明書；份數＝要申請的保險公司數'],
   dr:['「診斷證明書請寫入院日、出院日、住院天數，診斷（含 ICD-10 碼），以及做過的手術或處置名稱。」','「醫囑欄可以寫這次需要住院治療的原因嗎？」','「出院後要回診、復健或在家休養嗎？請寫在醫囑。」','「有住加護病房或燒燙傷病房嗎？請寫天數。」','「有用到自費藥物或醫材嗎？請給我費用明細。」'],
-  docs:['診斷證明書（每家保險公司一份；正本不夠時問副本理賠）','住院醫療費用收據（正本）','費用明細表（實支實付用）','出院病歷摘要（保險公司要求時）'],
-  miss:['加護病房、燒燙傷病房有些保單另外加倍給付','出院療養、住院前後門診有些保單另外賠','實支實付的「雜費」包含自費藥材與醫材（有限額）','有好幾張實支實付：有「副本理賠」約定才能每張都賠'],
+  docs:['診斷證明書（每家保險公司一份；醫院可以多開）','住院醫療費用收據（正本）','費用明細表（實支實付用）','出院病歷摘要（保險公司要求時）'],
+  miss:['加護病房、燒燙傷病房有些保單另外加倍給付','出院療養、住院前後門診有些保單另外賠','實支實付的「雜費」包含自費藥材與醫材（有限額）','有好幾張實支實付：有「副本理賠」約定的舊保單各自用收據副本申請，限正本的拿「理賠差額證明」申請差額（看下面的試算）'],
   pit:['疾病住院的等待期（常見 30 天）內發病可能不賠','既往症投保時沒告知可能有爭議','單人房差額、自費項目要看條款的限額與除外'],
   add:['有手術','住加護病房','用到自費藥物或醫材','住單人房（病房差額）','出院後要復健或在家休養','意外造成']},
  {k:'sx',ic:'🩺',n:'手術（住院或門診）',ev:'sx',cats:['surgery','hosp_real','hosp_day','acc_med'],
@@ -5200,7 +5229,7 @@ function claimItem(p,c,e){const tr=termsRule(p,c),cl=tr?.clause?`（依條款${t
    case 'hosp_day':if(u.per==='day'){if(e.icu&&!(tr?.icuX>1))why.push('住加護病房：有些保單另外加倍（看條款）');return perDay()}return R('maybe',null,`${covAmt(c)}：看條款怎麼給付`);
    case 'hosp_real':case 'acc_med':{if(u.per==='day')return e.hosp?perDay():R('maybe',null,`每日 ${money(b)}（住院才有）`);
      if(!e.hosp&&tr?.outpatient===false)return R('no',null,`條款：住院才賠${cl}`);
-     if(cat==='hosp_real'&&e.nReal>1)why.push(tr?.copyClaim?`有 ${e.nReal} 張實支實付：這張的條款接受收據副本${cl}`:`有 ${e.nReal} 張實支實付：要有「副本理賠」約定才能每張都用收據申請`);
+     if(isReal(c)&&e.nReal>1){const rd=realDoc(p,c);why.push(rd.v==='copy'?`有 ${e.nReal} 張實支實付：這張可以用收據副本申請（${rd.src}）${tr?.copyClaim?cl:''}`:rd.v==='orig'?`有 ${e.nReal} 張實支實付：這張${rd.t}；正本給了別家的話，請那家開「理賠差額證明」申請差額，限正本的合計最多賠到實際花費`:`有 ${e.nReal} 張實支實付：${rd.t}；不能用副本的要收據正本或別家開的理賠差額證明`)}
      if(cat==='hosp_real'&&!e.hosp&&!tr?.outpatient)return R('maybe',null,`沒住院：${e.sxOut?'門診手術':'意外門診'}有些實支實付會賠，上限 ${money(b)}（看條款）`);
      if(tr?.sub?.length){let cap=0;const parts=[];for(const x of tr.sub){const ui=unitInfo(x.unit),v=x.amt*(ui.mul||1);if(ui.per==='day'){if(e.days){cap+=v*e.days;parts.push(`${x.name} ${money(v)}×${e.days} 天`)}}else if(/手術/.test(x.name)){if(e.sx){cap+=v;parts.push(`${x.name} ${money(v)}`)}}else{cap+=v;parts.push(`${x.name} ${money(v)}`)}}
        if(tr.limit)cap=Math.min(cap,tr.limit);
@@ -5220,17 +5249,17 @@ function claimItem(p,c,e){const tr=termsRule(p,c),cl=tr?.clause?`（依條款${t
   return null}
 function claimEst(m,x){const d=/^\d{4}-\d{2}-\d{2}$/.test(String(x.d||''))?x.d:todayS(),dn=num(x.days),days=dn==null?0:Math.max(0,Math.floor(dn)),icu=Math.min(days,Math.max(0,Math.floor(num(x.icu)||0))),bill=Math.max(0,num(x.cost)||0)+Math.max(0,num(x.self)||0);
   const k=x.k,acc=!!x.acc||k==='acc',sx=!!x.sx||k==='sx',sxOut=!!x.sxOut,inSitu=!!x.inSitu,hosp=days>0||(dn==null&&(['ad','crit'].includes(k)||(k==='sx'&&!sxOut))),dx=String(x.dx||''),age=+d.slice(0,4)-birthY(m);
-  const L=insOf(m).filter(p=>p.status!=='quote'),nReal=L.filter(p=>polLive(p,d)&&(p.items||[]).some(c=>c.cat==='hosp_real'&&!itemOff(p,c))).length,out=[];let sum=0,nY=0,nM=0,nN=0;
+  const L=insOf(m).filter(p=>p.status!=='quote'),nReal=realPols(m,d).length,out=[];let sum=0,nY=0,nM=0,nN=0;
   for(const p of L){const live=polLive(p,d),pw=[],its=[];
     for(const c of p.items||[]){const r=claimItem(p,c,{k,d,age,days,icu,bill,hosp,acc,sx,sxOut,inSitu,nReal,live});if(r)its.push(r)}
     if(!its.length)continue;if(!p.chk)pw.push('保單還沒核對：金額以保單為準');if(p.type==='grp')pw.push('團體保險：事故時還在職才有，離職後就沒有');if(p.uw?.excl)pw.push(`有除外約定「${p.uw.excl}」：確認這次不在除外範圍`);
     if(p.start&&dx)for(const c of condActive(m)){const parts=c.name.replace(/（.*?）/g,'').split('／').filter(z=>z.length>=2);if(c.y&&+c.y<+p.start.slice(0,4)&&parts.some(pt=>dx.includes(pt)||pt.includes(dx)))pw.push(`既往症：「${c.name}」${c.y} 年確診，早於這張保單生效；投保時有據實告知、沒被除外，通常照條款理賠`)}
     out.push({p,pw,its});for(const r of its){if(r.v==='yes'){nY++;if(r.amt)sum+=r.amt}else if(r.v==='maybe')nM++;else nN++}}
-  return{out,sum,nY,nM,nN,nNoT:out.filter(o=>!o.p.terms).length,days,icu,bill,acc,sx,sxOut,d}}
+  return{out,sum,nY,nM,nN,nNoT:out.filter(o=>!o.p.terms).length,days,icu,bill,acc,sx,sxOut,d,ro:out.some(o=>o.its.some(r=>isReal(r.c)&&r.v!=='no'))?realOrder(m,d):''}}
 function ceHTML(R){const ic={yes:'✅',maybe:'🟠',no:'⛔'},lab={yes:'會賠',maybe:'可能會賠',no:'不賠'},cl={yes:'ok',maybe:'warn',no:'bad'},o={yes:0,maybe:1,no:2};
   if(!R.out.length)return '<div class="sub">你的保單裡沒有這種情況用得到的保障（或還沒匯入保單）。健保、勞保、公司的團體保險也可能有給付：可以按「問 AI」。</div>';
   const L=R.out.map(x=>({...x,its:[...x.its].sort((a,b)=>o[a.v]-o[b.v])})).sort((a,b)=>o[a.its[0].v]-o[b.its[0].v]);
-  return `<div class="hl" style="margin:6px 0 10px"><b>${R.nY?`✅ 會賠 ${R.nY} 項${R.sum?`，App 估算約 ${ntd(R.sum)}`:''}`:'App 算不出確定會賠的項目'}</b>${R.nM?`<br>🟠 可能會賠 ${R.nM} 項：要看條款或補資料`:''}${R.nN?`<br>⛔ 不賠 ${R.nN} 項（原因在下面）`:''}${R.nNoT?`<br>📜 ${R.nNoT} 張保單還沒匯入條款：匯入後試算會更準（打開保單 →「條款規則」）`:''}</div>`+
+  return `<div class="hl" style="margin:6px 0 10px"><b>${R.nY?`✅ 會賠 ${R.nY} 項${R.sum?`，App 估算約 ${ntd(R.sum)}`:''}`:'App 算不出確定會賠的項目'}</b>${R.nM?`<br>🟠 可能會賠 ${R.nM} 項：要看條款或補資料`:''}${R.nN?`<br>⛔ 不賠 ${R.nN} 項（原因在下面）`:''}${R.nNoT?`<br>📜 ${R.nNoT} 張保單還沒匯入條款：匯入後試算會更準（打開保單 →「條款規則」）`:''}</div>`+(R.ro?`<div class="cdet" style="white-space:pre-line">${esc(R.ro)}</div>`:'')+
     L.map(({p,pw,its})=>`<div class="cdet"><b>${esc(polName(p))}</b>${pw.map(w=>`<div class="sub" style="color:var(--amber)">⚠️ ${esc(w)}</div>`).join('')}${its.map(r=>`<div style="margin-top:8px"><span class="tg ${cl[r.v]}">${ic[r.v]} ${lab[r.v]}</span> ${esc(r.c.name)}${r.terms?' <span class="tg">📜 依條款</span>':''}<div class="sub">${esc(r.txt)}</div>${r.why.map(w=>`<div class="sub" style="color:var(--amber)">⚠️ ${esc(w)}</div>`).join('')}</div>`).join('')}</div>`).join('')+
     '<p class="note">App 依你匯入的保單資料粗估，不是保險公司的核定；以保單條款和理賠申請書為準。要確認就按「問 AI」並附上條款。</p>'}
 const EVT2SCN={op:'er',er:'er',ad:'ad',sx:'sx',acc:'acc',ca:'ca'};
@@ -5268,7 +5297,7 @@ const CLAIMPREP_HEAD=`你是熟悉台灣保險理賠實務的顧問（不是醫�
 【請回答】
 A. 會不會賠、大約賠多少：逐張保單、逐項寫「會賠／可能會賠／不賠」，金額依條款怎麼算（寫出算式）、還差什麼條件或文件才能確定；下面有 App 的試算，請對照條款確認或更正，不同意要說明原因
 B. 容易漏申請的給付（例如豁免保費、加護病房加倍、出院療養、骨折未住院、強制汽機車責任保險、信用卡附贈的旅平險、公司的團體保險、健保或勞保的給付）
-C. 要準備的文件：每家保險公司各要什麼；收據正本只有一份時怎麼辦（副本理賠、請醫院加開證明）
+C. 要準備的文件：每家保險公司各要什麼；收據正本只有一份時怎麼辦：2024/7/1 以後的實支實付只能正本，其他家用第一家開的「收據正本留存證明」或「理賠差額證明」申請差額；以前的保單看條款有沒有「副本理賠」
 D. 問醫師的話：依我的狀況列出 3–6 句，讓診斷證明完整寫出事實（診斷與 ICD-10 碼、日期、住院起訖、手術名稱與術式、意外或疾病、醫囑）
 E. 時間表：現在、出院前、出院後要做的事（保險金請求權時效 2 年，保險法第 65 條）
 F. 可能少賠或被拒賠的原因，以及怎麼用合法、據實的方式避免`;
@@ -5295,7 +5324,7 @@ ${EVID}
 4. 把保障分級：A 基本保障與重大風險、B 家庭經濟責任、C 重大醫療與長期照護、D 退休與進階。每項說明：為什麼需要、現有制度提供什麼、還缺什麼、有沒有重複、不補的實際風險、有沒有低成本的替代方式。
 5. 我給預算時，提供最低預算、基本完整、進階三個方案；不要為了用完預算推薦不必要的保險。
 6. 列出「不建議重複購買」的項目，以及需要我確認的資格與文件。
-7. 找出保太多的：有足夠的實支實付卻有很高的住院日額（以門診為主時用不到）、多張實支實付卻沒有副本理賠、癌症和重大傷病重疊、壽險遠超過家人需要、保費超過年收入 10%；說明可以怎麼調整（續保時降低、不再加買），不要建議隨便解約有病史的人的保證續保保單。
+7. 找出保太多的：有足夠的實支實付卻有很高的住院日額（以門診為主時用不到）、多張限正本的實支實付（2024/7/1 以後買的只能正本，同一筆費用只賠差額）、癌症和重大傷病重疊、壽險遠超過家人需要、保費超過年收入 10%；說明可以怎麼調整（續保時降低、不再加買），不要建議隨便解約有病史的人的保證續保保單。
 8. 依年齡與身分補充：新生兒（出生前投保、未滿 15 歲壽險只賠喪葬費）、75 歲以上（小額終老、長照 2.0、醫療預備金）、軍人（軍保）、榮民（退輔會就醫補助、健保費補助、喪葬補助）、低收入或繳不出健保費（健保費補助、欠費分期與紓困貸款、微型保險、急難救助與民間資源）。
 不要假設每個人都需要壽險、癌症險或長照險；政府補助、社會保險、商業保險不要混為一談；金額與資格以現行官方資料為準。
 
