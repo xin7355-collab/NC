@@ -938,8 +938,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     const ia = await page.evaluate(() => ({ title: document.title, logo: $('.logo').textContent, nav: [...document.querySelectorAll('#nav button')].map(b => b.textContent.trim()).join('|'),
       sub: [...document.querySelectorAll('#v-body .subnav [data-sub]')].map(b => b.dataset.sub + ':' + b.firstChild.textContent).join(','), ins: [...document.querySelectorAll('#v-ins .subnav [data-sub]')].map(b => b.firstChild.textContent).join('|'),
       self: (go('self'), $('.view.on').id + ':' + !$('#v-body .subp[data-sub="self"]').hidden), todo: (go('dash'), $('#todoCard').textContent), ldlMsg: labEval(labsOf(me())[0], me()).find(i => i.k === 'ldl').msg, tools: (renderTool(), document.querySelectorAll('#toolBody .card').length) }));
-    check('改名「Kinwell」；底部 總覽｜健康｜飲食｜運動｜保險；健康頁 狀況｜紀錄｜追蹤｜病史｜自測（舊「自我檢測」連結導到這裡）；保險頁 保單｜保障｜理賠｜AI 工具（7 種提示詞）；總覽有待辦與急症入口；LDL 165 不再說「對一般人可能正常」',
-      /^Kinwell/.test(ia.title) && ia.logo === 'Kinwell' && ia.nav === '總覽|健康|飲食|運動|保險' && ia.sub === 'now:狀況,rec:紀錄,plan:追蹤,cond:病史,self:自測' && ia.ins === '保單|保障|理賠|AI 工具' && ia.self === 'v-body:true' && ia.tools === 7
+    check('改名「Kinwell」；底部 總覽｜健康｜飲食｜運動｜保險；健康頁 狀況｜紀錄｜追蹤｜病史｜自測（舊「自我檢測」連結導到這裡）；保險頁 保單｜保障｜理賠｜AI 工具（8 種提示詞）；總覽有待辦與急症入口；LDL 165 不再說「對一般人可能正常」',
+      /^Kinwell/.test(ia.title) && ia.logo === 'Kinwell' && ia.nav === '總覽|健康|飲食|運動|保險' && ia.sub === 'now:狀況,rec:紀錄,plan:追蹤,cond:病史,self:自測' && ia.ins === '保單|保障|理賠|AI 工具' && ia.self === 'v-body:true' && ia.tools === 8
         && /待辦/.test(ia.todo) && /急症自我檢測/.test(ia.todo) && /項異常還沒記下醫師怎麼說/.test(ia.todo) && !/對一般人可能正常/.test(ia.ldlMsg) && /冠狀動脈鈣化/.test(ia.ldlMsg), JSON.stringify(ia));
     // 回診追蹤：實際點畫面
     await page.evaluate(() => go('body', 'plan')); await page.waitForTimeout(200);
@@ -2179,6 +2179,38 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     const s1 = await page.evaluate(async () => { const W = new Set(), t = insScrub('聯絡 test.user@example.com 證號 A812345678 身分證 B123456789', W); const e = await encPack({ a: 1 }, 'pw-123456'), d = await decPack(e, 'pw-123456'); return { t, w: [...W].join('|'), iter: e.iter, ok: d && d.a === 1 } });
     check('去識別化多遮 Email 和新式外來人口統一證號；加密備份 PBKDF2 改成 60 萬次，解得回來',
       !/@/.test(s1.t) && !/A812345678/.test(s1.t) && !/B123456789/.test(s1.t) && /Email/.test(s1.w) && s1.iter === 600000 && s1.ok, JSON.stringify(s1));
+    await page.close();
+  }
+
+  // =============== 6zza. 實支實付張數防呆（2019/11/8 起 3 張、團險公司全額付不算）、收據標示與一鍵設定、矛盾提醒；請 AI 推薦補缺口的商品和保費 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me', inc: 80, earner: true }], active: 'a' });
+    const g1 = await page.evaluate(() => { const m = me(), L = INS[m.id] || (INS[m.id] = []);
+      const mk = (id, ins, start, cov, x = {}) => { const { p } = polCheck({ insurer: ins, product: ins + '醫療保險', start, status: '有效', payFreq: '年', premium: 3000, coverages: [{ kind: 'rider', amount: 10, unit: '萬元/次', quote: '10 萬', ...cov }], ...x }, m); p.id = id; p.chk = true; L.push(p); return p };
+      const real = { name: '住院醫療費用保險金', cat: 'hosp_real' };
+      const P1 = mk('p1', '甲人壽', '2015-01-01', real), P2 = mk('p2', '乙人壽', '2018-03-01', { ...real, claimDoc: 'copy' }), P3 = mk('p3', '丙人壽', '2021-05-01', real), P4 = mk('p4', '丁人壽', '2023-01-01', real);
+      const G1 = mk('g1', '戊人壽', '2025-01-01', real, { policyType: '團體', groupPaidBy: '公司全額負擔' }), G2 = mk('g2', '己人壽', '2025-01-01', { name: '傷害醫療保險金', cat: 'acc_med' }, { policyType: '團體' });
+      S.set('ins', INS); renderIns();
+      const K = realCap(m), med = K.find(k => k.cat === 'hosp_real'), inj = K.find(k => k.cat === 'acc_med'), ck = covCheckup(m, covGap(m)), html = checkupHTML(m, covGap(m)), list = $('#polBody').textContent;
+      const f1 = polFlags(P1, m), fx = PFIX.filter(([re]) => f1.some(f => re.test(f.t))).map(x => x[1]).join(), i1 = f1.find(f => /看條款能不能用收據副本$/.test(f.t))?.ci;
+      polFix(m, P1, 'c_copy', i1); const d1 = realDoc(P1, P1.items[0]);
+      const { p: P5 } = polCheck({ insurer: '庚人壽', product: '庚人壽醫療保險', start: '2025-02-01', status: '有效', payFreq: '年', premium: 3000, coverages: [{ ...real, kind: 'rider', amount: 10, unit: '萬元/次', quote: '10 萬', claimDoc: 'copy' }] }, m);
+      const f5 = polFlags(P5, m).map(f => f.lv + ':' + f.t).join('|'), b5 = PFIX.some(([re, a]) => a === 'c_orig' && re.test(polFlags(P5, m).find(f => /標成可用副本/.test(f.t))?.t || '')); polFix(m, P5, 'c_orig', 0);
+      openPolEdit('g1'); const gp = $('#pe-gpay')?.value; closeSheet();
+      return { med: { n: med.n, st: med.st, co: med.co.length, msg: med.msg }, inj: { n: inj.n, st: inj.st, gu: inj.gu.length, msg: inj.msg }, N: ck.N.map(x => x[0]).join('|'), html: /實支實付：張數與收據/.test(html) && /🧾 可用副本<\/span> 戊人壽醫療保險/.test(html) && /公司全額付，不算張數/.test(html),
+        list: /甲人壽醫療保險.*🧾 實支實付收據不確定/.test(list) && /乙人壽醫療保險.*🧾 實支實付可用副本/.test(list) && /丁人壽醫療保險.*🧾 實支實付收據不確定/.test(list) && /戊人壽醫療保險.*🧾 實支實付可用副本/.test(list), g1doc: realDoc(G1, G1.items[0]).src, fx, d1: d1.v + ':' + d1.src, f5, b5, p5: P5.items[0].claimDoc, gp, gpay: G1.grpPay,
+        dif: polDiff({ items: [] }, { items: [], grpPay: 'self' }).join('|'), pp: /groupPaidBy/.test(promptPolicy()) } });
+    check('實支實付張數：醫療 4 張（2015、2018、2021、2023）超過 3 張，點名 2019/11/8 以後的丙、丁；公司全額付的團險不算張數；意外醫療 1 張還能再買 2 張、團險沒填誰付會提醒',
+      g1.med.n === 4 && g1.med.st === 'over' && g1.med.co === 1 && /「丙人壽醫療保險」、「丁人壽醫療保險」/.test(g1.med.msg) && !/甲人壽/.test(g1.med.msg) && g1.inj.n === 1 && g1.inj.st === 'room' && /還可以再買 2 張/.test(g1.inj.msg) && /只能用收據正本/.test(g1.inj.msg) && g1.inj.gu === 1
+        && /醫療實支實付算進張數的有 4 張：超過 3 張上限/.test(g1.N) && /團險 「己人壽醫療保險」 沒填保費誰付/.test(g1.N), JSON.stringify({ med: g1.med, inj: g1.inj, N: g1.N }));
+    check('收據標示：保單清單每張實支實付標「可用副本／限正本／收據不確定」；保障健檢列出每張；團險推定可用副本；不確定的一鍵「可用副本」「限正本」；2024/7/1 以後卻標可用副本 → 待核對＋一鍵改成限正本；團險保費誰付可以匯入、編輯、比對差異',
+      g1.html && g1.list && g1.g1doc === '團險推定' && /c_copy/.test(g1.fx) && /c_orig/.test(g1.fx) && g1.d1 === 'copy:保單資料' && /chk:「住院醫療費用保險金」標成可用副本，但生效日 2025-02-01 在 2024\/7\/1 以後/.test(g1.f5) && g1.b5 && g1.p5 === 'orig'
+        && g1.gpay === 'company' && g1.gp === 'company' && /團險保費 — → 自費/.test(g1.dif) && g1.pp, JSON.stringify({ html: g1.html, list: g1.list, g1doc: g1.g1doc, fx: g1.fx, d1: g1.d1, f5: g1.f5, b5: g1.b5, p5: g1.p5, gp: g1.gp, dif: g1.dif }));
+    const r1 = await page.evaluate(() => { const m = me(); go('ins', 'cov'); renderCov(); const has = !!$('#rcBudget') && !!document.querySelector('[data-rcmd]'); $('#rcBudget').value = '30000'; $('#rcHx').value = '0'; const t = promptRecommend(m);
+      go('ins', 'tool'); renderTool(); const tool = !!document.querySelector('#toolBody [data-copy="recommend"]'); return { has, tool, t } });
+    check('請 AI 推薦補缺口的商品和保費：保障健檢有預算與病史選項；提示詞帶缺口、現有保單、實支實付張數、預算，要求不同公司、還在賣、附來源、估保費查不到寫需試算；AI 工具頁也有',
+      r1.has && r1.tool && /每年約 30,000 元/.test(r1.t) && /要補的缺口/.test(r1.t) && /甲人壽 甲人壽醫療保險（2015 年投保）/.test(r1.t) && /醫療算進張數 4 張/.test(r1.t) && /不同保險公司/.test(r1.t) && /現在還在販售/.test(r1.t) && /需試算/.test(r1.t) && /資料來源/.test(r1.t) && !/【病史/.test(r1.t) && !/王小明/.test(r1.t),
+      r1.t.slice(0, 300));
     await page.close();
   }
 
