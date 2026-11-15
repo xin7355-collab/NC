@@ -1118,7 +1118,7 @@ const revTag=r=>r?`<span class="rv" style="color:${REVTAG[r[0]][1]}">${REVTAG[r[
 // 跟上一份報告比：新出現／上次也有／比上次嚴重／比上次改善（上一份沒驗這項就不標，不猜）
 function annotPrev(m,list,rec){const L=labsOf(m),ix=rec?L.findIndex(r=>r.id===rec.id):0,l=L[ix],p=ix>=0?L[ix+1]:null;if(!l||!p)return list;
 const pm={};labEval(p,m).forEach(i=>{pm[i.k]=i.lv});const xn=new Set((p.extra||[]).map(e=>'x_'+e.name)),yr=String(p.t).slice(0,4)===String(l.t).slice(0,4)?'':String(p.t).slice(0,4);
-for(const i of list){if(i.src!=='體檢')continue;const pl=pm[i.k];
+for(const i of list){if(i.src!=='體檢'||i.carry)continue;const pl=pm[i.k];
 if(pl!=null)i.prev={yr,lv:pl,now:i.lv};else if(p.items?.[i.k]!=null||xn.has(i.k))i.prev={yr,lv:0,now:i.lv}}
 return list}
 const prevTxt=p=>!p?'':p.lv===0?'新出現':p.now>p.lv?`比${p.yr?` ${p.yr} 年`:'上次'}嚴重`:p.now<p.lv?`比${p.yr?` ${p.yr} 年`:'上次'}改善`:`${p.yr?p.yr+' 年':'上次'}也有`;
@@ -1157,7 +1157,7 @@ if(rate!=null&&rate>5){const t=`每年下降約 ${r1(rate)}（超過 5 算偏快
 else if(rate!=null&&rate<=1.5&&vd==='trend'&&!l1){vd='flat';why=`每年約下降 ${r1(Math.max(0,rate))}，屬正常老化`}}
 if(vd==='flat'&&l1>0&&l0>0)vd='stay';
 return{...o,vd,why,f,l}}
-function cmpData(m){const all=[];for(const r of labsOf(m)){const p=all.find(x=>x.t===r.t);if(p)all[all.indexOf(p)]=labMerge(p,r);else all.push(r)}if(all.length<2)return null; // 同一天的報告當成一份比較
+function cmpData(m){const all=[];for(const r of labsOf(m)){const p=all.find(x=>x.t===r.t);if(p)all[all.indexOf(p)]=labMerge(p,r);else all.push(r)}if(all.length<2)return null;
 const rs=all.filter(r=>dayDiff(r.t,all[0].t)<=1100).slice(0,3).reverse();if(rs.length<2)return null;
 const evs=rs.map(r=>{const o={};for(const i of labEval(r,m))o[i.k]=Math.max(o[i.k]||0,i.lv);return o});
 const refOf=it=>!it?'':it.ref&&!/^原文/.test(it.ref)?String(it.ref):it.lo!=null&&it.hi!=null?`${it.lo}–${it.hi}`:it.hi!=null?`≤${it.hi}`:it.lo!=null?`≥${it.lo}`:'';
@@ -1232,7 +1232,14 @@ if(sb>=160||db>=100)P('bp',2,'手錶血壓很高：請先用上臂式血壓計�
 else if(sb>=130||db>=80)P('bp',1,'手錶血壓偏高：手錶量的只能參考，請用上臂式血壓計做 722（連續 7 天、早晚各 2 次）確認',o)}
 if(r.afib)P('afib',2,'手錶提示心律不整／疑似心房顫動：不能自行判定，請帶手錶的心電圖紀錄看心臟內科（心房顫動會增加中風風險）',{name:'心律不整提醒',val:'有',unit:'',organ:'heart',dept:'心臟內科',ref:'無'});
 return out}
-function issuesOf(m){const s=scalesOf(m)[0],l=labsOf(m)[0],w=watchOf(m)[0];return{scale:s?scaleEval(s,m):[],lab:l?labEval(l,m):[],watch:w?watchEval(w,m):[],s,l,w}}
+// 長期／不可逆的發現：最新報告沒做同一項檢查就沿用舊報告（規則見 PLAN.md「長期／不可逆的發現沿用」）
+function labCarry(m,L){if(!L)return[];const out=[],seen=new Set(labEval(L,m).map(i=>i.k)),srcK=v=>{const t=String(v||'');return Object.keys(LABK).find(k=>LABK[k].t==='opt'&&LABK[k].s&&t.startsWith(LABK[k].s))};
+for(const r of labsOf(m)){if(r===L||r.t>=L.t||dayDiff(r.t,L.t)>1830)continue;
+for(const i of labEval(r,m)){if(seen.has(i.k))continue;const rv=revOf(i.k,i.val,r.items?.[i.k]?.ref);if(!rv||rv[0]!=='perm')continue;
+if(IMGK[i.k]){const sk=srcK(i.val);if(sk&&L.items?.[sk]!=null)continue}else if(L.items?.[i.k]!=null)continue;   // 最新報告重做了同一種檢查
+seen.add(i.k);out.push({...i,carry:r.t,msg:`沿用 ${r.t} 報告（長期／不可逆，最新報告沒有做這項）：${i.msg}`})}}
+return out}
+function issuesOf(m){const s=scalesOf(m)[0],l=labsOf(m)[0],w=watchOf(m)[0];return{scale:s?scaleEval(s,m):[],lab:l?[...labEval(l,m),...labCarry(m,l)]:[],watch:w?watchEval(w,m):[],s,l,w}}
 function dietMode(m){
 const{scale,lab}=issuesOf(m),all=[...scale,...lab],o={};all.forEach(i=>{if(i.organ)o[i.organ]=Math.max(o[i.organ]||0,i.lv)});
 const md={lowCarb:(o.pancreas||0)>=1||all.some(i=>i.k==='tg'||(i.k==='visceral'&&i.lv>=1)),heart:(o.vessel||0)>=1||all.some(i=>i.k==='cac'||i.k==='img_cac'),liver:(o.liver||0)>=1,lowPur:all.some(i=>i.k==='ua'),kidney:all.some(i=>['egfr','cr','upro','uacr'].includes(i.k)&&i.lv>=2),kidneyMild:all.some(i=>['egfr','cr','upro','uacr'].includes(i.k)&&i.lv===1),waterLim:all.some(i=>i.k==='egfr'&&i.lv>=3)};
@@ -1921,11 +1928,11 @@ const SECS=['追蹤報告異常','數值趨勢','公費篩檢（國健署）','�
 const dayDiff=(a,b)=>Math.abs(new Date(a+'T00:00')-new Date(b+'T00:00'))/864e5;
 function yearPlan(m){
 const a=Math.floor(ageOf(m)),fem=m.sex==='f',fh=fhOf(m),lf=lifeOf(m),labs=labsOf(m),L=labs[0],P=L&&labs.find(r=>r!==L&&dayDiff(r.t,L.t)>=180);
-const by=+String(m.birth||'').slice(0,4)||new Date().getFullYear()-a,iss=L?labEval(L,m):[];
+const by=+String(m.birth||'').slice(0,4)||new Date().getFullYear()-a,iss=L?[...labEval(L,m),...labCarry(m,L)]:[];
 const lvOf=k=>iss.reduce((x,i)=>i.k===k?Math.max(x,i.lv):x,0),mx=(...ks)=>Math.max(0,...ks.map(lvOf)),any=(...ks)=>ks.some(k=>lvOf(k)>0);
 const lo=k=>iss.some(i=>i.k===k&&i.dir==='lo'),vOf=r=>k=>{const v=r?.items?.[k]?.v;return v==null||v===''?null:v};
 const hasL=k=>vOf(L)(k)!=null,has=k=>labs.some(r=>vOf(r)(k)!=null);
-const names=ks=>iss.filter(i=>ks.includes(i.k)).map(i=>`${i.short||i.name} ${typeof i.val==='number'?fmt(i.val):i.val}${i.bl!=null?`（僅略${i.dir==='lo'?'低':'高'}）`:''}`).join('、');
+const names=ks=>iss.filter(i=>ks.includes(i.k)).map(i=>`${i.short||i.name} ${typeof i.val==='number'?fmt(i.val):i.val}${i.bl!=null?`（僅略${i.dir==='lo'?'低':'高'}）`:''}${i.carry?`（${i.carry} 報告，長期不會消失）`:''}`).join('、');
 let blMode=false;const out=[],done=new Set(),add=(sec,pr,t,why,ch,when)=>{if(blMode&&pr===2)pr=3;if(!out.some(o=>o.t===t))out.push({sec,pr,t,why,ch,when})};
 // 同一組項目全部只是「略高／略低」（超出 5% 內）→ 建議降一級（今年 → 可考慮）
 const rule=(ks,fn)=>{if(ks.some(k=>lvOf(k)>0)){const h=iss.filter(i=>ks.includes(i.k));blMode=h.length>0&&h.every(i=>i.bl!=null);ks.forEach(k=>done.add(k));fn(mx(...ks),names(ks));blMode=false}};
@@ -2552,7 +2559,7 @@ const lv=watchEval(w,m).reduce((a,i)=>Math.max(a,i.lv),0);return `<button class=
 }
 
 // 總覽最上面：體檢分數環＋一句總結＋4 個關鍵數字（點了會跳到對應的頁）
-function renderHero(m,c){const{lab,l}=issuesOf(m),h=healthComment(m),sc=l?scoreOf(lab):null,g=sc!=null?grade(sc):null,td=ymd(new Date()),w=watchOf(m)[0],wOk=w&&dayDiff(w.t,td)<=60,ca=condActive(m),b=exBonus(m,td),dp=deptPlan([...lab,...(wOk?watchEval(w,m):[])]).filter(d=>d.lv>=2);
+function renderHero(m,c){const{lab,l}=issuesOf(m),h=healthComment(m),sc=l?scoreOf(lab.filter(i=>!i.carry)):null,g=sc!=null?grade(sc):null,td=ymd(new Date()),w=watchOf(m)[0],wOk=w&&dayDiff(w.t,td)<=60,ca=condActive(m),b=exBonus(m,td),dp=deptPlan([...lab,...(wOk?watchEval(w,m):[])]).filter(d=>d.lv>=2);
 const kpi=(k,v,u,t,acc,attr)=>`<button class="kpi" style="--acc:${acc}" ${attr}><div class="k">${k}</div><div class="v">${v}<span class="u">${u}</span></div><div class="t">${t}</div></button>`;
 const ring=sc!=null?scoreRing(sc,g[1]):`<svg viewBox="0 0 100 100" width="96" height="96" style="flex:0 0 96px"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="9"/><text x="50" y="56" text-anchor="middle" fill="#8a97b4" font-size="20" font-weight="800">—</text></svg>`;
 $('#heroCard').innerHTML=`<div class="scan"></div><div class="row" style="margin:0 0 10px"><h2 style="margin:0">健康總覽</h2><span class="sub">${esc(m.name)}・${sexT(m.sex)}・${Math.floor(c.a)} 歲</span></div>
@@ -3699,7 +3706,7 @@ return chkNote(labCheck(fv,m,day)).replace(/^<br>/,'')+(labCheck(fv,m,day).lengt
 (skip.length?`<br>略過（與性別不符）：${esc(skip.join('、'))}`:'')+dateNote+dupDay+'<br>請往下核對後按「儲存並分析」。';
 }
 const cleanMeta=mt=>{const o={};if(!mt)return o;for(const k of['lo','hi','ref','flag','conv'])if(mt[k]!=null&&mt[k]!=='')o[k]=mt[k];return o};
-/* 同一天的體檢報告合併成一份（同一次健檢的血液、影像、LDCT 分開匯入時）：以 base 為主，add 有、base 沒有的項目補上；兩邊都有的用 add（比較新匯入的）；其他項目去重複 */
+// 同一天的體檢報告合併（規則見 PLAN.md）
 function labMerge(base,add){const items={...obj(base.items)};for(const[k,v]of Object.entries(obj(add.items)))if(v&&v.v!=null&&v.v!=='')items[k]=v;
 const seen=new Set(),extra=[...(base.extra||[]),...(add.extra||[])].filter(e=>{const key=String(e?.name)+'|'+String(e?.value);if(seen.has(key))return false;seen.add(key);return true});
 const r={...base,items,extra,hospital:base.hospital||add.hospital||''};promoteExtras(r);return r}
@@ -3718,7 +3725,7 @@ if(PERUL[x.k]&&v>=PERUL[x.k]){v=Math.round(v/10)/100;conv.push(`${x.n} ${raw} �
 if(bad.length)return toast('數值格式錯誤：'+bad.join('、'));
 if(!Object.keys(items).length&&!lExtra.length)return toast('請至少輸入一個檢驗項目');
 const rec={id:lEditId||uid(),t:$('#l-date').value||ymd(new Date()),hospital:$('#l-hosp').value.trim(),items,extra:lExtra};promoteExtras(rec);{const W=labCheck(rec.items,m,rec.t);if(W.length)rec.chk=W}
-const arr=LABS[m.id]||(LABS[m.id]=[]),oth=lEditId?[]:arr.filter(x=>x.t===rec.t&&x.id!==rec.id);let sid=rec.id; // 編輯既有報告不問；同一天重複的可以在清單上方合併
+const arr=LABS[m.id]||(LABS[m.id]=[]),oth=lEditId?[]:arr.filter(x=>x.t===rec.t&&x.id!==rec.id);let sid=rec.id;
 if(oth.length){const sz=r=>Object.keys(r.items||{}).length+(r.extra||[]).length,b=[...oth].sort((x,y)=>sz(y)-sz(x))[0];
 if(confirm(`${rec.t} 已經有${oth.length>1?` ${oth.length} 份`:'一份'}報告（${sz(b)} 項）。\n\n按「確定」：合併到那一份（建議：同一次健檢的抽血、影像、低劑量 CT 放在一起，歷年比較才不會重複）。兩份都有的項目用這次的。\n按「取消」：另存一份。`)){
 const before=JSON.parse(JSON.stringify(arr));let mg=labMerge(b,rec);{const W=labCheck(mg.items,m,mg.t);if(W.length)mg.chk=W;else delete mg.chk}

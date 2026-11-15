@@ -2250,6 +2250,22 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zzd. 長期／不可逆的發現（冠狀動脈鈣化）：最新報告沒做那項檢查時沿用舊報告，狀況、人體圖、年度建議都看得到；不算進最新報告分數；新報告重做就以新的為準 ===============
+  {
+    const old = { id: 'o1', t: '2025-03-10', hospital: '甲醫院', items: { ldct: { v: 'Lung-RADS 1（陰性）', ref: '原文：No lung nodule. Coronary artery calcification.' }, us_liver: { v: '輕度脂肪肝' } }, extra: [] };
+    const neo = { id: 'n1', t: '2026-03-12', hospital: '甲醫院', items: { ldl: { v: 112 }, us_liver: { v: '正常' } }, extra: [] };
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me' }], active: 'a', labs: { a: [neo, old] } });
+    const c1 = await page.evaluate(() => { const m = me(), L = issuesOf(m).lab, cac = L.find(i => i.k === 'img_cac'); go('body', 'now'); renderAll(); showOrgan('heart');
+      const organ = $('#organPanel').textContent, hero = (document.body.textContent.match(/體檢 (\d+) 分/) || [])[1], own = scoreOf(labEval(labsOf(m)[0], m)), plan = JSON.stringify(yearPlan(m));
+      LABS[m.id][0].items.ldct = { v: 'Lung-RADS 1（陰性）', ref: '原文：No lung nodule.' }; const after = issuesOf(m).lab.some(i => i.k === 'img_cac');
+      return { carry: cac?.carry, msg: cac?.msg || '', liver: L.some(i => i.k === 'us_liver'), organ: /冠狀動脈鈣化/.test(organ) && /沿用 2025-03-10 報告/.test(organ), hero: +hero, own, plan: /心臟內科：冠狀動脈有鈣化/.test(plan) && /2025-03-10 報告，長期不會消失/.test(plan), after } });
+    check('2025 年 CT 有冠狀動脈鈣化、2026 年報告沒做 CT：狀況與人體圖（心臟）照樣列出、寫「沿用 2025-03-10 報告（長期／不可逆）」；年度建議照樣掛心臟內科；可逆的脂肪肝不沿用',
+      c1.carry === '2025-03-10' && /沿用 2025-03-10 報告（長期／不可逆/.test(c1.msg) && !c1.liver && c1.organ && c1.plan, JSON.stringify(c1));
+    check('沿用的發現不算進最新那份報告的分數（狀況頁的體檢分數＝最新報告自己的分數）；最新報告重做 CT、沒寫鈣化 → 以新的為準不再沿用',
+      c1.hero === c1.own && c1.after === false, JSON.stringify({ hero: c1.hero, own: c1.own, after: c1.after }));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
