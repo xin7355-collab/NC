@@ -2,6 +2,8 @@
  * NutriCore 圖片後端（Google Apps Script，免費）
  * 用途：替 App 呼叫 Cloudflare Workers AI（FLUX.1 schnell），金鑰只放在這裡，不進前端、不進 GitHub。
  * Cloudflare 免費方案每天 10,000 neurons，用完會直接失敗、不會扣款。
+ * 隱私：App 只送「菜色代號＋食物英文提示詞＋亂數種子」，沒有任何健康、體檢、保險資料；這裡不寫入試算表、雲端硬碟或紀錄，
+ *       指令碼屬性只存設定（帳戶 ID、Token、每日上限）和當天成功張數。
  *
  * 一、設定（專案設定 → 指令碼屬性）
  *   CF_ACCOUNT_ID  Cloudflare 帳戶 ID（Cloudflare 後台右側欄可複製）

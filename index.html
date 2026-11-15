@@ -1080,7 +1080,7 @@ const IMGF=[
 ['fracture','壓迫性骨折',/壓迫性骨折|compression fracture/i,2,'bone','骨科','可能和骨質疏鬆有關，建議骨科評估並驗骨密度',1]];
 const IMGK=Object.fromEntries(IMGF.map(f=>['img_'+f[0],f]));
 function imgFind(text){const out=[];if(!text)return out;
-for(const cl of String(text).split(/[，,。；;\n]/)){const c=cl.trim();if(!c)continue;
+for(const cl of String(text).split(/[，,。；;\n]|\.\s+/)){const c=cl.trim();if(!c)continue;   // 英文報告的句號後面接空白才斷（2.16 這種小數不切）
 for(const f of IMGF){const mm=c.match(f[2]);if(!mm||out.some(o=>o.f===f))continue;
 if(/(無|未見|未發現|沒有|未有|排除|\bno\s|without)/i.test(c.slice(Math.max(0,mm.index-8),mm.index)))continue;out.push({f,clause:c})}}
 return out}
@@ -2038,6 +2038,9 @@ if(fh.ca.includes('liver')&&a>=40&&!lvOf('us_liver'))add(S[3],3,'腹部超音波
 if(fh.ca.includes('stomach')){if(!has('hp')&&a<45)add(S[3],2,'幽門桿菌檢測','胃癌家族史，45 歲前可自費檢測','自費','今年');if(a>=40&&!lvOf('gastro'))add(S[3],3,'胃鏡（與醫師討論）','胃癌家族史','自費／健保','與醫師討論')}
 if(fh.ca.includes('npc')&&a>=30&&!hasL('ebv'))add(S[3],2,'EB 病毒抗體＋耳鼻喉科檢查（鼻咽癌）','鼻咽癌家族史','自費','每 1–2 年');
 if(lungFH&&!fem&&a>=40&&a<45)add(S[3],3,'低劑量胸部 CT（自費）','肺癌家族史，男性 45 歲才有公費','自費','與醫師討論');
+// 做過 LDCT、結果陰性（Lung-RADS 1、2），又不符合公費資格：報告常寫「每年追蹤」，但一般風險的人每年自費做的好處還不確定 → 寫出上次日期與到期日，請和醫師討論
+{const lr=labs.find(r=>r.items?.ldct?.v),o=lr&&optFind(LABK.ldct,lr.items.ldct.v),elig=(lungFH&&a>=(fem?40:45)&&a<=74)||(a>=50&&a<=74&&heavy);
+if(o&&o[1]===0&&!elig){const due=addDays(lr.t,365);add(S[3],3,'低劑量胸部 CT（自費，和醫師討論）',`上次 ${lr.t}：${o[0]}；報告建議 12 個月後再做。你沒有肺癌家族史、也不是重度吸菸者，不符合公費；一般風險的人每年自費做的好處還不確定（每次有少量輻射、可能有偽陽性要追蹤）`,'自費',due<=todayS()?`${due} 起（已到期）`:`${due} 起`)}}
 if(fh.ca.includes('thyroid'))add(S[3],3,'甲狀腺超音波（與醫師討論）','甲狀腺癌家族史','自費','與醫師討論');
 if(fh.ca.includes('pancreas')&&fh.early)add(S[3],3,'胰臟癌高風險評估（與醫師討論）','多位家人或早發胰臟癌','自費','與醫師討論');
 if(fh.chr.includes('dm')&&!hasL('hba1c'))add(S[3],2,'糖化血色素 HbA1c','一等親有糖尿病，風險約 2–3 倍','自費／公費','每年');
@@ -3409,7 +3412,7 @@ function promptLab(){const OPT=LAB.filter(x=>x.t==='opt'),QI=LAB.filter(x=>x.t==
 8. 血壓若寫成 "128/82"，請拆成 sbp=128、dbp=82。眼壓左右眼取較高值；骨密度取最低的 T 值（腰椎、髖部取較低者），報告有 Z 值另外填 dxaz（同樣取最低）；檢驗結果寫成範圍（例如尿沉渣「1-5」）照抄原文；聽力左右任一耳異常就填異常。InBody 的「阻抗（kHz）」原始數據不用輸出；InBody 的「推估握力」是建議範圍、不是測量值，報告沒有實際測量握力就不要填 grip_r／grip_l。
 9. 姓名、身分證字號、病歷號、生日、電話、地址一律不要輸出。
 10. date 填檢查（採檢）日期，格式 YYYY-MM-DD 的西元年；報告若寫民國年（例如 115/09/20），請加 1911 換算成 2026-09-20。
-11. 影像與檢查（超音波、X 光、電腦斷層、心電圖、內視鏡、乳房攝影、抹片等）：value 只能填下方括號內其中一個選項（報告寫「無明顯異常」、只有其他部位的小發現時選「正常」，例如胸部 X 光「肺部無明顯異常（疑輕度脊椎側彎）」）；報告原文（醫師總評、結論）「每一句都完整照抄」放進 "note"，不要摘要。同一份報告裡的其他發現（例如冠狀動脈鈣化、肋膜增厚、肺氣腫、甲狀腺結節），另外各自放進 extra（name 寫發現名稱，value 照抄原文句子）。
+11. 影像與檢查（超音波、X 光、電腦斷層、心電圖、內視鏡、乳房攝影、抹片等）：value 只能填下方括號內其中一個選項（報告寫「無明顯異常」、只有其他部位的小發現時選「正常」，例如胸部 X 光「肺部無明顯異常（疑輕度脊椎側彎）」）；報告原文（醫師總評、結論）「每一句都完整照抄」放進 "note"，不要摘要。同一份報告裡的其他發現（例如冠狀動脈鈣化、肋膜增厚、肺氣腫、甲狀腺結節），另外各自放進 extra（name 寫發現名稱，value 照抄原文句子）。低劑量胸部電腦斷層（LDCT）：依 Lung-RADS 分數選 ldct 的選項；冠狀動脈鈣化只寫「有」、沒有分數時不要填 cac（cac 只填 Agatston 鈣化分數），放進 extra；date 用檢查日期（不是報告日期）；輻射劑量（CTDIvol、DLP）、掃描技術、影像品質勾選不用輸出。
 12. ${QI.map(x=>x.k).join('、')} 是抗體保護力，照抄原文（陽性／陰性或數值）。
 13. 輸出前逐項自我核對：每個數字都必須能在報告中找到原文，小數點位置正確。
 

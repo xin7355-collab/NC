@@ -26,8 +26,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     return r.fulfill({ status: 404, json: {} });
   });
   // ---- GAS 後端模擬：reply 是物件就回 JSON，字串就回 HTML（模擬部署網址錯誤） ----
-  const gas = { hits: 0, reply: { ok: false, error: 'NOT_CONFIGURED' } };
-  await ctx.route('https://script.google.com/**', r => { gas.hits++; const h = { 'Access-Control-Allow-Origin': '*' };
+  const gas = { hits: 0, bodies: [], reply: { ok: false, error: 'NOT_CONFIGURED' } };
+  await ctx.route('https://script.google.com/**', r => { gas.hits++; gas.bodies.push(r.request().postData() || ''); const h = { 'Access-Control-Allow-Origin': '*' };
     return typeof gas.reply === 'string' ? r.fulfill({ status: 200, contentType: 'text/html', body: gas.reply, headers: h }) : r.fulfill({ json: gas.reply, headers: h }) });
   // o.clock：裝假時鐘（可快轉計時器）；o.url：改用 http 網址載入
   const newPage = async (seed, o = {}) => { const p = await ctx.newPage(); if (o.clock) await p.clock.install(); p.on('pageerror', e => errs.push(`[pageerror] ${e.message}`)); p.on('dialog', d => d.accept());
@@ -143,6 +143,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
   await toLab(); await page.selectOption('#labDish', 'l5'); await page.click('#genOne'); await labOut(/生成失敗/);
   let t = await page.textContent('#labOut');
   check('GAS 未設定：只送 1 次，提示去填 CF_ACCOUNT_ID／CF_API_TOKEN', gas.hits === 1 && /CF_ACCOUNT_ID/.test(t) && /指令碼屬性/.test(t), `${gas.hits} 次｜${t.slice(0, 50)}`);
+  { const gb = gas.bodies.map(b => { try { return JSON.parse(b) } catch (e) { return { raw: String(b).slice(0, 80) } } });
+    check('送到 GAS 後端的只有菜色代號、食物英文提示詞和亂數種子（不帶任何健康、體檢、保險資料）', gb.length >= 1 && gb.every(o => Object.keys(o).sort().join() === 'id,prompt,seed' && /appetizing/.test(o.prompt) && o.prompt.length < 400 && !/[\u4e00-\u9fff]/.test(o.prompt)), JSON.stringify(gb[0])) }
   gas.hits = 0; gas.reply = '<html><body>找不到網頁</body></html>'; await page.click('#genOne'); await labOut(/不是圖片資料/);
   t = await page.textContent('#labOut');
   check('GAS 網址錯（回 HTML）：只送 1 次，提示用 /exec 網址', gas.hits === 1 && /\/exec/.test(t), `${gas.hits} 次｜${t.slice(0, 50)}`);
@@ -2211,6 +2213,21 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('請 AI 推薦補缺口的商品和保費：保障健檢有預算與病史選項；提示詞帶缺口、現有保單、實支實付張數、預算，要求不同公司、還在賣、附來源、估保費查不到寫需試算；AI 工具頁也有',
       r1.has && r1.tool && /每年約 30,000 元/.test(r1.t) && /要補的缺口/.test(r1.t) && /甲人壽 甲人壽醫療保險（2015 年投保）/.test(r1.t) && /醫療算進張數 4 張/.test(r1.t) && /不同保險公司/.test(r1.t) && /現在還在販售/.test(r1.t) && /需試算/.test(r1.t) && /資料來源/.test(r1.t) && !/【病史/.test(r1.t) && !/王小明/.test(r1.t),
       r1.t.slice(0, 300));
+    await page.close();
+  }
+
+  // =============== 6zzb. 低劑量胸部 CT（LDCT）報告匯入：Lung-RADS、附帶發現（冠狀動脈鈣化、肋膜增厚、脊椎）；陰性又不符合公費 → 年度建議寫上次日期與到期日、自費、和醫師討論 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me' }], active: 'a' });
+    const d1 = await page.evaluate(() => { const m = me(); openLabSheet(); fillLab({ type: 'kinwell.lab', v: 1, date: '2025-03-10', hospital: '甲醫院', items: { ldct: { value: 'Lung-RADS 1（陰性）', note: 'Findings: No lung nodule. Pleural thickening at both apices. Coronary artery calcification. Degenerative change of the thoracic spine. Impression: Lung-RADS 1, continue annual screening with LDCT in 12 months.' } },
+        extra: [{ name: '冠狀動脈鈣化', value: 'Coronary artery calcification' }, { name: '肋膜增厚', value: 'Pleural thickening at both apices' }] }); saveLab();
+      const rec = labsOf(m)[0], iss = labEval(rec, m), pl = $('#sheetBody').textContent; closeSheet(); go('body', 'now'); renderAll();
+      const plan = JSON.stringify(yearPlan(m));
+      return { t: rec.t, ldct: rec.items.ldct?.v, iss: iss.map(i => i.k + ':' + i.lv + ':' + (i.dept || '')).join('|'), cq: iss.find(i => i.k === 'img_cac')?.msg || '', plan: /低劑量胸部 CT（自費，和醫師討論）/.test(plan) && /上次 2025-03-10/.test(plan) && /2026-03-10 起（已到期）/.test(plan) && /不符合公費/.test(plan), pr: promptLab() } });
+    check('LDCT 報告：Lung-RADS 1 不算異常；冠狀動脈鈣化 → 心臟內科、肋膜增厚 → 胸腔內科（從原文判讀，英文報告用句號斷句、引用正確那一句）；檢查日照 JSON',
+      d1.t === '2025-03-10' && d1.ldct === 'Lung-RADS 1（陰性）' && !/ldct:/.test(d1.iss) && /img_cac:2:心臟內科/.test(d1.iss) && /img_pleura:1:胸腔內科/.test(d1.iss) && /報告：「Coronary artery calcification」/.test(d1.cq), JSON.stringify({ t: d1.t, ldct: d1.ldct, iss: d1.iss, cq: d1.cq }));
+    check('LDCT 陰性、沒有肺癌家族史也不是重度吸菸：年度健檢建議寫「低劑量胸部 CT（自費，和醫師討論）」上次日期與到期日；體檢提示詞教 AI：Lung-RADS 對應選項、只有「有」沒有分數不填 cac、用檢查日期、劑量和技術不用輸出',
+      d1.plan && /Lung-RADS 分數選 ldct/.test(d1.pr) && /Agatston/.test(d1.pr) && /用檢查日期/.test(d1.pr) && /CTDIvol/.test(d1.pr), '');
     await page.close();
   }
 
