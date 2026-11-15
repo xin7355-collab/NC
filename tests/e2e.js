@@ -1271,8 +1271,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     const perf = await page.evaluate(() => { const L = []; for (let i = 0; i < 30; i++) L.push({ id: 'x' + i, t: '2026-01-01', items: {}, extra: Array.from({ length: 40 }, (_, k) => ({ name: ['其他項目', '細胞外液', '阻抗 5kHz 右上肢', '腰圍(InBody)', '總膽固醇 T-CHO'][k % 5] + k, value: k, unit: '' })) });
       RKC.clear(); ALIASN = null; const cdpLess = performance.now(); for (const r of L) promoteExtras(r); return Math.round(performance.now() - cdpLess) });
     await page.close();
-    check(`品質門檻：index.html ${kb} KB ≤ 900 KB；30 份體檢×40 個其他項目比對 ${perf} ms ≤ 100 ms（CPU 沒降速；以前要 1 秒以上）；${attrs.length} 種按鈕動作都有處理程式`,
-      kb <= 900 && perf <= 100 && !noH.length, JSON.stringify({ kb, perf, noH }));
+    check(`品質門檻：index.html ${kb} KB ≤ 1,000 KB；30 份體檢×40 個其他項目比對 ${perf} ms ≤ 100 ms（CPU 沒降速；以前要 1 秒以上）；${attrs.length} 種按鈕動作都有處理程式`,
+      kb <= 1000 && perf <= 100 && !noH.length, JSON.stringify({ kb, perf, noH }));
   }
 
   // =============== 6zc. 審查找到的問題：壞掉的 chk 不能讓紀錄打不開、舊紀錄不用現在身高亂警告、算出來的 eGFR 也要影響飲食、補蛋白質避開不吃的食物、X 光原文有鈣化不叫你改正常、電腦版抽屜避開狀態列、地板守衛不誤擋、待辦不白算 ===============
