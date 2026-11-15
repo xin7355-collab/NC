@@ -2231,6 +2231,25 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zzc. 同一天的體檢報告：儲存時問要不要合併；已經重複的一鍵合併、可以復原；歷年比較同一天只算一次 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me' }], active: 'a',
+      labs: { a: [{ id: 'r1', t: '2025-03-10', hospital: '甲醫院', items: { ldl: { v: 120 }, hb: { v: 15 } }, extra: [] }, { id: 'r2', t: '2026-03-12', hospital: '甲醫院', items: { ldl: { v: 125 }, hb: { v: 15.2 } }, extra: [] }] } });
+    const J = { type: 'kinwell.lab', v: 1, date: '2025-03-10', items: { ldct: { value: 'Lung-RADS 1（陰性）', note: 'No lung nodule. Coronary artery calcification.' } }, extra: [{ name: '冠狀動脈鈣化', value: 'Coronary artery calcification' }] };
+    const m1 = await page.evaluate(J => { const m = me(), imp = () => { openLabSheet(); fillLab(J); saveLab() };
+      imp(); const a1 = labsOf(m).filter(r => r.t === '2025-03-10'); imp(); const a2 = labsOf(m).filter(r => r.t === '2025-03-10');
+      window.confirm = () => false; imp(); window.confirm = () => true; const a3 = labsOf(m).filter(r => r.t === '2025-03-10').length;
+      recTab = 'lab'; go('body', 'rec'); renderRecs(); const btn = document.querySelector('#recList [data-labmerge="2025-03-10"]'), cd3 = cmpData(m).rs.map(r => r.t).join();
+      btn.click(); const a4 = labsOf(m).filter(r => r.t === '2025-03-10'), undo = !!document.querySelector('#recList [data-labundo]');
+      document.querySelector('#recList [data-labundo]').click(); const a5 = labsOf(m).filter(r => r.t === '2025-03-10').length;
+      return { n1: a1.length, id1: a1[0].id, k1: Object.keys(a1[0].items).sort().join(), n2: a2.length, ex2: a2[0].extra.length, a3, btn: !!btn, cd3, n4: a4.length, k4: Object.keys(a4[0]?.items || {}).sort().join(), undo, a5 } }, J);
+    check('匯入同一天的報告：儲存時問要不要合併，按確定就合併到原本那份（ldct 補進去、原本的 LDL 保留），重複匯入也不會多一份、其他項目不重複',
+      m1.n1 === 1 && m1.id1 === 'r1' && m1.k1 === 'hb,ldct,ldl' && m1.n2 === 1 && m1.ex2 === 1, JSON.stringify(m1));
+    check('按取消另存的、以前已經重複的：體檢報告清單出現「🔗 2025-03-10 有 2 份報告：合併成一份」，按了合併成一份、可以復原；歷年比較同一天只算一次',
+      m1.a3 === 2 && m1.btn && m1.cd3 === '2025-03-10,2026-03-12' && m1.n4 === 1 && m1.k4 === 'hb,ldct,ldl' && m1.undo && m1.a5 === 2, JSON.stringify(m1));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
