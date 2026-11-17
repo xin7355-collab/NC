@@ -2266,6 +2266,27 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zze. 可用副本的實支實付「多領」算出來：理賠試算限正本合計最多賠到收據、副本各賠各的；保障健檢列出每張每次限額與 10 萬元試算；建議補強每項一鍵請 AI 推薦商品和保費 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me', inc: 80, earner: true }], active: 'a' });
+    const v1 = await page.evaluate(() => { const m = me(), L = INS[m.id] || (INS[m.id] = []);
+      const mk = (id, ins, start, amt, x = {}) => { const { p } = polCheck({ insurer: ins, product: ins + '醫療保險', start, status: '有效', payFreq: '年', premium: 3000, coverages: [{ name: '住院醫療費用保險金', kind: 'rider', cat: 'hosp_real', amount: amt, unit: '萬元/次', quote: amt + ' 萬', ...x }] }, m); p.id = id; p.chk = true; L.push(p); return p };
+      mk('A', '甲人壽', '2018-01-01', 20, { claimDoc: 'copy' }); mk('B', '乙人壽', '2025-01-01', 10); mk('C', '丙人壽', '2026-01-01', 10); mk('D', '丁人壽', '2019-01-01', 5);
+      S.set('ins', INS); const g = realGain(m, 1e5), html = checkupHTML(m, covGap(m));
+      const e = claimEst(m, { k: 'ad', d: todayS(), days: 3, cost: 100000 }), amt = id => e.out.find(o => o.p.id === id).its[0].amt, ce = ceHTML(e);
+      go('ins', 'cov'); renderCov(); const btns = [...document.querySelectorAll('#covBody [data-rcmd]')].map(b => b.dataset.rcmd), one = btns.find(Boolean);
+      return { g: { total: g.total, extra: g.extra, uMore: g.uMore }, h: /每次 20 萬/.test(html) && /最多可以領約 20 萬，比實際花費多領 10 萬/.test(html) && /還可以再多領約 5 萬/.test(html),
+        a: [amt('A'), amt('B'), amt('C'), amt('D')], rg: e.rg && { tot: e.rg.tot, extra: e.rg.extra, nU: e.rg.nU }, ce: /合計可領約 200,000 元，比實際花費多領 100,000 元/.test(ce), sum: e.sum,
+        btns: btns.length, one, p1: one ? promptRecommend(m, one) : '', p0: promptRecommend(m) } });
+    check('副本多領算出來：自費 10 萬住院，限正本（含不確定）的乙、丙、丁合計只賠 10 萬，可用副本的甲另外再賠 10 萬 → 合計 20 萬、多領 10 萬；不確定的丁如果其實可用副本還能多 5 萬；保障健檢列出每張每次限額和這個試算',
+      v1.g.total === 200000 && v1.g.extra === 100000 && v1.g.uMore === 50000 && v1.h, JSON.stringify(v1.g));
+    check('理賠試算不再重複加總：甲（副本）10 萬、限正本照額度大到小賠差額（乙 10 萬、丙 0、丁 0）；合計 20 萬、多領 10 萬寫在結果上方',
+      v1.a.join() === '100000,100000,0,0' && v1.rg && v1.rg.tot === 200000 && v1.rg.extra === 100000 && v1.rg.nU === 1 && v1.ce, JSON.stringify({ a: v1.a, rg: v1.rg, sum: v1.sum }));
+    check('建議補強每一項都有「請 AI 推薦這項的商品和保費」，還有一次全部問；單項的提示詞寫「這次只要補這一項」',
+      v1.btns >= 2 && !!v1.one && /這次只要補這一項】/.test(v1.p1) && v1.p1.includes(v1.one) && !/這次只要補這一項/.test(v1.p0), JSON.stringify({ btns: v1.btns, one: v1.one }));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);

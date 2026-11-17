@@ -4623,25 +4623,33 @@ msg=st==='over'?(af.length?`2019/11/8 以後投保的 ${nm(af)} 照規定不該�
 :`照 2019 年規定還可以再買 ${REAL_CAP-n} 張；但 2024/7/1 以後新買的只能用收據正本，同一筆費用只賠差額；新制後張數規定說法不一，買前問保險公司`;
 out.push({cat,t,L,n,co,gu,st,msg,nc:L.filter(x=>x.v==='copy').length,no:L.filter(x=>x.v==='orig').length,nu:L.filter(x=>x.v==='?').length,nm})}return out}
 const REALT={copy:'可用副本',orig:'限正本','?':'收據不確定'};
+// 每張保單住院醫療實支實付的每次限額（元）：同一張保單分好幾項（病房、雜費、手術）加起來
+function realLim(m){const o={};for(const s of covSum(m))if(s.cat==='hosp_real'&&!s.nm&&['','time'].includes(s.per))for(const x of s.L)if(x.v>0)o[x.pid]=(o[x.pid]||0)+x.v;return o}
+// 同一筆醫療費用 bill 元可以領多少：限正本（不確定的保守當限正本）合計最多賠到 bill；可用副本的各賠各的（舊保單才有，等於多領）
+function realGain(m,bill){const lim=realLim(m),P=realPols(m).filter(x=>x.c.cat==='hosp_real'&&lim[x.p.id]>0);if(!P.length)return null;
+const one=x=>Math.min(bill,lim[x.p.id]),C=P.filter(x=>x.v==='copy'),O=P.filter(x=>x.v!=='copy'),U=P.filter(x=>x.v==='?');
+const sum=L=>L.reduce((a,x)=>a+one(x),0),oSum=Math.min(bill,sum(O)),cSum=sum(C),total=oSum+cSum,uMore=(Math.min(bill,sum(O.filter(x=>x.v!=='?')))+cSum+sum(U))-total;   // uMore：不確定的如果其實可用副本，會多領多少
+return{bill,lim,C,O,U,oSum,cSum,total,extra:Math.max(0,total-bill),uMore:Math.max(0,uMore)}}
 // 好幾張實支實付時，同一筆醫療費用怎麼申請
 function realOrder(m,d){const L=realPols(m,d);if(L.length<2)return'';const nm=x=>`「${polName(x.p)}」`,O=L.filter(x=>x.v==='orig'),C=L.filter(x=>x.v==='copy'),U=L.filter(x=>x.v==='?');
 return['🧾 有 '+L.length+' 張實支實付，同一筆醫療費用這樣申請：',O.length?`① 收據正本給 ${nm(O[0])}（限正本），請它理賠後開「收據正本留存證明」或「理賠差額證明」`:`① 收據正本先給任一家（例如 ${nm(L[0])}）`,
 C.length?`② ${C.map(nm).join('、')} 可以用醫院蓋章的收據副本各自申請`:'',O.length>1?`③ ${O.slice(1).map(nm).join('、')} 也限正本：拿差額證明申請「還沒賠到的差額」，所有限正本的合計最多賠到實際花費`:'',
 U.length?`❔ ${U.map(nm).join('、')} 不確定能不能用副本：看條款，或打電話問保險公司`:''].filter(Boolean).join('\n')}
 // 保障健檢裡的「實支實付：張數與收據」：每張標可用副本／限正本／不確定，張數超過或還能買
-function realHTML(m){const K=realCap(m);if(!K.length)return'';const tg={copy:'ok',orig:'warn','?':''};
+function realHTML(m){const K=realCap(m);if(!K.length)return'';const tg={copy:'ok',orig:'warn','?':''},lm=realLim(m),g=realGain(m,1e5);
 return `<div class="h4">🧾 實支實付：張數與收據</div>${K.map(k=>`<div class="cdet"><b>${esc(k.t)}：算進張數 ${k.n} 張${k.co.length?`（另有公司全額付的團險 ${k.co.length} 張不算）`:''}</b>
 <div class="sub" style="margin-top:4px;color:${k.st==='over'?'var(--amber)':'inherit'}">${k.st==='over'?'⚠️ 超過 3 張上限：':k.st==='full'?'已滿 3 張：':'✅ '}${esc(k.msg)}</div>
-${k.L.map(x=>`<div style="margin-top:6px"><span class="tg ${tg[x.v]}">🧾 ${REALT[x.v]}</span> ${esc(polName(x.p))}<span class="sub">${x.p.start?`・${esc(x.p.start.slice(0,4))} 年`:''}${x.p.type==='grp'?`・團險（${x.p.grpPay==='company'?'公司全額付，不算張數':x.p.grpPay==='self'?'自費，算張數':'保費誰付沒填'}）`:''}${x.src?`・${esc(x.src)}`:''}</span></div>`).join('')}
-${k.nu?`<div class="sub" style="margin-top:6px">❔ 不確定的：打開保單，在提醒那裡按「可用副本」或「限正本」（看條款有沒有「副本理賠」，或打電話問保險公司）。</div>`:''}</div>`).join('')}`}
-function promptRecommend(m){const G=covGap(m),{O,A}=covCheckup(m,G),bud=num(String($('#rcBudget')?.value||'').replace(/[,，\s元]/g,'')),hx=($('#rcHx')?.value??'1')!=='0',
+${k.L.map(x=>`<div style="margin-top:6px"><span class="tg ${tg[x.v]}">🧾 ${REALT[x.v]}</span> ${esc(polName(x.p))}<span class="sub">${lm[x.p.id]?`・每次 ${money(lm[x.p.id])}`:''}${x.p.start?`・${esc(x.p.start.slice(0,4))} 年`:''}${x.p.type==='grp'?`・團險（${x.p.grpPay==='company'?'公司全額付，不算張數':x.p.grpPay==='self'?'自費，算張數':'保費誰付沒填'}）`:''}${x.src?`・${esc(x.src)}`:''}</span></div>`).join('')}
+${k.nu?`<div class="sub" style="margin-top:6px">❔ 不確定的：打開保單，在提醒那裡按「可用副本」或「限正本」（看條款有沒有「副本理賠」，或打電話問保險公司）。</div>`:''}
+${k.cat==='hosp_real'&&g?`<div class="hl" style="margin-top:8px">💰 以一次自費 10 萬元的住院為例：最多可以領約 ${money(g.total)}${g.extra?`，比實際花費多領 ${money(g.extra)}（可用副本的舊保單各賠一次）`:''}。限正本${g.U.length?'和不確定':''}的合計最多賠 10 萬${g.C.length?`；可用副本的 ${g.C.length} 張再各賠 ${g.C.map(x=>money(Math.min(1e5,lm[x.p.id]))).join('、')}`:''}。${g.uMore?`<br>不確定的如果其實可用副本，還可以再多領約 ${money(g.uMore)}：值得打電話問保險公司。`:''}${g.C.length?'<br>可用副本的是 2024/7/1 以前的舊保單，現在買不到了：不要讓它斷掉，也不要因為「保太多」解約。':''}</div>`:''}</div>`).join('')}`}
+function promptRecommend(m,focus=''){const G=covGap(m),{O,A}=covCheckup(m,G),bud=num(String($('#rcBudget')?.value||'').replace(/[,，\s元]/g,'')),hx=($('#rcHx')?.value??'1')!=='0',
 cond=hx?condActive(m).map(c=>c.name.replace(/（.*?）/g,'')).slice(0,15):[],L=insOf(m).filter(p=>polLive(p)),K=realCap(m),fm=(g,v)=>g.u==='萬'?`${+(+v).toFixed(1)} 萬`:`${Math.round(v).toLocaleString()} 元${g.sfx||''}`;
 const gap=G.filter(g=>['low','none','other','adv'].includes(g.st));
 return `你是台灣保險商品比較助理（不是業務員、不拿佣金、不推銷）。請依下面我的保障缺口，推薦各家保險公司「現在還在販售」的商品，並估算保費。${INS_RULE}
 ${EVID}
 
 【我】${memTag(m,0)}
-【預算】${bud?`每年約 ${bud.toLocaleString()} 元`:'沒填：請給每年 1 萬、3 萬、5 萬元三種組合'}
+【預算】${bud?`每年約 ${bud.toLocaleString()} 元`:'沒填：請給每年 1 萬、3 萬、5 萬元三種組合'}${focus?`\n【這次只要補這一項】${focus}：只推薦這一類的商品，其他缺口不用推薦`:''}
 【要補的缺口（App 依現有保單加總）】
 ${gap.length?gap.map(g=>`- ${g.t}：有 ${g.pers?fm(g,g.have):g.oth+' 項'}${g.tg>0?`／目標 ${fm(g,g.tg)}`:''}（${GST[g.st][0]}）${g.why?`；目標的算法：${g.why}`:''}`).join('\n'):'- App 沒有算出缺口：請檢查我的現有保障是否合理，不用硬推薦'}
 【App 建議補強的順序】${A.map(x=>x[0]).join('、')||'沒有'}
@@ -4664,7 +4672,7 @@ const D=by('hosp_day'),R=by('hosp_real'),L=by('life'),AC=by('accident'),CA=by('c
 if(D.tg>0&&D.have>=2*D.tg)O.push([`住院日額每日 ${fm(D,D.have)}：是目標的 ${x(D)} 倍`,'日額是補住院時的病房差額、看護和收入損失。現在很多治療改成門診或短天數住院，平常以門診為主的人，日額保太高多半用不到；有實支實付時每日 2,000～3,000 元通常夠。不用再加，之後續保或調整時可以考慮降低。']);
 const RP=realPols(m),nR=RP.length,nC=RP.filter(x=>x.v==='copy').length,nO=RP.filter(x=>x.v==='orig').length,nU=nR-nC-nO;
 if(nR>=3||nO>=2)O.push([`實支實付 ${nR} 張（可用副本 ${nC}、限正本 ${nO}${nU?`、不確定 ${nU}`:''}）`,`限正本的保單（2024/7/1 以後買的都是）好幾張時，同一筆醫療費用合計最多賠到實際花費：第一家用收據正本賠，其他家拿「理賠差額證明」只賠差額，保費等於多繳。可用副本的舊保單才能各自用同一張收據申請。${nU?'不確定的看條款有沒有「副本理賠」。':''}不要再加第 ${nR+1} 張。`]);
-else if(R.tg>0&&R.have>=2*R.tg)O.push([`實支實付每次 ${fm(R,R.have)}：是目標的 ${x(R)} 倍`,'一般住院、手術的自費額度通常用不到這麼多：不用再加。']);
+else if(R.tg>0&&R.have>=2*R.tg){const g=realGain(m,R.tg*1e4);O.push([`實支實付每次 ${fm(R,R.have)}：是目標的 ${x(R)} 倍`,`一般住院、手術的自費額度通常用不到這麼多：不用再加。${g?.C.length?`其中可用副本的 ${g.C.length} 張是同一張收據各賠一次（自費 ${R.tg} 萬時最多可領約 ${money(g.total)}，多領 ${money(g.extra)}），是現在買不到的舊保單，不算浪費、不要解約。`:g?.U.length?'有收據不確定的：確認是不是可用副本（可以各賠一次），不是的話限正本的合計只賠到實際花費。':''}`])}
 const sx=nPol('surgery');if(sx)K.push(['手術已有支應：不用再加手術險','實支實付的手術費限額＋手術險（日額 × 倍數）已經可以支應一般手術；門診手術看條款有沒有賠。']);else if(R.st==='ok')K.push(['實支實付已包含手術費：不一定要另外買手術險','實支實付通常有手術費限額；門診手術看條款。']);
 for(const k of realCap(m)){if(k.st==='over')N.push([`${k.t}實支實付算進張數的有 ${k.n} 張：超過 3 張上限`,k.msg]);if(k.gu.length)N.push([`團險 ${k.nm(k.gu)} 沒填保費誰付`,'公司全額付保費的團險不算進實支實付張數，自費（含薪資扣款）的算：打開保單按「編輯」選「團險保費誰付」。'])}
 {const OL=RP.filter(x=>x.old&&x.v!=='orig');if(OL.length)N.push([`${OL.length} 張 2024/7/1 以前的實支實付${OL.some(x=>x.v==='copy')?'（可以用收據副本）':''}：不要讓它斷掉`,`每年續保是延續原來的契約，照原條款（可用副本、不受新的張數規定影響）。停效太久、解約、主約解約或減額繳清（附約通常跟著終止）、到最高續保年齡、不保證續保被拒絕續保，斷掉後再買就是新契約：只能正本理賠、要重新核保。${OL.filter(x=>x.c.renew==='no').map(x=>`「${polName(x.p)}」不保證續保，保險公司可以不續保。`).join('')}`])}
@@ -4715,11 +4723,11 @@ real:['🧾 實支實付：收據正本、副本、張數',[
 '【投保時要告知】已經有其他實支實付卻沒告知，有些條款會改成按日額給付：投保時據實告知已有的實支實付。法規與條款以金管會最新公告和你的保單為準。']],
 budget:['💰 預算有限的最低保險組合',['原則：先保大、後保小（先保會讓家裡經濟垮掉的風險）；先保障、後儲蓄；定期險比終身險便宜很多，預算有限不買儲蓄險、終身險。','① 意外險：意外身故、失能 200～500 萬，附意外醫療實支實付 3～5 萬（保費看職業等級，常見一年一、兩千元起）。','② 實支實付醫療：1 個計畫，每次雜費限額 10～20 萬，補健保不給付的自費醫材、手術、藥。','③ 定期壽險：有家人要養或有房貸才買，100～300 萬，保到責任結束（孩子獨立、房貸還完）。','④ 重大傷病或癌症一次金：50～100 萬，生重病時先有一筆錢。','省錢做法：先看公司或國軍的團體保險；網路投保通常比較便宜；主約選低額度、預算放在定期附約時要知道附約跟著主約，主約停效附約也沒有；定期險年紀越大保費越高。','保費是估計，會隨年齡、性別、職業等級變動；可以按下面的提示詞，填預算請 AI 依你的身分排方案。']]};
 const GUIDE_OF=m=>{const a=ageOf(m),j=m.job||'';return[(j==='mil'||j==='vet')&&'milvet',(j==='civ'||j==='tea')&&'civ',(j==='lab'||j==='self')&&'lab',(j==='farm'||j==='fish')&&'farm',(j==='home'||j==='none')&&'nhi',j==='stu'&&'stu',j==='ret'&&'ret',a<6&&'baby',a>=70&&'old',!insOf(m).some(p=>polLive(p))&&'poor',realPols(m).length&&'real','budget'].filter(Boolean)};
-function checkupHTML(m,G){const{O,K,A,N}=covCheckup(m,G),rel=GUIDE_OF(m),jb=(JOBS.find(x=>x[0]&&x[0]===m.job)||[])[1];
+function checkupHTML(m,G){const{O,K,A,N}=covCheckup(m,G),rel=GUIDE_OF(m),jb=(JOBS.find(x=>x[0]&&x[0]===m.job)||[])[1],liA=x=>`<div class="bl"><b>${esc(x[0])}</b><br><span class="sub">${esc(x[1])}</span><br><button class="btn ghost sm" data-rcmd="${esc(x[0])}" style="margin-top:6px;min-height:44px">🛒 請 AI 推薦這項的商品和保費</button></div>`;
 const li=x=>`<div class="bl"><b>${esc(x[0])}</b><br><span class="sub">${esc(x[1])}</span></div>`,sec=(t,L)=>L.length?`<div class="h4">${t}（${L.length}）</div>${L.map(li).join('')}`:'';
 const gd=(k,open)=>{const[t,L]=GUIDE[k];return `<details class="box"${open?' open':''}><summary>${t}</summary><div class="sub" style="line-height:1.7;padding-bottom:12px">${L.map(x=>'・'+esc(x)).join('<br>')}</div></details>`};
 return `<div class="card"><h2>🩺 ${esc(m.name)} 的保障健檢</h2><p class="note" style="margin-top:0">依現有保單、年齡、收入、負債、病史和身分粗算，只當參考；法規和補助以主管機關最新公告為準。</p>
-${sec('⚠️ 可能保太多／重複',O)}${sec('✅ 已經夠、不用再加',K)}${sec('➕ 建議補強（照優先順序）',A)}${sec('💡 你的狀況要注意',N)}${O.length||K.length||A.length||N.length?'':'<div class="sub">還沒有保單：先看下面的建議，或到「保單」匯入。</div>'}
+${sec('⚠️ 可能保太多／重複',O)}${sec('✅ 已經夠、不用再加',K)}${A.length?`<div class="h4">➕ 建議補強（照優先順序）（${A.length}）</div>${A.map(liA).join('')}<button class="btn ai sm" data-rcmd="" style="margin:8px 0 0;width:100%;min-height:44px">🛒 一次請 AI 推薦這 ${A.length} 項的商品和保費</button><p class="note" style="margin-top:6px">App 不知道各家現在的商品和價格：按了會複製提示詞（帶你的缺口、現有保單、實支實付張數，不帶姓名），貼給有上網搜尋的 AI。預算、病史在下面「🛒 請 AI 推薦補缺口」填。</p>`:''}${sec('💡 你的狀況要注意',N)}${O.length||K.length||A.length||N.length?'':'<div class="sub">還沒有保單：先看下面的建議，或到「保單」匯入。</div>'}
 <div class="h4">📚 依你的身分${jb?`（${esc(jb)}）`:'（⚙️ 設定 → 基本資料填職業身分會更準）'}</div><div id="idGuides">${rel.map((k,i)=>gd(k,i===0)).join('')}</div>
 <button class="btn ai" data-idplan style="margin-top:8px">📋 複製「依我的身分規劃保險」提示詞：填預算問 AI</button>
 ${realHTML(m)}
@@ -5421,12 +5429,18 @@ for(const p of L){const live=polLive(p,d),pw=[],its=[];
 for(const c of p.items||[]){const r=claimItem(p,c,{k,d,age,days,icu,bill,hosp,acc,sx,sxOut,inSitu,nReal,live,readmit});if(r)its.push(r)}
 if(!its.length)continue;if(!p.chk)pw.push('保單還沒核對：金額以保單為準');if(p.type==='grp')pw.push('團體保險：事故時還在職才有，離職後就沒有');if(p.uw?.excl)pw.push(`有除外約定「${p.uw.excl}」：確認這次不在除外範圍`);
 if(p.start&&dx)for(const c of condActive(m)){const parts=c.name.replace(/（.*?）/g,'').split('／').filter(z=>z.length>=2);if(c.y&&+c.y<+p.start.slice(0,4)&&parts.some(pt=>dx.includes(pt)||pt.includes(dx)))pw.push(`既往症：「${c.name}」${c.y} 年確診，早於這張保單生效；投保時有據實告知、沒被除外，通常照條款理賠`)}
-out.push({p,pw,its});for(const r of its){if(r.v==='yes'){nY++;if(r.amt)sum+=r.amt}else if(r.v==='maybe')nM++;else nN++}}
-return{out,sum,nY,nM,nN,nNoT:out.filter(o=>!o.p.terms).length,days,icu,bill,acc,sx,sxOut,d,ro:out.some(o=>o.its.some(r=>isReal(r.c)&&r.v!=='no'))?realOrder(m,d):''}}
+out.push({p,pw,its})}
+// 實支實付：同一張保單的分項合計不超過收據；限正本（不確定的保守照限正本）全部保單合計最多賠到收據金額、照額度大到小賠差額；可用副本的各賠各的（多領）
+let rg=null;if(bill){const P=[];for(const o of out){const R1=o.its.filter(r=>isReal(r.c)&&r.amt>0&&covUnit(r.c).per!=='day');if(!R1.length)continue;let cap=bill;for(const r of R1){const a=Math.min(r.amt,cap);if(a<r.amt){r.why.push(`同一張保單的各項合計最多賠到收據金額，這項調成 ${ntd(a)}`);r.amt=a}cap-=a}P.push({o,R1,d:realDoc(o.p,R1[0].c),t:R1.reduce((x,r)=>x+r.amt,0)})}
+let left=bill,cp=0;for(const x of P.filter(x=>x.d.v!=='copy').sort((a,b)=>b.t-a.t)){let pay=Math.min(x.t,Math.max(0,left));if(pay<x.t){for(const r of x.R1){const a=Math.min(r.amt,pay);pay-=a;if(a<r.amt){r.why.push(a?`限正本的保單合計最多賠到實際花費：前面的保單已經賠了，這張只賠差額 ≈ ${ntd(a)}（要第一家開「理賠差額證明」）`:'限正本的保單合計最多賠到實際花費：前面的保單已經賠滿，這張不用再申請');r.amt=a;if(!a)r.v='no'}}}left-=x.R1.reduce((s,r)=>s+r.amt,0)}
+for(const x of P.filter(x=>x.d.v==='copy')){cp+=x.t;for(const r of x.R1)r.why.push('可用收據副本：同一筆費用這張另外再賠一次（2024/7/1 以前的舊保單才有）')}
+const tot=P.reduce((s,x)=>s+x.R1.reduce((a,r)=>a+r.amt,0),0);if(P.length>1||cp)rg={bill,tot,cp,extra:Math.max(0,tot-bill),nU:P.filter(x=>x.d.v==='?').length}}
+for(const{its}of out)for(const r of its){if(r.v==='yes'){nY++;if(r.amt)sum+=r.amt}else if(r.v==='maybe')nM++;else nN++}
+return{out,sum,nY,nM,nN,nNoT:out.filter(o=>!o.p.terms).length,days,icu,bill,acc,sx,sxOut,d,rg,ro:out.some(o=>o.its.some(r=>isReal(r.c)&&r.v!=='no'))?realOrder(m,d):''}}
 function ceHTML(R){const ic={yes:'✅',maybe:'🟠',no:'⛔'},lab={yes:'會賠',maybe:'可能會賠',no:'不賠'},cl={yes:'ok',maybe:'warn',no:'bad'},o={yes:0,maybe:1,no:2};
 if(!R.out.length)return '<div class="sub">你的保單裡沒有這種情況用得到的保障（或還沒匯入保單）。健保、勞保、公司的團體保險也可能有給付：可以按「問 AI」。</div>';
 const L=R.out.map(x=>({...x,its:[...x.its].sort((a,b)=>o[a.v]-o[b.v])})).sort((a,b)=>o[a.its[0].v]-o[b.its[0].v]);
-return `<div class="hl" style="margin:6px 0 10px"><b>${R.nY?`✅ 會賠 ${R.nY} 項${R.sum?`，App 估算約 ${ntd(R.sum)}`:''}`:'App 算不出確定會賠的項目'}</b>${R.nM?`<br>🟠 可能會賠 ${R.nM} 項：要看條款或補資料`:''}${R.nN?`<br>⛔ 不賠 ${R.nN} 項（原因在下面）`:''}${R.nNoT?`<br>📜 ${R.nNoT} 張保單還沒匯入條款：匯入後試算會更準（打開保單 →「條款規則」）`:''}</div>`+(R.ro?`<div class="cdet" style="white-space:pre-line">${esc(R.ro)}</div>`:'')+
+return `<div class="hl" style="margin:6px 0 10px"><b>${R.nY?`✅ 會賠 ${R.nY} 項${R.sum?`，App 估算約 ${ntd(R.sum)}`:''}`:'App 算不出確定會賠的項目'}</b>${R.nM?`<br>🟠 可能會賠 ${R.nM} 項：要看條款或補資料`:''}${R.nN?`<br>⛔ 不賠 ${R.nN} 項（原因在下面）`:''}${R.nNoT?`<br>📜 ${R.nNoT} 張保單還沒匯入條款：匯入後試算會更準（打開保單 →「條款規則」）`:''}</div>`+(R.rg?`<div class="hl" style="margin:0 0 10px">🧾 實支實付：收據 ${ntd(R.rg.bill)}，合計可領約 ${ntd(R.rg.tot)}${R.rg.extra?`，比實際花費多領 ${ntd(R.rg.extra)}（可用副本的舊保單各賠一次）`:''}${R.rg.nU?`<br>有 ${R.rg.nU} 張收據不確定，先照限正本算（只賠差額）；確認可用副本的話會更多`:''}</div>`:'')+(R.ro?`<div class="cdet" style="white-space:pre-line">${esc(R.ro)}</div>`:'')+
 L.map(({p,pw,its})=>`<div class="cdet"><b>${esc(polName(p))}</b>${its.some(r=>r.v!=='no')?insLinks(p,1):''}${pw.map(w=>`<div class="sub" style="color:var(--amber)">⚠️ ${esc(w)}</div>`).join('')}${its.map(r=>`<div style="margin-top:8px"><span class="tg ${cl[r.v]}">${ic[r.v]} ${lab[r.v]}</span> ${esc(r.c.name)}${r.terms?' <span class="tg">📜 依條款</span>':''}<div class="sub">${esc(r.txt)}</div>${r.why.map(w=>`<div class="sub" style="color:var(--amber)">⚠️ ${esc(w)}</div>`).join('')}</div>`).join('')}</div>`).join('')+
 '<p class="note">App 依你匯入的保單資料粗估，不是保險公司的核定；以保單條款和理賠申請書為準。要確認就按「問 AI」並附上條款。</p>'}
 const EVT2SCN={op:'er',er:'er',ad:'ad',sx:'sx',acc:'acc',ca:'ca'};
@@ -5793,7 +5807,7 @@ else if(d.polchk){const L=d.polchk==='all'?insOf(m).filter(p=>p.status!=='quote'
 else if(d.polgo)openPol(d.polgo);
 else if(d.gapk)openGapDetail(d.gapk);
 else if('idplan' in d)copyText(promptIdPlan(m),'已複製：貼給 AI，在「我的預算」填每月想花多少');
-else if('rcmd' in d)copyText(promptRecommend(m),'已複製：貼給有上網搜尋功能的 AI，請它找現在還在賣的商品');
+else if('rcmd' in d)copyText(promptRecommend(m,d.rcmd||''),`已複製${d.rcmd?`「${d.rcmd}」`:''}：貼給有上網搜尋功能的 AI，請它找現在還在賣的商品和保費`);
 else if('poldel' in d)openPolDel();
 else if('polundo' in d){const T=POLTRASH;if(!T)return;const L=INS[T.mid]||(INS[T.mid]=[]);for(const p of T.list)if(!L.some(x=>x.id===p.id))L.push(p);POLTRASH=null;if(!S.set('ins',INS))return;renderIns();renderTodo();toast(`已復原 ${T.list.length} 張保單`)}
 else if('polall' in d){const L=insOf(m).filter(p=>polLv(p,m)==='chk'),ne=insOf(m).filter(p=>polLv(p,m)==='err').length;if(!L.length)return;
