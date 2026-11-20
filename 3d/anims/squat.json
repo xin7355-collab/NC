@@ -1,0 +1,76 @@
+{
+ "id": "squat",
+ "phases": [
+  [
+   "預備",
+   0,
+   0.5
+  ],
+  [
+   "下蹲",
+   0.5,
+   1.13
+  ],
+  [
+   "最低點",
+   1.13,
+   1.33
+  ],
+  [
+   "站起",
+   1.33,
+   2
+  ],
+  [
+   "完成",
+   2,
+   2.5
+  ]
+ ],
+ "clips": [
+  {
+   "name": "male",
+   "dur": 2.5,
+   "tracks": 24
+  },
+  {
+   "name": "female",
+   "dur": 2.5,
+   "tracks": 25
+  }
+ ],
+ "metrics": {
+  "male": {
+   "minY": 0,
+   "frames": 76,
+   "dur": 2.5,
+   "drift_Lankle": 0.0003,
+   "drift_Rankle": 0.0002,
+   "kneeMax": 129,
+   "elbowMax": 42,
+   "lineMin": 111,
+   "hipLineMax": 170,
+   "pelvisMin": 0.443,
+   "pelvisMax": 0.877,
+   "feet0": 0,
+   "arms0": 1.4166,
+   "feetMax": 0
+  },
+  "female": {
+   "minY": 0,
+   "frames": 76,
+   "dur": 2.5,
+   "drift_Lankle": 0.0003,
+   "drift_Rankle": 0.0002,
+   "kneeMax": 129,
+   "elbowMax": 42,
+   "lineMin": 109,
+   "hipLineMax": 167,
+   "pelvisMin": 0.462,
+   "pelvisMax": 0.912,
+   "feet0": 0,
+   "arms0": 1.3891,
+   "feetMax": 0
+  }
+ }
+}

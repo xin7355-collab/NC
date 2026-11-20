@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow"><title>3D 運動動畫轉檔（開發工具，不是 App 的一部分）</title>
+<script type="importmap">{"imports":{"three":"/three/build/three.module.js","three/addons/":"/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+// 把動作捕捉（CMU，BVH）與 CC0 動畫（Mesh2Motion，GLB）轉到 Rocketbox 的 Biped 骨架；棒式、臀橋用同一套工具自製。
+// 做法：每一節骨頭對齊來源的「方向」（不受兩副骨架原始姿勢、骨頭軸向不同影響）→ 兩節骨頭 IK 把著地的腳／手固定（不滑）→ 每一格讓身體最低點剛好在地板（不浮空、不穿地）。
+// 男女分別烘焙（身高、四肢長度不同），一個動作一個 GLB，裡面兩段動畫：male、female。
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { BVHLoader } from 'three/addons/loaders/BVHLoader.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';   // Mesh2Motion 的 GLB 有 Meshopt 壓縮
+const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z), Q = () => new THREE.Quaternion();
+const UP = V(0, 1, 0), FPS = 30, D2R = Math.PI / 180;
+const wp = o => o.getWorldPosition(V()), wq = o => o.getWorldQuaternion(Q());
+const angle = (a, b, c) => { const u = a.clone().sub(b).normalize(), v = c.clone().sub(b).normalize(); return Math.acos(Math.max(-1, Math.min(1, u.dot(v)))) / D2R };
+
+// ---------- 目標骨架（Rocketbox Bip01） ----------
+async function loadTarget(sex) {
+  const g = await new GLTFLoader().loadAsync(`/repo/3d/models/${sex}.glb`), root = g.scene, B = {}, meshes = [];
+  root.traverse(o => { if (o.isBone || /^Bip01/.test(o.name)) B[o.name] = o; if (o.isSkinnedMesh) { meshes.push(o); o.frustumCulled = false } });   // 根骨頭 Bip01 在 GLB 裡是一般節點（沒有綁頂點），也要收
+  root.updateMatrixWorld(true); const bind = {}; for (const n in B) bind[n] = { q: B[n].quaternion.clone(), p: B[n].position.clone() };
+  // 頂點（算最低點用）：每個頂點都算（只抽樣會漏掉細的髮束、鞋底邊緣，App 裡就會穿地幾毫米到幾公分）。同一份頂點資料會被好幾個材質區塊共用（女性 35 塊），只取一次
+  // 女性馬尾根部的頂點（主要還綁在頭骨、但有一部分綁馬尾骨頭）標成 Hair：臀橋時算頭的一部分（頭靠在馬尾根部上），馬尾本身另外擺
+  const samp = [], seen = new Set();
+  for (const m of meshes) { const pa = m.geometry.attributes.position; if (seen.has(pa)) continue; seen.add(pa); const n = pa.count, si = m.geometry.attributes.skinIndex, sw = m.geometry.attributes.skinWeight, pt = m.skeleton.bones.findIndex(b => b.name === 'Bip01_Ponytail');
+    for (let i = 0; i < n; i++) { let bi = 0, bw = -1, tail = false; for (let c = 0; c < 4; c++) { if (sw.getComponent(i, c) > bw) { bw = sw.getComponent(i, c); bi = si.getComponent(i, c) } if (pt >= 0 && si.getComponent(i, c) === pt && sw.getComponent(i, c) > 0) tail = true }
+      const name = m.skeleton.bones[bi]?.name || ''; samp.push([m, i, tail && name === 'Bip01_Head' ? 'Hair' : name]) } }
+  return { root, B, bind, meshes, samp, sex };
+}
+const T = (t, n) => t.B[n ? 'Bip01_' + n : 'Bip01'];   // '' ＝ 根骨頭 Bip01
+function resetBind(t) { for (const n in t.B) { t.B[n].quaternion.copy(t.bind[n].q); t.B[n].position.copy(t.bind[n].p) } t.root.updateMatrixWorld(true) }
+function setWorldQ(t, b, q) { b.parent.updateMatrixWorld(true); b.quaternion.copy(wq(b.parent).invert().multiply(q)); b.updateMatrixWorld(true) }
+function aim(t, bone, child, dir) { t.root.updateMatrixWorld(true); const b = T(t, bone), cur = wp(T(t, child)).sub(wp(b)).normalize(); if (dir.lengthSq() < 1e-10) return;
+  setWorldQ(t, b, Q().setFromUnitVectors(cur, dir.clone().normalize()).multiply(wq(b))) }
+// 繞骨頭本身的軸轉，讓「目前的側向量」對齊「想要的側向量」（修正軀幹、手掌的扭轉）
+function twist(t, bone, axis, curLat, wantLat) { const a = axis.clone().normalize(), p = v => v.clone().sub(a.clone().multiplyScalar(v.dot(a))).normalize(); const c = p(curLat), w = p(wantLat);
+  if (!isFinite(c.x) || !isFinite(w.x)) return; let ang = Math.acos(Math.max(-1, Math.min(1, c.dot(w)))); if (V().crossVectors(c, w).dot(a) < 0) ang = -ang;
+  const b = T(t, bone); setWorldQ(t, b, Q().setFromAxisAngle(a, ang).multiply(wq(b))) }
+function setRootWorld(t, pos) { const r = T(t, ''), par = r.parent; par.updateMatrixWorld(true); r.position.copy(par.worldToLocal(pos.clone())); t.root.updateMatrixWorld(true) }
+// 兩節骨頭 IK：把末端（腳踝、手腕）放到 goal；pole 是膝蓋／手肘要朝的方向
+function ik2(t, a, b, c, goal, pole) { t.root.updateMatrixWorld(true); const A = wp(T(t, a)), Bp = wp(T(t, b)), C = wp(T(t, c)), l1 = A.distanceTo(Bp), l2 = Bp.distanceTo(C);
+  const d = goal.clone().sub(A), L = Math.min(Math.max(d.length(), Math.abs(l1 - l2) + 1e-4), l1 + l2 - 1e-4), dir = d.normalize();
+  const x = (l1 * l1 - l2 * l2 + L * L) / (2 * L), h = Math.sqrt(Math.max(0, l1 * l1 - x * x));
+  const pv = pole.clone().sub(dir.clone().multiplyScalar(pole.dot(dir))).normalize(), knee = A.clone().add(dir.clone().multiplyScalar(x)).add(pv.multiplyScalar(h));
+  aim(t, a, b, knee.clone().sub(A)); t.root.updateMatrixWorld(true); aim(t, b, c, A.clone().add(dir.clone().multiplyScalar(L)).sub(wp(T(t, b)))) }
+function minY(t, re) { t.root.updateMatrixWorld(true); let m = Infinity; const v = V(); for (const [mesh, i, b] of t.samp) { if (re && !re.test(b)) continue; mesh.getVertexPosition(i, v); v.applyMatrix4(mesh.matrixWorld); if (v.y < m) m = v.y } return m }   // re：只看主要綁在這些骨頭上的頂點（例如腳、前臂）
+const joints = t => { t.root.updateMatrixWorld(true); const o = {}; for (const s of ['L', 'R']) Object.assign(o, { [s + 'hip']: wp(T(t, s + '_Thigh')), [s + 'knee']: wp(T(t, s + '_Calf')), [s + 'ankle']: wp(T(t, s + '_Foot')), [s + 'toe']: wp(T(t, s + '_Toe0')),
+  [s + 'sho']: wp(T(t, s + '_UpperArm')), [s + 'elb']: wp(T(t, s + '_Forearm')), [s + 'wri']: wp(T(t, s + '_Hand')) }); o.pelvis = wp(T(t, 'Pelvis')); o.neck = wp(T(t, 'Neck')); o.head = wp(T(t, 'Head')); return o };
+
+// ---------- 來源：關節名稱對照 ----------
+const MAPS = {
+  cmu: { hips: 'Hips', spine: 'Spine', chest: 'Spine1', neck: 'Neck1', head: 'Head', side: s => ({ hip: `${s}UpLeg`, knee: `${s}Leg`, ankle: `${s}Foot`, toe: `${s}ToeBase`, clav: `${s}Shoulder`, sho: `${s}Arm`, elb: `${s}ForeArm`, wri: `${s}Hand`, hand: `${s}FingerBase` }), L: 'Left', R: 'Right' },
+  m2m: { hips: 'pelvis', spine: 'spine_02', chest: 'spine_03', neck: 'neck_01', head: 'head', side: s => ({ hip: `thigh_${s}`, knee: `calf_${s}`, ankle: `foot_${s}`, toe: `ball_${s}`, clav: `clavicle_${s}`, sho: `upperarm_${s}`, elb: `lowerarm_${s}`, wri: `hand_${s}`, hand: `middle_01_${s}` }), L: 'l', R: 'r' }
+};
+async function loadSource(kind, url) {
+  let root, clip;
+  if (kind === 'cmu') { const r = new BVHLoader().parse(await (await fetch(url)).text()); root = new THREE.Group(); root.add(r.skeleton.bones[0]); clip = r.clip }
+  else { const g = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(url); root = g.scene; clip = g.animations[0] }
+  const mixer = new THREE.AnimationMixer(root); mixer.clipAction(clip).play(); const by = {}; root.traverse(o => { by[o.name] = o });
+  const M = MAPS[kind], pick = n => { const o = by[n]; if (!o) throw new Error('來源沒有關節 ' + n); return o };
+  const J = { hips: pick(M.hips), spine: pick(M.spine), chest: pick(M.chest), neck: pick(M.neck), head: pick(M.head) };
+  for (const s of ['L', 'R']) for (const [k, n] of Object.entries(M.side(M[s]))) J[s + k] = pick(n);
+  return { at(time) { mixer.setTime(time); root.updateMatrixWorld(true); const o = {}; for (const k in J) o[k] = wp(J[k]); return o }, dur: clip.duration };
+}
+
+// ---------- 方向對齊：把來源的一格姿勢套到目標 ----------
+// rot：把來源轉到「起始時面向 +Z、左邊 +X」的偏航；off、k：位置的平移與縮放
+function poseFromSource(t, P, rot, k, off, rootRest) {
+  resetBind(t); const g = v => v.clone().applyQuaternion(rot), d = (a, b) => g(P[b].clone().sub(P[a]));
+  // 骨盆：用「左右髖連線」和「骨盆→脊椎」兩個方向定出整個骨盆的旋轉
+  const basis = (lat, up) => { const x = lat.clone().normalize(), y = up.clone().sub(x.clone().multiplyScalar(up.dot(x))).normalize(), z = V().crossVectors(x, y); return new THREE.Matrix4().makeBasis(x, y, z) };
+  const t0 = joints(t), Bt = basis(t0.Lhip.clone().sub(t0.Rhip), wp(T(t, 'Spine1')).sub(t0.Lhip.clone().add(t0.Rhip).multiplyScalar(.5)));
+  const Bs = basis(d('Rhip', 'Lhip'), d('hips', 'spine')), R = Q().setFromRotationMatrix(Bs.clone().multiply(Bt.clone().transpose()));
+  setWorldQ(t, T(t, 'Pelvis'), R.multiply(wq(T(t, 'Pelvis'))));
+  setRootWorld(t, rootRest.clone().add(g(P.hips.clone().sub(off)).multiplyScalar(k)));
+  aim(t, 'Spine', 'Spine1', d('hips', 'spine'));
+  for (const s of ['L', 'R']) { aim(t, s + '_Thigh', s + '_Calf', d(s + 'hip', s + 'knee')); aim(t, s + '_Calf', s + '_Foot', d(s + 'knee', s + 'ankle')); aim(t, s + '_Foot', s + '_Toe0', d(s + 'ankle', s + 'toe')) }
+  aim(t, 'Spine1', 'Spine2', d('spine', 'chest')); aim(t, 'Spine2', 'Neck', d('chest', 'neck'));
+  { const j = joints(t); twist(t, 'Spine2', d('chest', 'neck'), j.Lsho.clone().sub(j.Rsho), d('Rsho', 'Lsho')) }
+  aim(t, 'Neck', 'Head', d('neck', 'head'));
+  for (const s of ['L', 'R']) { aim(t, s + '_Clavicle', s + '_UpperArm', d(s + 'clav', s + 'sho')); aim(t, s + '_UpperArm', s + '_Forearm', d(s + 'sho', s + 'elb')); aim(t, s + '_Forearm', s + '_Hand', d(s + 'elb', s + 'wri'));
+    aim(t, s + '_Hand', s + '_Finger2', d(s + 'wri', s + 'hand')) }
+}
+// ---------- 烘焙：每格記錄所有身體骨頭的區域旋轉＋根骨位置 ----------
+const BODY = ['Pelvis', 'Spine', 'Spine1', 'Spine2', 'Neck', 'Head', ...['L', 'R'].flatMap(s => ['_Thigh', '_Calf', '_Foot', '_Toe0', '_Clavicle', '_UpperArm', '_Forearm', '_Hand'].map(x => s + x))];
+const bodyOf = t => t.B.Bip01_Ponytail ? [...BODY, 'Ponytail'] : BODY;   // 女性模型多一根馬尾骨頭（tools/glb-add-ponytail.py 加的）：每段女性動畫都帶它，換動作時馬尾才不會停在上一個動作的位置
+const boneKeys = f => Object.keys(f).filter(k => k !== 'root' && k !== 'rootQ');
+function snap(t) { const o = { root: T(t, '').position.clone(), rootQ: T(t, '').quaternion.clone() }; for (const n of bodyOf(t)) o[n] = T(t, n).quaternion.clone(); return o }
+function apply(t, f) { T(t, '').position.copy(f.root); T(t, '').quaternion.copy(f.rootQ || t.bind.Bip01.q); for (const n of boneKeys(f)) T(t, n).quaternion.copy(f[n]); t.root.updateMatrixWorld(true) }   // 根骨頭的旋轉也要每格重設，不然傾斜會一格一格累加
+function toClip(name, frames) {
+  const times = frames.map((_, i) => i / FPS), tracks = [new THREE.VectorKeyframeTrack('Bip01.position', times, frames.flatMap(f => f.root.toArray()))];
+  { const q = frames.map(f => f.rootQ.clone()); for (let i = 1; i < q.length; i++) if (q[i].dot(q[i - 1]) < 0) q[i].set(-q[i].x, -q[i].y, -q[i].z, -q[i].w); tracks.push(new THREE.QuaternionKeyframeTrack('Bip01.quaternion', times, q.flatMap(x => x.toArray()))) }
+  for (const n of boneKeys(frames[0])) { const q = frames.map(f => f[n].clone()); for (let i = 1; i < q.length; i++) if (q[i].dot(q[i - 1]) < 0) q[i].set(-q[i].x, -q[i].y, -q[i].z, -q[i].w); tracks.push(new THREE.QuaternionKeyframeTrack(`Bip01_${n}.quaternion`, times, q.flatMap(x => x.toArray()))) }
+  return new THREE.AnimationClip(name, frames.length > 1 ? (frames.length - 1) / FPS : 0, tracks);
+}
+// 頭尾接起來（循環播放不跳）：最後 n 格慢慢回到第一格
+function loopBlend(frames, n) { const N = frames.length, F = frames[0]; for (let i = 0; i < n; i++) { const k = N - n + i, a = (i + 1) / n, f = frames[k]; f.root.lerp(F.root, a); f.rootQ.slerp(F.rootQ, a); for (const b of boneKeys(F)) f[b].slerp(F[b], a) } }
+
+// ---------- 動作捕捉／CC0 動畫 → 目標 ----------
+async function retarget(t, spec) {
+  const src = await loadSource(spec.kind, spec.url), t0 = spec.from, t1 = spec.to ?? src.dur, n = Math.round((t1 - t0) * FPS) + 1;
+  const P0 = src.at(t0), latS = P0.Lhip.clone().sub(P0.Rhip); latS.y = 0; const rot = Q().setFromUnitVectors(latS.normalize(), V(1, 0, 0));
+  resetBind(t); const j0 = joints(t), rootRest = wp(T(t, '')), hipsT = j0.Lhip.clone().add(j0.Rhip).multiplyScalar(.5), footBind = { L: wq(T(t, 'L_Foot')), R: wq(T(t, 'R_Foot')) };
+  const legS = P0.Lhip.distanceTo(P0.Lknee) + P0.Lknee.distanceTo(P0.Lankle), legT = j0.Lhip.distanceTo(j0.Lknee) + j0.Lknee.distanceTo(j0.Lankle), k = legT / legS;
+  const raw = []; for (let i = 0; i < n; i++) { const P = src.at(t0 + i / FPS); poseFromSource(t, P, rot, k, P0.hips, rootRest.clone().add(V(-hipsT.x, 0, -hipsT.z))); raw.push({ f: snap(t), j: joints(t) }) }
+  // 著地偵測＋鎖定（腳踝或手腕）：速度慢、而且接近最低高度的那幾格固定在同一點
+  // 著地鎖定（依時間順序）：腳跟著地＝鎖腳踝、腳掌平貼；只有腳尖著地（腳跟抬起）＝鎖腳尖、腳掌照來源角度；伏地挺身的手一直鎖住。
+  // 鎖定點從「上一格已修正的位置」接著用，切換時不跳、不滑。著地＝速度 < 0.25 m/s 而且接近這個點在整段裡的最低高度
+  const lockSets = spec.lock || [], lows = {}; for (const key of lockSets) lows[key] = Math.min(...raw.map(r => r.j[key].y));
+  // 支撐腳（弓箭步留在原地的那隻）：整段水平移動最少的腳，全程鎖住；腳跟離地超過 2 公分就改鎖腳尖
+  const travel = s => Math.max(...raw.map(r => r.j[s + 'ankle'].clone().setY(0).distanceTo(raw[0].j[s + 'ankle'].clone().setY(0)))), stance = spec.stance === 'auto' ? (travel('L') < travel('R') ? 'L' : 'R') : null;
+  const planted = (key, i) => { if (spec.always?.includes(key)) return true; const s = key[0];
+    if (s === stance && /ankle|toe/.test(key)) return /toe/.test(key) || raw[i].j[s + 'ankle'].y < lows[s + 'ankle'] + 0.02;
+    return raw[i].j[key].distanceTo(raw[Math.max(0, i - 1)].j[key]) * FPS < 0.25 && raw[i].j[key].y < lows[key] + 0.04 };
+  const footLen = { L: j0.Ltoe.distanceTo(j0.Lankle), R: j0.Rtoe.distanceTo(j0.Rankle) }; let goal = {};
+  // 手臂改成自然垂在身側（跟著胸口轉）：來源手臂動作不是健身示範要的（例如 CMU 144 號在弓箭步時出拳）
+  let armDirs = null; if (spec.arms === 'sides') { resetBind(t); const c0 = wq(T(t, 'Spine2')).invert(), j = joints(t), lat = j.Lhip.clone().sub(j.Rhip).normalize(), fwd = V().crossVectors(lat, UP).normalize();
+    armDirs = { c0, d: s => { const k = s === 'L' ? 1 : -1; return { u: UP.clone().negate().add(lat.clone().multiplyScalar(0.16 * k)).add(fwd.clone().multiplyScalar(-0.04)), f: UP.clone().negate().add(lat.clone().multiplyScalar(0.05 * k)).add(fwd.clone().multiplyScalar(0.22)) } } } }
+  const pivot = raw[0].j.Ltoe.clone().add(raw[0].j.Rtoe).multiplyScalar(.5);
+  const run = tilt => { goal = {}; const out = []; let prev = null;
+  for (let i = 0; i < n; i++) { apply(t, raw[i].f);
+    if (tilt) { const r = T(t, ''), Rq = Q().setFromAxisAngle(V(1, 0, 0), tilt), np = pivot.clone().add(wp(r).sub(pivot).applyQuaternion(Rq)); setWorldQ(t, r, Rq.multiply(wq(r))); setRootWorld(t, np) }   // 以腳尖為支點整個人往頭的方向傾斜
+    if (armDirs) { const rq = wq(T(t, 'Spine2')).multiply(armDirs.c0); for (const s of ['L', 'R']) { const d = armDirs.d(s); aim(t, s + '_UpperArm', s + '_Forearm', d.u.clone().applyQuaternion(rq)); aim(t, s + '_Forearm', s + '_Hand', d.f.clone().applyQuaternion(rq)) } }
+    const P = src.at(t0 + i / FPS);
+    for (const s of ['L', 'R']) { const aK = s + 'ankle', tK = s + 'toe', useA = lockSets.includes(aK), useT = lockSets.includes(tK); if (!useA && !useT) continue;
+      const aP = useA && planted(aK, i), tP = useT && planted(tK, i), j = joints(t), pole = j[s + 'knee'].clone().sub(j[s + 'hip'].clone().add(j[s + 'ankle']).multiplyScalar(.5)), sdir = P[tK].clone().sub(P[aK]).applyQuaternion(rot).normalize();
+      if (aP) { goal[aK] ??= (prev || j)[aK].clone(); goal[tK] = null; ik2(t, s + '_Thigh', s + '_Calf', s + '_Foot', goal[aK], pole); setWorldQ(t, T(t, s + '_Foot'), footBind[s].clone()) }
+      else if (tP) { goal[tK] ??= (prev || j)[tK].clone(); goal[aK] = null; ik2(t, s + '_Thigh', s + '_Calf', s + '_Foot', goal[tK].clone().sub(sdir.clone().multiplyScalar(footLen[s])), pole); aim(t, s + '_Foot', s + '_Toe0', sdir) }
+      else { goal[aK] = goal[tK] = null; aim(t, s + '_Foot', s + '_Toe0', sdir) } }
+    if (spec.contact === 'toesHands') {   // 伏地挺身：腳尖、手掌都固定在地上；胸口或臉會碰地時，以腳尖為支點把上半身抬一點（手肘少彎），不整個人往上移
+      const r = T(t, ''), shiftY = d => setRootWorld(t, wp(r).add(V(0, d, 0))), arm = s => { const j = joints(t); ik2(t, s + '_UpperArm', s + '_Forearm', s + '_Hand', goal[s + 'wri'], j[s + 'elb'].clone().sub(j[s + 'sho'].clone().add(j[s + 'wri']).multiplyScalar(.5))) };
+      shiftY(-minY(t, /Foot|Toe/)); if (!goal.Lwri) { const hm = minY(t, /Hand|Finger/), j = joints(t); goal.Lwri = j.Lwri.clone().add(V(0, -hm, 0)); goal.Rwri = j.Rwri.clone().add(V(0, -hm, 0)) } arm('L'); arm('R');
+      for (let it = 0; it < 5; it++) { const pen = -minY(t, /^(?!.*(Foot|Toe|Hand|Finger|Forearm)).*/); if (pen <= 0.003) break; const j = joints(t), pv = j.Ltoe.clone().add(j.Rtoe).multiplyScalar(.5), L = Math.abs((j.Lsho.z + j.Rsho.z) / 2 - pv.z) || 1;
+        const Rq = Q().setFromAxisAngle(V(1, 0, 0), -Math.asin(Math.min(0.4, (pen + 0.01) / L))), np = pv.clone().add(wp(r).sub(pv).applyQuaternion(Rq)); setWorldQ(t, r, Rq.multiply(wq(r))); setRootWorld(t, np); shiftY(-minY(t, /Foot|Toe/)); arm('L'); arm('R') }
+      prev = joints(t); out.push(snap(t)); continue }
+    for (const s of ['L', 'R']) { const wK = s + 'wri'; if (!lockSets.includes(wK)) continue; if (!planted(wK, i)) { goal[wK] = null; continue } const j = joints(t);
+      goal[wK] ??= (prev || j)[wK].clone(); ik2(t, s + '_UpperArm', s + '_Forearm', s + '_Hand', goal[wK], j[s + 'elb'].clone().sub(j[s + 'sho'].clone().add(j[s + 'wri']).multiplyScalar(.5))) }
+    const dy = -minY(t); const r = T(t, ''); setRootWorld(t, wp(r).add(V(0, dy, 0))); prev = joints(t); out.push(snap(t)) }
+  return out };
+  // 伏地挺身：這副骨架手臂比來源短，最高點手臂打直時手掌碰不到地 → 量出手掌離地多高，以腳尖為支點把身體往頭的方向多傾斜一點，再算（最多 4 次）
+  let tilt = 0, out = run(0); if (spec.handsDown) for (let it = 0; it < 4; it++) { apply(t, out[0]); const h = minY(t, /Hand|Finger/); if (h <= 0.003) break; const j = joints(t), L = Math.abs((j.Lwri.z + j.Rwri.z) / 2 - (j.Ltoe.z + j.Rtoe.z) / 2) || 1; tilt += Math.asin(Math.min(0.5, h / L)); out = run(tilt) }
+  if (spec.loop) { loopBlend(out, Math.min(8, Math.floor(n / 6))); for (const f of out) { apply(t, f); const r = T(t, ''); setRootWorld(t, wp(r).add(V(0, -minY(t), 0))); Object.assign(f, snap(t)) } }   // 頭尾接合後每格重新貼地
+  t._stance = stance; return out;
+}
+
+// ---------- 自製動作：用目標空間的方向直接擺姿勢（u＝0..1 的動作進度） ----------
+function placeGround(t) { const r = T(t, ''); setRootWorld(t, wp(r).add(V(0, -minY(t), 0))) }
+function lying(t, { up, front, hipsAt }) {   // 讓骨盆躺下：身體往頭的方向＝up，胸口朝向＝front
+  resetBind(t); const j0 = joints(t), lat0 = j0.Lhip.clone().sub(j0.Rhip).normalize(), up0 = wp(T(t, 'Spine1')).sub(j0.Lhip.clone().add(j0.Rhip).multiplyScalar(.5)).normalize();
+  const b = (x, y) => { const X = x.clone().normalize(), Y = y.clone().sub(X.clone().multiplyScalar(y.dot(X))).normalize(); return new THREE.Matrix4().makeBasis(X, Y, V().crossVectors(X, Y)) };
+  const lat = V().crossVectors(up, front).normalize(), R = Q().setFromRotationMatrix(b(lat, up).multiply(b(lat0, up0).transpose()));
+  setWorldQ(t, T(t, 'Pelvis'), R.multiply(wq(T(t, 'Pelvis')))); const j = joints(t), hc = j.Lhip.clone().add(j.Rhip).multiplyScalar(.5), r = T(t, '');
+  setRootWorld(t, wp(r).add(hipsAt.clone().sub(hc))); return lat }
+const POSES = {
+  // 前臂棒式：頭朝 +Z、臉朝下；手肘在肩膀正下方，前臂平放向前，身體一直線，腳尖踩地；呼吸時胸口輕微起伏
+  // 完整過程（x＝時間比例，共 6.6 秒）：趴著（前臂撐地、腳尖踩地、骨盆貼地）0.8 秒 → 1.0 秒撐起 → 撐住 3 秒（呼吸一次）→ 1.2 秒放下 → 趴著 0.6 秒
+  // 前臂和腳尖全程固定在地上：放下時軀幹以兩肩中點為軸往下轉；髖關節離腳踝會稍微變遠，腳以腳尖為軸轉一點讓腿搆得到
+  plank(t, x) { const sec = x * 6.6, e = y => 0.5 - Math.cos(Math.PI * Math.min(1, Math.max(0, y))) / 2;
+    const s = sec < 0.8 ? 0 : sec < 1.8 ? e((sec - 0.8) / 1.0) : sec < 4.8 ? 1 : sec < 6.0 ? 1 - e((sec - 4.8) / 1.2) : 0;
+    const breath = sec > 1.8 && sec < 4.8 ? Math.sin((sec - 1.8) / 3 * Math.PI * 2) * 0.012 : 0;
+    // 身體一直線、從肩膀往腳尖微微向下斜：找一個斜率，讓前臂和腳尖同時踩在地上（腳尖離地 ≤ 5 mm）
+    if (t._plankSlope == null) { let lo = 0, hi = 0.5; for (let it = 0; it < 18; it++) { const m = (lo + hi) / 2; this._plank(t, m, 0); const feet = minY(t, /Foot|Toe/), arms = minY(t, /Forearm|Hand|UpperArm|Finger/); if (feet > arms + 0.004) lo = m; else hi = m } t._plankSlope = (lo + hi) / 2 }   // 用皮膚頂點比：腳的最低點和前臂的最低點一樣高＝兩邊都踩在地上
+    // 趴著：軀幹往下轉到骨盆、大腿剛好碰地（取不穿地的那一邊）
+    if (t._plankDrop == null) { let lo = 0, hi = 0.8; for (let it = 0; it < 16; it++) { t._plankDrop = (lo + hi) / 2; this._plankAt(t, 0, 0); if (minY(t, /Pelvis|Spine|Thigh|Calf/) > 0) lo = t._plankDrop; else hi = t._plankDrop } t._plankDrop = lo }
+    this._plankAt(t, s, breath) },
+  _plankAt(t, s, breath) { this._plank(t, t._plankSlope, breath); if (s >= 1) return;
+    const j = joints(t), S = j.Lsho.clone().add(j.Rsho).multiplyScalar(.5), keep = {};
+    for (const n of ['L_Foot', 'R_Foot', 'L_Toe0', 'R_Toe0', 'L_Clavicle', 'R_Clavicle', 'L_Hand', 'R_Hand']) keep[n] = wq(T(t, n));
+    const r = T(t, ''), Rq = Q().setFromAxisAngle(V(1, 0, 0), -(1 - s) * t._plankDrop), np = S.clone().add(wp(r).sub(S).applyQuaternion(Rq));
+    setWorldQ(t, r, Rq.multiply(wq(r))); setRootWorld(t, np);   // 軀幹以兩肩中點為軸往下轉（臀部降低）
+    for (const sd of ['L', 'R']) { const H = wp(T(t, sd + '_Thigh')), Tc = j[sd + 'toe'], A0 = j[sd + 'ankle'], len = H.distanceTo(wp(T(t, sd + '_Calf'))) + wp(T(t, sd + '_Calf')).distanceTo(wp(T(t, sd + '_Foot'))) - 0.002;
+      const at = ph => Tc.clone().add(A0.clone().sub(Tc).applyAxisAngle(V(1, 0, 0), ph));   // 腳以腳尖關節為軸轉 ph（腳踝往髖的方向）
+      let ph = 0; if (H.distanceTo(A0) > len) { let lo = 0, hi = 0.8; for (let it = 0; it < 16; it++) { const m = (lo + hi) / 2; if (H.distanceTo(at(m)) > len) lo = m; else hi = m } ph = hi }
+      ik2(t, sd + '_Thigh', sd + '_Calf', sd + '_Foot', at(ph), V(0, -1, 0)); setWorldQ(t, T(t, sd + '_Foot'), Q().setFromAxisAngle(V(1, 0, 0), ph).multiply(keep[sd + '_Foot'])); setWorldQ(t, T(t, sd + '_Toe0'), keep[sd + '_Toe0']);   // 腳尖留在原地
+      setWorldQ(t, T(t, sd + '_Clavicle'), keep[sd + '_Clavicle']); t.root.updateMatrixWorld(true);   // 鎖骨掛在頸部底下會跟著轉：方向轉回來，手臂再用 IK 把手肘、手腕留在原處（前臂不滑）
+      ik2(t, sd + '_UpperArm', sd + '_Forearm', sd + '_Hand', j[sd + 'wri'], j[sd + 'elb'].clone().sub(wp(T(t, sd + '_UpperArm')))); setWorldQ(t, T(t, sd + '_Hand'), keep[sd + '_Hand']) } },
+  _plank(t, sl, breath) {
+    lying(t, { up: V(0, 0, 1), front: V(0, -1, 0), hipsAt: V(0, 0.36, 0) });
+    aim(t, 'Spine', 'Spine1', V(0, sl + breath, 1)); aim(t, 'Spine1', 'Spine2', V(0, sl + breath, 1)); aim(t, 'Spine2', 'Neck', V(0, sl, 1)); aim(t, 'Neck', 'Head', V(0, sl - 0.06, 1));
+    for (const [s, k] of [['L', 1], ['R', -1]]) { aim(t, s + '_Thigh', s + '_Calf', V(0.04 * k, -sl, -1)); aim(t, s + '_Calf', s + '_Foot', V(0.02 * k, -sl, -1)); aim(t, s + '_Foot', s + '_Toe0', V(0, -1, 0.25));   // 腳尖收在腳踝正下方偏頭的方向
+      aim(t, s + '_Clavicle', s + '_UpperArm', V(k, -0.15, 0)); aim(t, s + '_UpperArm', s + '_Forearm', V(-0.05 * k, -1, 0.02)); aim(t, s + '_Forearm', s + '_Hand', V(-0.12 * k, 0, 1)); aim(t, s + '_Hand', s + '_Finger2', V(-0.1 * k, 0.03, 1)) }   // 手掌平放（指尖不往下戳）
+    placeGround(t) },
+  // 臀橋：仰躺、頭朝 +Z、臉朝上；屈膝、腳掌平貼地；手平放身體兩側。地面 y＝0
+  // 抬臀：以上背（肩膀）貼地的位置為支點把軀幹往上轉（腰不拱、不折），頭頸跟著前屈讓後腦留在地上，腳用 IK 固定在原地；
+  // 抬多高不寫死：解到「肩－髖－膝」夾角 173 度（看起來一直線、不會抬過頭變成腰拱起）
+  bridge(t, u) { if (!t._br) this._bridgeSetup(t); this._bridgeAt(t, u * t._br.phiTop) },
+  _bridgeSetup(t) { const S = t._br = { tilt: 0, ank: null, P: V(), phiTop: 0 };
+    // ① 脊椎前後傾：上背和臀部同時貼地
+    let lo = -0.3, hi = 0.3; for (let it = 0; it < 16; it++) { S.tilt = (lo + hi) / 2; this._bridgeBase(t); if (minY(t, /Spine2|Clavicle/) > minY(t, /Pelvis/)) hi = S.tilt; else lo = S.tilt }
+    // ② 腳踝位置：腳跟離髖關節約 50 公分；高度讓腳掌貼地（不同身材腳踝高度不一樣）
+    S.ank = {}; this._bridgeBase(t); for (let k = 0; k < 4; k++) { this._bridgeHead(t); this._bridgeTail(t) } const j0 = joints(t);
+    for (const [s, k] of [['L', -1], ['R', 1]]) S.ank[s] = V(j0[s + 'hip'].x + 0.02 * k, 0.09, j0[s + 'hip'].z - 0.5);
+    this._bridgeLegs(t); for (let it = 0; it < 5; it++) { const d = minY(t, /Foot|Toe/); for (const s of ['L', 'R']) S.ank[s].y -= d; this._bridgeLegs(t) }
+    // ③ 支點：肩關節正下方的地面
+    S.P = V(0, 0, (j0.Lsho.z + j0.Rsho.z) / 2);
+    // ④ 抬臀角度：肩→髖、髖→膝在側面的夾角（0＝一直線；正＝還沒抬到位；負＝抬過頭）解到 7 度
+    lo = 0; hi = 1.2; for (let it = 0; it < 16; it++) { const m = (lo + hi) / 2; this._bridgeAt(t, m); if (this._bridgeBend(t) > 7) lo = m; else hi = m } S.phiTop = (lo + hi) / 2 },
+  _bridgeBend(t) { const j = joints(t), mid = (a, b) => a.clone().add(b).multiplyScalar(.5), sh = mid(j.Lsho, j.Rsho), hc = mid(j.Lhip, j.Rhip), kn = mid(j.Lknee, j.Rknee), a = hc.clone().sub(sh), b = kn.clone().sub(hc);
+    return Math.atan2(a.y * b.z - a.z * b.y, a.y * b.y + a.z * b.z) / D2R },
+  _bridgeBase(t) { const S = t._br, shift = () => setRootWorld(t, wp(T(t, '')).add(V(0, -minY(t, /Spine|Pelvis|Clavicle/), 0)));
+    lying(t, { up: V(0, 0, 1), front: V(0, 1, 0), hipsAt: V(0, 0.12, 0) });
+    aim(t, 'Spine', 'Spine1', V(0, S.tilt, 1)); aim(t, 'Spine1', 'Spine2', V(0, S.tilt, 1)); aim(t, 'Spine2', 'Neck', V(0, S.tilt, 1));
+    for (const [s, k] of [['L', -1], ['R', 1]]) aim(t, s + '_Clavicle', s + '_UpperArm', V(0.9 * k, -0.02, -0.2));   // 鎖骨（肩膀）在躺姿就擺好，之後跟著軀幹轉；手臂求解不動它，肩膀才不會被壓進地板
+    shift(); return shift },
+  // 頭：調頸部前屈角度，讓後腦和上背同時貼地（不穿地、不懸空）。鎖骨掛在頸部底下（Biped 骨架），轉頸部時鎖骨方向轉回原樣，但肩膀位置還是會跟著動，
+  // 所以比的是「頭的最低點－軀幹的最低點」：兩個一樣高之後整個人再平移貼地
+  _bridgeHead(t) { const cl = ['L', 'R'].map(s => [T(t, s + '_Clavicle'), wq(T(t, s + '_Clavicle'))]), set = a => { aim(t, 'Neck', 'Head', V(0, Math.sin(a), Math.cos(a))); for (const [b, q] of cl) setWorldQ(t, b, q) };
+    const torso = () => minY(t, /Spine|Pelvis|Clavicle/);
+    let lo = -0.5, hi = 1.0; for (let it = 0; it < 16; it++) { const m = (lo + hi) / 2; set(m); if (minY(t, /Head|Hair/) > torso()) hi = m; else lo = m } set(hi); t._br.neck = hi;
+    setRootWorld(t, wp(T(t, '')).add(V(0, -torso(), 0))) },
+  // 馬尾（只有女性）：頭往前屈時馬尾會跟著往下轉進地板；繞左右軸抬到剛好平貼地面
+  _bridgeTail(t) { const b = T(t, 'Ponytail'); if (!b) return; const q0 = wq(b), set = a => setWorldQ(t, b, Q().setFromAxisAngle(V(1, 0, 0), a).multiply(q0));
+    let lo = -0.6, hi = 1.6; for (let it = 0; it < 16; it++) { const m = (lo + hi) / 2; set(m); if (minY(t, /Ponytail/) > 0) hi = m; else lo = m } set(hi); t._br.tail = hi },
+  _bridgeLegs(t) { const S = t._br; for (const [s, k] of [['L', -1], ['R', 1]]) { ik2(t, s + '_Thigh', s + '_Calf', s + '_Foot', S.ank[s], V(0, 1, -0.2)); aim(t, s + '_Foot', s + '_Toe0', V(0.05 * k, -0.08, -1)) } },
+  _bridgeArms(t) { const set = d => { for (const [s, k] of [['L', -1], ['R', 1]]) { aim(t, s + '_UpperArm', s + '_Forearm', V(0.3 * k, -d, -1));
+      aim(t, s + '_Forearm', s + '_Hand', V(0.15 * k, -d * 0.4, -1)); aim(t, s + '_Hand', s + '_Finger2', V(0.1 * k, -0.02, -1)) } };   // 手臂往下壓到前臂、手掌貼地
+    let lo = 0, hi = 0.9; for (let it = 0; it < 12; it++) { const d = (lo + hi) / 2; set(d); if (minY(t, /Forearm|Hand|Finger/) > 0.002) lo = d; else hi = d } set(hi); t._br.arm = hi },
+  _bridgeAt(t, phi) { const S = t._br, shift = this._bridgeBase(t), r = T(t, ''), Rq = Q().setFromAxisAngle(V(1, 0, 0), phi), np = S.P.clone().add(wp(r).sub(S.P).applyQuaternion(Rq));
+    setWorldQ(t, r, Rq.multiply(wq(r))); setRootWorld(t, np); shift();   // 整個人繞支點轉，再讓軀幹最低點貼地（接觸點會往肩膀移，跟真人一樣）
+    for (let k = 0; k < 4; k++) { this._bridgeHead(t); this._bridgeTail(t) }   // 頭和馬尾互相牽動（馬尾根部一半綁頭骨），來回解幾次
+    this._bridgeLegs(t); this._bridgeArms(t);
+    const m = minY(t); if (m < 0) setRootWorld(t, wp(r).add(V(0, -m, 0))) }
+};
+function authored(t, spec) { const out = [], n = Math.round(spec.dur * FPS) + 1; for (let i = 0; i < n; i++) { POSES[spec.pose](t, spec.curve(i / (n - 1))); out.push(snap(t)) } return out }
+const CURVES = {
+  hold: u => u,
+  // 臀橋：躺著 0.6 秒 → 1.0 秒抬起 → 停 2 秒 → 1.2 秒放下 → 躺著 0.6 秒（共 5.4 秒）
+  bridge: u => { const s = u * 5.4, e = x => 0.5 - Math.cos(Math.PI * Math.min(1, Math.max(0, x))) / 2; return s < 0.6 ? 0 : s < 1.6 ? e((s - 0.6) / 1.0) : s < 3.6 ? 1 : s < 4.8 ? 1 - e((s - 3.6) / 1.2) : 0 }
+};
+// ---------- 品質檢查：最低點、著地點滑動、關鍵角度、動作階段 ----------
+function analyze(t, frames, spec) {
+  let worstY = Infinity; const J = frames.map(f => { apply(t, f); worstY = Math.min(worstY, minY(t)); return joints(t) }), dr = key => Math.max(...J.map(j => j[key].clone().setY(0).distanceTo(J[0][key].clone().setY(0))));
+  const knee = j => 180 - Math.min(angle(j.Lhip, j.Lknee, j.Lankle), angle(j.Rhip, j.Rknee, j.Rankle)), elb = j => 180 - Math.min(angle(j.Lsho, j.Lelb, j.Lwri), angle(j.Rsho, j.Relb, j.Rwri));
+  const line = j => angle(j.Lsho.clone().add(j.Rsho).multiplyScalar(.5), j.Lhip.clone().add(j.Rhip).multiplyScalar(.5), j.Lankle.clone().add(j.Rankle).multiplyScalar(.5));
+  const hipLine = j => angle(j.Lsho.clone().add(j.Rsho).multiplyScalar(.5), j.Lhip.clone().add(j.Rhip).multiplyScalar(.5), j.Lknee.clone().add(j.Rknee).multiplyScalar(.5));
+  const pel = J.map(j => j.pelvis.y), m = { minY: +worstY.toFixed(4), frames: frames.length, dur: +((frames.length - 1) / FPS).toFixed(3) };
+  for (const key of spec.planted || []) m['drift_' + key] = +dr(key).toFixed(4);
+  m.kneeMax = Math.round(Math.max(...J.map(knee))); m.elbowMax = Math.round(Math.max(...J.map(elb))); m.lineMin = Math.round(Math.min(...J.map(line))); m.hipLineMax = Math.round(Math.max(...J.map(hipLine)));
+  m.pelvisMin = +Math.min(...pel).toFixed(3); m.pelvisMax = +Math.max(...pel).toFixed(3);
+  // 著地檢查：第一格與整段中，腳、手臂（前臂＋手）皮膚最低點離地多高（踩在地上應該接近 0）
+  apply(t, frames[0]); m.feet0 = +minY(t, /Foot|Toe/).toFixed(4); m.arms0 = +minY(t, /Forearm|Hand|Finger/).toFixed(4); m.feetMax = +Math.max(...frames.map(f => { apply(t, f); return minY(t, /Foot|Toe/) })).toFixed(4);
+  // 動作階段：依骨盆高度（臀橋相反：往上）切成 預備／過程／最低（最高）點／回程／完成
+  const sgn = spec.up ? -1 : 1, h = pel.map(y => sgn * y), hi = Math.max(h[0], h[h.length - 1]), lo = Math.min(...h), span = hi - lo, ph = [];
+  if (span > 0.05) { const a = h.findIndex(y => y < hi - span * 0.06), bot = h.indexOf(lo), b = h.findIndex((y, i) => i <= bot && y < lo + span * 0.06), c = h.findIndex((y, i) => i > bot && y > lo + span * 0.06), d = h.findIndex((y, i) => i > bot && y > hi - span * 0.06);
+    const T2 = i => +(i / FPS).toFixed(2), end = T2(frames.length - 1), at = [0, T2(a), T2(b), T2(c), T2(d < 0 ? frames.length - 1 : d), end];
+    for (let i = 0; i < 5; i++) ph.push([spec.phaseNames[i], at[i], at[i + 1]]) } else ph.push([spec.phaseNames[0], 0, m.dur]);
+  return { m, phases: ph, J }
+}
+// ---------- 匯出：一個動作一個 GLB（只有骨頭＋male／female 兩段動畫） ----------
+// others：其他人物多出來的骨頭（女性的馬尾）也要放進骨架樹，不然匯出時那條動畫軌會被丟掉
+async function exportGLB(t, clips, others = []) { const tree = new THREE.Object3D(); tree.name = 'Armature'; const map = new Map();
+  const mk = o => { const n = new THREE.Object3D(); n.name = o.name; n.position.copy(o.position); n.quaternion.copy(o.quaternion); n.scale.copy(o.scale); map.set(o, n); for (const c of o.children) if (c.isBone || /^Bip01/.test(c.name)) n.add(mk(c)); return n };
+  resetBind(t); tree.add(mk(T(t, ''))); const by = {}; tree.traverse(n => { by[n.name] = n });
+  for (const o of others) { resetBind(o); o.root.traverse(b => { if (!(b.isBone || /^Bip01/.test(b.name)) || by[b.name] || !by[b.parent?.name]) return; const n = new THREE.Object3D(); n.name = b.name; n.position.copy(b.position); n.quaternion.copy(b.quaternion); n.scale.copy(b.scale); by[b.parent.name].add(n); by[b.name] = n }) }
+  const names = new Set(Object.keys(by)), lost = clips.flatMap(c => c.tracks.map(k => k.name.split('.')[0]).filter(n => !names.has(n)));
+  if (lost.length) throw new Error('匯出骨架樹缺骨頭：' + [...new Set(lost)].join());
+  return new GLTFExporter().parseAsync(tree, { binary: true, animations: clips }) }
+// ---------- 截圖（關鍵影格） ----------
+const R = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); R.setSize(480, 360); R.toneMapping = THREE.ACESFilmicToneMapping; R.outputColorSpace = THREE.SRGBColorSpace;
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#0b1220'); { const pm = new THREE.PMREMGenerator(R); scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.5 }
+{ const k = new THREE.DirectionalLight('#fff4ea', 2); k.position.set(1.6, 3.2, 2.6); const r = new THREE.DirectionalLight('#9ec8ff', 1.2); r.position.set(-2, 2.2, -2.5); scene.add(k, r, new THREE.HemisphereLight('#dfe9ff', '#2a2420', .5));
+  const g = new THREE.GridHelper(4, 16, '#3a4a66', '#1c2740'); scene.add(g) }
+function shot(t, f, view) { apply(t, f); if (!t.root.parent) scene.add(t.root); const box = new THREE.Box3().setFromObject(t.root), c = box.getCenter(V()), sz = box.getSize(V()), cam = new THREE.PerspectiveCamera(30, 4 / 3, 0.05, 50);
+  const dist = Math.max(sz.y * 1.9, sz.z * 1.5, sz.x * 1.5, 1.6) + 0.6, a = { side: Math.PI / 2, front: 0, q: Math.PI / 4 }[view]; cam.position.set(c.x + Math.sin(a) * dist, Math.max(0.5, c.y + 0.15), c.z + Math.cos(a) * dist); cam.lookAt(c);
+  R.render(scene, cam); const url = R.domElement.toDataURL('image/jpeg', 0.8).split(',')[1]; scene.remove(t.root); return url }
+const b64 = buf => { let s = ''; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s) };
+window.build = async spec => {
+  const res = { id: spec.id, clips: [], shots: {}, metrics: {}, phases: null };
+  for (const sex of ['male', 'female']) { const t = await loadTarget(sex);
+    const frames = spec.kind ? await retarget(t, spec) : authored(t, { ...spec, curve: CURVES[spec.curve] });
+    const A = analyze(t, frames, spec); res.metrics[sex] = A.m; if (sex === 'male') res.phases = A.phases;
+    res.clips.push(toClip(sex, frames));
+    const at = spec.shotsAt || [0, 0.5, 1], fr = u => frames[Math.min(frames.length - 1, Math.round(u * (frames.length - 1)))];
+    res.shots[sex] = (spec.views || ['side']).flatMap(v => at.map(u => ({ v, u, img: shot(t, fr(u), v) })));
+    if (sex === 'male') res._t = t; else res._tf = t }
+  res.glb = b64(await exportGLB(res._t, res.clips, [res._tf])); delete res._t; delete res._tf; res.clips = res.clips.map(c => ({ name: c.name, dur: +c.duration.toFixed(3), tracks: c.tracks.length })); return res };
+window.ready = true;
+</script></body></html>

@@ -1,0 +1,80 @@
+{
+ "id": "bridge",
+ "phases": [
+  [
+   "躺好",
+   0,
+   0.77
+  ],
+  [
+   "抬臀",
+   0.77,
+   1.47
+  ],
+  [
+   "停住",
+   1.47,
+   3.8
+  ],
+  [
+   "放下",
+   3.8,
+   4.63
+  ],
+  [
+   "完成",
+   4.63,
+   5.4
+  ]
+ ],
+ "clips": [
+  {
+   "name": "male",
+   "dur": 5.4,
+   "tracks": 24
+  },
+  {
+   "name": "female",
+   "dur": 5.4,
+   "tracks": 25
+  }
+ ],
+ "metrics": {
+  "male": {
+   "minY": 0,
+   "frames": 163,
+   "dur": 5.4,
+   "drift_Lankle": 0,
+   "drift_Rankle": 0,
+   "drift_Lsho": 0.0208,
+   "drift_Rsho": 0.0208,
+   "kneeMax": 102,
+   "elbowMax": 9,
+   "lineMin": 143,
+   "hipLineMax": 173,
+   "pelvisMin": 0.124,
+   "pelvisMax": 0.266,
+   "feet0": 0,
+   "arms0": 0.002,
+   "feetMax": 0
+  },
+  "female": {
+   "minY": 0,
+   "frames": 163,
+   "dur": 5.4,
+   "drift_Lankle": 0,
+   "drift_Rankle": 0,
+   "drift_Lsho": 0.0213,
+   "drift_Rsho": 0.0213,
+   "kneeMax": 105,
+   "elbowMax": 9,
+   "lineMin": 142,
+   "hipLineMax": 173,
+   "pelvisMin": 0.146,
+   "pelvisMax": 0.247,
+   "feet0": 0,
+   "arms0": 0.002,
+   "feetMax": 0
+  }
+ }
+}

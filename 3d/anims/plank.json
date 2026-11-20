@@ -1,0 +1,80 @@
+{
+ "id": "plank",
+ "phases": [
+  [
+   "預備",
+   0,
+   0.97
+  ],
+  [
+   "撐起",
+   0.97,
+   1.7
+  ],
+  [
+   "撐住（每次停 30 秒）",
+   1.7,
+   4.97
+  ],
+  [
+   "放下",
+   4.97,
+   5.83
+  ],
+  [
+   "完成",
+   5.83,
+   6.6
+  ]
+ ],
+ "clips": [
+  {
+   "name": "male",
+   "dur": 6.6,
+   "tracks": 24
+  },
+  {
+   "name": "female",
+   "dur": 6.6,
+   "tracks": 25
+  }
+ ],
+ "metrics": {
+  "male": {
+   "minY": 0,
+   "frames": 199,
+   "dur": 6.6,
+   "drift_Lelb": 0.0004,
+   "drift_Relb": 0.0004,
+   "drift_Ltoe": 0.0001,
+   "drift_Rtoe": 0.0001,
+   "kneeMax": 8,
+   "elbowMax": 89,
+   "lineMin": 153,
+   "hipLineMax": 179,
+   "pelvisMin": 0.148,
+   "pelvisMax": 0.318,
+   "feet0": 0.0028,
+   "arms0": 0,
+   "feetMax": 0.009
+  },
+  "female": {
+   "minY": 0,
+   "frames": 199,
+   "dur": 6.6,
+   "drift_Lelb": 0.0003,
+   "drift_Relb": 0.0003,
+   "drift_Ltoe": 0.0002,
+   "drift_Rtoe": 0.0002,
+   "kneeMax": 8,
+   "elbowMax": 89,
+   "lineMin": 149,
+   "hipLineMax": 179,
+   "pelvisMin": 0.117,
+   "pelvisMax": 0.308,
+   "feet0": 0.004,
+   "arms0": 0,
+   "feetMax": 0.0083
+  }
+ }
+}

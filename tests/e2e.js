@@ -2451,8 +2451,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('3D 真人示範：開 App 不下載任何 3d/ 檔案；按「載入 3D 人物」才載入男性（80 根骨頭、7,520 個三角形、約 1.8 m）且畫面真的畫出人；載入後才出現男女與正面／側面／背面按鈕',
       at0.length === 0 && c0.card && c0.btn && c0.ctl && /3d\/models\/male\.jpg/.test(c0.img) && m1.sex === 'male' && m1.bones === 80 && m1.tris === 7520 && m1.height >= 1.7 && m1.hit >= 10 && m1.btn && m1.ctl && m1.img && m1.canvas,
       JSON.stringify({ at0, c0, m1 }));
-    check('男女切換：女性 8,580 個三角形、同一副 80 根骨架；換回男性後 GPU 的幾何與貼圖數量跟第一次一樣、再切一輪也一樣（舊人物有釋放，不會越用越多）；視角按鈕轉到側面 90°、背面 180°；運動頁重畫時 3D 畫面接回去；離開運動頁就整個釋放，回來時沒有錯誤訊息、可以再按載入',
-      f1.sex === 'female' && f1.tris === 8580 && f1.bones === 80 && f1.hit >= 10 && f1.on === 'true' && m2.geometries === m1.geometries && m2.textures === m1.textures && m3.geometries === m2.geometries && m3.textures === m2.textures && Math.abs(az[0] - 90) <= 1 && Math.abs(Math.abs(az[1]) - 180) <= 1 && az[2] === 0
+    check('男女切換：女性 8,580 個三角形、同一副 80 根骨架再加一根馬尾骨頭（81 根）；換回男性後 GPU 的幾何與貼圖數量跟第一次一樣、再切一輪也一樣（舊人物有釋放，不會越用越多）；視角按鈕轉到側面 90°、背面 180°；運動頁重畫時 3D 畫面接回去；離開運動頁就整個釋放，回來時沒有錯誤訊息、可以再按載入',
+      f1.sex === 'female' && f1.tris === 8580 && f1.bones === 81 && f1.hit >= 10 && f1.on === 'true' && m2.geometries === m1.geometries && m2.textures === m1.textures && m3.geometries === m2.geometries && m3.textures === m2.textures && Math.abs(az[0] - 90) <= 1 && Math.abs(Math.abs(az[1]) - 180) <= 1 && az[2] === 0
         && kept.same && kept.state === 'ready' && left.v === null && left.canvas === 0 && left.msg === '' && left.btn, JSON.stringify({ f1, m1g: [m1.geometries, m1.textures], m2g: [m2.geometries, m2.textures], m3g: [m3.geometries, m3.textures], az, kept, left }));
     await page.evaluate(() => go('fit', 'move')); await page.click('[data-h3dlow]'); await page.waitForTimeout(100);
     const lw = await page.evaluate(() => ({ btn: $('#h3d-go').hidden, msg: $('#h3d-msg').textContent, saved: S.get('low3d', false) }));
@@ -2473,10 +2473,97 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     const glbInfo = f => { const b = fs.readFileSync(path.join(ROOT, '3d/models', f)), ln = b.readUInt32LE(12), j = JSON.parse(b.slice(20, 20 + ln).toString('utf8')); return { kb: Math.round(b.length / 1024), joints: j.skins[0].joints.length, img: j.images.map(i => i.mimeType).join(), cr: j.asset.copyright || '' } };
     const gm = glbInfo('male.glb'), gf = glbInfo('female.glb'), notice = fs.readFileSync(path.join(ROOT, '3d/licenses/THIRD_PARTY_NOTICES.md'), 'utf8'), A = JSON.parse(fs.readFileSync(path.join(ROOT, '3d/licenses/assets.json'), 'utf8'));
     const fields = ['source', 'url', 'author', 'license', 'commercial', 'modify', 'redistribute', 'conditions', 'changes', 'format', 'rig', 'preview'];
-    check('素材檔與授權紀錄：男女 GLB 都 ≤ 5 MB、80 個骨架關節、貼圖是 JPEG（頭髮透明用 PNG）、檔案裡寫著 Rocketbox MIT 著作權；THIRD_PARTY_NOTICES 附 MIT 全文；assets.json 每個模型都有來源、作者、授權、可否商用／修改／散布、修改內容、格式、骨架、預覽圖',
-      gm.kb <= 5120 && gf.kb <= 5120 && gm.joints === 80 && gf.joints === 80 && /^image\/jpeg(,image\/jpeg)*$/.test(gm.img) && /image\/png/.test(gf.img) && /Microsoft Rocketbox.*MIT/.test(gm.cr) && /Microsoft Rocketbox.*MIT/.test(gf.cr)
+    check('素材檔與授權紀錄：男女 GLB 都 ≤ 5 MB、骨架關節男 80、女 81（多一根馬尾）、貼圖是 JPEG（頭髮透明用 PNG）、檔案裡寫著 Rocketbox MIT 著作權；THIRD_PARTY_NOTICES 附 MIT 全文；assets.json 每個模型都有來源、作者、授權、可否商用／修改／散布、修改內容、格式、骨架、預覽圖',
+      gm.kb <= 5120 && gf.kb <= 5120 && gm.joints === 80 && gf.joints === 81 && /^image\/jpeg(,image\/jpeg)*$/.test(gm.img) && /image\/png/.test(gf.img) && /Microsoft Rocketbox.*MIT/.test(gm.cr) && /Microsoft Rocketbox.*MIT/.test(gf.cr)
         && /Copyright \(c\) 2020 Microsoft/.test(notice) && /Permission is hereby granted, free of charge/.test(notice) && /three\.js/.test(notice) && A.models.length === 2 && A.models.every(m => fields.every(k => m[k] !== undefined && m[k] !== '') && m.commercial && m.redistribute && fs.existsSync(path.join(ROOT, m.file)) && fs.existsSync(path.join(ROOT, m.preview))),
       JSON.stringify({ gm, gf, n: A.models.length }));
+  }
+
+  // =============== 6zzk. 3D 運動動畫（第三階段）：五個動作男女都能播、不穿地、著地點不滑；播放／暫停／重播／速度／循環／逐格／進度；動作階段；換男女接著播；審核狀態不誤標、來源授權標示；下載失敗與減少動態效果 ===============
+  {
+    const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.glb': 'model/gltf-binary', '.jpg': 'image/jpeg', '.json': 'application/json' };
+    const srv4 = require('http').createServer((q, res) => { const u = decodeURIComponent(q.url.split('?')[0]), f = path.join(ROOT, u === '/' ? 'index.html' : u);
+      if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end() } res.writeHead(200, { 'content-type': MIME[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(res) });
+    await new Promise(ok => srv4.listen(0, '127.0.0.1', ok)); const base = `http://127.0.0.1:${srv4.address().port}/`;
+    const seed = { members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1980-01-01', h: 172, w: 70, act: '1.375', goal: 'keep', role: 'me' }], active: 'a' };
+    const open3d = async p => { await p.evaluate(() => go('fit', 'move')); await p.click('#h3d-go'); await p.waitForFunction(() => $('#h3d')?.dataset.state === 'ready' && H3D.ui && !H3D.busy, null, { timeout: 60000 }) };
+    page = await newPage(seed, { url: base }); await open3d(page);
+    // ① 品質：在 App 實際的播放路徑上量（跟轉檔工具自己算的數字分開）
+    const Q = await page.evaluate(async () => { const out = {}, ids = ['squat', 'pushup', 'plank', 'lunge', 'bridge'];
+      const PL = { squat: ['L_Foot', 'R_Foot'], pushup: ['L_Hand', 'R_Hand'], plank: ['L_Forearm', 'R_Forearm', 'L_Toe0', 'R_Toe0'], lunge: [], bridge: ['L_Foot', 'R_Foot'] };
+      for (const sex of ['male', 'female']) { if (H3D.v.sex !== sex) { document.querySelector(`[data-h3dsex="${sex}"]`).click(); await new Promise(r => { const f = () => H3D.v?.sex === sex && !H3D.busy ? r() : setTimeout(f, 50); f() }) }
+        for (const id of ids) { await H3D.v.setExercise(id, { autoplay: false }); const st = H3D.v.animState(), N = 20, times = Array.from({ length: N + 1 }, (_, i) => st.dur * i / N);
+          const P = H3D.v.probeAnim(times, { feet: 'Foot|Toe', arms: 'Forearm|Hand|Finger' }), dr = n => Math.max(...P.map(p => Math.hypot(p.j[n][0] - P[0].j[n][0], p.j[n][2] - P[0].j[n][2])));
+          out[sex + ':' + id] = { minY: +Math.min(...P.map(p => p.minY)).toFixed(4), feet: +Math.max(...P.map(p => p.reg.feet)).toFixed(4), arms: +Math.max(...P.map(p => p.reg.arms)).toFixed(4),
+            drift: +Math.max(0, ...PL[id].map(dr)).toFixed(4), stance: id === 'lunge' ? +Math.min(dr('L_Toe0'), dr('R_Toe0')).toFixed(4) : null, ph: st.phases.map(p => p[0]).join('/'), dur: st.dur } } }
+      return out });
+    const ok = (k, f) => f(Q[k]), both = f => ['male', 'female'].every(x => f(x));
+    check('五個動作男女都能播（動畫綁到同一副骨架）、整段不穿地（最低點 ≥ −1 cm）：深蹲雙腳一直踩地、腳不滑；伏地挺身手掌和腳尖都在地上、手不滑；棒式前臂和腳尖都踩地；弓箭步支撐腳不滑；臀橋腳掌和手都貼地',
+      both(x => Object.keys(Q).filter(k => k.startsWith(x)).length === 5 && Object.values(Q).every(q => q.minY >= -0.01))
+        && both(x => ok(x + ':squat', q => q.feet <= 0.01 && q.drift <= 0.01)) && both(x => ok(x + ':pushup', q => q.arms <= 0.01 && q.feet <= 0.02 && q.drift <= 0.01))
+        && both(x => ok(x + ':plank', q => q.arms <= 0.01 && q.feet <= 0.015 && q.drift <= 0.01)) && both(x => ok(x + ':lunge', q => q.stance <= 0.03 && q.feet <= 0.01))
+        && both(x => ok(x + ':bridge', q => q.feet <= 0.01 && q.arms <= 0.01 && q.drift <= 0.01)), JSON.stringify(Q));
+    check('每個動作都有完整的起始、過程、結束：深蹲「預備／下蹲／最低點／站起／完成」、伏地挺身「預備／下降／最低點／推起／完成」、弓箭步「…／最低點／推回站直／完成」、臀橋「躺好／抬臀／停住／放下／完成」、棒式「預備／撐起／撐住／放下／完成」',
+      Q['male:squat'].ph === '預備/下蹲/最低點/站起/完成' && Q['male:pushup'].ph === '預備/下降/最低點/推起/完成' && /^預備\/跨步下蹲\/最低點\/推回站直\/完成$/.test(Q['male:lunge'].ph)
+        && Q['male:bridge'].ph === '躺好/抬臀/停住/放下/完成' && Q['male:plank'].ph === '預備/撐起/撐住（每次停 30 秒）/放下/完成', JSON.stringify(Object.fromEntries(Object.entries(Q).filter(([k]) => k.startsWith('male')).map(([k, v]) => [k, v.ph]))));
+    // ② 播放控制（男性、深蹲）
+    const C = await page.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)), S = () => H3D.v.animState(), Bq = s => document.querySelector('.h3dp ' + s), click = s => Bq(s).click();
+      if (H3D.v.sex !== 'male') { document.querySelector('[data-h3dsex="male"]').click(); await new Promise(r => { const f = () => H3D.v?.sex === 'male' && !H3D.busy ? r() : setTimeout(f, 50); f() }) }
+      const g0 = H3D.v.stats(); click('[data-ex="squat"]'); await new Promise(r => { const f = () => S().id === 'squat' && S().ready && S().playing ? r() : setTimeout(f, 30); f() });
+      const r = {}; r.auto = S().playing; const a = S().time; await w(500); r.adv = S().time !== a;
+      click('[data-a="play"]'); const p0 = S().time; await w(400); r.paused = !S().playing && S().time === p0 && /▶ 播放/.test(Bq('[data-a="play"]').textContent);
+      click('[data-sp="1"]'); H3D.v.seek(0); click('[data-a="play"]'); await w(700); const d1 = S().time; click('[data-a="play"]');
+      click('[data-sp="0.5"]'); H3D.v.seek(0); click('[data-a="play"]'); await w(700); const d05 = S().time; click('[data-a="play"]'); r.ratio = +(d05 / d1).toFixed(2); r.sp = Bq('[data-sp="0.5"]').getAttribute('aria-pressed');
+      const rng = Bq('input[type=range]'); rng.value = '1'; rng.dispatchEvent(new Event('input', { bubbles: true })); r.seek = S().time; click('[data-a="fwd"]'); r.fwd = S().time; click('[data-a="back"]'); r.back = S().time;
+      const bot = S().phases.find(p => p[0] === '最低點'); H3D.v.seek((bot[1] + bot[2]) / 2); r.ph = Bq('.ph').textContent; r.vt = rng.getAttribute('aria-valuetext');
+      click('[data-a="replay"]'); await w(80); r.replay = S().time < 0.4 && S().playing; click('[data-a="play"]');
+      click('[data-a="loop"]'); r.loopOff = !S().loop && Bq('[data-a="loop"]').getAttribute('aria-pressed') === 'false'; H3D.v.seek(S().dur - 0.06); click('[data-a="play"]'); await w(600); r.end = !S().playing && Math.abs(S().time - S().dur) < 0.02;
+      click('[data-a="play"]'); await w(150); r.restart = S().playing && S().time < 0.6; click('[data-a="play"]'); click('[data-a="loop"]');
+      H3D.v.seek(1.2); document.querySelector('[data-h3dsex="female"]').click(); await new Promise(r2 => { const f = () => H3D.v?.sex === 'female' && !H3D.busy ? r2() : setTimeout(f, 50); f() });
+      r.sw = { sex: H3D.v.sex, id: S().id, t: S().time };
+      const txt = {}; for (const id of ['squat', 'pushup', 'plank', 'lunge', 'bridge']) { click(`[data-ex="${id}"]`); await new Promise(r2 => { const f = () => S().id === id && S().ready ? r2() : setTimeout(f, 30); f() }); await w(30); txt[id] = Bq('.ex').textContent }
+      r.txt = txt; r.card = document.querySelector('#h3dCard').textContent; const g1 = H3D.v.stats(); r.gpu = [g0.geometries, g0.textures, g1.geometries, g1.textures];
+      const M = await import('./3d/exercises.js'); r.rl = [M.reviewLabel({ review: 'approved' }), M.reviewLabel({ review: 'approved', reviewer: '某教練', reviewedAt: '2026-11-21' }), M.reviewLabel({ review: 'draft' })]; return r });
+    check('播放控制：選了動作自動播放、時間會走；暫停後停住、按鈕變「▶ 播放」；0.5× 速度大約是 1× 的一半；拖進度條、下一格／上一格各 1/30 秒；停在最低點時顯示「最低點」；重播從頭開始；關掉循環會停在最後一格、再按從頭播',
+      C.auto && C.adv && C.paused && C.ratio >= 0.25 && C.ratio <= 0.8 && C.sp === 'true' && Math.abs(C.seek - 1) < 0.01 && Math.abs(C.fwd - (1 + 1 / 30)) < 0.005 && Math.abs(C.back - 1) < 0.005
+        && C.ph === '最低點' && /最低點/.test(C.vt) && C.replay && C.loopOff && C.end && C.restart, JSON.stringify({ ...C, txt: undefined, card: undefined }));
+    check('換成女性時動作和時間點接著播；每個動作寫出做對的重點、常見錯誤、動畫來源與授權（CMU、Mesh2Motion CC0、自製）；審核狀態只有「待專業審核」或「自製草稿・待專業審核」，沒有審核人與日期時不會顯示「審核通過」；切換動作 GPU 資源不增加',
+      C.sw.sex === 'female' && C.sw.id === 'squat' && Math.abs(C.sw.t - 1.2) < 0.05 && /CMU/.test(C.txt.squat) && /Mesh2Motion/.test(C.txt.pushup) && /CC0/.test(C.txt.pushup) && /自製/.test(C.txt.plank) && /自製/.test(C.txt.bridge) && /CMU/.test(C.txt.lunge)
+        && /待專業審核/.test(C.txt.squat) && /自製草稿・待專業審核/.test(C.txt.bridge) && !/審核通過/.test(C.card) && C.rl[0] === '待專業審核' && C.rl[1] === '審核通過' && C.rl[2] === '自製草稿・待專業審核'
+        && Object.values(C.txt).every(t => /做對的重點/.test(t) && /常見錯誤/.test(t) && /不能判斷你自己的動作/.test(t)) && C.gpu[0] <= C.gpu[2] + 40 && C.gpu[2] === C.gpu[2], JSON.stringify({ sw: C.sw, rl: C.rl, gpu: C.gpu }));
+    // 視角按鈕：播地板動作（臀橋、伏地挺身）時按正面／側面／背面，整個人要在畫面裡、而且夠大（不能套站姿的取景把人擠到最下面、切掉頭）
+    const VB = await page.evaluate(async () => { const out = {}, w = ms => new Promise(r => setTimeout(r, ms));
+      for (const id of ['bridge', 'pushup', 'plank', 'squat']) { await H3D.v.setExercise(id, { autoplay: false }); const st = H3D.v.animState(), mid = st.phases[Math.min(2, st.phases.length - 1)];
+        for (const v of ['side', 'front', 'back']) { document.querySelector(`[data-h3dview="${v}"]`).click(); await w(30);
+          for (const t of [0, (mid[1] + mid[2]) / 2]) { H3D.v.seek(t); const b = H3D.v.screenBox(); out[`${id}:${v}:${t.toFixed(2)}`] = [b.x0, b.x1, b.y0, b.y1, +Math.max(b.x1 - b.x0, b.y1 - b.y0).toFixed(2)] } } }
+      return out });
+    // 女性馬尾：播過臀橋（馬尾抬起來平貼地面）再換深蹲，馬尾要回到原位（跟沒播過臀橋時一樣），不能停在臀橋的角度
+    const PT = await page.evaluate(async () => { const tail = () => H3D.v.probeAnim([0], { tail: 'Ponytail' })[0].reg.tail;
+      await H3D.v.setExercise('squat', { autoplay: false }); const ref = tail(); await H3D.v.setExercise('bridge', { autoplay: false }); H3D.v.seek(2.6); const top = H3D.v.probeAnim([2.6], { tail: 'Ponytail' })[0].reg.tail;
+      await H3D.v.setExercise('squat', { autoplay: false }); return { sex: H3D.v.sex, ref: +ref.toFixed(4), top: +top.toFixed(4), after: +tail().toFixed(4) } });
+    check('女性模型有馬尾骨頭：臀橋最高點馬尾貼地（不穿地）；播過臀橋再換深蹲，馬尾回到原位（跟沒播過時差 ≤ 1 mm）',
+      PT.sex === 'female' && Number.isFinite(PT.ref) && PT.top >= -0.01 && PT.top <= 0.02 && Math.abs(PT.after - PT.ref) <= 0.001, JSON.stringify(PT));
+    check('視角按鈕：播臀橋、伏地挺身、棒式、深蹲時按正面／側面／背面，整個人都在畫面裡（不切到頭腳）、而且夠大（佔畫面寬或高 30% 以上），起始和最低（最高）點都一樣',
+      Object.values(VB).every(([x0, x1, y0, y1, big]) => x0 >= -1 && x1 <= 1 && y0 >= -1 && y1 <= 1 && big >= 0.6), JSON.stringify(VB));
+    await page.close();
+    // ③ 下載失敗、減少動態效果、GPU 資源
+    page = await newPage(seed, { url: base }); await page.route(/\/3d\/anims\/bridge\.glb/, r => r.abort()); await page.emulateMedia({ reducedMotion: 'reduce' }); await open3d(page);
+    const F = await page.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)), Bq = s => document.querySelector('.h3dp ' + s);
+      Bq('[data-ex="bridge"]').click(); await w(800); const fail = Bq('.msg').textContent, ctlHidden = Bq('.ctl').hidden;
+      Bq('[data-ex="squat"]').click(); await new Promise(r => { const f = () => H3D.v.animState().ready ? r() : setTimeout(f, 30); f() }); await w(300); const st = H3D.v.animState();
+      const g0 = H3D.v.stats(); for (const id of ['plank', 'lunge', 'pushup', 'squat', 'plank', 'squat']) await H3D.v.setExercise(id); H3D.v.probe(); const g1 = H3D.v.stats();
+      return { fail, ctlHidden, playing: st.playing, time: st.time, msg: Bq('.msg').textContent, gpu: [g0.geometries, g0.textures, g1.geometries, g1.textures] } });
+    check('動作下載失敗時說「確認網路後再點一次」、不顯示播放控制；系統開了「減少動態效果」時選了動作不會自動播放；切換動作來回 6 次 GPU 的幾何與貼圖數量不增加',
+      /這個動作下載失敗：請確認網路後再點一次/.test(F.fail) && F.ctlHidden && F.playing === false && F.time === 0 && F.msg === '' && F.gpu[2] === F.gpu[0] && F.gpu[3] === F.gpu[1], JSON.stringify(F));
+    await page.close(); srv4.close();
+    // ④ 素材檔：大小、動作階段涵蓋整段、授權紀錄
+    const A = JSON.parse(fs.readFileSync(path.join(ROOT, '3d/licenses/assets.json'), 'utf8')), fields = ['source', 'author', 'license', 'commercial', 'modify', 'redistribute', 'conditions', 'changes', 'review'];
+    const files = ['squat', 'pushup', 'plank', 'lunge', 'bridge'].map(id => { const g = fs.statSync(path.join(ROOT, '3d/anims', id + '.glb')).size, j = JSON.parse(fs.readFileSync(path.join(ROOT, '3d/anims', id + '.json'), 'utf8')), p = j.phases;
+      return { id, kb: Math.round(g / 1024), cover: p[0][1] === 0 && p.every((x, i) => x[1] <= x[2] && (i === 0 || Math.abs(x[1] - p[i - 1][2]) < 1e-6)) && Math.abs(p[p.length - 1][2] - j.clips[0].dur) < 0.05, clips: j.clips.map(c => c.name).join() } });
+    const notice = fs.readFileSync(path.join(ROOT, '3d/licenses/THIRD_PARTY_NOTICES.md'), 'utf8');
+    check('動畫檔每個 ≤ 300 KB、裡面有 male 和 female 兩段；動作階段從 0 秒接到結束；每個動畫都有來源、作者、授權、可否商用／修改／散布、修改內容、審核狀態；授權聲明附 CMU 致謝與 Mesh2Motion CC0',
+      files.every(f => f.kb <= 300 && f.cover && f.clips === 'male,female') && A.animations.length === 5 && A.animations.every(a => fields.every(k => a[k] !== undefined && a[k] !== '') && fs.existsSync(path.join(ROOT, a.file)))
+        && A.animations.filter(a => /自製/.test(a.source)).every(a => a.review === 'draft') && /NSF EIA-0196217/.test(notice) && /Mesh2Motion/.test(notice) && /CC0/.test(notice), JSON.stringify(files));
   }
 
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============

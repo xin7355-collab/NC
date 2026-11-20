@@ -1,0 +1,80 @@
+{
+ "id": "pushup",
+ "phases": [
+  [
+   "預備",
+   0,
+   0.1
+  ],
+  [
+   "下降",
+   0.1,
+   0.57
+  ],
+  [
+   "最低點",
+   0.57,
+   0.97
+  ],
+  [
+   "推起",
+   0.97,
+   1.37
+  ],
+  [
+   "完成",
+   1.37,
+   1.53
+  ]
+ ],
+ "clips": [
+  {
+   "name": "male",
+   "dur": 1.533,
+   "tracks": 24
+  },
+  {
+   "name": "female",
+   "dur": 1.533,
+   "tracks": 25
+  }
+ ],
+ "metrics": {
+  "male": {
+   "minY": 0,
+   "frames": 47,
+   "dur": 1.533,
+   "drift_Lwri": 0.0023,
+   "drift_Rwri": 0.0023,
+   "drift_Lankle": 0.0133,
+   "drift_Rankle": 0.0133,
+   "kneeMax": 14,
+   "elbowMax": 120,
+   "lineMin": 167,
+   "hipLineMax": 180,
+   "pelvisMin": 0.273,
+   "pelvisMax": 0.383,
+   "feet0": 0,
+   "arms0": 0.0018,
+   "feetMax": 0.012
+  },
+  "female": {
+   "minY": 0,
+   "frames": 47,
+   "dur": 1.533,
+   "drift_Lwri": 0.0022,
+   "drift_Rwri": 0.0022,
+   "drift_Lankle": 0.0139,
+   "drift_Rankle": 0.0139,
+   "kneeMax": 14,
+   "elbowMax": 126,
+   "lineMin": 171,
+   "hipLineMax": 180,
+   "pelvisMin": 0.258,
+   "pelvisMax": 0.382,
+   "feet0": 0,
+   "arms0": 0.0009,
+   "feetMax": 0.0084
+  }
+ }
+}

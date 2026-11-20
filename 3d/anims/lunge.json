@@ -1,0 +1,76 @@
+{
+ "id": "lunge",
+ "phases": [
+  [
+   "預備",
+   0,
+   0.33
+  ],
+  [
+   "跨步下蹲",
+   0.33,
+   0.87
+  ],
+  [
+   "最低點",
+   0.87,
+   1.07
+  ],
+  [
+   "推回站直",
+   1.07,
+   1.47
+  ],
+  [
+   "完成",
+   1.47,
+   2.03
+  ]
+ ],
+ "clips": [
+  {
+   "name": "male",
+   "dur": 2.033,
+   "tracks": 24
+  },
+  {
+   "name": "female",
+   "dur": 2.033,
+   "tracks": 25
+  }
+ ],
+ "metrics": {
+  "male": {
+   "minY": 0,
+   "frames": 62,
+   "dur": 2.033,
+   "drift_Ltoe": 0.0232,
+   "drift_Rtoe": 0.8077,
+   "kneeMax": 114,
+   "elbowMax": 16,
+   "lineMin": 162,
+   "hipLineMax": 175,
+   "pelvisMin": 0.604,
+   "pelvisMax": 0.875,
+   "feet0": 0,
+   "arms0": 0.7728,
+   "feetMax": 0
+  },
+  "female": {
+   "minY": 0,
+   "frames": 62,
+   "dur": 2.033,
+   "drift_Ltoe": 0.0229,
+   "drift_Rtoe": 0.8376,
+   "kneeMax": 116,
+   "elbowMax": 16,
+   "lineMin": 163,
+   "hipLineMax": 172,
+   "pelvisMin": 0.617,
+   "pelvisMax": 0.908,
+   "feet0": 0,
+   "arms0": 0.7354,
+   "feetMax": 0
+  }
+ }
+}

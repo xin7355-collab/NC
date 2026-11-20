@@ -1379,19 +1379,21 @@ return `<div class="card" id="h3dCard"><h2>🧍 3D 真人示範 <span class="tg"
 <button class="btn" data-h3d="go" id="h3d-go"${on||low?' hidden':''}>▶ 載入 3D 人物（約 1.2 MB）</button>
 <div class="h3d-ctl"${on?'':' hidden'}><div class="seg" role="group" aria-label="人物">${[['male','男'],['female','女']].map(([k,t])=>`<button type="button" data-h3dsex="${k}" class="${sx===k?'on':''}" aria-pressed="${sx===k}">${t}</button>`).join('')}</div>
 <div class="seg" role="group" aria-label="視角">${[['front','正面'],['side','側面'],['back','背面']].map(([k,t])=>`<button type="button" data-h3dview="${k}">${t}</button>`).join('')}</div></div>
+<div id="h3d-play"></div>
 <div class="chips" style="margin-top:8px"><button type="button" class="chip${low?' on':''}" data-h3dlow aria-pressed="${low}">🔋 省電模式：只用 2D</button></div>
-<p class="note">手指拖曳可以 360° 旋轉、兩指縮放。第一次要下載約 1.2 MB，之後比較快。動作動畫、肌肉標示會陸續加入。人物素材：Microsoft Rocketbox Avatar Library（MIT 授權）。</p></div>`}
+<p class="note">手指拖曳可以 360° 旋轉、兩指縮放。第一次要下載約 1.2 MB，之後比較快。肌肉標示會陸續加入。人物素材：Microsoft Rocketbox Avatar Library（MIT 授權）。</p></div>`}
 const h3dMsg=(t,err)=>{const e=$('#h3d-msg');if(e){e.textContent=t;e.classList.toggle('err',!!err)}};
 const h3dUI=()=>{const on=!!H3D.v,h=$('#h3d');if(h)h.dataset.state=on?'ready':'idle';const i=$('#h3d .h3d-img');if(i)i.hidden=on;const g=$('#h3d-go');if(g)g.hidden=on||h3dLow();const c=$('#h3dCard .h3d-ctl');if(c)c.hidden=!on;
 $$('[data-h3dsex]').forEach(b=>{const x=b.dataset.h3dsex===(H3D.sex||h?.dataset.sex);b.classList.toggle('on',x);b.setAttribute('aria-pressed',x)})};
-function h3dDispose(){if(H3D.v){try{H3D.v.dispose()}catch(e){}H3D.v=null}h3dUI()}
-function h3dReattach(){if(!H3D.v)return;const el=$('#h3d');if(el)H3D.v.attach(el);else h3dDispose()}
+function h3dDispose(){if(H3D.ui){H3D.ui.destroy();H3D.ui=null}if(H3D.v){try{H3D.v.dispose()}catch(e){}H3D.v=null}h3dUI()}
+function h3dReattach(){if(!H3D.v)return;const el=$('#h3d');if(el){H3D.v.attach(el);const p=$('#h3d-play');if(p&&H3D.ui)H3D.ui.attach(p)}else h3dDispose()}
 async function h3dLoad(sex){const host=$('#h3d');if(!host||H3D.busy||h3dLow())return;H3D.busy=1;
 try{h3dMsg('載入 3D 程式…');const mod=await import('./3d/viewer.js?v='+encodeURIComponent(APP_VER)).catch(e=>{throw Object.assign(new Error('mod'),{cause:e})});
 if(!mod.supports3D()){h3dMsg('這支手機的瀏覽器不支援 3D（需要 WebGL 2）：請用下面的 2D 動作示範；iPhone 更新到 iOS 15 以上就能用',1);return}
 if(!H3D.v)H3D.v=mod.createViewer(host,{ver:APP_VER,onLost:()=>{h3dDispose();h3dMsg('3D 畫面被系統暫停（可能是記憶體不足）：再按一次「載入 3D 人物」，或開啟省電模式',1)}});
 const i=$('#h3d .h3d-img');if(i)i.hidden=true;h3dMsg('下載 3D 人物… 0%');
-await H3D.v.load(sex,p=>h3dMsg(`下載 3D 人物… ${Math.min(99,Math.round(p*100))}%`));H3D.sex=sex;host.dataset.sex=sex;h3dMsg('');h3dUI()}
+await H3D.v.load(sex,p=>h3dMsg(`下載 3D 人物… ${Math.min(99,Math.round(p*100))}%`));H3D.sex=sex;host.dataset.sex=sex;h3dMsg('');h3dUI();
+if(!H3D.ui){const U=await import('./3d/ui.js?v='+encodeURIComponent(APP_VER));H3D.ui=U.mountPlayer($('#h3d-play'),H3D.v,{reduced:matchMedia('(prefers-reduced-motion: reduce)').matches})}}
 catch(e){const k=e?.message;h3dDispose();h3dMsg(k==='webgl'?'這支手機現在無法建立 3D 畫面：先用下面的 2D 動作示範，或關掉其他 App 再試':k==='load'||k==='mod'?'3D 人物下載失敗：請確認網路後再按一次「載入 3D 人物」':'3D 載入失敗：請再試一次，或開啟省電模式改用 2D',1)}
 finally{H3D.busy=0}}
 document.addEventListener('click',e=>{const t=e.target;if(t.closest('[data-h3d]')){h3dLoad(H3D.sex||$('#h3d')?.dataset.sex||'male');return}
