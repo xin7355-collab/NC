@@ -324,6 +324,8 @@ table.imap td.er{color:var(--red);font-weight:800}table.imap td.gp1{color:var(--
 .mkbar .btn.sm,.mkbar .seg button{min-height:44px;min-width:44px}
 .mkthumbs{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 .mkthumbs img{width:88px;height:88px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.anim{display:block;width:100%;max-width:360px;margin:0 auto;background:rgba(255,255,255,.03);border-radius:14px}.anim.sm{width:72px;height:62px;flex:none;margin:0 10px 0 0;border-radius:10px}.anwrap{display:flex;gap:8px;align-items:center}.anwrap .anim{flex:1;min-width:0}#an-pain .chip{min-height:44px}.anhold{text-align:center;font-size:22px;font-weight:700;color:var(--amber);margin-top:6px;font-variant-numeric:tabular-nums}.anwrap video{width:45%;max-width:240px;border-radius:12px;transform:scaleX(-1);background:#000}
+.ag{stroke:var(--line);stroke-width:1}.ap{fill:none;stroke:var(--mute);stroke-width:1.5}.afar line{stroke:var(--cyan);stroke-opacity:.38;stroke-width:4;stroke-linecap:round}.anear line,.ab{stroke:var(--cyan);stroke-width:4.5;stroke-linecap:round;fill:none}.ah{fill:var(--cyan)}.atw{stroke:var(--amber);stroke-width:1.5}
 </style>
 </head>
 <body>
@@ -410,7 +412,7 @@ table.imap td.er{color:var(--red);font-weight:800}table.imap td.gp1{color:var(--
 </section>
 
 <!-- 運動 -->
-<section class="view" id="v-fit"><div class="subnav" data-for="fit" role="tablist" aria-label="運動分頁"><button data-sub="today" role="tab">今天</button><button data-sub="week" role="tab">本週課表</button><button data-sub="tips" role="tab">注意事項</button></div><div id="fitBody"></div></section>
+<section class="view" id="v-fit"><div class="subnav" data-for="fit" role="tablist" aria-label="運動分頁"><button data-sub="today" role="tab">今天</button><button data-sub="week" role="tab">本週課表</button><button data-sub="tips" role="tab">注意事項</button><button data-sub="move" role="tab">動作／復健</button></div><div id="fitBody"></div></section>
 
 <!-- 圖片工坊 -->
 <section class="view" id="v-lab">
@@ -1304,12 +1306,95 @@ yoga:{n:'瑜伽／伸展',e:'🧘',t:'f',met:2.5,how:'每個伸展停 20–30 �
 taichi:{n:'太極拳',e:'☯️',t:'b',met:3,how:'重心轉移練平衡，膝蓋不超過腳尖、不蹲太低',bad:[]}};
 const WHYNOT={knee:'膝蓋不適',ankle:'腳踝／足底不適',back:'下背痛',shoulder:'肩膀不適',osteo:'骨質疏鬆（怕衝擊、跌倒）',heart:'心臟病史（先讓醫師評估）',preg:'懷孕中',obese:'BMI ≥30，先用低衝擊保護關節',bp2:'血壓 ≥160/100，先暫停高強度',cvr:'冠狀動脈鈣化或中風病史（高強度前先讓醫師評估）',old:'65 歲以上，先練肌力與平衡',new:'新手，先打好有氧基礎'};
 const MOVES=[
-{n:'椅子深蹲',d:'坐下、站起，膝蓋對準腳尖',r:12,bad:['knee']},{n:'坐姿抬腿',d:'坐椅子把小腿伸直停 5 秒（護膝的大腿訓練）',r:12,bad:[]},
-{n:'臀橋',d:'躺姿抬臀、停 2 秒',r:15,bad:['preg']},{n:'弓箭步',d:'前後腳下蹲，每腳',r:10,bad:['knee','ankle','osteo']},
-{n:'牆壁伏地挺身',d:'手扶牆、身體一直線',r:12,bad:['shoulder']},{n:'彈力帶划船',d:'坐姿拉向肚臍、夾背',r:15,bad:[]},
-{n:'鳥狗式',d:'四足跪姿伸對側手腳、停 3 秒，每邊（護腰核心）',r:10,bad:[]},{n:'棒式',d:'前臂撐地、身體一直線，不憋氣',r:30,u:'秒',bad:['shoulder','bp2','preg','heart']},
-{n:'側躺抬腿',d:'練臀中肌、穩定膝蓋，每邊',r:15,bad:[]},{n:'扶牆墊腳尖',d:'練小腿與平衡',r:15,bad:['ankle']},
-{n:'單腳站',d:'扶椅單腳站，每腳（防跌倒）',r:30,u:'秒',bad:[]}];
+{n:'椅子深蹲',ax:'chairsq',d:'坐下、站起，膝蓋對準腳尖',r:12,bad:['knee']},{n:'坐姿抬腿',ax:'sitext',d:'坐椅子把小腿伸直停 5 秒（護膝的大腿訓練）',r:12,bad:[]},
+{n:'臀橋',ax:'bridge',d:'躺姿抬臀、停 2 秒',r:15,bad:['preg']},{n:'弓箭步',ax:'lunge',d:'前後腳下蹲，每腳',r:10,bad:['knee','ankle','osteo']},
+{n:'牆壁伏地挺身',ax:'wallpush',d:'手扶牆、身體一直線',r:12,bad:['shoulder']},{n:'彈力帶划船',ax:'row',d:'坐姿拉向肚臍、夾背',r:15,bad:[]},
+{n:'鳥狗式',ax:'birddog',d:'四足跪姿伸對側手腳、停 3 秒，每邊（護腰核心）',r:10,bad:[]},{n:'棒式',ax:'plank',d:'前臂撐地、身體一直線，不憋氣',r:30,u:'秒',bad:['shoulder','bp2','preg','heart']},
+{n:'側躺抬腿',ax:'sideleg',d:'練臀中肌、穩定膝蓋，每邊',r:15,bad:[]},{n:'扶牆墊腳尖',ax:'heelraise',d:'練小腿與平衡',r:15,bad:['ankle']},
+{n:'單腳站',ax:'balance',d:'扶椅單腳站，每腳（防跌倒）',r:30,u:'秒',bad:[]}];
+/* ===== 動作動畫：側面小人（關鍵姿勢＋內插）；角度 0＝朝下、90＝朝前、180＝朝上、-90＝朝後；g：近側腳固定在地上（1 腳踝、2 腳尖） ===== */
+const AL={t:28,ua:14,fa:13,th:18,sh:17,ft:8},AG=110,aV=(o,a,l)=>[o[0]+Math.sin(a*Math.PI/180)*l,o[1]+Math.cos(a*Math.PI/180)*l];
+const AP=o=>({t:180,ua:[5,-5],fa:[10,-3],th:[0,0],sh:[0,0],ft:[90,90],c:0,...o,n:o.n??o.t??180});
+function anPts(p){let h=p.h||[60,70];if(p.g){const k=aV([0,0],p.th[0],AL.th),a=aV(k,p.sh[0],AL.sh),r=p.g===2?aV(a,p.ft[0],AL.ft):a;h=[(p.gx??60)-r[0],(p.gy??AG)-r[1]]}
+const nk=aV(h,p.t,AL.t);return{h,nk,hd:aV(nk,p.n,9),c:p.c,L:[0,1].map(i=>{const k=aV(h,p.th[i],AL.th),a=aV(k,p.sh[i],AL.sh);return[h,k,a,aV(a,p.ft[i],AL.ft)]}),A:[0,1].map(i=>{const e=aV(nk,p.ua[i],AL.ua),w=aV(e,p.fa[i],AL.fa);return[nk,e,w,aV(w,p.hd?.[i]??p.fa[i],4)]})}}
+const anMix=(a,b,f)=>{const o={};for(const k in b){const x=a[k],y=b[k];o[k]=Array.isArray(y)?y.map((v,i)=>typeof v==='number'&&x?x[i]+(v-x[i])*f:v):typeof y==='number'&&typeof x==='number'?x+(y-x)*f:y}return o};
+const APROP={chair:'<path d="M30 92h22M33 92v18M49 92v18M31 92V66" class="ap"/>',wall:x=>`<path d="M${x} 24V${AG}" class="ap"/>`,step:'<rect x="44" y="100" width="30" height="10" rx="1" class="ap"/>',mat:`<rect x="14" y="${AG}" width="112" height="3" rx="1.5" class="ap"/>`,table:'<path d="M88 84h30M92 84v26M114 84v26" class="ap"/>',ball:'<circle cx="74" cy="106" r="4" class="ap"/>',chairR:'<path d="M92 64V110M92 90h20M111 90v20" class="ap"/>'};
+function anSVG(X,cls='anim',k=''){return `<svg viewBox="0 0 140 120" class="${cls}"${k?` data-k="${k}"`:''} role="img" aria-label="${X.n}動作示範"><path d="M6 ${AG}H134" class="ag"/>${(X.pr||[]).map(p=>{const[k,v]=String(p).split(':');return typeof APROP[k]==='function'?APROP[k](+v):APROP[k]||''}).join('')}<g class="afar">${'<line/>'.repeat(6)}</g><path class="ab"/><circle r="6" class="ah"/><g class="anear">${'<line/>'.repeat(6)}</g>${X.tw?'<line class="atw"/>':''}</svg>`}
+function anDraw(svg,P,X){const q=anPts(P),S=(l,a,b)=>{l.setAttribute('x1',a[0].toFixed(1));l.setAttribute('y1',a[1].toFixed(1));l.setAttribute('x2',b[0].toFixed(1));l.setAttribute('y2',b[1].toFixed(1))};
+[['.afar',1],['.anear',0]].forEach(([s,i])=>{const ln=svg.querySelectorAll(s+' line'),[a,e,w,hn]=q.A[i],[h,k,an,t]=q.L[i];[[a,e],[e,w],[w,hn],[h,k],[k,an],[an,t]].forEach(([x,y],j)=>S(ln[j],x,y))});
+const[h,n]=[q.h,q.nk],dx=n[0]-h[0],dy=n[1]-h[1],l=Math.hypot(dx,dy)||1,cx=(h[0]+n[0])/2+dy/l*q.c,cy=(h[1]+n[1])/2-dx/l*q.c;
+svg.querySelector('.ab').setAttribute('d',`M${h[0].toFixed(1)} ${h[1].toFixed(1)}Q${cx.toFixed(1)} ${cy.toFixed(1)} ${n[0].toFixed(1)} ${n[1].toFixed(1)}`);const hc=svg.querySelector('.ah');hc.setAttribute('cx',q.hd[0].toFixed(1));hc.setAttribute('cy',q.hd[1].toFixed(1));
+if(X.tw)S(svg.querySelector('.atw'),q.A[0][2],q.L[0][3])}
+// 動作庫：f＝[姿勢, 轉到這個姿勢的毫秒]（最後一個轉回第一個）；r 次數、hold 停幾秒、cue 做對的重點、bad 常見錯誤
+const S0={g:1,gx:70},STD=AP(S0),SIT={h:[50,91],th:[90,90],sh:[0,0],ua:[20,20],fa:[70,70]},SUP={h:[56,107],t:-90,n:-95,th:[145,145],sh:[20,20],ua:[95,95],fa:[90,90]},QP={h:[44,90],t:110,n:105,ua:[0,0],fa:[0,0],th:[0,0],sh:[-90,-90],ft:[-100,-100]};
+const ANX={
+chairsq:{n:'椅子坐站（深蹲）',pr:['chair'],r:12,f:[[{...S0,ua:[95,95],fa:[95,95]},900],[{...S0,t:145,th:[80,80],sh:[-15,-15],ua:[95,95],fa:[95,95]},1500],[{...S0,t:145,th:[80,80],sh:[-15,-15],ua:[95,95],fa:[95,95]},300]],cue:['腳與肩同寬、腳尖微微朝外','屁股往後坐，像要坐到椅子','膝蓋對準第二根腳趾','站起來時腳跟出力、吐氣'],bad:['膝蓋往內夾','腳跟離地','彎腰駝背']},
+sitext:{n:'坐姿抬腿（伸膝）',pr:['chair'],r:10,hold:5,f:[[SIT,800],[{...SIT,sh:[90,0],ft:[175,90]},1200],[{...SIT,sh:[90,0],ft:[175,90]},5000]],cue:['坐直、背靠椅背','小腿慢慢伸直、腳尖勾起','大腿出力停 5 秒，再慢慢放下'],bad:['用甩的抬腿','身體往後倒']},
+slr:{n:'直膝抬腿',pr:['mat'],r:10,hold:3,f:[[{...SUP,th:[90,145],sh:[90,20],ft:[180,90]},800],[{...SUP,th:[125,145],sh:[125,20],ft:[215,90]},1300],[{...SUP,th:[125,145],sh:[125,20],ft:[215,90]},3000]],cue:['躺平，一腳彎曲踩地','另一腳伸直、腳尖勾起','大腿出力抬到和彎曲的膝蓋同高，停 3 秒'],bad:['膝蓋彎掉','腰拱起來']},
+bridge:{n:'臀橋',pr:['mat'],r:12,hold:2,f:[[SUP,900],[{...SUP,h:[58,95],t:-74,n:-80,th:[105,105],sh:[-8,-8]},1200],[{...SUP,h:[58,95],t:-74,n:-80,th:[105,105],sh:[-8,-8]},2000]],cue:['躺平、膝蓋彎、腳掌踩地','夾臀把屁股抬起，肩到膝一直線','停 2 秒再慢慢放下'],bad:['抬太高、腰拱起','用脖子出力']},
+ptilt:{n:'骨盆後傾',pr:['mat'],r:10,hold:5,f:[[{...SUP,c:-4},900],[{...SUP,c:2},1200],[{...SUP,c:2},5000]],cue:['躺平、膝蓋彎','吐氣、肚子收緊，讓下背貼平地面','停 5 秒再放鬆'],bad:['憋氣','用屁股抬起來']},
+k2c:{n:'抱膝伸展',pr:['mat'],r:3,hold:20,f:[[SUP,900],[{...SUP,th:[205,145],sh:[120,20],ua:[135,95],fa:[120,90]},1500],[{...SUP,th:[205,145],sh:[120,20],ua:[135,95],fa:[120,90]},20000]],cue:['躺著，雙手抱住一邊膝蓋','慢慢拉向胸口，下背放鬆','停 20 秒，換邊'],bad:['抬頭用力','拉到痛']},
+pressup:{n:'俯臥撐起（麥肯基）',pr:['mat'],r:10,hold:2,f:[[{h:[52,106],t:90,n:95,th:[-90,-90],sh:[-90,-90],ft:[-40,-40],ua:[-100,-100],fa:[80,80]},900],[{h:[52,106],t:122,n:130,th:[-90,-90],sh:[-90,-90],ft:[-40,-40],ua:[-15,-15],fa:[70,70]},1300],[{h:[52,106],t:122,n:130,th:[-90,-90],sh:[-90,-90],ft:[-40,-40],ua:[-15,-15],fa:[70,70]},2000]],cue:['趴著，手放在肩膀旁','手撐起上半身，骨盆貼地、下背放鬆','停 2 秒再慢慢趴下'],bad:['骨盆離地','腿麻或痛往腳延伸要停']},
+birddog:{n:'鳥狗式',pr:['mat'],r:10,hold:3,f:[[QP,900],[{...QP,ua:[95,0],fa:[95,0],th:[0,-95],sh:[-90,-95],ft:[-100,-100]},1300],[{...QP,ua:[95,0],fa:[95,0],th:[0,-95],sh:[-90,-95],ft:[-100,-100]},3000]],cue:['四足跪姿：手在肩膀下、膝蓋在髖關節下','伸直對側的手和腳，身體保持水平','停 3 秒，左右交換'],bad:['腰往下塌或轉身','腳抬太高']},
+catcow:{n:'貓牛式',pr:['mat'],r:8,f:[[{...QP,c:6,n:40},1800],[{...QP,c:-5,n:140},1800]],cue:['四足跪姿','吐氣拱背像貓、低頭','吸氣慢慢塌腰、抬頭看前方'],bad:['動太快','手肘鎖死']},
+wallcalf:{n:'牆壁小腿伸展',pr:['wall:106'],r:3,hold:30,f:[[{g:1,gx:55,t:160,th:[-22,30],sh:[-22,-5],ua:[105,105],fa:[95,95]},900],[{g:1,gx:55,t:150,th:[-28,36],sh:[-28,-8],ua:[100,100],fa:[92,92]},1500],[{g:1,gx:55,t:150,th:[-28,36],sh:[-28,-8],ua:[100,100],fa:[92,92]},30000]],cue:['雙手扶牆，痛的腳在後面伸直','後腳跟踩穩地面','身體往前靠到小腿有拉緊感，停 30 秒'],bad:['後腳跟離地','後腳膝蓋彎']},
+towelst:{n:'坐姿毛巾拉足底',pr:['mat'],tw:1,r:3,hold:30,f:[[{h:[40,106],t:162,th:[90,90],sh:[90,90],ft:[178,178],ua:[118,118],fa:[100,100]},900],[{h:[40,106],t:152,th:[90,90],sh:[90,90],ft:[205,178],ua:[110,110],fa:[95,95]},1500],[{h:[40,106],t:152,th:[90,90],sh:[90,90],ft:[205,178],ua:[110,110],fa:[95,95]},30000]],cue:['坐著腿伸直，毛巾套在腳掌前端','慢慢把腳尖拉向自己，腳底有拉緊感','停 30 秒；早上下床前做最有效'],bad:['膝蓋彎起來','拉到痛']},
+towelcurl:{n:'腳趾抓毛巾',pr:['chair','mat'],r:10,f:[[SIT,700],[{...SIT,ft:[68,90]},700]],cue:['坐著，毛巾平放在腳下','用腳趾把毛巾抓起、放下','練足弓的小肌肉'],bad:['腳跟離地']},
+ballroll:{n:'腳底滾球',pr:['chair','ball'],r:10,f:[[{...SIT,sh:[-12,0]},1000],[{...SIT,sh:[18,0]},1000]],cue:['坐著，腳底踩網球或冰水瓶','從腳跟滾到腳尖，力道適中','每次 1–2 分鐘'],bad:['壓到很痛']},
+heelraise:{n:'墊腳尖',pr:['chairR'],r:15,f:[[{g:2,gx:72,ua:[50,50],fa:[60,60]},900],[{g:2,gx:72,ft:[38,38],ua:[58,58],fa:[68,68]},1000],[{g:2,gx:72,ft:[38,38],ua:[58,58],fa:[68,68]},600]],cue:['手輕扶椅背','慢慢墊腳尖到最高，停 1 秒','慢慢放下（放下比抬起慢）'],bad:['身體往前倒','放太快']},
+heeldrop:{n:'台階離心墊腳（跟腱）',pr:['step','wall:78'],r:15,f:[[{g:2,gx:52,gy:100,ft:[45,45],ua:[95,95],fa:[95,95]},800],[{g:2,gx:52,gy:100,ft:[125,45],ua:[100,100],fa:[100,100]},3000]],cue:['前腳掌站在台階邊緣、扶牆','用痛的那腳慢慢把腳跟往下放到低於台階（數 3 秒）','用好腳回到上面，重複'],bad:['放太快','膝蓋彎太多']},
+ankle:{n:'腳踝繞圈（寫字母）',pr:['chair'],r:10,f:[[{...SIT,sh:[55,0],ft:[150,90]},900],[{...SIT,sh:[55,0],ft:[95,90]},900]],cue:['坐著把腳抬離地','用腳尖在空中寫 A 到 Z 或繞圈','只動腳踝，小腿不動'],bad:['整條腿跟著甩']},
+balance:{n:'單腳站',pr:['chairR'],r:3,hold:30,f:[[{g:1,gx:68,ua:[52,-5],fa:[62,-3]},800],[{g:1,gx:68,th:[0,50],sh:[0,-35],ua:[52,-5],fa:[62,-3]},800],[{g:1,gx:68,t:182,th:[0,50],sh:[0,-35],ua:[52,-5],fa:[62,-3]},30000]],cue:['手輕扶椅背','抬起一腳，站穩 30 秒','進步後放手、閉眼（旁邊要有人）'],bad:['身體歪向一邊','憋氣']},
+wallpush:{n:'牆壁伏地挺身',pr:['wall:106'],r:12,f:[[{g:1,gx:52,t:155,th:[-25,-25],sh:[-25,-25],ua:[90,90],fa:[90,90]},900],[{g:1,gx:52,t:145,th:[-35,-35],sh:[-35,-35],ua:[125,125],fa:[65,65]},1300]],cue:['手扶牆與肩同寬','身體保持一直線，慢慢靠近牆','推回來時吐氣'],bad:['屁股翹起或腰塌','聳肩']},
+lunge:{n:'弓箭步',r:10,f:[[{g:1,gx:84,th:[20,-25],sh:[-5,-25],ua:[5,-5],fa:[5,-5]},900],[{g:1,gx:84,th:[72,-10],sh:[-8,-95],ft:[90,-60],ua:[5,-5],fa:[5,-5]},1300]],cue:['前後腳站開，身體直立','往下蹲到前腳大腿接近水平','前膝對準腳尖、不超過太多'],bad:['前膝往內倒','身體往前傾']},
+row:{n:'彈力帶划船',pr:['mat'],tw:1,r:15,f:[[{h:[40,106],t:175,th:[90,90],sh:[90,90],ft:[178,178],ua:[95,95],fa:[95,95]},900],[{h:[40,106],t:178,th:[90,90],sh:[90,90],ft:[178,178],ua:[-30,-30],fa:[88,88]},1100]],cue:['坐直，彈力帶套腳底','手肘貼身往後拉向肚臍、夾背','慢慢放回'],bad:['聳肩','身體往後倒']},
+plank:{n:'棒式',pr:['mat'],r:3,hold:30,f:[[{g:2,gx:20,t:103,n:105,th:[-77,-77],sh:[-77,-77],ft:[-160,-160],ua:[0,0],fa:[90,90]},800],[{g:2,gx:20,t:104,n:106,th:[-76,-76],sh:[-76,-76],ft:[-160,-160],ua:[0,0],fa:[90,90]},30000]],cue:['前臂撐地、手肘在肩膀正下方','頭到腳跟一直線，肚子收緊','正常呼吸，不憋氣'],bad:['屁股翹太高或腰塌','憋氣']},
+sideleg:{n:'側躺抬腿',pr:['mat'],r:15,f:[[{h:[62,104],t:-90,n:-100,th:[90,90],sh:[90,90],ft:[100,100],ua:[90,-160],fa:[80,-60]},800],[{h:[62,104],t:-90,n:-100,th:[118,90],sh:[118,90],ft:[128,100],ua:[90,-160],fa:[80,-60]},1100]],cue:['側躺，身體一直線','上面的腳伸直往上抬約 30 度','慢慢放下，骨盆不要往後倒'],bad:['腳往前擺','抬太高']},
+chin:{n:'下巴後縮',r:10,hold:5,f:[[{...S0,n:165},900],[{...S0,n:190},1100],[{...S0,n:190},5000]],cue:['坐直或站直，眼睛看前方','下巴水平往後收（做出雙下巴），不是低頭','停 5 秒'],bad:['低頭','聳肩']},
+scap:{n:'肩胛夾緊',r:10,hold:5,f:[[{...S0,ua:[15,15],fa:[90,90]},900],[{...S0,ua:[-22,-22],fa:[90,90]},1100],[{...S0,ua:[-22,-22],fa:[90,90]},5000]],cue:['手肘彎 90 度貼身','兩邊肩胛骨往後往下夾','停 5 秒，不要聳肩'],bad:['聳肩','腰往前挺']},
+pend:{n:'鐘擺運動',pr:['table'],r:20,f:[[{g:1,gx:48,t:112,n:105,ua:[-12,115],fa:[-12,90]},1100],[{g:1,gx:48,t:112,n:105,ua:[14,115],fa:[14,90]},1100]],cue:['好手扶桌、身體前彎','痛的手臂放鬆垂下，用身體帶動前後擺或畫小圈','不要用肩膀出力'],bad:['肩膀用力甩']},
+wallcrawl:{n:'手指爬牆',pr:['wall:98'],r:5,hold:10,f:[[{g:1,gx:78,ua:[50,-5],fa:[50,-3]},900],[{g:1,gx:78,ua:[132,-5],fa:[132,-3]},3000],[{g:1,gx:78,ua:[132,-5],fa:[132,-3]},10000]],cue:['面對牆站，手指放在牆上','手指一步一步往上爬到有拉緊感','停 10 秒再慢慢爬下來'],bad:['聳肩','身體往後仰']},
+wrist:{n:'手腕伸展（網球肘）',r:3,hold:30,f:[[{...S0,ua:[90,80],fa:[90,85],hd:[90,90]},900],[{...S0,ua:[90,80],fa:[90,85],hd:[5,40]},1200],[{...S0,ua:[90,80],fa:[90,85],hd:[5,40]},30000]],cue:['手臂伸直、掌心朝下','另一手把手背往下壓，前臂外側有拉緊感','停 30 秒'],bad:['手肘彎掉','壓到痛']},
+thoracic:{n:'擴胸伸展',pr:['chair'],r:8,hold:5,f:[[{...SIT,ua:[150,150],fa:[-60,-60]},900],[{...SIT,t:192,n:200,ua:[165,165],fa:[-40,-40]},1300],[{...SIT,t:192,n:200,ua:[165,165],fa:[-40,-40]},5000]],cue:['坐直，雙手放在頭後','手肘往後打開、胸口往上抬','停 5 秒，正常呼吸'],bad:['腰往前挺太多','憋氣']}};
+// 復健動作：病史（condKeys）或「運動狀況」的不適部位（L:knee…）對到的動作
+const REHAB=[['pf','足底筋膜炎',['towelst','wallcalf','ballroll','towelcurl','heelraise']],['achilles','阿基里斯腱炎（跟腱炎）',['heeldrop','wallcalf','ankle']],['bursitis','腳跟滑囊炎',['wallcalf','towelst','ankle']],['ledd','蹠筋膜纖維瘤症',['towelst','ballroll']],
+['kneeoa','退化性膝關節炎',['sitext','slr','bridge','sideleg','chairsq']],['disc','椎間盤突出／坐骨神經痛',['ptilt','pressup','bridge','birddog']],['frozen','五十肩',['pend','wallcrawl','scap']],['osteo','骨質疏鬆',['balance','heelraise','sitext','wallpush']],
+['as','僵直性脊椎炎',['catcow','thoracic','chin']],['ra','類風濕性關節炎',['wrist','sitext','ankle']],['dupuy','手掌筋膜纖維瘤',['wrist']],
+['L:ankle','腳踝、足底不適',['ankle','balance','wallcalf','heelraise']],['L:knee','膝蓋不適',['sitext','slr','bridge','chairsq']],['L:back','下背痛',['ptilt','catcow','birddog','bridge','k2c']],['L:shoulder','肩膀不適',['pend','wallcrawl','scap']],
+['neck','肩頸僵硬（久坐、低頭族）',['chin','scap','thoracic']],['elbow','網球肘（手肘外側痛）',['wrist']]];
+const PAIN=[['😀 不痛（0–2 分）','很好：照這個量做，之後可以慢慢加次數或停留時間。'],['😐 有點痛（3–5 分）','可以做，但減少次數或幅度；隔天沒有更痛，再回到原本的量。'],['😣 很痛（6 分以上）','先停這個動作，改做溫和的伸展；持續或越來越痛，請看復健科。'],['⚡ 麻、刺痛往手腳竄','停止：可能是神經受到壓迫，儘快看復健科或神經科。']];
+const rehabMine=m=>{const ck=condKeys(m),lim=fitOf(m).lim;return REHAB.filter(([k])=>k.startsWith('L:')?lim.includes(k.slice(2)):ck.has(k))};
+function moveHTML(m){const mine=rehabMine(m),rest=REHAB.filter(r=>!mine.includes(r)),card=k=>{const X=ANX[k];return `<button class="rec" data-anim="${k}">${anSVG(X,'anim sm',k)}<div class="m"><b>${esc(X.n)}</b><small>${X.hold?`每${X.hold>=10?'次':'下'}停 ${X.hold} 秒・`:''}${X.r} ${X.hold>=10?'次':'下'}・${esc(X.cue[0])}</small></div><span class="chev">›</span></button>`},grp=([,t,L],o)=>`<div class="h4">${o?'🩹 你的：':''}${esc(t)}</div>${L.map(card).join('')}`;
+return `<div class="card"><h2>🎬 動作示範與復健</h2><p class="note" style="margin-top:0">點一個動作看動畫跟著做，App 幫你數次數；做完回報痛感，告訴你要不要調整。</p>
+${mine.length?mine.map(r=>grp(r,1)).join(''):'<div class="sub">病史和「運動狀況」沒有需要復健的部位；有不舒服可以從下面找，或到「⚙️ 設定」填病史、運動狀況。</div>'}
+<details class="box"${mine.length?'':' open'}><summary>其他部位的復健動作</summary>${rest.map(r=>grp(r)).join('')}</details>
+<details class="box"><summary>一般肌力動作</summary>${[...new Set(MOVES.map(x=>x.ax).filter(Boolean))].map(card).join('')}</details></div>`}
+const anThumbs=el=>el&&el.querySelectorAll('svg.anim[data-k]').forEach(v=>{const X=ANX[v.dataset.k];if(X)anDraw(v,AP((X.f[1]||X.f[0])[0]),X)});
+// 播放：一個循環＝一下；停在每組結束等使用者按下一組；切換放慢時保持進度
+let ANR=null;
+function anRun(svg,X,onRep,onTick){const F=X.f.map(([p,d])=>[AP(p),d]),tot=F.reduce((a,x)=>a+x[1],0),R={svg,cyc:0,slow:false,pause:false,e:F[0][1]};
+const step=now=>{if(ANR!==R||!svg.isConnected)return;const dt=Math.min(100,now-(R.last??now));R.last=now;if(!R.pause){R.e+=dt/(R.slow?1.6:1);const c=Math.floor(R.e/tot);if(c>R.cyc){R.cyc=c;onRep?.(c)}let u=R.e-c*tot,i=0;while(i<F.length-1&&u>F[i][1]){u-=F[i][1];i++}
+onTick?.(i,F[i][1]-u);const f=Math.min(1,u/F[i][1]);anDraw(svg,anMix(F[(i+F.length-1)%F.length][0],F[i][0],.5-Math.cos(f*Math.PI)/2),X)}requestAnimationFrame(step)};ANR=R;requestAnimationFrame(step);return R}
+function openAnim(k,r,st){const X=ANX[k];if(!X)return;const goal=r||X.r,sets=st||X.sets||2,u=X.hold>=10?'次':'下',hz=(X.hold||0)*1000;let R=null,cam=null,hl='';
+openSheet(sheetHead(`🎬 ${esc(X.n)}`,`${X.hold?`每${u}停 ${X.hold} 秒・`:''}${goal} ${u} × ${sets} 組`)+`<div class="anwrap">${anSVG(X,'anim big')}<video id="an-cam" playsinline muted hidden></video></div><div id="an-hold" class="anhold" style="visibility:hidden">　</div>
+<div class="row" style="margin:10px 0 6px"><b id="an-cnt" aria-live="polite">按「開始」跟著做</b><span class="sub" id="an-set">第 1／${sets} 組</span></div>
+<div class="row2"><button class="btn" id="an-go">▶ 開始</button><button class="btn ghost" id="an-slow" aria-pressed="false">🐢 放慢</button></div>
+<button class="btn ghost" id="an-camb" style="margin-top:8px">📷 開前鏡頭對照（不錄影、不上傳）</button>
+<div class="h4">✅ 做對的重點</div>${X.cue.map(c=>`<div class="bl">${esc(c)}</div>`).join('')}${X.bad?.length?`<div class="h4">⚠️ 常見錯誤</div>${X.bad.map(c=>`<div class="bl">${esc(c)}</div>`).join('')}`:''}
+<div class="h4">做完感覺如何？</div><div class="chips" id="an-pain">${PAIN.map(([t],i)=>`<button type="button" class="chip" data-pi="${i}">${t}</button>`).join('')}</div><div id="an-pout" aria-live="polite"></div>
+<p class="note">復健動作以不痛或微痛（0–3 分）為原則，幅度做到舒服的範圍就好；急性扭傷、骨折、開刀後，先照醫師或物理治療師的指示。</p>`);
+const svg=$('#sheetBody svg.anim'),cnt=$('#an-cnt'),go=$('#an-go');anDraw(svg,AP(X.f[0][0]),X);
+const hEl=$('#an-hold'),hold=t=>{if(t!==hl){hl=t;hEl.textContent=t||'　';hEl.style.visibility=t?'visible':'hidden'}},tick=(i,rem)=>hold(hz&&X.f[i][1]>=hz?`停住 ${Math.ceil(rem/1000)} 秒`:'');
+const rep=c=>{const s=Math.ceil(c/goal),n=c-(s-1)*goal;cnt.textContent=`${n}／${goal} ${u}`;if(n<goal)return;R.pause=true;hold('');
+if(s>=sets){cnt.textContent=`🎉 ${sets} 組完成！回報一下痛感`;go.textContent='▶ 再做一次';R.done=1}else{$('#an-set').textContent=`第 ${s+1}／${sets} 組`;go.textContent='▶ 下一組（先休息 30 秒）'}};
+go.onclick=()=>{if(!R||R.done){R=anRun(svg,X,rep,tick);$('#an-set').textContent=`第 1／${sets} 組`;cnt.textContent=`0／${goal} ${u}`;go.textContent='⏸ 暫停'}else{R.pause=!R.pause;go.textContent=R.pause?'▶ 繼續':'⏸ 暫停'}};
+$('#an-slow').onclick=e=>{const on=e.currentTarget.getAttribute('aria-pressed')!=='true';e.currentTarget.setAttribute('aria-pressed',on);e.currentTarget.classList.toggle('on',on);if(R)R.slow=on};
+$('#an-camb').onclick=async()=>{const v=$('#an-cam');if(cam){cam.getTracks().forEach(t=>t.stop());cam=null;v.hidden=true;return}
+try{cam=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});v.srcObject=cam;v.hidden=false;await v.play().catch(()=>{})}catch(err){toast(err?.name==='NotAllowedError'?'沒有相機權限：到 iPhone「設定 → Safari → 相機」改成允許，或對照動畫自己檢查重點':'這台裝置開不了前鏡頭：對照下面的重點自己檢查')}};
+$('#an-pain').onclick=e=>{const b=e.target.closest('[data-pi]');if(!b)return;$$('#an-pain .chip').forEach(x=>x.classList.toggle('on',x===b));$('#an-pout').innerHTML=`<div class="hl" style="margin-top:8px">${esc(PAIN[+b.dataset.pi][1])}</div>`};
+onSheetClose=()=>{ANR=null;if(cam)cam.getTracks().forEach(t=>t.stop());cam=null}}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-anim]');if(t){e.preventDefault();openAnim(t.dataset.anim,+t.dataset.ar||0,+t.dataset.as||0)}});
+
 const fitOf=m=>{const f=obj(m.fit);return{lim:Array.isArray(f.lim)?f.lim.filter(k=>LIM.some(z=>z[0]===k)):[],lvl:['new','mid','pro'].includes(f.lvl)?f.lvl:'new',days:Math.min(6,Math.max(2,+f.days||3)),min:[20,30,45,60].includes(+f.min)?+f.min:30,like:Array.isArray(f.like)?f.like.filter(k=>EX[k]):[],time:/^\d{2}:\d{2}$/.test(f.time)?f.time:'07:00'}};
 const DOW='一二三四五六日';
 function fitPlan(m){
@@ -2621,7 +2706,7 @@ ${m.fit?'':`<div class="hl" style="margin-bottom:14px">🏋️ <b>先告訴教�
 ${P.stop?`<div class="banner">🚨 ${esc(P.W[0].t)}：${esc(P.W[0].d)}</div>`:''}
 ${dayCard(P.days[ti],'今天')}
 ${exlogCard(m,P)}
-<button class="rec" data-go="fit" data-gosub="tips"><span class="ric">🧑‍🏫</span><div class="m"><b>教練提醒 ${tips.length} 則${P.no.length?`・暫不建議 ${P.no.length} 項`:''}</b><small>${esc(tips.slice(0,2).map(x=>x.t).join('、'))}</small></div><span class="chev">›</span></button></div></div>
+${rehabMine(m).length?`<button class="rec" data-go="fit" data-gosub="move"><span class="ric">🩹</span><div class="m"><b>你的復健動作：${esc(rehabMine(m).map(r=>r[1]).join('、'))}</b><small>動畫示範、跟著做、數次數</small></div><span class="chev">›</span></button>`:''}<button class="rec" data-go="fit" data-gosub="tips"><span class="ric">🧑‍🏫</span><div class="m"><b>教練提醒 ${tips.length} 則${P.no.length?`・暫不建議 ${P.no.length} 項`:''}</b><small>${esc(tips.slice(0,2).map(x=>x.t).join('、'))}</small></div><span class="chev">›</span></button></div></div>
 <div class="subp" data-sub="week" hidden><div class="stg">
 <div class="card"><h2>本週課表・${esc(m.name)}</h2><div class="wk">${wk}</div>
 <div class="grid2" style="margin-top:12px">${stat('每週有氧',P.aer,` / ${P.aerT} 分`,tagH(aerOk?'達標':'未達標',aerOk?'#b6ff3c':'#ffb547'))}${stat('肌力訓練',P.nS,' 天／週',tagH('建議 ≥'+P.strT+' 天','#8a97b4'))}</div>
@@ -2636,13 +2721,13 @@ ${dayCard(D,sel===ti?'今天':'週'+DOW[sel])}
 <div class="row" style="margin-top:0"><span class="sub">${Math.round(P.hrMax*.5)}</span><span class="sub">你的目標區間（白框）</span><span class="sub">最大 ${P.hrMax}</span></div>
 <div style="font-size:calc(26px*var(--fz));font-weight:800;margin-top:8px">${P.zone[0]}–${P.zone[1]} <span class="u" style="font-size:calc(13px*var(--fz));color:var(--mute)">下／分鐘</span></div>
 <div class="note" style="margin-top:4px">${P.hrRest?`依你的靜止心率 ${fmt(P.hrRest)}（${P.hrSrc}，Karvonen 公式）計算。`:'用年齡估算；在「身體 → ＋ 手錶」填靜止心率會更準。'}沒有手錶就用「說話測試」：微喘、能講完整句子但唱不了歌，就是對的強度。有吃血壓藥（β 阻斷劑）的人心率會偏低，以說話測試為準。</div></div>
-<div class="card"><h2>${EX[P.str].e} 肌力動作（每次 ${P.sets} 組）</h2>${P.mv.map(x=>`<div class="do"><span class="ic">✓</span><div><b>${esc(x.n)}</b> <span class="sub">${x.r} ${x.u||'下'} × ${P.sets} 組</span><div class="s">${esc(x.d)}</div></div></div>`).join('')}
+<div class="card"><h2>${EX[P.str].e} 肌力動作（每次 ${P.sets} 組）</h2>${P.mv.map(x=>`<div class="do"><span class="ic">✓</span><div style="flex:1"><b>${esc(x.n)}</b> <span class="sub">${x.r} ${x.u||'下'} × ${P.sets} 組</span><div class="s">${esc(x.d)}</div></div>${x.ax?`<button class="btn ghost sm" data-anim="${x.ax}" data-ar="${x.u?1:x.r}" data-as="${P.sets}" style="width:auto;min-height:44px;align-self:center">▶ 動畫</button>`:''}</div>`).join('')}
 <p class="note">組間休息 60 秒。動作做對比做多重要；任何動作造成關節痛就跳過。</p></div></div></div>
 <div class="subp" data-sub="tips" hidden><div class="stg">
 <div class="card"><h2>教練提醒</h2>${tips.map(x=>row(x.ic,x.t,x.d)).join('')}</div>
 ${P.no.length?`<div class="card"><h2>暫不建議</h2>${P.no.map(x=>blk({k:x.k,note:'原因：'+x.why.join('、')},'no')).join('')}</div>`:''}
-<button class="btn ai" data-aitopic="fit" style="margin-bottom:14px">🩺 深入了解：問 AI 排 4 週運動計畫</button></div></div>`;
-applySub('fit');subBadge('fit','tips',P.no.length||'','')}
+<button class="btn ai" data-aitopic="fit" style="margin-bottom:14px">🩺 深入了解：問 AI 排 4 週運動計畫</button></div></div><div class="subp" data-sub="move" hidden><div class="stg">${moveHTML(m)}</div></div>`;
+anThumbs($('#fitBody'));applySub('fit');subBadge('fit','tips',P.no.length||'','')}
 
 /* ---- 運動紀錄：手動輸入或計時完成後一鍵記錄；中等以上強度的有氧才算進 WHO 每週 150 分鐘 ---- */
 const INT=[['easy','輕鬆',.8],['mod','中等（微喘）',1],['hard','費力（很喘）',1.25]];
@@ -5743,7 +5828,7 @@ renderAll();toast(mode==='replace'?'備份已還原':mode==='new'?'已另存成�
 
 /* ================= 導覽 / 事件 ================= */
 // 子分頁：健康（狀況／紀錄／追蹤／病史／自測）、飲食（今日菜單／營養建議／熱量計算）、運動（今天／本週課表／注意事項）、保險（保單／保障／理賠／AI 工具）；只記在這次開啟期間，重開 App 回到第一頁
-const SUBS={body:['now','rec','plan','cond','self'],menu:['menu','nutri','kcal'],fit:['today','week','tips'],ins:['pol','cov','clm','tool']},SUB={};
+const SUBS={body:['now','rec','plan','cond','self'],menu:['menu','nutri','kcal'],fit:['today','week','tips','move'],ins:['pol','cov','clm','tool']},SUB={};
 function applySub(v){const k=SUBS[v].includes(SUB[v])?SUB[v]:SUBS[v][0];$$(`#v-${v} .subp`).forEach(p=>p.hidden=p.dataset.sub!==k);$$(`#v-${v} .subnav button`).forEach(b=>{const on=b.dataset.sub===k;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)})}
 function sub(v,k){SUB[v]=k;applySub(v);const n=$(`#v-${v} .subnav`);if(n&&n.getBoundingClientRect().top<0)scrollTo({top:0})}
 // 分頁上的數字徽章（例如：需要注意 3、病史 2）

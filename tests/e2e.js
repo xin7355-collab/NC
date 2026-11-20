@@ -2316,6 +2316,49 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zzg. 動作示範動畫與復健：依病史／不適部位列出復健動作，跟著動畫數次數、每組結束暫停、放慢、回報痛感、前鏡頭對照（關掉就停） ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1970-05-05', h: 170, w: 72, act: '1.375', goal: 'keep', role: 'me',
+      fit: { lim: ['knee'], lvl: 'new', days: 3, min: 30 }, cond: { items: [{ k: 'pf', y: 2025, st: 'fu' }] } }], active: 'a' });
+    const a1 = await page.evaluate(() => {
+      const fin = q => [q.h, q.nk, q.hd, ...q.L.flat(), ...q.A.flat()].every(v => v.every(Number.isFinite));
+      const okPts = Object.values(ANX).every(X => X.f.length >= 2 && X.f.every(([p]) => fin(anPts(AP(p)))) && X.cue.length > 0);
+      const keys = REHAB.every(r => r[2].length && r[2].every(k => ANX[k])) && MOVES.filter(x => x.ax).length >= 10 && MOVES.filter(x => x.ax).every(x => ANX[x.ax]);
+      go('fit', 'today'); const today = $('#fitBody .subp[data-sub="today"]').textContent;
+      go('fit', 'move'); const pane = $('#fitBody .subp[data-sub="move"]'), txt = pane.textContent, th = [...pane.querySelectorAll('svg.anim[data-k]')];
+      const drawn = th.length >= 20 && th.every(v => [...v.querySelectorAll('.anear line')].every(l => Number.isFinite(parseFloat(l.getAttribute('x2')))));
+      return { okPts, keys, today: /你的復健動作：足底筋膜炎、膝蓋不適/.test(today), vis: !pane.hidden && $('#v-fit .subnav [data-sub="move"]').classList.contains('on'),
+        mine: /你的：足底筋膜炎/.test(txt) && /你的：膝蓋不適/.test(txt) && /坐姿毛巾拉足底/.test(txt), drawn, n: th.length, week: document.querySelectorAll('#fitBody .subp[data-sub="week"] [data-anim]').length,
+        wk: (() => { const b = document.querySelector('#fitBody .subp[data-sub="week"] [data-anim]'); if (!b) return false; b.click(); const t = $('#sheetBody').textContent, X = ANX[b.dataset.anim]; closeSheet();
+          return +b.dataset.ar > 0 && +b.dataset.as >= 2 && t.includes(`${b.dataset.ar} ${X.hold >= 10 ? '次' : '下'} × ${b.dataset.as} 組`) })() } });
+    check('動作／復健分頁：病史有足底筋膜炎、運動狀況勾膝蓋 → 列出「你的：足底筋膜炎」「你的：膝蓋不適」；縮圖都畫出小人；今天頁有捷徑；本週課表的肌力動作有 ▶ 動畫、次數組數跟課表一樣；所有動作的每個關鍵影格都算得出座標',
+      a1.okPts && a1.keys && a1.today && a1.vis && a1.mine && a1.drawn && a1.week > 0 && a1.wk, JSON.stringify(a1));
+    const a2 = await page.evaluate(async () => {
+      const raf = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))), X = ANX.towelst, tot = X.f.reduce((a, x) => a + x[1], 0), goal = X.r, sets = X.sets || 2;
+      openAnim('towelst'); const pose = () => [...$('#sheetBody svg.anim').querySelectorAll('line')].map(l => l.getAttribute('x2')).join();
+      const p0 = pose(); $('#an-go').click(); await raf(); const run = !!ANR && !ANR.pause;
+      ANR.e = X.f[0][1] + X.f[1][1]; await raf(); const moved = pose() !== p0;
+      ANR.e = X.f[0][1] + X.f[1][1] + 5000; await raf(); const hold = $('#an-hold').textContent, holdVis = $('#an-hold').style.visibility;
+      ANR.e = tot + 1; await raf(); const c1 = $('#an-cnt').textContent;
+      ANR.e = tot * goal + 1; await raf(); const c2 = $('#an-cnt').textContent, g2 = $('#an-go').textContent, s2 = $('#an-set').textContent, p2 = ANR.pause;
+      $('#an-go').click(); const p3 = ANR.pause; ANR.e = tot * goal * sets + 1; await raf(); const c4 = $('#an-cnt').textContent, g4 = $('#an-go').textContent;
+      $('#an-slow').click(); const slow = $('#an-slow').getAttribute('aria-pressed') === 'true' && ANR.slow === true;
+      $('#an-pain [data-pi="2"]').click(); const pain = $('#an-pout').textContent;
+      window.__stop = 0; Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: async () => { const st = document.createElement('canvas').captureStream();
+        st.getTracks().forEach(t => { const o = t.stop.bind(t); t.stop = () => { window.__stop++; o() } }); return st } } });
+      $('#an-camb').click(); await new Promise(r => setTimeout(r, 80)); const cam = !$('#an-cam').hidden && !!$('#an-cam').srcObject;
+      closeSheet(); const stop = window.__stop, loop = ANR;
+      Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: async () => { throw Object.assign(new Error('x'), { name: 'NotAllowedError' }) } } });
+      openAnim('heelraise'); $('#an-camb').click(); await new Promise(r => setTimeout(r, 80)); const deny = $('#toast').textContent, camHid = $('#an-cam').hidden; closeSheet();
+      return { run, moved, hold, holdVis, c1, c2, g2, s2, p2, p3, c4, g4, slow, pain, cam, stop, loop: loop === null, deny, camHid, goal, sets } });
+    check('跟著做：按開始才動、小人真的換姿勢；停留動作顯示「停住 25 秒」倒數；一個循環算一次；做滿一組自動暫停、按鈕變「下一組（先休息 30 秒）」、第 2 組；兩組做完顯示完成；放慢開關有作用；回報「很痛」建議先停',
+      a2.run && a2.moved && a2.hold === '停住 25 秒' && a2.holdVis === 'visible' && a2.c1 === `1／${a2.goal} 次` && a2.c2 === `${a2.goal}／${a2.goal} 次` && a2.p2 && /下一組（先休息 30 秒）/.test(a2.g2) && a2.s2 === `第 2／${a2.sets} 組` && a2.p3 === false
+        && /🎉 2 組完成/.test(a2.c4) && /再做一次/.test(a2.g4) && a2.slow && /先停這個動作/.test(a2.pain), JSON.stringify(a2));
+    check('前鏡頭對照：開了看得到自己（鏡像），關掉動畫就停止相機和動畫迴圈；沒權限時告訴使用者去哪裡打開，不是只丟錯誤',
+      a2.cam && a2.stop >= 1 && a2.loop && /設定 → Safari → 相機/.test(a2.deny) && a2.camHid, JSON.stringify({ cam: a2.cam, stop: a2.stop, loop: a2.loop, deny: a2.deny }));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
