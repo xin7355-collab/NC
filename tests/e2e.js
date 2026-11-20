@@ -2425,6 +2425,60 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zzj. 3D 真人示範（第二階段：男女人物模型）：按需載入、男女切換不累積記憶體、正側背視角、離開就釋放、省電模式、下載失敗與不支援 3D 的替代、素材授權紀錄 ===============
+  {
+    const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.glb': 'model/gltf-binary', '.jpg': 'image/jpeg', '.json': 'application/json' };
+    const srv3 = require('http').createServer((q, res) => { const u = decodeURIComponent(q.url.split('?')[0]), f = path.join(ROOT, u === '/' ? 'index.html' : u);
+      if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end() } res.writeHead(200, { 'content-type': MIME[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(res) });
+    await new Promise(ok => srv3.listen(0, '127.0.0.1', ok)); const base = `http://127.0.0.1:${srv3.address().port}/`;
+    const seed = { members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1980-01-01', h: 172, w: 70, act: '1.375', goal: 'keep', role: 'me' }], active: 'a' };
+    page = await newPage(seed, { url: base });
+    const at0 = await page.evaluate(() => performance.getEntriesByType('resource').map(r => r.name).filter(n => n.includes('/3d/')));
+    await page.evaluate(() => go('fit', 'move')); await page.waitForTimeout(200);
+    const c0 = await page.evaluate(() => ({ card: !!$('#h3dCard'), btn: !$('#h3d-go').hidden, img: $('#h3d .h3d-img').getAttribute('src'), ctl: $('#h3dCard .h3d-ctl').hidden }));
+    await page.click('#h3d-go'); await page.waitForFunction(() => $('#h3d')?.dataset.state === 'ready', null, { timeout: 60000 });
+    const m1 = await page.evaluate(() => { const hit = H3D.v.probe(); return { ...H3D.v.stats(), hit, btn: $('#h3d-go').hidden, ctl: !$('#h3dCard .h3d-ctl').hidden, img: $('#h3d .h3d-img').hidden, canvas: !!$('#h3d canvas') } });
+    await page.click('[data-h3dsex="female"]'); await page.waitForFunction(() => H3D.v?.sex === 'female' && !H3D.busy, null, { timeout: 60000 });
+    const f1 = await page.evaluate(() => { const hit = H3D.v.probe(); return { ...H3D.v.stats(), hit, on: $('[data-h3dsex="female"]').getAttribute('aria-pressed') } });
+    await page.click('[data-h3dsex="male"]'); await page.waitForFunction(() => H3D.v?.sex === 'male' && !H3D.busy, null, { timeout: 60000 });
+    const m2 = await page.evaluate(() => { H3D.v.probe(); return H3D.v.stats() });
+    await page.click('[data-h3dsex="female"]'); await page.waitForFunction(() => H3D.v?.sex === 'female' && !H3D.busy, null, { timeout: 60000 });
+    await page.click('[data-h3dsex="male"]'); await page.waitForFunction(() => H3D.v?.sex === 'male' && !H3D.busy, null, { timeout: 60000 });
+    const m3 = await page.evaluate(() => { H3D.v.probe(); return H3D.v.stats() });   // 再切一輪：GPU 資源數量要跟上一輪一樣（沒有越用越多）
+    const az = await page.evaluate(() => ['side', 'back', 'front'].map(v => { $(`[data-h3dview="${v}"]`).click(); return H3D.v.stats().az }));
+    const kept = await page.evaluate(() => { renderFit(); return { same: !!H3D.v && !!$('#h3d canvas'), state: $('#h3d').dataset.state } });   // 資料重畫運動頁：3D 畫面接回新的版面，不重新下載
+    const left = await page.evaluate(async () => { go('dash'); await new Promise(r => setTimeout(r, 400)); go('fit', 'move'); return { v: H3D.v, canvas: document.querySelectorAll('#h3d canvas').length, msg: $('#h3d-msg').textContent, btn: !$('#h3d-go').hidden } });
+    check('3D 真人示範：開 App 不下載任何 3d/ 檔案；按「載入 3D 人物」才載入男性（80 根骨頭、7,520 個三角形、約 1.8 m）且畫面真的畫出人；載入後才出現男女與正面／側面／背面按鈕',
+      at0.length === 0 && c0.card && c0.btn && c0.ctl && /3d\/models\/male\.jpg/.test(c0.img) && m1.sex === 'male' && m1.bones === 80 && m1.tris === 7520 && m1.height >= 1.7 && m1.hit >= 10 && m1.btn && m1.ctl && m1.img && m1.canvas,
+      JSON.stringify({ at0, c0, m1 }));
+    check('男女切換：女性 8,580 個三角形、同一副 80 根骨架；換回男性後 GPU 的幾何與貼圖數量跟第一次一樣、再切一輪也一樣（舊人物有釋放，不會越用越多）；視角按鈕轉到側面 90°、背面 180°；運動頁重畫時 3D 畫面接回去；離開運動頁就整個釋放，回來時沒有錯誤訊息、可以再按載入',
+      f1.sex === 'female' && f1.tris === 8580 && f1.bones === 80 && f1.hit >= 10 && f1.on === 'true' && m2.geometries === m1.geometries && m2.textures === m1.textures && m3.geometries === m2.geometries && m3.textures === m2.textures && Math.abs(az[0] - 90) <= 1 && Math.abs(Math.abs(az[1]) - 180) <= 1 && az[2] === 0
+        && kept.same && kept.state === 'ready' && left.v === null && left.canvas === 0 && left.msg === '' && left.btn, JSON.stringify({ f1, m1g: [m1.geometries, m1.textures], m2g: [m2.geometries, m2.textures], m3g: [m3.geometries, m3.textures], az, kept, left }));
+    await page.evaluate(() => go('fit', 'move')); await page.click('[data-h3dlow]'); await page.waitForTimeout(100);
+    const lw = await page.evaluate(() => ({ btn: $('#h3d-go').hidden, msg: $('#h3d-msg').textContent, saved: S.get('low3d', false) }));
+    await page.reload(); await page.waitForTimeout(500); await page.evaluate(() => go('fit', 'move'));
+    const lw2 = await page.evaluate(() => ({ btn: $('#h3d-go').hidden, msg: $('#h3d-msg').textContent, on: $('[data-h3dlow]').getAttribute('aria-pressed'), r: performance.getEntriesByType('resource').filter(r => /\/3d\/.+\.(js|glb)/.test(r.name)).length }));
+    await page.click('[data-h3dlow]'); const glbRe = /\/3d\/models\/[a-z]+\.glb/; await page.route(glbRe, r => r.abort()); await page.click('#h3d-go');
+    await page.waitForFunction(() => /下載失敗/.test($('#h3d-msg').textContent) && !H3D.busy, null, { timeout: 60000 });
+    await page.waitForTimeout(400);   // 釋放 3D 時的 context 遺失事件是非同步的：等它發生後訊息仍要是「下載失敗」
+    const fl = await page.evaluate(() => ({ msg: $('#h3d-msg').textContent, btn: !$('#h3d-go').hidden, img: !$('#h3d .h3d-img').hidden, v: H3D.v, canvas: document.querySelectorAll('#h3d canvas').length }));
+    await page.unroute(glbRe);
+    await page.evaluate(() => { const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (t, ...a) { return t === 'webgl2' ? null : g.call(this, t, ...a) } });
+    await page.click('#h3d-go'); await page.waitForFunction(() => /不支援 3D/.test($('#h3d-msg').textContent) && !H3D.busy, null, { timeout: 30000 });
+    const nw = await page.evaluate(() => ({ msg: $('#h3d-msg').textContent, v: H3D.v }));
+    check('省電模式：不顯示「載入 3D」、說明改用 2D，重新整理後仍記得、也不會下載 3D；下載失敗時告訴使用者確認網路再按一次、預覽圖和按鈕回來（不會被釋放時的「畫面被暫停」蓋掉）；手機不支援 WebGL 2 時說明改用 2D、iPhone 要 iOS 15 以上',
+      lw.btn && /省電模式/.test(lw.msg) && lw.saved === true && lw2.btn && lw2.on === 'true' && /省電模式/.test(lw2.msg) && lw2.r === 0
+        && /3D 人物下載失敗：請確認網路後再按一次/.test(fl.msg) && fl.btn && fl.img && fl.v === null && fl.canvas === 0 && /不支援 3D（需要 WebGL 2）/.test(nw.msg) && /iOS 15/.test(nw.msg) && nw.v === null, JSON.stringify({ lw, lw2, fl, nw }));
+    await page.close(); srv3.close();
+    const glbInfo = f => { const b = fs.readFileSync(path.join(ROOT, '3d/models', f)), ln = b.readUInt32LE(12), j = JSON.parse(b.slice(20, 20 + ln).toString('utf8')); return { kb: Math.round(b.length / 1024), joints: j.skins[0].joints.length, img: j.images.map(i => i.mimeType).join(), cr: j.asset.copyright || '' } };
+    const gm = glbInfo('male.glb'), gf = glbInfo('female.glb'), notice = fs.readFileSync(path.join(ROOT, '3d/licenses/THIRD_PARTY_NOTICES.md'), 'utf8'), A = JSON.parse(fs.readFileSync(path.join(ROOT, '3d/licenses/assets.json'), 'utf8'));
+    const fields = ['source', 'url', 'author', 'license', 'commercial', 'modify', 'redistribute', 'conditions', 'changes', 'format', 'rig', 'preview'];
+    check('素材檔與授權紀錄：男女 GLB 都 ≤ 5 MB、80 個骨架關節、貼圖是 JPEG（頭髮透明用 PNG）、檔案裡寫著 Rocketbox MIT 著作權；THIRD_PARTY_NOTICES 附 MIT 全文；assets.json 每個模型都有來源、作者、授權、可否商用／修改／散布、修改內容、格式、骨架、預覽圖',
+      gm.kb <= 5120 && gf.kb <= 5120 && gm.joints === 80 && gf.joints === 80 && /^image\/jpeg(,image\/jpeg)*$/.test(gm.img) && /image\/png/.test(gf.img) && /Microsoft Rocketbox.*MIT/.test(gm.cr) && /Microsoft Rocketbox.*MIT/.test(gf.cr)
+        && /Copyright \(c\) 2020 Microsoft/.test(notice) && /Permission is hereby granted, free of charge/.test(notice) && /three\.js/.test(notice) && A.models.length === 2 && A.models.every(m => fields.every(k => m[k] !== undefined && m[k] !== '') && m.commercial && m.redistribute && fs.existsSync(path.join(ROOT, m.file)) && fs.existsSync(path.join(ROOT, m.preview))),
+      JSON.stringify({ gm, gf, n: A.models.length }));
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);

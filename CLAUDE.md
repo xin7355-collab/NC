@@ -4,7 +4,8 @@
 - `index.html` 的 `const APP_VER='dev'` 不要手改：部署時 workflow 會換成 commit 編號，App 回到前景時用它自動更新。
 - **改完、測試通過就直接 commit 並 push 到 `main`**：不開分支、不開 PR、不用再問。推上 `main` 後，GitHub Actions（`.github/workflows/pages-sync.yml`）會同步到 `gh-pages` 並自動發布到 https://xin7355-collab.github.io/NC/ ；不要手動改 `gh-pages`。
 - 推之前必跑 `node tests/e2e.js`（全部 PASS 才推；最後會自動跑 `tests/floor-guard.mjs`，擋下刪測試、跳過測試、放寬 `CONSTRAINTS.md` 門檻、新增 eval／document.write）。品質門檻寫在 `CONSTRAINTS.md`，只能收緊，要放寬先問使用者。改到 App 內 AI 提示詞時，跑 `node tests/e2e.js --update-prompts` 同步 `PROMPTS.md`。
-- 架構：單檔 `index.html`，沒有建置步驟。健康資料只存在使用者手機（localStorage，圖片在 IndexedDB），不得上傳；任何 API Key 不得進前端或 repo，一律經 `gas/Code.gs` 代理。
+- 架構：主程式是單檔 `index.html`，沒有建置步驟。3D 真人示範放在 `3d/`（three.js、GLB 人物模型，使用者按「載入 3D」才下載，開 App 不載入；2026-11 使用者同意）；轉檔工具在 `tools/`。健康資料只存在使用者手機（localStorage，圖片在 IndexedDB），不得上傳；任何 API Key 不得進前端或 repo，一律經 `gas/Code.gs` 代理。
+- 3D 素材：只用允許公開散布的授權（MIT、CC0、CC BY）；網站是公開的，付費素材多半禁止使用者下載原始檔，不能放。每個素材的來源、作者、授權、可否商用／修改／散布寫在 `3d/licenses/assets.json` 與 `THIRD_PARTY_NOTICES.md`。動作沒有專業審核紀錄時，不得顯示「已審核」。
 - 判讀規則、資料結構、公費篩檢資格見 `PLAN.md`；規則改了要同步更新 `PLAN.md`。
 - 外部 API：單一佇列、指數退避、失敗可略過，不可瞬間併發；GAS 寫入用 LockService。
 - 回報要誠實：哪些驗過、哪些沒驗到分開講；範圍外的問題簡短提出，不擅自擴大範圍。

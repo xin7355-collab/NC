@@ -14,6 +14,7 @@
 | 註解不能吃掉程式碼 | index.html 整個檔案（不只新增的行）：行尾 `//` 註解後面還接著程式 ≤ 0 處（曾經發生三次：註解插在一行中間，後面的判斷或宣告整個失效；第三次是舊程式，理賠比對因此當掉） | floor-guard 每次掃整個檔案（`--scan index.html` 可以單獨跑；`--selftest` 有這三個實例） |
 | 個資 | 健康與保險資料只存在手機；金鑰不進前端或 repo；使用者給的真實資料不進 repo、不進測試 | guardrails audit 必修 ≤ 0、人工 |
 | 防禦準則 | app-guardrails-audit 必修 ≤ 0 | `python3 .claude/skills/app-guardrails-audit/scripts/guardrails_audit.py audit .` |
+| 3D 素材與記憶體 | 每個人物 GLB ≤ 5 MB；開 App 時下載的 3d/ 檔案 ≤ 0 個（按「載入 3D」才下載）；男女切換兩輪後 GPU 貼圖、幾何數量增加 ≤ 0；每個素材都有授權紀錄（來源、作者、授權、可否商用／修改／散布） | e2e 6zzj |
 
 ## 例外
 

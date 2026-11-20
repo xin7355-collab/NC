@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow"><title>3D 人體素材轉檔（開發工具，不是 App 的一部分）</title>
+<script type="importmap">{"imports":{"three":"/three/build/three.module.js","three/addons/":"/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+// Microsoft Rocketbox（MIT）FBX＋TGA → GLB：材質改成白底 PBR（3ds Max 材質的底色是黑的）、公分→公尺、腳底貼地；另外輸出站姿預覽圖（3D 載入失敗時顯示）
+import * as THREE from 'three';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { TGALoader } from 'three/addons/loaders/TGALoader.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+const b64 = buf => { let s = ''; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s) };
+// 自然站姿：上臂、前臂往下（只用在預覽圖；匯出的 GLB 保留原本的綁定姿勢）
+function stand(obj) {
+  const B = {}; obj.traverse(o => { if (o.isBone) B[o.name] = o }); obj.updateMatrixWorld(true);
+  const v = n => B[n].getWorldPosition(new THREE.Vector3()), up = new THREE.Vector3(0, 1, 0), lat = v('Bip01_L_Thigh').sub(v('Bip01_R_Thigh')).normalize(), fwd = new THREE.Vector3().crossVectors(lat, up).normalize();
+  const aim = (n, c, dir) => { obj.updateMatrixWorld(true); const b = B[n], cur = v(c).sub(v(n)).normalize(), dq = new THREE.Quaternion().setFromUnitVectors(cur, dir.normalize());
+    const wq = b.getWorldQuaternion(new THREE.Quaternion()), pq = b.parent.getWorldQuaternion(new THREE.Quaternion()); b.quaternion.copy(pq.invert().multiply(dq.multiply(wq))); obj.updateMatrixWorld(true) };
+  for (const [s, k] of [['L', 1], ['R', -1]]) {
+    aim(`Bip01_${s}_UpperArm`, `Bip01_${s}_Forearm`, up.clone().negate().add(lat.clone().multiplyScalar(0.2 * k)).add(fwd.clone().multiplyScalar(0.04)));
+    aim(`Bip01_${s}_Forearm`, `Bip01_${s}_Hand`, up.clone().negate().add(lat.clone().multiplyScalar(0.06 * k)).add(fwd.clone().multiplyScalar(0.16)))
+  }
+}
+window.convert = async name => {
+  const dir = `/src/${name}/`, mgr = new THREE.LoadingManager(); let missing = [];
+  mgr.setURLModifier(u => /\.tga$/i.test(u) ? dir + 'Textures/' + u.split(/[\\/]/).pop() : u); mgr.addHandler(/\.tga$/i, new TGALoader(mgr)); mgr.onError = u => missing.push(u);
+  const obj = await new FBXLoader(mgr).loadAsync(dir + `Export/${name}.fbx`);
+  await new Promise(r => { if (mgr.itemsLoaded >= mgr.itemsTotal) r(); else { mgr.onLoad = r; setTimeout(r, 30000) } });
+  let tris = 0, bones = 0; const mats = [];
+  // TGA 解出來是原始像素（DataTexture），GLTFExporter 要能畫在 canvas 上的圖：先轉成 CanvasTexture（方向、色彩空間照舊）
+  const cv = t => { if (!t || !t.isDataTexture) return t; const { data, width, height } = t.image, c = document.createElement('canvas'); c.width = width; c.height = height;
+    const g = c.getContext('2d'), id = g.createImageData(width, height); id.data.set(data.length === width * height * 4 ? data : new Uint8ClampedArray(width * height * 4).map((_, i) => i % 4 === 3 ? 255 : data[(i >> 2) * 3 + i % 4]));
+    g.putImageData(id, 0, 0); const n = new THREE.CanvasTexture(c); Object.assign(n, { flipY: t.flipY, wrapS: t.wrapS, wrapT: t.wrapT }); return n };
+  const conv = m => { const op = /opacity/i.test(m.name); m.map = cv(m.map); m.normalMap = cv(m.normalMap); if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
+    const n = new THREE.MeshStandardMaterial({ name: m.name, map: m.map || null, normalMap: m.normalMap || null, roughness: op ? 0.75 : 0.62, metalness: 0, alphaTest: op ? 0.35 : 0, side: op ? THREE.DoubleSide : THREE.FrontSide });
+    mats.push(n.name + (n.map ? ':map' : '') + (n.normalMap ? '+normal' : '') + (op ? '+alpha' : '')); return n };
+  let vin = 0, vout = 0;
+  obj.traverse(o => { if (o.isBone) bones++; if (o.isMesh) { o.material = Array.isArray(o.material) ? o.material.map(conv) : conv(o.material);
+    // FBX 載入後每個三角形各自有頂點：合併相同頂點（位置、法線、UV、骨架權重都一樣才合併），檔案小很多
+    vin += o.geometry.attributes.position.count; for (const k of Object.keys(o.geometry.attributes)) if (!['position', 'normal', 'uv', 'skinIndex', 'skinWeight'].includes(k)) o.geometry.deleteAttribute(k);
+    o.geometry = mergeVertices(o.geometry, 1e-5); vout += o.geometry.attributes.position.count; const g = o.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3 } });
+  obj.scale.setScalar(0.01); obj.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(obj); obj.position.y = -box.min.y; obj.updateMatrixWorld(true);
+  const height = +(box.max.y - box.min.y).toFixed(3);
+  const glb = await new GLTFExporter().parseAsync(obj, { binary: true, maxTextureSize: 2048, onlyVisible: true });
+  // 預覽圖：站姿、正面偏右 20 度
+  const W = 480, H = 720, R = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); R.setSize(W, H); R.toneMapping = THREE.ACESFilmicToneMapping; R.outputColorSpace = THREE.SRGBColorSpace;
+  const sc = new THREE.Scene(); sc.background = new THREE.Color('#0b1220'); const pm = new THREE.PMREMGenerator(R); sc.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; sc.environmentIntensity = 0.5;
+  const key = new THREE.DirectionalLight('#fff4ea', 2.0); key.position.set(1.6, 3.2, 2.6); sc.add(key); const rim = new THREE.DirectionalLight('#9ec8ff', 1.2); rim.position.set(-2, 2.2, -2.5); sc.add(rim); sc.add(new THREE.HemisphereLight('#dfe9ff', '#2a2420', 0.5));
+  stand(obj); sc.add(obj); const cam = new THREE.PerspectiveCamera(26, W / H, 0.05, 50), a = 20 * Math.PI / 180; cam.position.set(Math.sin(a) * 4.4, 1.0, Math.cos(a) * 4.4); cam.lookAt(0, height / 2, 0); R.render(sc, cam);
+  const preview = R.domElement.toDataURL('image/jpeg', 0.82).split(',')[1]; R.dispose();
+  return { glb: b64(glb), preview, info: { name, tris: Math.round(tris), bones, height, mats, missing, vin, vout } }
+};
+window.ready = true;
+</script></body></html>

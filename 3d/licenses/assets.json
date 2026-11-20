@@ -1,0 +1,62 @@
+{
+ "version": 1,
+ "models": [
+  {
+   "source": "Microsoft Rocketbox Avatar Library",
+   "url": "https://github.com/microsoft/Microsoft-Rocketbox",
+   "commit": "0943055db6ec570bcef9f2c8b41c9e5467c808f9",
+   "author": "Microsoft（授權聲明：Copyright (c) 2020 Microsoft）",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/microsoft/Microsoft-Rocketbox/blob/master/LICENSE.md",
+   "commercial": true,
+   "modify": true,
+   "redistribute": true,
+   "conditions": "散布時附上 MIT 授權與著作權聲明（THIRD_PARTY_NOTICES.md）",
+   "changes": "FBX 轉 GLB；材質改白底 PBR；貼圖縮小改 JPEG（頭髮 256 色 PNG）；合併重複頂點；公分換算公尺；腳底貼地",
+   "format": "GLB 2.0（JPEG／PNG 貼圖）",
+   "rig": "3ds Max Biped（Bip01），80 根骨頭（含手指、臉部），男女相同",
+   "id": "male",
+   "file": "3d/models/male.glb",
+   "preview": "3d/models/male.jpg",
+   "original": "Assets/Avatars/Professions/Sports_Male_04",
+   "name": "Sports_Male_04（背心、運動短褲、慢跑鞋）",
+   "tris": 7520,
+   "heightM": 1.8
+  },
+  {
+   "source": "Microsoft Rocketbox Avatar Library",
+   "url": "https://github.com/microsoft/Microsoft-Rocketbox",
+   "commit": "0943055db6ec570bcef9f2c8b41c9e5467c808f9",
+   "author": "Microsoft（授權聲明：Copyright (c) 2020 Microsoft）",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/microsoft/Microsoft-Rocketbox/blob/master/LICENSE.md",
+   "commercial": true,
+   "modify": true,
+   "redistribute": true,
+   "conditions": "散布時附上 MIT 授權與著作權聲明（THIRD_PARTY_NOTICES.md）",
+   "changes": "FBX 轉 GLB；材質改白底 PBR；貼圖縮小改 JPEG（頭髮 256 色 PNG）；合併重複頂點；公分換算公尺；腳底貼地",
+   "format": "GLB 2.0（JPEG／PNG 貼圖）",
+   "rig": "3ds Max Biped（Bip01），80 根骨頭（含手指、臉部），男女相同",
+   "id": "female",
+   "file": "3d/models/female.glb",
+   "preview": "3d/models/female.jpg",
+   "original": "Assets/Avatars/Professions/Sports_Female_02",
+   "name": "Sports_Female_02（背心、長褲、運動鞋）",
+   "tris": 8580,
+   "heightM": 1.74
+  }
+ ],
+ "code": [
+  {
+   "id": "three",
+   "path": "3d/vendor/three",
+   "source": "three.js",
+   "url": "https://github.com/mrdoob/three.js",
+   "license": "MIT",
+   "commercial": true,
+   "modify": true,
+   "redistribute": true
+  }
+ ],
+ "animations": []
+}
