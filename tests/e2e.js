@@ -2287,6 +2287,35 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zzf. 保障缺口結合公家保障（軍保、國軍團保…）與每月給付換算：夠不夠講清楚；條款一鍵搜尋 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1984-05-05', h: 172, w: 75, act: '1.375', goal: 'keep', role: 'me', inc: 80, earner: true, job: 'mil', sip: 50000 }], active: 'a' });
+    const s1 = await page.evaluate(() => { const m = me(), L = INS[m.id] || (INS[m.id] = []);
+      const { p } = polCheck({ insurer: '甲人壽', product: '甲人壽終身壽險', start: '2015-01-01', status: '有效', payFreq: '年', premium: 30000, coverages: [
+        { name: '身故保險金', kind: 'main', cat: 'life', amount: 500, unit: '萬元', quote: '500 萬' },
+        { name: '傷害附約：意外身故', kind: 'rider', cat: 'accident', amount: 100, unit: '萬元', quote: '100 萬' },
+        { name: '傷害附約：失能補償保險金', kind: 'rider', cat: 'accident', amount: 15000, unit: '元/月', quote: '15,000 元' },
+        { name: '失能一次給付', kind: 'rider', cat: 'disability', amount: 50, unit: '萬元', quote: '50 萬', lump: true }] }, m); p.id = 'p1'; p.chk = true; L.push(p); S.set('ins', INS);
+      const G = covGap(m), g = k => G.find(x => x.k === k), li = g('life'), ac = g('accident'), di = g('disability');
+      go('ins', 'cov'); renderCov(); const txt = k => document.querySelector(`#covBody .gap[data-gapk="${k}"]`)?.textContent || '';
+      const T0 = { l: txt('life'), a: txt('accident'), d: txt('disability') };
+      openGapDetail('life'); const det = $('#sheetBody').textContent; closeSheet();
+      openGapEdit(); const sip = !!$('#gp-sip'); $('#gp-sip').value = '60000'; $('#gp-save').click(); const sip2 = me().sip, life2 = covGap(me()).find(x => x.k === 'life').have;
+      m.job = 'vet'; const vet = covGap(m), vl = vet.find(x => x.k === 'life'), va = vet.find(x => x.k === 'accident'); m.job = 'mil';
+      openPol('p1'); const tl = /google\.com\/search\?q=%22%E7%94%B2%E4%BA%BA%E5%A3%BD%E7%B5%82%E8%BA%AB%E5%A3%BD%E9%9A%AA%22%20%E6%A2%9D%E6%AC%BE/.test($('#sheetBody').innerHTML); closeSheet();
+      return { life: li.have, inv: Math.abs(li.inL.reduce((a, x) => a + x.v, 0) / 1e4 - li.have) < 1e-6, acc: ac.have, accMon: ac.accMon, dis: { have: di.have, tg: di.tg, lump: di.lumpV },
+        tl1: T0.l, ta: T0.a, td: T0.d, det: /軍保死亡給付（因病或意外）/.test(det) && /月支本俸 5 萬 × 36 個基數/.test(det),
+        sip, sip2, life2, vet: { life: vl.have, acc: va.have, note: (vet.socNote || []).join() }, tl } });
+    check('軍職：軍保死亡給付（本俸 5 萬 × 36＝180 萬）算進壽險 → 680 萬；國軍團保非因公意外死亡 200 萬算進意外 → 300 萬；明細列出公家保障、加總對得起來',
+      s1.life === 680 && s1.inv && s1.acc === 300 && /含公家保障 180 萬（軍保死亡給付/.test(s1.tl1) && s1.det, JSON.stringify({ life: s1.life, inv: s1.inv, acc: s1.acc, tl1: s1.tl1.slice(0, 160) }));
+    check('每月給付講清楚夠不夠：失能扶助每月差 6.3 萬、一次給付 50 萬可以補約 7 個月（不再寫金額不明）；意外失能每月 1.5 萬（不再寫算不出來）在意外列換算 10 年約 180 萬、在失能列標「只限意外」',
+      s1.accMon === 15000 && s1.dis.have === 0 && s1.dis.tg === 63000 && s1.dis.lump === 500000 && /失能扶助（每月）不足/.test(s1.td) && /每月差 6.3 萬（一年約 75.6 萬）/.test(s1.td) && /可以補每月不足約 7 個月/.test(s1.td)
+        && /意外失能時另有每月 1.5 萬（以 10 年算約 180 萬/.test(s1.ta) && !/算不出來/.test(s1.ta) && /只限意外：意外造成失能時每月另有 1.5 萬/.test(s1.td), JSON.stringify({ ta: s1.ta.slice(0, 200), td: s1.td.slice(0, 260) }));
+    check('調整目標可以填本俸，改 6 萬 → 壽險 716 萬；榮民不算軍保、國軍團保（退伍就沒有），改提醒榮總、國軍醫院部分負擔補助；保單詳情有「搜尋這張保單的條款 PDF」',
+      s1.sip && s1.sip2 === 60000 && s1.life2 === 716 && s1.vet.life === 500 && s1.vet.acc === 100 && /榮總/.test(s1.vet.note) && s1.tl, JSON.stringify({ sip2: s1.sip2, life2: s1.life2, vet: s1.vet, tl: s1.tl }));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
