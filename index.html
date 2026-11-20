@@ -327,6 +327,7 @@ table.imap td.er{color:var(--red);font-weight:800}table.imap td.gp1{color:var(--
 .anim{display:block;width:100%;max-width:360px;margin:0 auto;background:rgba(255,255,255,.03);border-radius:14px}.anim.sm{width:72px;height:62px;flex:none;margin:0 10px 0 0;border-radius:10px}.anwrap{display:flex;gap:8px;align-items:center}.anwrap .anim{flex:1;min-width:0}#an-pain .chip{min-height:44px}.anhold{text-align:center;font-size:22px;font-weight:700;color:var(--amber);margin-top:6px;font-variant-numeric:tabular-nums}.anwrap video{width:45%;max-width:240px;border-radius:12px;transform:scaleX(-1);background:#000}
 .ag{stroke:var(--line);stroke-width:1}.ap{fill:none;stroke:var(--mute);stroke-width:1.5}.afar line{stroke:var(--cyan);stroke-opacity:.38;stroke-width:4;stroke-linecap:round}.anear line,.ab{stroke:var(--cyan);stroke-width:4.5;stroke-linecap:round;fill:none}.ah{fill:var(--cyan)}.atw{stroke:var(--amber);stroke-width:1.5}
 .symA .chip,#sym-out .chip{min-height:44px}.symbar .btn.urg{background:var(--red);color:#fff}.symbar{position:sticky;bottom:0;margin:0 -4px;padding:10px 4px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(rgba(6,9,18,0),var(--bg) 35%)}#sym-q{margin:4px 0 6px}
+#habCard .chip{min-height:44px}.hab{padding:10px 0;border-top:1px solid var(--line)}.hab .step{display:inline-flex;align-items:center;gap:10px}.hab .step .btn{width:44px;min-height:44px;padding:0;font-size:20px}
 </style>
 </head>
 <body>
@@ -400,7 +401,7 @@ table.imap td.er{color:var(--red);font-weight:800}table.imap td.gp1{color:var(--
 <button class="btn ghost" data-shop style="margin:0 0 10px">🛒 一週採買清單（依菜單自動算份量）</button>
 <button class="btn ghost" data-golab style="margin:0 0 14px">🖼 菜色圖片工坊（幫菜單配圖）</button>
 </div>
-<div class="subp" data-sub="nutri" hidden><div class="card" id="nutriCard"></div></div>
+<div class="subp" data-sub="nutri" hidden><div class="card" id="nutriCard"></div><div class="card" id="habCard"></div></div>
 <div class="subp" data-sub="kcal" hidden>
 <div class="card"><div class="scan"></div><h2>身體數值</h2><div id="gauge"></div><div class="grid2" id="coreStats" style="margin-top:12px"></div></div>
 <div class="card" id="energyCard"></div>
@@ -3045,7 +3046,7 @@ out.push('你是一位謹慎、會用白話解釋的家庭醫學科醫師。請�
 `【基本資料】${sexT(m.sex)}性、${Math.floor(c.a)} 歲、身高 ${c.h} cm、體重 ${tv(c.w)} kg（BMI ${r1(c.bmi)}）${m.waist?`、腰圍 ${m.waist} cm`:''}${l?.items?.ht||l?.items?.bmi?`；醫院量：${[l.items.ht&&`身高 ${l.items.ht.v} cm`,l.items.wt&&`體重 ${l.items.wt.v} kg`,l.items.bmi&&`BMI ${l.items.bmi.v}`].filter(Boolean).join('、')}`:''}`,
 `【目標】${GOALT[c.goal]}；活動量：${(ACTS.find(x=>x[0]===String(m.act))||ACTS[1])[1]}`);
 if(o.fh){const fx=[fh.early&&'有 50 歲前發病，或同一種癌症 2 人以上',fh.mbc&&'有男性家人得過乳癌',fh.gene&&'家人驗出致病基因（BRCA、林奇症候群等）'].filter(Boolean);if(fhText(m)||fx.length)out.push(`【${fh.rel.some(r=>FRELK[r.r][3]===2)?'家族史（一、二等親）':'一等親家族史'}】${fhText(m)||'（癌症、慢性病沒有勾選）'}${fx.length?'（'+fx.join('；')+'）':''}`);
-if(m.life)out.push(`【生活習慣】吸菸：${{never:'從不',former:'已戒',current:'目前有'}[lf.smoke]}${lf.smoke!=='never'&&packYears(lf)?`（約 ${packYears(lf)} 包年）`:''}；喝酒：${{none:'不喝',some:'偶爾',often:'每週 3 次以上'}[lf.alc]}；檳榔：${{never:'從不',former:'已戒',current:'目前有'}[lf.betel]}`);
+if(m.life)out.push(`【生活習慣】吸菸：${{never:'從不',former:'已戒',current:'目前有'}[lf.smoke]}${lf.smoke!=='never'&&packYears(lf)?`（約 ${packYears(lf)} 包年）`:''}；喝酒：${{none:'不喝',some:'偶爾',often:'每週 3 次以上'}[lf.alc]}；檳榔：${{never:'從不',former:'已戒',current:'目前有'}[lf.betel]}`);{const hl=habLine(m);if(hl)out.push(hl)}
 if(fp.lim.length)out.push(`【身體限制】${fp.lim.map(k=>(LIM.find(z=>z[0]===k)||[,k])[1]).join('、')}`);
 if(dt.no.length)out.push(`【不吃的食物】${dt.no.map(k=>(EXG.find(z=>z[0]===k)||[,k])[1]).join('、')}`)}
 if(o.cond){const ct=condText(m);if(ct.length)out.push(...ct)}
@@ -3131,9 +3132,9 @@ const iv=key=>{for(const r of labs){const v=num(r.items?.[key]?.v);if(v!=null)re
 {const ns=condNames(m,k==='chest'||k==='palp'||k==='sob'?['cac','cad','af','hf','htn']:k==='leg'?['hf','ckd','varicose']:k==='dizzy'?['af','htn','dm']:k==='joint'?['gout','ra','kneeoa']:[]);if(ns.length)o.push(`你的病史：${ns.join('、')}`)}
 if(k==='chest'||k==='palp'||k==='sob'){if(has('img_cac')||has('cac'))o.push('你的影像報告有冠狀動脈鈣化：胸悶胸痛更要當一回事，運動中出現要立刻停下並就醫');
 if(has('ldl')||has('sdldl'))o.push('你的血脂偏高，屬心血管風險因子');if(w?.afib)o.push('手錶提示過心律不整：帶手錶的心電圖紀錄去看診');if(num(w?.rhr)>100)o.push(`手錶靜止心率 ${w.rhr}，偏快`)}
-if(k==='sob'||k==='snore'){if(num(w?.spo2)<95)o.push(`手錶血氧平均 ${w.spo2}%，偏低`);if(lf.smoke!=='never')o.push('有吸菸史：喘或久咳要排除慢性阻塞性肺病')}
+if(k==='sob'||k==='snore'){if((num(w?.spo2)??100)<95)o.push(`手錶血氧平均 ${w.spo2}%，偏低`);if(lf.smoke!=='never')o.push('有吸菸史：喘或久咳要排除慢性阻塞性肺病')}
 if(k==='cough'&&lf.smoke!=='never')o.push('有吸菸史：久咳更要照胸部 X 光，符合資格可做低劑量肺部 CT');
-if(k==='tired'){if(has('hb'))o.push('你的報告血紅素異常，可能是貧血');if(has('ferritin'))o.push('鐵蛋白異常（缺鐵）');if(has('tsh'))o.push('甲狀腺 TSH 異常');if(has('glu')||has('hba1c'))o.push('血糖偏高');if(num(w?.sleep)<6)o.push(`手錶平均只睡 ${w.sleep} 小時`)}
+if(k==='tired'){if(has('hb'))o.push('你的報告血紅素異常，可能是貧血');if(has('ferritin'))o.push('鐵蛋白異常（缺鐵）');if(has('tsh'))o.push('甲狀腺 TSH 異常');if(has('glu')||has('hba1c'))o.push('血糖偏高');if((num(w?.sleep)??99)<6)o.push(`手錶平均只睡 ${w.sleep} 小時`)}
 if(k==='dizzy'||k==='head'){if(has('sbp')||has('dbp')||has('w_bp'))o.push('你的血壓偏高：先量居家血壓 722');if(has('hb'))o.push('血紅素異常（貧血也會頭暈）')}
 if(k==='thirst'&&(has('glu')||has('hba1c')))o.push('你的報告血糖已經偏高，口渴尿多更要儘快驗 HbA1c');
 if(k==='yellow'&&(has('alt')||has('ast')||has('tbil')))o.push('你的報告肝功能或膽紅素有異常');
@@ -3986,7 +3987,82 @@ $('#nutriCard').innerHTML=`<h2>營養師建議・${esc(m.name)}</h2>
 <div class="tgt">${tile(t.kcal,'熱量 kcal')}${tile(t.p+'g','蛋白質')}${tile(t.cb+'g','碳水')}${tile(t.f+'g','脂肪')}${tile(t.fib+'g','纖維 ≥')}${tile(t.na,'鈉 mg ≤')}${tile(t.sug+'g','添加糖 ≤')}${tile(t.water==null?'依醫囑':t.water.toFixed(1)+'L','喝水')}</div>
 ${n.F.map((f,i)=>`<details class="box"${i<1?' open':''}><summary><span>${f.ic} ${esc(f.t)}</span></summary>${f.why?`<div class="sub" style="color:var(--amber);margin:-4px 0 8px">📋 ${esc(f.why)}</div>`:''}<ul class="steps" style="color:var(--text)">${f.do.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><div class="chips">${f.eat.map(x=>`<span class="tg">✓ ${esc(x)}</span>`).join('')}${f.avoid.map(x=>`<span class="tg warn">✕ ${esc(x)}</span>`).join('')}</div></details>`).join('')}
 <p class="note">「今日菜單」已照這些重點自動挑菜、調整份量；數值為一般建議，有慢性病請以醫師、營養師指示為準。</p>
-<button class="btn ai" data-aitopic="diet" style="margin-top:6px">🩺 深入了解：問 AI 排一週飲食</button>`}
+<button class="btn ai" data-aitopic="diet" style="margin-top:6px">🩺 深入了解：問 AI 排一週飲食</button>`;renderHab(m)}
+/* ================= 每天固定吃喝：對照報告、病史、用藥 → 可以／減量／避免＋怎麼換 =================
+HAB：[key, 名稱, 單位, d 每天｜w 每週, 預設量, 每份含：c 咖啡因 mg、s 添加糖 g、a 酒精 g、n 鈉 mg]；m.hab＝{key: 量}。依據：衛福部咖啡因（成人 ≤300–400 mg、孕婦 ≤200–300 mg）、添加糖 <10% 熱量、飲酒標準杯 10 g、加工肉 IARC 一級致癌物 */
+const HAB=[['coffee','☕ 黑咖啡','杯','d',1,{c:100}],['latte','☕ 拿鐵（無糖）','杯','d',1,{c:100}],['mix','☕ 三合一咖啡','包','d',1,{c:50,s:10}],['tea','🍵 無糖茶','杯','d',1,{c:40}],['boba','🧋 手搖飲（含糖）','杯','d',1,{c:40,s:35}],['soda','🥤 汽水、果汁','罐','d',1,{s:35}],['energy','⚡ 提神飲料','瓶','d',1,{c:50,s:20}],
+['beer','🍺 啤酒','罐','d',1,{a:13}],['wine','🍷 紅白酒','杯','d',1,{a:14}],['liquor','🥃 烈酒、高粱','杯','d',1,{a:16}],
+['noodle','🍜 泡麵','碗','w',2,{n:1800}],['proc','🌭 香腸、火腿、培根','份','w',3,{n:600}],['fried','🍗 炸物、鹹酥雞','份','w',2,{n:500}],['red','🥩 紅肉（牛豬羊）','份','d',1],['organ','🦐 內臟、海鮮、肉湯','份','w',2],['sweet','🍰 甜點、餅乾','份','d',1,{s:20}],['late','🌙 宵夜','次','w',3],['pickle','🥢 醃漬醬菜、滷味','份','w',3,{n:800}],
+['soy','🥛 豆漿','杯','d',1],['milk','🥛 牛奶','杯','d',1],['fruit','🍎 水果','份','d',2],['veg','🥬 蔬菜','份','d',3],['nut','🥜 堅果','小把','d',1],['grape','🍊 葡萄柚','次','w',1],
+['fish','💊 魚油','顆','d',1],['ryr','💊 紅麴','顆','d',1],['ginkgo','💊 銀杏','顆','d',1],['turm','💊 薑黃','顆','d',1],['natto','💊 納豆、納豆激酶','份','d',1],['ca','💊 鈣片','顆','d',1],['fe','💊 鐵劑','顆','d',1],['vd','💊 維他命 D','顆','d',1],['water','💧 喝水','杯（250 ml）','d',6]];
+const HABG=[['飲料',0,7],['酒',7,10],['吃的',10,24],['保健食品',24,32],['水',32,33]],HABK=Object.fromEntries(HAB.map(x=>[x[0],x])),HSUM={c:'咖啡因',s:'添加糖',a:'酒精',n:'加工食品的鈉'};
+const habOf=m=>{const h=obj(m.hab),o={};for(const x of HAB){const v=+h[x[0]];if(v>0)o[x[0]]=Math.min(Math.round(v*2)/2,x[3]==='d'?20:21)}return o};
+const habLine=m=>{const h=habOf(m),L=Object.keys(h).map(k=>`${HABK[k][1].replace(/^\S+\s/,'')} ${HABK[k][3]==='d'?'每天':'每週'} ${h[k]} ${HABK[k][2]}`);return L.length?`【每天固定吃喝】${L.join('、')}`:''};
+// lv 0 可以 1 減量 2 避免；k＝項目或合計（c／s／a／n）
+function habEval(m){const h=habOf(m),I=issuesOf(m),has=k=>I.lab.some(i=>i.k===k),iv=k=>{for(const r of labsOf(m).slice(0,3)){const v=num(r.items?.[k]?.v);if(v!=null)return v}return null},C=(...k)=>condHas(m,...k),M=(...k)=>medHas(m,...k),mt=medTxt(m),
+f=m.sex==='f',preg=fitOf(m).lim.includes('preg'),bmi=calc(m).bmi,t=nutriPlan(m).tgt,q=k=>h[k]?h[k]/(HABK[k][3]==='w'?7:1):0,tot=y=>Math.round(HAB.reduce((a,x)=>a+q(x[0])*(x[5]?.[y]||0),0)),
+hp=C('htn')||has('sbp')||has('dbp'),dm=C('dm')||has('glu')||has('hba1c'),tg=has('tg'),ua=C('gout')||has('ua'),ldl=has('ldl'),liver=has('us_liver')||has('alt')||has('ast')||has('ggt')||C('hbv','hcv','nafld'),ckd=C('ckd')||has('egfr'),
+ac=M('warf','doac','aplt')||/抗凝血|抗血小板/.test(mt),thy=/levothyroxine|eltroxin|昂特欣|甲狀腺素/i.test(mt),sleepRx=/zolpidem|stilnox|史蒂諾斯|安眠|alprazolam|lorazepam|xanax/i.test(mt),fe=iv('ferritin'),
+lowFe=(has('ferritin')&&fe<30)||(has('hb')&&iv('hb')<(f?12:13)),w=I.w&&dayDiff(I.w.t,ymd(new Date()))<=60?I.w:null,out=[],R=(k,lv,why,alt='')=>out.push({k,lv,why,alt}),sum={c:tot('c'),s:tot('s'),a:tot('a'),n:tot('n')};
+const lim={c:preg?200:400,s:t.sug,a:f?10:20,n:t.na};
+if(sum.c){const c=sum.c;if(c>lim.c)R('c',preg||c>lim.c*1.5?2:1,`咖啡因每天約 ${c} mg，超過${preg?'孕婦':'成人'}上限 ${lim.c} mg`,'慢慢減到上限以內（一杯美式約 100 mg），或改低咖啡因');else R('c',0,`咖啡因每天約 ${c} mg，在安全範圍（${lim.c} mg 以內）`);
+if(hp&&c>=200)R('c',1,'血壓偏高：咖啡因會讓血壓短暫上升','每天 2 杯以內；量血壓前 30 分鐘不要喝');
+if(C('af')||num(w?.rhr)>100)R('c',c>200?1:0,'心律不整、心跳偏快：適量咖啡多半沒關係，但喝了會心悸就要減量','提神飲料避免');
+if(C('gerd'))R('c',1,'胃食道逆流：咖啡、茶會讓症狀變嚴重','飯後再喝、不要空腹，睡前 4 小時不喝');
+if(C('insomnia')||(num(w?.sleep)??99)<6)R('c',1,'睡不好：咖啡因要 5–6 小時才代謝掉一半','下午 2 點以後不要喝');
+if((C('osteo')||has('dxa'))&&c>=300)R('c',1,'骨質疏鬆：咖啡因會讓鈣多流失一點','每天 3 杯以內，改喝拿鐵順便補鈣')}
+if(sum.s){const x=sum.s,r=[dm&&'血糖偏高',tg&&'三酸甘油酯偏高',liver&&'脂肪肝或肝指數偏高',ua&&'尿酸偏高',bmi>=27&&'體重過重'].filter(Boolean);
+if(x>lim.s||(x>lim.s/2&&r.length))R('s',x>lim.s&&r.length?2:1,`添加糖每天約 ${x} g，你的上限 ${lim.s} g${r.length?'；'+r.join('、'):''}`,'手搖飲改無糖或微糖、小杯、不加料；汽水改氣泡水；甜點一週 2 次以內');else R('s',0,`添加糖每天約 ${x} g，在上限 ${lim.s} g 以內`)}
+if(sum.a){const x=sum.a,bad=[preg&&'懷孕中',liver&&'脂肪肝或肝指數偏高',M('hypo')&&'吃可能低血糖的降血糖藥（空腹喝酒容易低血糖）',sleepRx&&'吃安眠藥或鎮定劑（會抑制呼吸）'].filter(Boolean),
+r=[tg&&'三酸甘油酯偏高',ua&&'尿酸偏高',hp&&'血壓偏高',M('warf')&&'吃 Warfarin（影響凝血）',M('nsaid','aplt')&&'吃止痛藥或抗血小板藥（胃出血）',C('af')&&'心房顫動（喝酒容易誘發）'].filter(Boolean);
+if(bad.length)R('a',2,`酒精每天約 ${x} g：${bad.join('、')}`,'這段期間不要喝');else if(x>lim.a)R('a',2,`酒精每天約 ${x} g（${(x/10).toFixed(1)} 個標準杯），超過${f?'女性 1':'男性 2'} 杯上限${r.length?'；'+r.join('、'):''}`,'一週至少 2 天不喝，每次減半');
+else R('a',r.length?1:0,`酒精每天約 ${x} g，在${f?'女性 1':'男性 2'} 杯上限內${r.length?'，但'+r.join('、'):''}`,'喝酒沒有「有益健康」的量，能少就少')}
+if(sum.n){const x=sum.n;R('n',(hp||ckd)&&x>=400?2:x>=600?1:0,`泡麵、加工肉、炸物、醃漬平均每天多吃約 ${x} mg 鈉（一天上限 ${lim.n} mg）${hp||ckd?'；你有高血壓或腎臟問題':''}`,'泡麵湯不要喝完、調味包放一半；加工肉、醃漬一週 1–2 次')}
+if(h.coffee){if(ldl)R('coffee',1,'LDL 偏高：法式濾壓、土耳其咖啡的咖啡油會讓 LDL 上升','用濾紙沖的（美式、手沖、滴濾）');if(liver)R('coffee',0,'脂肪肝或肝指數偏高：無糖黑咖啡對肝臟可能有保護效果','不加糖、不加奶精')}
+for(const k of ['coffee','tea'])if(h[k]&&(lowFe||h.fe))R(k,1,`咖啡、茶會降低鐵的吸收${lowFe?'（你的鐵蛋白或血紅素偏低）':''}`,'和正餐、鐵劑隔 1–2 小時');
+if((h.coffee||h.latte||h.mix)&&thy)R(h.coffee?'coffee':h.latte?'latte':'mix',1,'咖啡會降低甲狀腺素（Levothyroxine）吸收','吃藥後隔 30–60 分鐘再喝');
+if(h.mix)R('mix',1,`三合一的奶精多半是氫化植物油，還有糖${ldl||tg?'；你的血脂偏高':''}`,'改黑咖啡加鮮奶');
+if(h.latte)R('latte',0,'鮮奶可以補鈣和蛋白質',ldl?'血脂偏高選低脂鮮奶':'');
+if(h.boba)R('boba',dm||tg||bmi>=27?2:1,'全糖一杯約 35 g 糖，珍珠一份約四分之一碗飯的熱量','改無糖或微糖、不加料、小杯');
+if(h.soda)R('soda',dm||ua||tg?2:1,`果糖會讓血糖、三酸甘油酯、尿酸上升${ua?'（你的尿酸偏高）':''}`,'改氣泡水、無糖茶；果汁改吃整顆水果');
+if(h.energy)R('energy',hp||C('af')?2:1,'提神飲料有咖啡因又有糖，常喝也可能是太累、睡不夠','先補睡眠；真的要喝改無糖茶或黑咖啡');
+if(h.beer&&ua)R('beer',2,'尿酸偏高：啤酒最容易誘發痛風','改無酒精飲料；真的要喝少量');
+if(h.noodle)R('noodle',hp||ckd?2:1,'一碗泡麵約 1,500–2,000 mg 鈉，快是一天的上限，蔬菜和蛋白質又少','湯不要喝完、調味包放一半，加青菜和蛋');
+if(h.proc){const crc=fhOf(m).ca.includes('crc');R('proc',crc||q('proc')>=3/7?(crc?2:1):0,`加工肉是一級致癌物（和大腸癌有關）${crc?'；你有大腸癌家族史':''}`,'一週 1 次以內，改新鮮雞肉、魚、豆腐')}
+if(h.fried)R('fried',ldl||tg||bmi>=27?2:1,`油炸熱量高、容易氧化${ldl?'；LDL 偏高':''}`,'改氣炸、烤、滷；鹹酥雞一週 1 次以內');
+if(h.red)R('red',q('red')>1||ua||ldl?1:0,`紅肉每週建議 350–500 g（約每天 1 份）${ua?'；尿酸偏高':''}${ldl?'；LDL 偏高選瘦肉':''}`,'換一些魚、雞、豆類');
+if(h.organ)R('organ',ua?2:ldl?1:0,ua?'尿酸偏高：內臟、海鮮、肉湯的普林很高':ldl?'內臟、蝦蟹膽固醇高，LDL 偏高要少吃':'適量沒問題',ua?'痛風發作期不要吃，平常一週 1–2 次少量':'');
+if(h.late)R('late',C('gerd')||dm||bmi>=27?1:0,`吃宵夜會影響血糖、體重${C('gerd')?'，也會讓胃酸逆流':''}`,'睡前 3 小時不吃；真的餓吃無糖豆漿、水煮蛋');
+if(h.pickle&&(has('hp')||fhOf(m).ca.includes('stomach')))R('pickle',1,'醃漬物加上幽門桿菌或胃癌家族史，胃癌風險更高','一週 1 次以內，多吃新鮮蔬果');
+if(h.soy)R('soy',ckd?1:0,ckd?'腎臟病：豆漿含鉀、磷，份量問醫師或營養師':'好的植物性蛋白質','選無糖');
+if(h.milk)R('milk',ckd?1:0,ckd?'腎臟病：牛奶含磷，份量問營養師':`補鈣和蛋白質${C('osteo')?'，對骨質疏鬆有幫助':''}`,ldl?'選低脂':'');
+if(h.fruit){const x=q('fruit');if(ckd)R('fruit',1,'腎臟病：楊桃一定不能吃；血鉀偏高少吃香蕉、奇異果','');if(x>4&&(dm||tg))R('fruit',1,'水果也有果糖：血糖、三酸甘油酯偏高時每天 2–3 份就好','一份約一個拳頭大');else if(x<2)R('fruit',1,'每天至少 2 份水果','');else R('fruit',0,'份量剛好')}
+if(h.veg)R('veg',q('veg')<3?1:0,q('veg')<3?`每天至少 3 份蔬菜（你填 ${h.veg} 份）`:'很好，繼續保持',q('veg')<3?'每餐半盤菜':ckd&&has('k')?'血鉀偏高：蔬菜燙過再吃':'');
+if(h.nut)R('nut',q('nut')>2&&bmi>=24?1:0,'一小把（約 30 g）對心血管有益；熱量高，不要一次吃一包','');
+if(h.grape)R('grape',M('grape')?2:0,M('grape')?'你吃的藥怕葡萄柚（會讓藥物濃度變高）':'沒有吃怕葡萄柚的藥就沒關係',M('grape')?'改柳丁、橘子等其他水果':'');
+if(h.fish){if(ac)R('fish',1,'正在吃抗凝血或抗血小板藥：大劑量魚油（每天 3 g 以上）可能增加出血','手術、拔牙前告訴醫師');if(C('af'))R('fish',1,'心房顫動：高劑量魚油可能讓心房顫動變多','先問醫師');if(tg)R('fish',0,'三酸甘油酯偏高：處方級高劑量魚油才有明顯效果','問醫師要不要開處方')}
+if(h.ryr){if(M('statin'))R('ryr',2,'紅麴含天然 statin，和降血脂藥一起吃等於吃兩份，傷肌肉和肝臟的風險變高','停掉紅麴，讓醫師調藥');else if(ckd||liver)R('ryr',2,`${ckd?'腎臟病（2024 年日本紅麴保健品傷腎事件）':'肝功能異常'}：不要吃紅麴保健品`,'');else R('ryr',1,'紅麴的成分等於低劑量 statin，品質差很多','選有「健康食品」認證的，定期驗肝功能並告訴醫師')}
+if(h.ginkgo)R('ginkgo',ac||M('nsaid')?2:0,ac||M('nsaid')?'銀杏會增加出血（你在吃抗凝血、抗血小板或止痛藥）':'手術、拔牙前 2 週要停',ac||M('nsaid')?'停用；一定要吃先問醫師':'');
+if(h.turm){if(ac)R('turm',1,'薑黃保健品可能增加出血','先問醫師');if(has('us_gb'))R('turm',1,'膽結石：薑黃可能誘發膽絞痛','');if(liver)R('turm',1,'肝指數偏高：高劑量薑黃保健品有傷肝的報告','先停用觀察')}
+if(h.natto)R('natto',M('warf')?2:ac?2:0,M('warf')?'納豆含大量維生素 K 會讓 Warfarin 失效，納豆激酶又會增加出血':ac?'納豆激酶會增加出血':'納豆是好的蛋白質',ac?'不要吃':'');
+if(h.ca){if(has('ca'))R('ca',2,'你的血鈣偏高，不要再補鈣','');if(C('stone'))R('ca',1,'腎結石：鈣片隨餐吃、一次 500 mg 以內，不要空腹','優先從牛奶、豆腐補鈣');if(thy||h.fe)R('ca',1,`鈣片會降低${thy?'甲狀腺素、':''}鐵劑的吸收`,'隔 2–4 小時再吃')}
+if(h.fe&&!lowFe&&fe>=100)R('fe',1,`你的鐵蛋白 ${fe}，沒有缺鐵：長期吃鐵劑可能鐵過量`,'問醫師要不要停');
+if(h.vd&&has('ca'))R('vd',1,'血鈣偏高：維他命 D 先暫停','');
+if(h.water){const x=h.water*.25;if(t.water==null)R('water',1,'你的病史需要限制水分：喝多少照醫師指示','');else if(x<t.water-.2)R('water',1,`每天喝約 ${x.toFixed(1)} L，建議 ${t.water.toFixed(1)} L${C('stone')?'（腎結石要 2.5 L 以上）':''}`,'放一個水壺在桌上，每小時喝幾口');else R('water',0,`每天約 ${x.toFixed(1)} L，夠了`)}
+return{h,out,sum,lim}}
+const HLV=[['✅ 可以','var(--lime)'],['⚠️ 減量','var(--amber)'],['⛔ 避免','var(--red)']];
+function renderHab(m){const el=$('#habCard');if(!el)return;const op=el.querySelector('details')?.open,E=habEval(m),ks=Object.keys(E.h),lvOf=k=>{const x=HABK[k][5]||{};return Math.max(0,...E.out.filter(o=>o.k===k||(o.k in x)).map(o=>o.lv))},
+li=o=>`<div class="bl" style="color:${HLV[o.lv][1]}"><span style="color:var(--text)">${['✅','⚠️','⛔'][o.lv]} ${esc(o.why)}</span>${o.alt?`<div class="sub">💡 ${esc(o.alt)}</div>`:''}</div>`,tiles=Object.keys(HSUM).filter(k=>E.sum[k]);
+el.innerHTML=`<h2>☕ 每天固定吃喝的東西</h2><p class="note" style="margin-top:0">選你每天（或每週）固定會吃喝的，App 對照你的報告、病史和用藥，告訴你可以、要減量還是避免，和怎麼換。</p>
+${tiles.length?`<div class="tgt">${tiles.map(k=>{const lv=Math.max(0,...E.out.filter(o=>o.k===k).map(o=>o.lv));return `<div><b style="color:${HLV[lv][1]}">${E.sum[k]}</b><span>${HSUM[k]} ${k==='c'||k==='n'?'mg':'g'}／天${E.lim[k]!=null?`（上限 ${E.lim[k]}）`:''}</span></div>`}).join('')}</div>${E.out.filter(o=>o.k in HSUM).sort((a,b)=>b.lv-a.lv).map(li).join('')}`:''}
+${ks.sort((a,b)=>lvOf(b)-lvOf(a)).map(k=>{const x=HABK[k],lv=lvOf(k),own=E.out.filter(o=>o.k===k);return `<div class="hab" data-hk="${k}"><div class="row" style="margin:0"><b>${esc(x[1])}</b><span class="vd" style="color:${HLV[lv][1]};border-color:${HLV[lv][1]}">${HLV[lv][0]}</span></div>
+<div class="row" style="margin:4px 0"><span class="sub">${x[3]==='d'?'每天':'每週'}</span><span class="step"><button type="button" class="btn ghost sm" data-hq="-1" aria-label="${esc(x[1])}減少">−</button><b>${E.h[k]} ${esc(x[2])}</b><button type="button" class="btn ghost sm" data-hq="1" aria-label="${esc(x[1])}增加">＋</button></span></div>
+${own.map(li).join('')}${(()=>{const ag=Object.keys(x[5]||{}).filter(y=>E.out.some(o=>o.k===y&&o.lv>0)).map(y=>HSUM[y]);return ag.length?`<div class="bl sub">算進上面的${ag.join('、')}合計（超過或接近上限）</div>`:own.length?'':'<div class="bl sub">目前沒看到問題，保持適量</div>'})()}</div>`}).join('')}
+<details class="box"${op??!ks.length?' open':''}><summary>＋ 加入常吃喝的東西</summary>${HABG.map(([g,a,b])=>`<label>${g}</label><div class="chips">${HAB.slice(a,b).map(x=>`<button type="button" class="chip${E.h[x[0]]?' on':''}" data-hab="${x[0]}" aria-pressed="${!!E.h[x[0]]}">${esc(x[1])}</button>`).join('')}</div>`).join('')}</details>
+<p class="note">依一般飲食建議和常見交互作用整理；有慢性病、正在吃藥，調整前先問醫師或藥師。這些只存在你的手機。</p>`}
+const habSet=(k,v)=>{const m=me(),h=habOf(m);if(v>0)h[k]=v;else delete h[k];if(Object.keys(h).length)m.hab=h;else delete m.hab;S.set('members',MEM);renderHab(m)};
+document.addEventListener('click',e=>{const c=e.target.closest('#habCard [data-hab]');if(c){const k=c.dataset.hab;habSet(k,habOf(me())[k]?0:HABK[k][4]);$(`#habCard [data-hab="${k}"]`)?.focus();return}
+const b=e.target.closest('#habCard [data-hq]');if(b){const k=b.closest('[data-hk]').dataset.hk,v=(habOf(me())[k]||0)+(+b.dataset.hq);habSet(k,Math.max(0,v));$(`#habCard [data-hk="${k}"] [data-hq="${b.dataset.hq}"]`)?.focus()}});
 
 /* ================= 一週採買清單 ================= */
 const addDays=(s,n)=>{const d=new Date(s+'T00:00');d.setDate(d.getDate()+n);return ymd(d)};
@@ -5781,7 +5857,7 @@ const mem=(Array.isArray(d.members)?d.members:[]).filter(m=>m&&okId(m.id)&&typeo
 .map(m=>{const c={...m,name:m.name.trim().slice(0,20),sex:m.sex==='f'?'f':'m',birth:parseYMD(m.birth)||'1990-01-01'},ok=(a,list)=>(Array.isArray(a)?a:[]).filter(k=>list.some(z=>z[0]===k));
 if(m.fh){c.fh={ca:ok(m.fh.ca,FH_CA),chr:ok(m.fh.chr,FH_CHR),early:!!m.fh.early,mbc:!!m.fh.mbc,gene:!!m.fh.gene};const rl=cleanRel(m.fh.rel);if(rl.length)c.fh.rel=rl}else delete c.fh;
 c.job=JOBS.some(j=>j[0]===m.job)?m.job:'';c.role=ROLES.some(r=>r[0]===m.role)?m.role:'';c.earner=!!m.earner;
-{const v=(x,max)=>{x=num(x);return x!=null&&x>=0&&x<=max?x:''};c.inc=v(m.inc,1e5);c.debt=v(m.debt,1e6);c.sip=v(m.sip,5e5);c.siy=v(m.siy,60);const t={};for(const g of GAPK)if(g.pers){const x=v(obj(m.covT)[g.k],1e6);if(x!=='')t[g.k]=x}if(Object.keys(t).length)c.covT=t;else delete c.covT}
+{const v=(x,max)=>{x=num(x);return x!=null&&x>=0&&x<=max?x:''};c.inc=v(m.inc,1e5);c.debt=v(m.debt,1e6);c.sip=v(m.sip,5e5);c.siy=v(m.siy,60);{const hb=habOf(m);if(Object.keys(hb).length)c.hab=hb}const t={};for(const g of GAPK)if(g.pers){const x=v(obj(m.covT)[g.k],1e6);if(x!=='')t[g.k]=x}if(Object.keys(t).length)c.covT=t;else delete c.covT}
 if(m.life){const l=obj(m.life),e=(v,a)=>a.includes(v)?v:a[0];c.life={smoke:e(l.smoke,['never','former','current']),betel:e(l.betel,['never','former','current']),alc:e(l.alc,['none','some','often']),
 abo:!!l.abo,ppd:Math.min(10,num(l.ppd)||0),yrs:Math.min(80,num(l.yrs)||0),quit:Math.min(80,num(l.quit)||0),...Object.fromEntries(['colono','gastro','ldct'].map(k=>[k,num(l[k])>=1950&&num(l[k])<=2100?Math.floor(num(l[k])):'']))}}else delete c.life;
 c.goal=GOALT[m.goal]?m.goal:'auto';if(m.diet){const t=dietOf(m);c.diet={no:t.no,ban:t.ban}}else delete c.diet;if(m.fit)c.fit=fitOf(m);else delete c.fit;

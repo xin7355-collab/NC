@@ -2391,6 +2391,37 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('量到的數值一起判斷：打到一半的 18 不算；只填血壓 185/125 → 1–3 天內、先休息 5 分鐘再量；再勾頭痛 → 高血壓急症要立刻就醫；血糖 60 → 先吃 15 克糖、50 → 打 119；找「拉肚子」只剩那一項、找不到時說可以問 AI',
       r.partial && /⚠️ 儘快：1–3 天內看醫生/.test(r.bpOnly) && /坐著休息 5 分鐘再量/.test(r.bpOnly) && /🚨 立即就醫：現在就去急診/.test(r.bpHead) && /可能是高血壓急症/.test(r.bpHead)
         && /⚠️/.test(r.g60) && /先吃 15 克糖/.test(r.g60) && /🚨 立即就醫：現在就去急診/.test(r.g50) && /要打 119/.test(r.g50) && r.vis === 'gi' && r.none, JSON.stringify({ partial: r.partial, bpOnly: r.bpOnly.slice(0, 90), bpHead: r.bpHead.slice(0, 90), g60: r.g60.slice(0, 80), vis: r.vis, none: r.none }));
+    const nw = await page.evaluate(() => { const o = {}; for (const k of ['sob', 'snore', 'tired']) { try { symSel.clear(); symSel.add(k); o[k] = /看哪一科/.test(symResult(me())) } catch (e) { o[k] = e.message } } symSel.clear(); return o });
+    check('沒有手錶資料時勾「喘」「打鼾」「疲倦」照樣算得出結果（以前讀不到手錶血氧、睡眠就整個出錯）', nw.sob === true && nw.snore === true && nw.tired === true, JSON.stringify(nw));
+    await page.close();
+  }
+
+  // =============== 6zzi. 每天固定吃喝分析：咖啡因、添加糖、酒精、鈉合計對照上限；交叉比對報告、病史、用藥（紅麴＋statin、納豆＋Warfarin、葡萄柚、啤酒＋尿酸、LDL＋咖啡）；選取、加減份量會存、備份清洗、AI 提示詞帶上 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1975-05-05', h: 170, w: 80, act: '1.375', goal: 'keep', role: 'me',
+      cond: { items: [{ k: 'htn', y: 2023, st: 'fu' }], meds: 'Atorvastatin 20mg、Warfarin 5mg', allergy: '', surg: '' }, hab: { coffee: 4, boba: 1, beer: 2, ryr: 1, natto: 1, grape: 1 } },
+      { id: 'b', name: '王小美', sex: 'f', birth: '1992-03-03', h: 160, w: 52, act: '1.375', goal: 'keep', role: 'family', fit: { lim: ['preg'] }, hab: { coffee: 3 } },
+      { id: 'c', name: '王小華', sex: 'm', birth: '1990-01-01', h: 175, w: 68, act: '1.375', goal: 'keep', role: 'family', hab: { veg: 2, water: 4 } }],
+      active: 'a', labs: { a: [{ id: 'l1', t: '2026-06-01', hospital: '甲醫院', items: { ldl: { v: 165 }, ua: { v: 8.2 }, tg: { v: 220 }, ggt: { v: 90 } }, extra: [] }] } });
+    const h1 = await page.evaluate(() => { const E = habEval(me()), f = (k, lv, re) => E.out.some(o => o.k === k && o.lv === lv && re.test(o.why + o.alt));
+      go('menu', 'nutri'); const card = $('#habCard').textContent, B = habEval(MEM.find(x => x.id === 'b')), Cc = habEval(MEM.find(x => x.id === 'c'));
+      return { sum: E.sum, caf: f('c', 1, /咖啡因每天約 440 mg，超過成人上限 400 mg/) && f('c', 1, /血壓偏高/), sug: f('s', 2, /添加糖每天約 35 g/), alc: f('a', 2, /脂肪肝或肝指數偏高.*這段期間不要喝/),
+        beer: f('beer', 2, /啤酒最容易誘發痛風/), ryr: f('ryr', 2, /等於吃兩份/), natto: f('natto', 2, /讓 Warfarin 失效/), grape: f('grape', 2, /怕葡萄柚/), coffee: f('coffee', 1, /濾紙/),
+        noSleep: !E.out.some(o => /睡不好/.test(o.why)), card: /☕ 每天固定吃喝的東西/.test(card) && /⛔ 避免/.test(card) && /算進上面的咖啡因合計/.test(card),
+        preg: B.out.some(o => o.k === 'c' && o.lv === 2 && /超過孕婦上限 200 mg/.test(o.why)), veg: Cc.out.some(o => o.k === 'veg' && o.lv === 1 && /每天至少 3 份蔬菜（你填 2 份）/.test(o.why)),
+        water: Cc.out.some(o => o.k === 'water' && o.lv === 1 && /每天喝約 1\.0 L/.test(o.why)), ai: aiPrompt(me(), { topic: 'diet', fh: true }) } });
+    check('合計對照上限：咖啡因 440 mg（超過 400、血壓偏高要減量）、添加糖 35 g（超過上限又有三酸甘油酯、尿酸偏高 → 避免）、酒精 26 g＋肝指數偏高 → 這段期間不要喝；沒有手錶資料不會誤判「睡不好」',
+      h1.sum.c === 440 && h1.sum.s === 35 && h1.sum.a === 26 && h1.caf && h1.sug && h1.alc && h1.noSleep, JSON.stringify({ sum: h1.sum, caf: h1.caf, sug: h1.sug, alc: h1.alc, noSleep: h1.noSleep }));
+    check('交叉比對：紅麴＋Atorvastatin、納豆＋Warfarin、葡萄柚＋怕葡萄柚的藥、啤酒＋尿酸偏高都「避免」並說原因；LDL 偏高建議咖啡用濾紙沖；孕婦每天 3 杯咖啡超過 200 mg；蔬菜不足、水喝太少會提醒；卡片寫出被哪個合計拖累',
+      h1.beer && h1.ryr && h1.natto && h1.grape && h1.coffee && h1.card && h1.preg && h1.veg && h1.water, JSON.stringify({ beer: h1.beer, ryr: h1.ryr, natto: h1.natto, grape: h1.grape, coffee: h1.coffee, card: h1.card, preg: h1.preg, veg: h1.veg, water: h1.water }));
+    await page.click('#habCard details summary'); await page.click('#habCard [data-hab="tea"]'); await page.waitForTimeout(150);
+    await page.click('#habCard [data-hk="beer"] [data-hq="-1"]'); await page.click('#habCard [data-hk="beer"] [data-hq="-1"]'); await page.click('#habCard [data-hk="coffee"] [data-hq="1"]'); await page.waitForTimeout(150);
+    await page.reload(); await page.waitForTimeout(500);
+    const h2 = await page.evaluate(() => { const cb = cleanBackup({ members: [{ id: 'e', name: 'x', sex: 'm', birth: '1984-01-01', hab: { coffee: '3', evil: 5, beer: -1, water: 99, '<b>': 1 } }] });
+      return { hab: JSON.stringify(habOf(me())), cb: JSON.stringify(cb.mem[0].hab), open: (go('menu', 'nutri'), !!$('#habCard [data-hk="tea"]')) } });
+    check('加入「無糖茶」、啤酒減到 0 就移除、咖啡加 1 杯，重新整理後還在；備份檔的飲食習慣會清洗（未知項目、負數拿掉、上限 20）；AI 提示詞附上每天固定吃喝',
+      h2.hab === '{"coffee":5,"tea":1,"boba":1,"grape":1,"ryr":1,"natto":1}' && h2.cb === '{"coffee":3,"water":20}' && h2.open && /【每天固定吃喝】黑咖啡 每天 4 杯、手搖飲（含糖） 每天 1 杯/.test(h1.ai),
+      JSON.stringify({ hab: h2.hab, cb: h2.cb, ai: (h1.ai.match(/【每天固定吃喝】[^\n]*/) || [''])[0] }));
     await page.close();
   }
 
