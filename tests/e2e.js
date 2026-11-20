@@ -2359,6 +2359,41 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close();
   }
 
+  // =============== 6zzh. 症狀自查：結論寫清楚要不要去、多快、掛哪科；量到的數值（血壓、血糖…）一起判斷；個人風險升級（抗凝血藥撞到頭、舊 CT 冠狀動脈鈣化＋胸痛）；找症狀、給醫生的摘要 ===============
+  {
+    const old = { id: 'o1', t: '2025-03-10', hospital: '甲醫院', items: { ldct: { v: 'Lung-RADS 1（陰性）', ref: '原文：No lung nodule. Coronary artery calcification.' } }, extra: [] };
+    const nx = (id, t) => ({ id, t, hospital: '甲醫院', items: { ldl: { v: 110 } }, extra: [] });
+    page = await newPage({ members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1955-05-05', h: 170, w: 70, act: '1.375', goal: 'keep', role: 'me', cond: { items: [], meds: 'Warfarin 5mg', allergy: '盤尼西林', surg: '' } }],
+      active: 'a', labs: { a: [nx('n1', '2026-06-01'), nx('n2', '2025-12-01'), nx('n3', '2025-06-01'), old] } });
+    const r = await page.evaluate(async () => {
+      const wait = ms => new Promise(f => setTimeout(f, ms)), pick = k => $(`#sheetBody [data-sk="${k}"]`).click(), verd = () => $('#sym-verd')?.textContent || '';
+      const typ = async (k, v) => { const i = $(`#sv-${k}`); i.value = v; i.dispatchEvent(new Event('input')); await wait(550) };
+      symSel.clear(); symRf.clear(); symV = {}; symDur = 'new'; openSym();
+      pick('chest'); const chest = verd(), card = $('#sym-out').textContent; pick('chest');
+      const C = me().cond; C.items.push({ k: 'cad', y: 2024, st: 'fu' }); pick('chest'); const cad = verd(), cadCard = $('#sym-out').textContent; $('#sym-dur [data-v="long"]').click(); const cadLong = verd();
+      $('#sym-dur [data-v="new"]').click(); pick('chest'); C.items.pop();
+      pick('head'); const headObs = verd(); pick('head');
+      pick('headinj'); const hi = verd(), hiCard = $('#sym-out').textContent, bar = !$('#sym-bar').hidden && /立即就醫：現在就去急診/.test($('#sym-see').textContent);
+      window.copyText = t => { window.__cp = t }; $('#sym-copy').click(); const sum = window.__cp || ''; pick('headinj');
+      const empty = /先勾選上面的症狀，或填量到的數值/.test($('#sym-out').textContent) && $('#sym-bar').hidden;
+      await typ('sbp', '18'); const partial = !$('#sym-verd');
+      await typ('sbp', '185'); await typ('dbp', '125'); const bpOnly = verd(); pick('head'); const bpHead = verd(); pick('head');
+      await typ('sbp', ''); await typ('dbp', ''); await typ('g', '60'); const g60 = verd(); await typ('g', '50'); const g50 = verd(); await typ('g', '');
+      const q = $('#sym-q'); q.value = '拉肚子'; q.dispatchEvent(new Event('input')); const vis = [...$$('#sheetBody [data-sk]')].filter(b => !b.hidden).map(b => b.dataset.sk).join();
+      q.value = '完全沒有這種症狀'; q.dispatchEvent(new Event('input')); const none = !$('#sym-none').hidden; closeSheet();
+      return { chest, card, cad, cadCard, cadLong, headObs, hi, hiCard, bar, sum, empty, partial, bpOnly, bpHead, g60, g50, vis, none } });
+    check('胸痛＋舊 CT 有冠狀動脈鈣化（之後 3 份報告都沒做 CT 也抓得到）：1–3 天內看醫生、列出「出現這些就改去急診」；確診冠心病＋剛開始的胸痛 → 立即就醫並說明原因，超過 2 週 → 1–3 天內；只有頭痛 → 先不用急',
+      /⚠️ 儘快：1–3 天內看醫生/.test(r.chest) && /出現這些就改去急診/.test(r.chest) && /你的影像報告有冠狀動脈鈣化/.test(r.card) && /🚨 立即就醫：現在就去急診或打 119/.test(r.cad) && /你有冠心病：新出現的胸悶胸痛要當天到急診/.test(r.cadCard)
+        && /⚠️ 儘快：1–3 天內看醫生/.test(r.cadLong) && /🏠 先不用急著看醫生/.test(r.headObs) && /突然爆炸般劇痛/.test(r.headObs), JSON.stringify({ chest: r.chest.slice(0, 80), cad: r.cad.slice(0, 40), cadLong: r.cadLong.slice(0, 40), headObs: r.headObs.slice(0, 120) }));
+    check('撞到頭＋有吃 Warfarin → 現在就去急診（寫原因）；下方固定列出結論可以一鍵跳回；「給醫生看的摘要」有症狀、年齡、用藥、過敏，沒有姓名；全部取消後清空',
+      /🚨 立即就醫：現在就去急診/.test(r.hi) && /你有吃抗凝血或抗血小板藥：撞到頭可能慢慢出血/.test(r.hiCard) && r.bar && /症狀：撞到頭（1–3 天）/.test(r.sum) && /\d+ 歲男性/.test(r.sum)
+        && /正在吃的藥：.*Warfarin 5mg/.test(r.sum) && /過敏：盤尼西林/.test(r.sum) && !/王小明/.test(r.sum) && r.empty, JSON.stringify({ hi: r.hi.slice(0, 60), sum: r.sum, empty: r.empty }));
+    check('量到的數值一起判斷：打到一半的 18 不算；只填血壓 185/125 → 1–3 天內、先休息 5 分鐘再量；再勾頭痛 → 高血壓急症要立刻就醫；血糖 60 → 先吃 15 克糖、50 → 打 119；找「拉肚子」只剩那一項、找不到時說可以問 AI',
+      r.partial && /⚠️ 儘快：1–3 天內看醫生/.test(r.bpOnly) && /坐著休息 5 分鐘再量/.test(r.bpOnly) && /🚨 立即就醫：現在就去急診/.test(r.bpHead) && /可能是高血壓急症/.test(r.bpHead)
+        && /⚠️/.test(r.g60) && /先吃 15 克糖/.test(r.g60) && /🚨 立即就醫：現在就去急診/.test(r.g50) && /要打 119/.test(r.g50) && r.vis === 'gi' && r.none, JSON.stringify({ partial: r.partial, bpOnly: r.bpOnly.slice(0, 90), bpHead: r.bpHead.slice(0, 90), g60: r.g60.slice(0, 80), vis: r.vis, none: r.none }));
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);

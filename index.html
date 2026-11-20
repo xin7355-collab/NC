@@ -326,6 +326,7 @@ table.imap td.er{color:var(--red);font-weight:800}table.imap td.gp1{color:var(--
 .mkthumbs img{width:88px;height:88px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
 .anim{display:block;width:100%;max-width:360px;margin:0 auto;background:rgba(255,255,255,.03);border-radius:14px}.anim.sm{width:72px;height:62px;flex:none;margin:0 10px 0 0;border-radius:10px}.anwrap{display:flex;gap:8px;align-items:center}.anwrap .anim{flex:1;min-width:0}#an-pain .chip{min-height:44px}.anhold{text-align:center;font-size:22px;font-weight:700;color:var(--amber);margin-top:6px;font-variant-numeric:tabular-nums}.anwrap video{width:45%;max-width:240px;border-radius:12px;transform:scaleX(-1);background:#000}
 .ag{stroke:var(--line);stroke-width:1}.ap{fill:none;stroke:var(--mute);stroke-width:1.5}.afar line{stroke:var(--cyan);stroke-opacity:.38;stroke-width:4;stroke-linecap:round}.anear line,.ab{stroke:var(--cyan);stroke-width:4.5;stroke-linecap:round;fill:none}.ah{fill:var(--cyan)}.atw{stroke:var(--amber);stroke-width:1.5}
+.symA .chip,#sym-out .chip{min-height:44px}.symbar .btn.urg{background:var(--red);color:#fff}.symbar{position:sticky;bottom:0;margin:0 -4px;padding:10px 4px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(rgba(6,9,18,0),var(--bg) 35%)}#sym-q{margin:4px 0 6px}
 </style>
 </head>
 <body>
@@ -3110,11 +3111,22 @@ const SYM=[
 {k:'skin',n:'皮膚癢、紅疹、蕁麻疹',a:'全身',u:'obs',rf:[['嘴唇舌頭腫、喘或頭暈','now'],['發燒合併大片紅疹、水泡或嘴巴破（嚴重藥物過敏）','now'],['紅腫範圍快速擴大、發熱疼痛','soon']],d:'皮膚科',t:['醫師看診（多數不需要抽血）','必要時過敏原檢測'],tip:'最近 2 個月內開始吃的新藥（例如痛風藥 allopurinol、抗癲癇藥、抗生素、止痛藥），出疹時一定要告訴醫師'},
 {k:'neck',n:'頸肩痛',a:'骨骼肌肉',u:'obs',rf:[['胸悶、冒冷汗合併左肩頸痛','now'],['發燒合併脖子僵硬、頭痛','now'],['手臂麻、無力，或走路不穩','soon']],d:'復健科／骨科',t:['醫師評估','依需要頸椎 X 光或 MRI'],tip:'每 30–60 分鐘起來動一動、螢幕在視線高度；熱敷、伸展'},
 {k:'heel',n:'腳底／腳跟痛',a:'骨骼肌肉',u:'obs',rf:[['突然像被踢到一樣劇痛、無法踮腳（可能跟腱斷裂）','now'],['紅、腫、發熱或發燒','soon'],['腳受過傷後痛、不能踩地','soon']],d:'復健科／骨科（足踝）',t:['醫師觸診與步態評估','有外傷，或照顧 6 週以上沒改善，才由醫師決定照 X 光或超音波'],tip:'早上下床第一步痛多半是足底筋膜炎；腳跟後方痛多是跟腱或滑囊。沒有外傷、沒有紅腫發熱時：先放鬆、伸展小腿，穿後跟有緩衝的鞋，減少跑跳與久站；醫師交代泡腳熱敷就照做（泡到小腿）'},
-{k:'bleed',n:'不正常陰道出血',a:'女性',sex:'f',u:'clinic',rf:[['大量出血、頭暈','now'],['可能懷孕，合併下腹痛、肩膀痛或頭暈（排除子宮外孕）','now'],['停經後出血','soon']],d:'婦產科',t:['抹片、HPV','陰道超音波'],tip:''}];
+{k:'bleed',n:'不正常陰道出血',a:'女性',sex:'f',u:'clinic',rf:[['大量出血、頭暈','now'],['可能懷孕，合併下腹痛、肩膀痛或頭暈（排除子宮外孕）','now'],['停經後出血','soon']],d:'婦產科',t:['抹片、HPV','陰道超音波'],tip:''},
+{k:'faint',n:'昏倒／快昏倒',a:'全身',u:'soon',rf:[['運動中或躺著時昏倒','now'],['合併胸痛、心悸或喘','now'],['昏倒時撞到頭','now'],['有心臟病史，或家人年輕時猝死','now']],d:'心臟內科／神經內科',t:['心電圖','躺站血壓','血糖、血紅素、電解質','24 小時心電圖、心臟超音波（依醫師評估）'],tip:'久站、悶熱、看到血或突然站起來時昏倒，多半是血管迷走神經或姿勢性低血壓；快昏倒時先躺下、把腳抬高',s:'暈倒 失去意識 眼前發黑'},
+{k:'headinj',n:'撞到頭',a:'頭頸',u:'obs',rf:[['昏過去，或想不起發生什麼事','now'],['一直吐、頭越來越痛、愛睏叫不醒','now'],['講話不清、手腳無力、抽搐','now'],['耳朵或鼻子流出血水','now']],d:'急診／神經外科',t:['頭部電腦斷層（依醫師評估）'],tip:'撞到頭後 24 小時內要有人陪，出現警訊立刻去急診；常跌倒要檢查視力、藥物、血壓與肌力',s:'跌倒 摔倒 頭部外傷'},
+{k:'ana',n:'過敏：吃東西、吃藥或被叮後嘴唇腫、起疹',a:'全身',u:'clinic',rf:[['喘、喉嚨緊、聲音沙啞、吞嚥困難','now'],['頭暈、快昏倒，或全身起疹','now'],['嘴唇、眼皮腫但沒有喘','soon']],d:'急診（嚴重時）／過敏免疫科',t:['過敏原檢測','醫師評估要不要隨身帶腎上腺素筆'],tip:'記下吃了什麼、哪個藥、多久後發作；同樣的東西下次可能更嚴重',s:'過敏性休克 蜂 蕁麻疹 腫'},
+{k:'gi',n:'拉肚子、嘔吐',a:'腹部',u:'obs',rf:[['喝不下水、尿很少、站起來就暈（脫水）','now'],['吐血、黑便或血便','now'],['發燒 38.5°C 以上或肚子劇痛','soon'],['超過 3 天沒改善','soon']],d:'家醫科／腸胃科',t:['血液常規、電解質、腎功能','糞便檢查（依醫師評估）'],tip:'少量多次喝口服電解質液、吃清淡的；吃降血糖藥、利尿劑、降血壓藥的人脫水時，問醫師要不要暫停',s:'腹瀉 嘔吐 腸胃炎 食物中毒'},
+{k:'constip',n:'便秘',a:'腹部',u:'obs',rf:[['肚子脹痛、吐、完全不排氣','now'],['血便、體重下降，或 50 歲後才開始','soon']],d:'腸胃科／家醫科',t:['糞便潛血','大腸鏡（有警訊或 45 歲以上新發生）','甲狀腺、血鈣'],tip:'每天蔬菜 3 份、水喝夠、固定時間上廁所、多走路；鐵劑、鈣片、某些止痛藥和降血壓藥會讓便秘變嚴重',s:'大便 排便困難'},
+{k:'lump',n:'摸到腫塊（脖子、腋下、鼠蹊或身上）',a:'全身',u:'clinic',rf:[['越來越大、硬、推不動、不會痛','soon'],['合併發燒、盜汗、體重下降','soon']],d:'家醫科（依部位轉診）',t:['超音波','血液常規','必要時切片'],tip:'感冒時脖子淋巴結腫、會痛、2–4 週內消掉，多半是發炎',s:'淋巴結 腫瘤 硬塊'},
+{k:'mole',n:'痣或斑變大、變色、出血',a:'全身',u:'clinic',rf:[['出血、潰爛不會好','soon']],d:'皮膚科',t:['皮膚鏡','必要時切片'],tip:'注意 ABCDE：不對稱、邊緣不規則、顏色不均、直徑大於 6 mm、最近有變化；台灣人腳底、指甲的黑色素瘤比較多',s:'黑痣 皮膚癌 黑色素瘤'},
+{k:'foam',n:'尿液泡泡多、尿色深',a:'泌尿',u:'clinic',rf:[['合併腳腫、眼皮腫','soon'],['尿像可樂或茶的顏色','soon']],d:'腎臟科',t:['尿液（尿蛋白、UACR）','腎功能 eGFR','血糖'],tip:'泡泡久久不散才要注意；糖尿病、高血壓的人每年要驗 UACR',s:'蛋白尿 泡泡尿 腎臟'},
+{k:'cramp',n:'小腿抽筋、走路小腿痛',a:'骨骼肌肉',u:'obs',rf:[['小腿持續腫痛、發紅發熱（不是抽一下就好）','now'],['走一段路小腿就痛、停下來休息才好','clinic']],d:'家醫科（走路就痛：心臟血管外科）',t:['電解質（鈉、鉀、鈣、鎂）','腎功能、血糖、甲狀腺','走路就痛：足踝血壓比（ABI）'],tip:'晚上抽筋：睡前伸展小腿、水喝夠；利尿劑、降血脂藥、懷孕都可能讓抽筋變多，不要自己停藥，回診問醫師',s:'抽筋 腳抽筋 跛行'},
+{k:'tremor',n:'手抖',a:'全身',u:'obs',rf:[['合併動作變慢、走路小碎步、表情變少','clinic'],['合併心悸、怕熱、體重下降','clinic']],d:'神經內科／新陳代謝科',t:['甲狀腺功能','神經學檢查'],tip:'咖啡因、焦慮、熬夜、某些藥物（例如氣喘吸入劑）都會讓手抖',s:'顫抖 巴金森'},
+{k:'memory',n:'記性變差、常忘東忘西',a:'睡眠情緒',u:'clinic',rf:[['幾天內突然變糊塗、講話顛三倒四','now']],d:'神經內科／身心科（記憶門診）',t:['AD8 量表（App 的自我檢測）','B12、甲狀腺、血糖','腦部影像（依醫師評估）'],tip:'聽力變差、憂鬱、睡不好也會讓記性變差；可以先做「自我檢測 → AD8」',s:'失智 健忘'}];
 const URGT={now:['立即就醫：打 119 或掛急診','var(--red)'],soon:['儘快：1–3 天內看門診','#ff8a5c'],clinic:['安排門診：1–2 週內','var(--amber)'],obs:['先觀察與自我照顧；超過 2 週或變嚴重再看門診','var(--lime)']};
 const URGO=['obs','clinic','soon','now'];
 // 對照自己的資料：報告、手錶、生活習慣
-function symCtx(m,k){const a=Math.floor(ageOf(m)),labs=labsOf(m).slice(0,3),iss=labs.flatMap(r=>labEval(r,m)),has=key=>iss.some(i=>i.k===key),lv=key=>iss.reduce((x,i)=>i.k===key?Math.max(x,i.lv):x,0),w=watchOf(m)[0],lf=lifeOf(m),ld=lastDone(m),o=[];
+function symCtx(m,k){const a=Math.floor(ageOf(m)),labs=labsOf(m).slice(0,3),iss=[...labs.flatMap(r=>labEval(r,m)),...(labs[0]?labCarry(m,labs[0]):[])],has=key=>iss.some(i=>i.k===key),lv=key=>iss.reduce((x,i)=>i.k===key?Math.max(x,i.lv):x,0),w=watchOf(m)[0],lf=lifeOf(m),ld=lastDone(m),o=[];
 const iv=key=>{for(const r of labs){const v=num(r.items?.[key]?.v);if(v!=null)return v}return null};
 {const ns=condNames(m,k==='chest'||k==='palp'||k==='sob'?['cac','cad','af','hf','htn']:k==='leg'?['hf','ckd','varicose']:k==='dizzy'?['af','htn','dm']:k==='joint'?['gout','ra','kneeoa']:[]);if(ns.length)o.push(`你的病史：${ns.join('、')}`)}
 if(k==='chest'||k==='palp'||k==='sob'){if(has('img_cac')||has('cac'))o.push('你的影像報告有冠狀動脈鈣化：胸悶胸痛更要當一回事，運動中出現要立刻停下並就醫');
@@ -3139,31 +3151,72 @@ if(k==='stuffy'){const ns=condNames(m,['septum','turbinate','sinusitis','rhiniti
 if(k==='eye'&&has('iop'))o.push('你的眼壓偏高：眼睛痛、視力模糊要儘快看眼科');
 if(k==='ear'&&has('hearing'))o.push('你的聽力檢查有異常紀錄');
 if(k==='wtloss'&&a>=40)o.push('40 歲以上不明原因體重下降，建議做完整檢查');
+if(k==='faint'){const ns=condNames(m,['af','cad','hf','htn','dm']);if(ns.length)o.push(`你的病史：${ns.join('、')}`);if(medHas(m,'bp','bb'))o.push('正在吃降血壓藥或乙型阻斷劑：起身太快容易暈，看診時量躺站血壓');if(medHas(m,'hypo'))o.push('吃可能造成低血糖的藥：昏倒前冒冷汗、手抖，先驗血糖')}
+if(k==='cramp'){if(medHas(m,'statin'))o.push('正在吃 Statin：肌肉痠痛無力要回診驗 CK，不要自己停藥');if(has('egfr')||has('cr'))o.push('你的腎功能有異常：抽筋可能和電解質有關')}
+if(k==='gi'&&medHas(m,'dm','bp'))o.push('正在吃降血糖或降血壓藥：上吐下瀉吃不下時，問醫師或藥師要不要先暫停（避免低血糖、低血壓、腎臟受傷）');
+if(k==='constip'&&a>=45&&!(ld.colono&&new Date().getFullYear()-ld.colono.y<10))o.push('45 歲以上、10 年內沒做過大腸鏡：排便習慣改變建議做大腸鏡');
+if(k==='foam'){if(has('upro')||has('uacr')||has('egfr'))o.push('你的報告尿蛋白或腎功能有異常');const ns=condNames(m,['dm','htn','ckd']);if(ns.length)o.push(`你的病史：${ns.join('、')}（每年驗 UACR）`)}
+if((k==='tremor'||k==='palp')&&has('tsh'))o.push('你的報告甲狀腺 TSH 異常');
+if(k==='memory'){if(has('b12'))o.push('你的維生素 B12 偏低');if(has('tsh'))o.push('甲狀腺 TSH 異常')}
+if(k==='ana'){const al=condOf(m).allergy;if(al&&al!=='無')o.push(`你登記的過敏：${al}`)}
 return o}
-let symSel=new Set(),symDur='new',symRf=new Set();
-function symResult(m){const list=SYM.filter(x=>symSel.has(x.k));if(!list.length)return '<div class="empty" style="padding:10px 0">先勾選上面的症狀</div>';
-const rows=list.map(x=>{const hit=(x.rf||[]).filter((r,i)=>symRf.has(x.k+':'+i));let u=x.u;
-for(const[,lv]of hit)if(URGO.indexOf(lv)>URGO.indexOf(u))u=lv;if(symDur==='long'&&u==='obs')u='clinic';return{x,u,hit,ctx:symCtx(m,x.k)}});
-const top=rows.reduce((a,r)=>URGO.indexOf(r.u)>URGO.indexOf(a)?r.u:a,'obs'),depts=[...new Set(rows.map(r=>r.x.d))];
-return `<div class="${top==='now'?'banner':'hl'}" style="margin:12px 0;${top==='now'?'':`border-color:${URGT[top][1]}`}"><b style="color:${top==='now'?'#fff':URGT[top][1]}">${URGT[top][0]}</b><div class="sub" style="margin-top:4px;${top==='now'?'color:#fff':''}">建議科別：${esc(depts.join('、'))}</div></div>
+// 量到的數值（不儲存）→ 急迫度；sel＝勾選的症狀
+function symVit(m,v,sel){const o=[],a=ageOf(m),S=k=>sel.includes(k),add=(t,u,d)=>o.push({t,u,d}),{t:T,hr:H,sbp:Sb,dbp:Db,o2:O,g:G}=v,ac=['chest','head','sob','stroke','eye','faint'].some(S),lowS=S('dizzy')||S('faint');
+if(T!=null){if(T>=41||T<35)add(`體溫 ${T}°C：${T<35?'體溫過低':'超高燒'}`,'now','急診');else if(T>=39.5)add(`體溫 ${T}°C：高燒`,'soon','家醫科');else if(T>=38){const r=a>=65||condHas(m,'cancer','ckd','hf');add(`體溫 ${T}°C：發燒${r?'（65 歲以上或有癌症、腎臟病、心衰竭，發燒要儘快看）':''}`,r?'soon':'obs','家醫科')}}
+if(Sb!=null||Db!=null){const bp=`血壓 ${Sb??'—'}/${Db??'—'}`;if(Sb>=180||Db>=120)add(ac?`${bp}：很高，又有胸痛、頭痛、喘或看不清楚，可能是高血壓急症`:`${bp}：很高；坐著休息 5 分鐘再量，還是 180/120 以上當天就醫`,ac?'now':'soon','心臟內科／家醫科');else if(Sb!=null&&Sb<90)add(`${bp}：偏低${lowS?'，又頭暈或昏倒':''}`,lowS?'now':'clinic','家醫科');else if(Sb>=140||Db>=90)add(`${bp}：偏高；量一週居家血壓（722）帶去看診`,'clinic','心臟內科／家醫科')}
+if(H!=null){if(H>150||H<40)add(`心跳 ${H}：太${H<40?'慢':'快'}`,'now','急診');else if(H>120)add(`心跳 ${H}：休息時超過 120`,'soon','心臟內科');else if(H<50&&lowS)add(`心跳 ${H}：偏慢又頭暈`,'soon','心臟內科')}
+if(O!=null){const cp=condHas(m,'copd');if(O<90)add(`血氧 ${O}%：太低`,'now','急診');else if(O<95)add(`血氧 ${O}%：偏低（手指溫暖、沒擦指甲油時再量一次）${cp?'；慢性阻塞性肺病的人平常就可能偏低，比平常低再處理':''}`,cp?'clinic':'soon','胸腔內科')}
+if(G!=null){if(G<70)add(`血糖 ${G}：低血糖！先吃 15 克糖（半罐果汁或 3 顆方糖），15 分鐘後再量${G<54?'；意識不清、吞不下去要打 119':''}`,G<54?'now':'soon','新陳代謝科');else if(G>=400)add(`血糖 ${G}：非常高`,'now','急診');else if(G>=250){const x=S('thirst')||S('gi');add(`血糖 ${G}：很高${x?'，又口渴、吐或拉肚子（可能酮酸中毒）':''}`,x?'now':'soon','新陳代謝科')}else if(G>=200)add(`血糖 ${G}：偏高，安排新陳代謝科`,'clinic','新陳代謝科')}
+return o}
+// 個人風險讓急迫度升級：[急迫度, 原因]
+function symBump(m,k){const a=ageOf(m);
+if(k==='headinj'){if(medHas(m,'warf','doac','aplt')||/抗凝血|抗血小板/.test(medTxt(m)))return['now','你有吃抗凝血或抗血小板藥：撞到頭可能慢慢出血，現在沒感覺也要去急診，讓醫師決定要不要照電腦斷層'];if(a>=65)return['soon','65 歲以上撞到頭，建議當天給醫師評估']}
+if(k==='chest'&&symDur==='new'&&condHas(m,'cad'))return['now','你有冠心病：新出現的胸悶胸痛要當天到急診排除心肌梗塞'];   // 只有鈣化（很常見）不自動升急診，靠危險徵兆
+if(k==='fever'&&(a>=65||condHas(m,'cancer')))return['soon','65 歲以上或正在治療癌症：發燒要儘快看'];
+if(k==='gi'&&(a>=75||medHas(m,'hypo')))return['soon','年紀大或吃可能造成低血糖的藥：上吐下瀉容易脫水、低血糖'];
+return null}
+const VERD={now:['🚨 立即就醫：現在就去急診或打 119','不要自己開車；帶著正在吃的藥或藥袋'],soon:['⚠️ 儘快：1–3 天內看醫生','等的時候出現下面的警訊，就改去急診'],clinic:['📅 要去檢查：1–2 週內安排門診','把症狀和量到的數值記下來，看診時給醫師看'],obs:['🏠 先不用急著看醫生','照下面的方法照顧自己；超過 2 週沒好、變嚴重或出現警訊就去看']};
+// 給醫生看的摘要：不含姓名
+const symSum=m=>{const L=SYM.filter(x=>symSel.has(x.k)),rf=L.flatMap(x=>(x.rf||[]).filter((r,i)=>symRf.has(x.k+':'+i)).map(r=>r[0])),v=symVit(m,symV,[...symSel]),cn=condNames(m),md=medTxt(m).trim(),al=condOf(m).allergy;
+return[`症狀：${L.map(x=>x.n).join('、')||'（沒有勾選）'}（${{new:'1–3 天',days:'4–14 天',long:'超過 2 週'}[symDur]}）`,rf.length&&`另外有：${rf.join('、')}`,v.length&&`量到的數值：${v.map(x=>x.t.split('：')[0]).join('、')}`,`${Math.floor(ageOf(m))} 歲${m.sex==='f'?'女性':'男性'}`,cn.length&&`病史：${cn.join('、')}`,md&&`正在吃的藥：${md}`,al&&`過敏：${al}`].filter(Boolean).join('\n')};
+let symSel=new Set(),symDur='new',symRf=new Set(),symV={},symTop='obs';
+function symResult(m){const list=SYM.filter(x=>symSel.has(x.k)),vit=symVit(m,symV,[...symSel]);symTop='obs';if(!list.length&&!vit.length)return '<div class="empty" style="padding:10px 0">先勾選上面的症狀，或填量到的數值</div>';
+const rows=list.map(x=>{const hit=(x.rf||[]).filter((r,i)=>symRf.has(x.k+':'+i)),b=symBump(m,x.k),ctx=symCtx(m,x.k);let u=x.u;
+for(const[,lv]of hit)if(URGO.indexOf(lv)>URGO.indexOf(u))u=lv;if(symDur==='long'&&u==='obs')u='clinic';if(b&&URGO.indexOf(b[0])>URGO.indexOf(u)){u=b[0];ctx.unshift(b[1])}return{x,u,hit,ctx}});
+const top=symTop=[...rows,...vit].reduce((a,r)=>URGO.indexOf(r.u)>URGO.indexOf(a)?r.u:a,'obs'),depts=[...new Set([...rows.map(r=>r.x.d),...vit.filter(v=>v.u!=='obs'&&!rows.some(r=>v.d.split('／').some(p=>r.x.d.includes(p)))).map(v=>v.d)])],tests=[...new Set(rows.flatMap(r=>r.x.t))].slice(0,6),
+warn=top==='now'?[]:[...new Set(rows.flatMap(r=>(r.x.rf||[]).filter((f,i)=>f[1]==='now'&&!symRf.has(r.x.k+':'+i)).map(f=>f[0])))].slice(0,5),V=VERD[top],w=top==='now'?'color:#fff':'';
+return `<div class="${top==='now'?'banner':'hl'}" id="sym-verd" style="margin:12px 0;scroll-margin-top:12px;${top==='now'?'':`border-color:${URGT[top][1]}`}"><b style="font-size:calc(17px*var(--fz));color:${top==='now'?'#fff':URGT[top][1]}">${V[0]}</b><div class="sub" style="margin-top:4px;${w}">${top!=='now'&&!warn.length?'變嚴重，或出現胸痛、很喘、單側無力、意識不清，就直接去急診':V[1]}</div>
+<div style="margin-top:8px;line-height:1.7;${w}">${depts.length?`<div><b>掛哪一科：</b>${esc(depts.join('、'))}</div>`:''}${tests.length&&top!=='obs'?`<div><b>可以請醫師安排：</b>${esc(tests.join('、'))}</div>`:''}
+${vit.length?`<div><b>你量到的數值：</b></div>${vit.map(v=>`<div class="bl">${{now:'🚨',soon:'⚠️',clinic:'📅',obs:'✓'}[v.u]} ${esc(v.t)}</div>`).join('')}`:''}
+${warn.length?`<div><b>出現這些就改去急診：</b></div>${warn.map(x=>`<div class="bl">🚨 ${esc(x)}</div>`).join('')}`:''}</div>
+<button type="button" class="btn ghost sm" id="sym-copy" style="margin-top:10px;min-height:44px">📋 複製給醫生看的摘要</button></div>
 ${rows.map(({x,u,hit,ctx})=>`<div class="card" style="margin:10px 0;padding:14px"><div class="row" style="margin:0 0 6px"><b>${esc(x.n)}</b><span class="vd" style="color:${URGT[u][1]};border-color:${URGT[u][1]}">${{now:'立即',soon:'儘快',clinic:'門診',obs:'觀察'}[u]}</span></div>
 ${(x.rf||[]).length?`<div class="sub">有下面任何一項嗎？</div><div class="chips" style="margin:6px 0">${x.rf.map((r,i)=>`<button type="button" class="chip${symRf.has(x.k+':'+i)?' on':''}" data-rf="${x.k}:${i}">${r[1]==='now'?'🚨 ':'⚠️ '}${esc(r[0])}</button>`).join('')}</div>`:''}
 <div class="s" style="font-size:calc(13px*var(--fz));line-height:1.7"><b>看哪一科：</b>${esc(x.d)}<br><b>可以和醫師討論的檢查：</b>${esc(x.t.join('、'))}${x.tip?`<br><span class="sub">💡 ${esc(x.tip)}</span>`:''}</div>
 ${ctx.length?`<div class="hl" style="margin-top:8px;font-size:calc(12px*var(--fz))">📋 對照你的資料：${esc(ctx.join('；'))}</div>`:''}</div>`).join('')}`}
 function openSym(){const m=me(),areas=[...new Set(SYM.map(x=>x.a))],own=x=>!x.sex||x.sex===m.sex;
-openSheet(sheetHead('🤒 我有症狀','勾選症狀 → 要注意什麼、掛哪一科、做哪些檢查')+`
+openSheet(sheetHead('🤒 我有症狀','勾選症狀、填量到的數值 → 要不要去看醫生、多快、掛哪一科')+`
 <div class="banner" style="margin:10px 0">胸痛冒冷汗、單側無力、嘴歪講話不清、呼吸困難、意識改變：<b>不要看 App，直接打 119</b></div>
-${areas.filter(ar=>SYM.some(x=>x.a===ar&&own(x))).map(ar=>`<label>${esc(ar)}</label><div class="chips">${SYM.filter(x=>x.a===ar&&own(x)).map(x=>`<button type="button" class="chip${symSel.has(x.k)?' on':''}" data-sk="${x.k}">${esc(x.n)}</button>`).join('')}</div>`).join('')}
+<input id="sym-q" type="search" aria-label="找症狀" placeholder="🔎 找症狀：例如 頭痛、拉肚子、腳跟" autocomplete="off">
+${areas.filter(ar=>SYM.some(x=>x.a===ar&&own(x))).map(ar=>`<div class="symA"><label>${esc(ar)}</label><div class="chips">${SYM.filter(x=>x.a===ar&&own(x)).map(x=>`<button type="button" class="chip${symSel.has(x.k)?' on':''}" data-sk="${x.k}">${esc(x.n)}</button>`).join('')}</div></div>`).join('')}<div class="sub" id="sym-none" hidden>找不到這個症狀：換個說法，或直接按下面「問 AI 醫生」描述</div>
 <label>多久了？</label><div class="seg" id="sym-dur">${[['new','1–3 天'],['days','4–14 天'],['long','超過 2 週']].map(([v,t])=>`<button type="button" data-v="${v}" class="${symDur===v?'on':''}">${t}</button>`).join('')}</div>
+<details class="box" id="sym-vd"${Object.values(symV).some(v=>v!=null)?' open':''}><summary>📏 有量到數值嗎？（選填，會一起判斷）</summary><div class="grid2">
+${[['t','體溫（°C）','decimal','例如 38.5'],['hr','心跳（次/分）','numeric','休息時'],['sbp','血壓：收縮壓','numeric','上面的數字'],['dbp','血壓：舒張壓','numeric','下面的數字'],['o2','血氧（%）','numeric','例如 97'],['g','血糖（mg/dL）','numeric','例如 110']].map(([k,l,im,ph])=>`<div><label for="sv-${k}">${l}</label><input id="sv-${k}" data-sv="${k}" inputmode="${im}" placeholder="${ph}" value="${symV[k]??''}"></div>`).join('')}</div></details>
 <div id="sym-out">${symResult(m)}</div>
 <button class="btn ai" id="sym-ai">🩺 帶著這些症狀和我的數值問 AI 醫生</button>
-<p class="note">依常見臨床建議整理的就醫指引，不是診斷；症狀和 App 的判斷不一樣時，以你的感覺和醫師為準。症狀不會儲存。</p>`);
-const paint=()=>{$('#sym-out').innerHTML=symResult(m);$$('#sym-out [data-rf]').forEach(b=>b.onclick=()=>{const k=b.dataset.rf;symRf.has(k)?symRf.delete(k):symRf.add(k);paint()})};
+<p class="note">依常見臨床建議整理的就醫指引，不是診斷；症狀和 App 的判斷不一樣時，以你的感覺和醫師為準。症狀和量到的數值都不會儲存。</p>
+<div class="symbar" id="sym-bar" hidden><button type="button" class="btn" id="sym-see"></button></div>`);
+const paint=()=>{$('#sym-out').innerHTML=symResult(m);$$('#sym-out [data-rf]').forEach(b=>b.onclick=()=>{const k=b.dataset.rf;symRf.has(k)?symRf.delete(k):symRf.add(k);paint()});
+const c=$('#sym-copy');if(c)c.onclick=()=>copyText(symSum(m),'已複製：看診時打開給醫師看，或貼給家人');const on=!!$('#sym-verd');$('#sym-bar').hidden=!on;if(on){const b=$('#sym-see');b.textContent=`${VERD[symTop][0]} → 看說明`;b.classList.toggle('urg',symTop==='now')}};
+const VR={t:[30,45],hr:[20,250],sbp:[50,300],dbp:[30,200],o2:[50,100],g:[10,1000]};let vt;   // 範圍外（打到一半）的數字先不算
+$$('[data-sv]').forEach(i=>i.oninput=()=>{clearTimeout(vt);vt=setTimeout(()=>{$$('[data-sv]').forEach(x=>{const k=x.dataset.sv,v=parseFloat(x.value.replace(/[^\d.]/g,''));symV[k]=Number.isFinite(v)&&v>=VR[k][0]&&v<=VR[k][1]?v:null});paint()},400)});
+$('#sym-see').onclick=()=>$('#sym-verd')?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+$('#sym-q').oninput=e=>{const q=e.target.value.trim();let n=0;$$('#sheetBody .symA').forEach(g=>{let any=0;g.querySelectorAll('[data-sk]').forEach(b=>{const x=SYM.find(z=>z.k===b.dataset.sk),ok=!q||(x.n+x.a+(x.s||'')+x.d).includes(q);b.hidden=!ok;if(ok)any=1});g.hidden=!any;n+=any});$('#sym-none').hidden=n>0};
 $$('[data-sk]').forEach(b=>b.onclick=()=>{const k=b.dataset.sk;symSel.has(k)?symSel.delete(k):symSel.add(k);b.classList.toggle('on',symSel.has(k));paint()});
 $$('#sym-dur button').forEach(b=>b.onclick=()=>{symDur=b.dataset.v;$$('#sym-dur button').forEach(x=>x.classList.toggle('on',x===b));paint()});
-$('#sym-ai').onclick=()=>{const L=SYM.filter(x=>symSel.has(x.k));if(!L.length)return toast('先勾選症狀');
+$('#sym-ai').onclick=()=>{const L=SYM.filter(x=>symSel.has(x.k)),V=symVit(m,symV,[...symSel]);if(!L.length&&!V.length)return toast('先勾選症狀，或填量到的數值');
 const rf=L.flatMap(x=>(x.rf||[]).filter((r,i)=>symRf.has(x.k+':'+i)).map(r=>r[0]));
-openAI(null,`我最近有這些症狀：${L.map(x=>x.n).join('、')}（${{new:'1–3 天',days:'4–14 天',long:'超過 2 週'}[symDur]}）${rf.length?`；另外有：${rf.join('、')}`:''}。請依我的數值判斷可能原因、要掛哪一科、需要哪些檢查、有沒有需要立刻就醫的警訊。`)};
+openAI(null,`我最近有這些症狀：${L.map(x=>x.n).join('、')}（${{new:'1–3 天',days:'4–14 天',long:'超過 2 週'}[symDur]}）${rf.length?`；另外有：${rf.join('、')}`:''}${V.length?`；剛剛量到：${V.map(x=>x.t.split('：')[0]).join('、')}`:''}。請依我的數值判斷可能原因、要掛哪一科、需要哪些檢查、有沒有需要立刻就醫的警訊。`)};
 paint()}
 let aiO={topic:'all',fh:true,cond:true,scale:true,watch:true,self:true,normals:false,q:'',item:null};
 function openAI(item,q){const m=me();aiO={...aiO,item:item||null,topic:item?'item':aiO.topic==='item'?'all':aiO.topic,q:String(q||'').slice(0,500)};
