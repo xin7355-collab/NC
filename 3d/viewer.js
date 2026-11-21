@@ -132,6 +132,8 @@ export function createViewer(host, opt = {}) {
     for (let i = 0; i < 48; i++) for (let j = 0; j < 48; j++) { gl.readPixels(Math.round((i + 0.5) * w / 48), Math.round((j + 0.5) * hh / 48), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const [r, g, b] = px;
       if (r > 140 && g < 90 && b < 90) o.red++; else if (r > 170 && g > 95 && g < 200 && b < 110 && r - g > 50) o.orange++; else if (r > 55 && Math.abs(r - g) < 20 && Math.abs(g - b) < 26) o.gray++ }
     return o }
+  // 工具用（審核資料包的截圖、影片）：立刻渲染並回傳畫面圖檔
+  function snapshot(type = 'image/jpeg', q = 0.85) { R.render(scene, cam); return cv.toDataURL(type, q) }
   // 測試用：人物（目前姿勢）投影到畫面上的範圍，-1～1＝畫面邊緣；用來確認整個人都在畫面裡、而且夠大
   function screenBox() { if (!model) return null; model.updateMatrixWorld(true); cam.updateMatrixWorld(); const b = new THREE.Box3().setFromObject(model, true), o = { x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9 };
     for (let i = 0; i < 8; i++) { const p = new THREE.Vector3(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z).project(cam); o.x0 = Math.min(o.x0, p.x); o.x1 = Math.max(o.x1, p.x); o.y0 = Math.min(o.y0, p.y); o.y1 = Math.max(o.y1, p.y) }
@@ -147,5 +149,5 @@ export function createViewer(host, opt = {}) {
     seek(t0); return out }
   attach(host);
   return { load, setView, reset: () => setView('front'), stats, dispose, attach, probe, credit: CREDIT, get sex() { return sex },
-    setExercise, play, pause, replay, setSpeed, setLoop, seek, step, animState, probeAnim, screenBox, setMuscles, muscleState, colorStats, onAnim: f => { listener = f } }
+    setExercise, play, pause, replay, setSpeed, setLoop, seek, step, animState, probeAnim, screenBox, setMuscles, muscleState, colorStats, snapshot, onAnim: f => { listener = f } }
 }

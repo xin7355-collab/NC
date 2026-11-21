@@ -123,8 +123,8 @@
    "modify": true,
    "redistribute": true,
    "conditions": "無",
-   "changes": "自製關鍵影格：前臂＋膝蓋跪撐 → 抬膝撐起 → 撐住（呼吸起伏）→ 放下膝蓋；前臂與腳尖全程踩地（以皮膚最低點計算身體斜度，放膝蓋時軀幹以肩膀為軸往下轉、腿用 IK 固定腳踝）",
-   "review": "draft"
+   "changes": "自製關鍵影格：趴著（前臂撐地、腳尖踩地、骨盆貼地）→ 撐起 → 撐住（呼吸起伏）→ 放下；前臂與腳尖全程踩地、不滑（身體斜度以皮膚最低點計算；放下時軀幹以兩肩中點為軸往下轉，腳以腳尖為軸微轉讓腿搆得到）",
+   "review": "pending_review"
   },
   {
    "id": "bridge",
@@ -139,7 +139,7 @@
    "redistribute": true,
    "conditions": "無",
    "changes": "自製關鍵影格：躺 0.6 秒→抬臀 1 秒→停 2 秒→放下 1.2 秒→躺 0.6 秒；腳掌、手、背都貼地",
-   "review": "draft"
+   "review": "pending_review"
   }
  ]
 }

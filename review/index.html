@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0b1220">
+<link rel="icon" href="../icon-180.png"><link rel="apple-touch-icon" href="../icon-180.png">
+<title>Kinwell 3D 動作審核資料包</title>
+<style>
+:root{--bg:#0b1220;--card:#121a2b;--card2:#18223a;--line:rgba(255,255,255,.12);--text:#e9eef7;--mute:#a3afc2;--cyan:#22e4ff;--amber:#ffb547;--red:#ff7b7b;--green:#3ddc97;--fz:1}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%;scroll-padding-top:16px;scroll-padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px 16px calc(96px + env(safe-area-inset-bottom))}
+h1{font-size:22px;line-height:1.35;margin:8px 0 6px}h2{font-size:19px;line-height:1.4;margin:0 0 6px}h3{font-size:15px;margin:16px 0 4px;color:var(--cyan)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+.note{color:var(--mute);font-size:14px;margin:6px 0}.msg{color:var(--amber);font-size:14px;margin:8px 0}.msg:empty{display:none}.msg.ok{color:var(--green)}
+ul{margin:4px 0;padding-left:1.2em}li{margin:2px 0}
+label{display:block;margin:10px 0;font-size:15px}input[type=text],textarea{display:block;width:100%;margin-top:4px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#0e1627;color:var(--text);font:inherit;font-size:16px}
+textarea{min-height:88px;resize:vertical}input:focus,textarea:focus{outline:2px solid var(--cyan);outline-offset:1px}
+.ck{display:flex;gap:10px;align-items:flex-start}.ck input{width:22px;height:22px;margin-top:3px;flex:none}
+button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border-radius:12px;border:1px solid transparent;background:linear-gradient(90deg,#22e4ff,#a3ff5c);color:#06121c;font:inherit;font-weight:700;cursor:pointer;text-decoration:none}
+button.ghost,.btn.ghost{background:transparent;border-color:var(--line);color:var(--text);font-weight:600}button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.tg{display:inline-block;font-size:13px;font-weight:700;padding:2px 10px;border-radius:999px;border:1px solid rgba(34,228,255,.5);color:var(--cyan);vertical-align:middle}
+video{display:block;width:100%;border-radius:12px;background:#000;margin:8px 0 2px}
+.shots{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px;scroll-snap-type:x mandatory}.shots figure{flex:0 0 46%;margin:0;scroll-snap-align:start}@media(min-width:600px){.shots figure{flex-basis:24%}}
+.shots img{display:block;width:100%;aspect-ratio:6/5;object-fit:cover;border-radius:10px;background:#000}.shots figcaption{font-size:13px;color:var(--mute);line-height:1.4;margin-top:4px}
+.lv{display:inline-block;min-width:3.2em;text-align:center;padding:1px 8px;border-radius:6px;font-size:13px;font-weight:700;margin-right:6px}.lv.p{background:#d93a3e;color:#fff}.lv.s{background:#ff8a1f;color:#1a1205}
+fieldset{border:1px solid var(--line);border-radius:12px;margin:14px 0 6px;padding:8px 12px 10px}legend{padding:0 6px;font-weight:700}
+.opts{display:flex;flex-wrap:wrap;gap:8px}.opts label{margin:0;flex:1 1 140px}.opts input{position:absolute;opacity:0;pointer-events:none}
+.opts span{display:flex;align-items:center;justify-content:center;min-height:44px;padding:0 10px;border-radius:12px;border:1px solid var(--line);background:var(--card2);font-weight:600}
+.opts input:checked+span{border-color:var(--cyan);background:rgba(34,228,255,.14);color:var(--cyan)}.opts input:focus-visible+span{outline:2px solid var(--cyan);outline-offset:2px}
+details{margin:10px 0}summary{cursor:pointer;min-height:32px;color:var(--mute)}
+.hist{margin:6px 0;padding-left:1.4em;font-size:14px;color:var(--mute)}
+.bar{position:fixed;left:0;right:0;bottom:0;background:rgba(11,18,32,.96);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center;justify-content:center}
+.bar .note{margin:0;flex:1;max-width:420px}
+/* 3D 播放器（跟 App 同一個 3d/ui.js）用到的樣式 */
+.h3d{position:relative;height:min(56vh,420px);min-height:280px;border-radius:14px;overflow:hidden;background:#0b1220;margin:8px 0}.h3d canvas{position:absolute;inset:0}
+.h4{font-weight:700;margin:12px 0 4px}.bl{position:relative;padding:4px 0 4px 16px;border-bottom:1px solid var(--line)}.bl::before{content:'';position:absolute;left:2px;top:14px;width:6px;height:6px;border-radius:50%;background:var(--cyan)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.chip{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card2);color:var(--text);font-weight:600}.chip.on{border-color:var(--cyan);color:var(--cyan);background:rgba(34,228,255,.12)}
+.seg{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden}.seg button{flex:1;border-radius:0;background:transparent;color:var(--mute);font-weight:600;min-height:44px;padding:0 8px}.seg button.on{background:rgba(34,228,255,.16);color:var(--text)}
+.h3dp .btn{width:auto}.h3dp .btn.ghost{background:transparent}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Kinwell 3D 動作示範｜專業審核資料包</h1>
+  <p class="note" id="ver">載入中…</p>
+  <p>這是 Kinwell App 裡 3D 運動示範的審核資料。請看每個動作的影片和關鍵畫面，確認動作、說明、注意事項和肌群是否正確，選擇審核結果並寫下意見；全部看完後按最下面的「匯出審核意見」，把檔案傳回給 App 的負責人。</p>
+  <p class="note">不需要登入。你填的內容只存在你這支手機（可以分次填），按「匯出審核意見」才會產生檔案。</p>
+</header>
+<section class="card" id="who" aria-labelledby="whoH">
+  <h2 id="whoH">審核人</h2>
+  <label>姓名（必填）<input type="text" id="rvName" autocomplete="name" maxlength="40"></label>
+  <label>職稱或資格（必填，例如：物理治療師、運動教練＋證照）<input type="text" id="rvTitle" maxlength="60"></label>
+  <label class="ck"><input type="checkbox" id="rvPublish"><span>同意在 App 的審核紀錄公開顯示我的姓名（沒勾的話只顯示職稱）</span></label>
+</section>
+<section class="card" aria-labelledby="v3dH">
+  <h2 id="v3dH">用 3D 看動作（選用）</h2>
+  <p class="note">可以用手指旋轉、放慢、逐格看；第一次要下載約 1.5 MB。</p>
+  <button type="button" class="ghost" id="load3d">載入 3D 人物</button>
+  <div id="v3d" hidden><div class="chips" role="group" aria-label="人物"><button type="button" class="chip on" data-sex="male" aria-pressed="true">男性</button><button type="button" class="chip" data-sex="female" aria-pressed="false">女性</button></div>
+    <div class="h3d" id="h3d"></div><div class="seg" role="group" aria-label="視角"><button type="button" data-view="front">正面</button><button type="button" data-view="side">側面</button><button type="button" data-view="back">背面</button></div><div id="h3d-play"></div></div>
+  <p class="msg" id="msg3d" role="status" aria-live="polite"></p>
+</section>
+<div id="list"></div>
+<section class="card" id="out" aria-labelledby="outH">
+  <h2 id="outH">匯出審核意見</h2>
+  <p class="note">匯出的檔案裡有：你的姓名與職稱、審核日期、每個動作的審核結果與意見。請用 LINE、Email 或 AirDrop 傳給 App 的負責人。</p>
+  <button type="button" id="export">匯出審核意見</button>
+  <p class="msg" id="msgOut" role="status" aria-live="polite"></p>
+  <p><button type="button" class="ghost" id="clear">清除這支手機上的草稿</button></p>
+</section>
+<p class="note">素材授權：人物 Microsoft Rocketbox Avatar Library（MIT）；動作捕捉 CMU Graphics Lab Motion Capture Database（mocap.cs.cmu.edu，NSF EIA-0196217）；伏地挺身 Mesh2Motion（CC0）；棒式、臀橋為 Kinwell 自製。</p>
+</main>
+<div class="bar"><p class="note" id="sum"></p><button type="button" id="export2">匯出審核意見</button></div>
+<script type="module">
+import { EXERCISES, MUSCLE_GROUPS } from '../3d/exercises.js';
+import { loadDB, merged, reviewLabel, historyLines, FIELDS, STATUS, today, esc, shareFile } from '../3d/review.js';
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)], KEY = 'kwrv_draft', GL = Object.fromEntries(MUSCLE_GROUPS);
+const names = a => (a || []).map(k => esc(GL[k] || k)).join('、') || '—', OPTS = [['approved', '審核通過'], ['revision_required', '需要修正'], ['rejected', '不予採用']];
+let st = null;
+const draft = () => { try { return JSON.parse(localStorage.getItem(KEY) || 'null') || { reviewer: {}, items: {} } } catch (e) { return { reviewer: {}, items: {} } } };
+function save() { const d = { reviewer: { name: $('#rvName').value, title: $('#rvTitle').value, publish: $('#rvPublish').checked }, items: {} };
+  for (const e of EXERCISES) { const c = {}; $$(`#ex-${e.id} textarea`).forEach(t => { if (t.value) c[t.dataset.k] = t.value }); const s = $(`#ex-${e.id} input[type=radio]:checked`)?.value || ''; if (s || Object.keys(c).length) d.items[e.id] = { status: s, comments: c } }
+  try { localStorage.setItem(KEY, JSON.stringify(d)) } catch (e) {} sum() }
+function sum() { const n = EXERCISES.filter(e => $(`#ex-${e.id} input[type=radio]:checked`)).length; $('#sum').textContent = `已選審核結果 ${n}／${EXERCISES.length} 個動作` }
+function card(e) { const p = st?.pkg.items.find(i => i.id === e.id), rec = st?.recs[e.id], s = e.src, M = e.muscles || {}, h = historyLines(rec);
+  const fig = sex => (p?.shots[sex] || []).map(x => `<figure><a href="../${esc(x.file)}" target="_blank" rel="noopener"><img src="../${esc(x.file)}" alt="${esc(e.name)}・${sex === 'male' ? '男性' : '女性'}・${esc(x.label)}（${esc(x.phase)}，${x.t} 秒）" loading="lazy" width="480" height="400"></a><figcaption>${sex === 'male' ? '男' : '女'}・${esc(x.label)}：${esc(x.phase)}（${x.t} 秒）</figcaption></figure>`).join('');
+  return `<section class="card" id="ex-${e.id}" aria-labelledby="h-${e.id}"><h2 id="h-${e.id}">${esc(e.name)} <span class="tg">${esc(reviewLabel(e, rec, st?.content[e.id]))}</span></h2>
+<p class="note">內容版本 ${esc(p?.content || '—')}・資料包 ${esc(st?.pkg.built || '')}</p>
+${p ? `<video src="../${esc(p.video.file)}" poster="../${esc(p.shots.male[0].file)}" controls playsinline muted loop preload="metadata" aria-label="${esc(e.name)}影片：${esc(p.video.layout)}"></video><p class="note">影片：${esc(p.video.layout)}，一個循環 ${p.dur} 秒；可以在播放器裡放慢。</p>
+<h3>關鍵畫面（起始／過程／關鍵／結束）</h3><div class="shots">${fig('male')}</div><div class="shots">${fig('female')}</div>` : '<p class="msg">影片和截圖讀不到：請確認網路後重新整理</p>'}
+<h3>動作說明</h3><ul>${e.cues.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+<h3>常見錯誤</h3><ul>${e.bad.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+<h3>注意事項</h3><ul>${(e.cautions || []).map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+<h3>用到的肌群</h3><p><span class="lv p">主要</span>${names(M.primary)}</p><p><span class="lv s">次要</span>${names(M.secondary)}</p>${e.musNote ? `<p class="note">${esc(e.musNote)}</p>` : ''}<p class="note">App 裡用顏色在人物身上標出部位（紅＝主要、橘＝次要），只是部位示意，不是真實肌肉的形狀或收縮。</p>
+<h3>動畫來源與授權</h3><p>${esc(s.kind)}・${esc(s.name)}${s.clip ? `（${esc(s.clip)}）` : ''}；授權：${esc(s.license)}；App 播放速度 ${e.speed}×</p>
+<details><summary>修正紀錄（${h.length} 筆）</summary><ol class="hist" reversed>${h.map(x => `<li>${esc(x.date)}：${esc(x.text)}</li>`).join('')}</ol></details>
+<fieldset><legend>你的審核結果</legend><div class="opts">${OPTS.map(([v, t]) => `<label><input type="radio" name="st-${e.id}" value="${v}"><span>${t}</span></label>`).join('')}</div></fieldset>
+<label>意見（選「需要修正」或「不予採用」時必填）<textarea data-k="general" maxlength="2000"></textarea></label>
+<details><summary>分項意見（選填）</summary>${FIELDS.map(([k, t]) => `<label>${esc(t)}<textarea data-k="${k}" maxlength="2000"></textarea></label>`).join('')}</details>
+<button type="button" class="ghost" data-clear="${e.id}">清除這個動作的選擇</button></section>` }
+function render() { $('#list').innerHTML = EXERCISES.map(card).join(''); const d = draft();
+  $('#rvName').value = d.reviewer?.name || ''; $('#rvTitle').value = d.reviewer?.title || ''; $('#rvPublish').checked = !!d.reviewer?.publish;
+  for (const [id, it] of Object.entries(d.items || {})) { const r = $(`#ex-${id} input[value="${it.status}"]`); if (r) r.checked = true; for (const [k, v] of Object.entries(it.comments || {})) { const t = $(`#ex-${id} textarea[data-k="${k}"]`); if (t) { t.value = v; if (k !== 'general') t.closest('details').open = true } } }
+  sum() }
+document.addEventListener('input', e => { if (e.target.closest('main')) save() });
+document.addEventListener('click', e => { const c = e.target.closest('[data-clear]'); if (!c) return; const s = $(`#ex-${c.dataset.clear}`); s.querySelectorAll('input[type=radio]').forEach(r => { r.checked = false }); s.querySelectorAll('textarea').forEach(t => { t.value = '' }); save() });
+async function doExport() { const out = $('#msgOut'), name = $('#rvName').value.trim(), title = $('#rvTitle').value.trim(), items = []; out.classList.remove('ok');
+  const fail = (t, el) => { out.textContent = t; el?.focus(); el?.scrollIntoView({ block: 'center' }) };
+  if (!name) return fail('請先填審核人的姓名', $('#rvName')); if (!title) return fail('請先填職稱或資格', $('#rvTitle'));
+  for (const e of EXERCISES) { const s = $(`#ex-${e.id} input[type=radio]:checked`)?.value; if (!s) continue; const c = {}; $$(`#ex-${e.id} textarea`).forEach(t => { if (t.value.trim()) c[t.dataset.k] = t.value.trim() });
+    if (s !== 'approved' && !Object.keys(c).length) return fail(`「${e.name}」選了「${STATUS[s]}」，請在意見寫原因`, $(`#ex-${e.id} textarea[data-k="general"]`));
+    items.push({ id: e.id, content: st?.content[e.id] || '', status: s, comments: c }) }
+  if (!items.length) return fail('還沒有選任何動作的審核結果', $(`#ex-${EXERCISES[0].id} input[type=radio]`));
+  const j = { type: 'kinwell-3d-review-result', schema: 1, package: st?.pkg.built || '', reviewer: { name, title, publish: $('#rvPublish').checked }, date: today(), items };
+  const r = await shareFile(JSON.stringify(j, null, 1), `kinwell-review-${today().replace(/-/g, '')}.json`);
+  if (r === 'cancel') return; out.classList.add('ok'); out.textContent = r === 'shared' ? `已分享 ${items.length} 個動作的審核意見，請傳給 App 的負責人` : `已下載審核意見檔（${items.length} 個動作）：請用 LINE、Email 或 AirDrop 傳給 App 的負責人` }
+$('#export').addEventListener('click', doExport); $('#export2').addEventListener('click', doExport);
+$('#clear').addEventListener('click', () => { if (!confirm('清除這支手機上的審核草稿？（姓名、選擇和意見都會清掉）')) return; try { localStorage.removeItem(KEY) } catch (e) {} render() });
+// 3D：按了才載入（跟 App 同一個檢視器和播放器；不顯示 App 的審核管理）
+let V = null;
+$('#load3d').addEventListener('click', async () => { const m = $('#msg3d'), b = $('#load3d'); if (V) return; b.disabled = true; m.textContent = '載入 3D…';
+  try { const mod = await import('../3d/viewer.js'); if (!mod.supports3D()) { m.textContent = '這支手機的瀏覽器不支援 3D：請看上面的影片和截圖'; return }
+    $('#v3d').hidden = false; V = mod.createViewer($('#h3d'), {}); await V.load('male'); const U = await import('../3d/ui.js'); U.mountPlayer($('#h3d-play'), V, { reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, panel: false, db: st });
+    m.textContent = ''; b.hidden = true }
+  catch (e) { m.textContent = '3D 載入失敗：請確認網路後再按一次'; V?.dispose(); V = null; $('#v3d').hidden = true } finally { b.disabled = false } });
+$('#v3d').addEventListener('click', async e => { const s = e.target.closest('[data-sex]'), v = e.target.closest('[data-view]'); if (!V) return;
+  if (v) return V.setView(v.dataset.view);
+  if (s && V.sex !== s.dataset.sex) { $$('#v3d [data-sex]').forEach(x => { const on = x === s; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on) }); try { await V.load(s.dataset.sex) } catch (err) { $('#msg3d').textContent = '人物下載失敗：請確認網路後再按一次' } } });
+try { const s = await loadDB(); st = { ...s, recs: merged(s.db) }; $('#ver').textContent = `資料包版本 ${s.pkg.built}・共 ${EXERCISES.length} 個動作` }
+catch (e) { $('#ver').textContent = '審核資料讀不到：請確認網路後重新整理（下面的文字說明仍可審核）' }
+render();
+</script>
+</body>
+</html>

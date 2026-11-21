@@ -1,0 +1,557 @@
+{
+ "type": "kinwell-3d-review-package",
+ "schema": 1,
+ "built": "2026-11-21",
+ "items": [
+  {
+   "id": "squat",
+   "name": "徒手深蹲",
+   "content": "4a6ba14d4c4d",
+   "dur": 2.5,
+   "phases": [
+    [
+     "預備",
+     0,
+     0.5
+    ],
+    [
+     "下蹲",
+     0.5,
+     1.13
+    ],
+    [
+     "最低點",
+     1.13,
+     1.33
+    ],
+    [
+     "站起",
+     1.33,
+     2
+    ],
+    [
+     "完成",
+     2,
+     2.5
+    ]
+   ],
+   "shots": {
+    "male": [
+     {
+      "key": "start",
+      "label": "起始",
+      "phase": "預備",
+      "t": 0,
+      "file": "3d/review/media/squat_male_start.jpg",
+      "bytes": 7659
+     },
+     {
+      "key": "middle",
+      "label": "過程",
+      "phase": "下蹲",
+      "t": 0.815,
+      "file": "3d/review/media/squat_male_middle.jpg",
+      "bytes": 8330
+     },
+     {
+      "key": "key",
+      "label": "關鍵",
+      "phase": "最低點",
+      "t": 1.23,
+      "file": "3d/review/media/squat_male_key.jpg",
+      "bytes": 7983
+     },
+     {
+      "key": "end",
+      "label": "結束",
+      "phase": "站起",
+      "t": 2,
+      "file": "3d/review/media/squat_male_end.jpg",
+      "bytes": 7871
+     }
+    ],
+    "female": [
+     {
+      "key": "start",
+      "label": "起始",
+      "phase": "預備",
+      "t": 0,
+      "file": "3d/review/media/squat_female_start.jpg",
+      "bytes": 6711
+     },
+     {
+      "key": "middle",
+      "label": "過程",
+      "phase": "下蹲",
+      "t": 0.815,
+      "file": "3d/review/media/squat_female_middle.jpg",
+      "bytes": 6923
+     },
+     {
+      "key": "key",
+      "label": "關鍵",
+      "phase": "最低點",
+      "t": 1.23,
+      "file": "3d/review/media/squat_female_key.jpg",
+      "bytes": 6859
+     },
+     {
+      "key": "end",
+      "label": "結束",
+      "phase": "站起",
+      "t": 2,
+      "file": "3d/review/media/squat_female_end.jpg",
+      "bytes": 6852
+     }
+    ]
+   },
+   "video": {
+    "file": "3d/review/media/squat.mp4",
+    "bytes": 69019,
+    "w": 960,
+    "h": 400,
+    "layout": "左：男性、右：女性（側面）"
+   }
+  },
+  {
+   "id": "pushup",
+   "name": "伏地挺身",
+   "content": "512ac387a948",
+   "dur": 1.533,
+   "phases": [
+    [
+     "預備",
+     0,
+     0.1
+    ],
+    [
+     "下降",
+     0.1,
+     0.57
+    ],
+    [
+     "最低點",
+     0.57,
+     0.97
+    ],
+    [
+     "推起",
+     0.97,
+     1.37
+    ],
+    [
+     "完成",
+     1.37,
+     1.53
+    ]
+   ],
+   "shots": {
+    "male": [
+     {
+      "key": "start",
+      "label": "起始",
+      "phase": "預備",
+      "t": 0,
+      "file": "3d/review/media/pushup_male_start.jpg",
+      "bytes": 8549
+     },
+     {
+      "key": "middle",
+      "label": "過程",
+      "phase": "下降",
+      "t": 0.335,
+      "file": "3d/review/media/pushup_male_middle.jpg",
+      "bytes": 8241
+     },
+     {
+      "key": "key",
+      "label": "關鍵",
+      "phase": "最低點",
+      "t": 0.77,
+      "file": "3d/review/media/pushup_male_key.jpg",
+      "bytes": 7826
+     },
+     {
+      "key": "end",
+      "label": "結束",
+      "phase": "推起",
+      "t": 1.37,
+      "file": "3d/review/media/pushup_male_end.jpg",
+      "bytes": 8621
+     }
+    ],
+    "female": [
+     {
+      "key": "start",
+      "label": "起始",
+      "phase": "預備",
+      "t": 0,
+      "file": "3d/review/media/pushup_female_start.jpg",
+      "bytes": 7546
+     },
+     {
+      "key": "middle",
+      "label": "過程",
+      "phase": "下降",
+      "t": 0.335,
+      "file": "3d/review/media/pushup_female_middle.jpg",
+      "bytes": 7478
+     },
+     {
+      "key": "key",
+      "label": "關鍵",
+      "phase": "最低點",
+      "t": 0.77,
+      "file": "3d/review/media/pushup_female_key.jpg",
+      "bytes": 6925
+     },
+     {
+      "key": "end",
+      "label": "結束",
+      "phase": "推起",
+      "t": 1.37,
+      "file": "3d/review/media/pushup_female_end.jpg",
+      "bytes": 7641
+     }
+    ]
+   },
+   "video": {
+    "file": "3d/review/media/pushup.mp4",
+    "bytes": 43108,
+    "w": 960,
+    "h": 400,
+    "layout": "左：男性、右：女性（側面）"
+   }
+  },
+  {
+   "id": "plank",
+   "name": "棒式（前臂）",
+   "content": "3dcabb32a42a",
+   "dur": 6.6,
+   "phases": [
+    [
+     "預備",
+     0,
+     0.97
+    ],
+    [
+     "撐起",
+     0.97,
+     1.7
+    ],
+    [
+     "撐住（每次停 30 秒）",
+     1.7,
+     4.97
+    ],
+    [
+     "放下",
+     4.97,
+     5.83
+    ],
+    [
+     "完成",
+     5.83,
+     6.6
+    ]
+   ],
+   "shots": {
+    "male": [
+     {
+      "key": "start",
+      "label": "起始",
+      "phase": "預備",
+      "t": 0,
+      "file": "3d/review/media/plank_male_start.jpg",
+      "bytes": 8882
+     },
+     {
+      "key": "middle",
+      "label": "過程",
+      "phase": "撐起",
+      "t": 1.335,
+      "file": "3d/review/media/plank_male_middle.jpg",
+      "bytes": 8675
+     },
+     {
+      "key": "key",
+      "label": "關鍵",
+      "phase": "撐住（每次停 30 秒）",
+      "t": 3.335,
+      "file": "3d/review/media/plank_male_key.jpg",
+      "bytes": 8588
+     },
+     {
+      "key": "end",
+      "label": "結束",
+      "phase": "放下",
+      "t": 5.83,
+      "file": "3d/review/media/plank_male_end.jpg",
+      "bytes": 8890
+     }
+    ],
+    "female": [
+     {
+      "key": "start",
+      "label": "起始",
+      "phase": "預備",
+      "t": 0,
+      "file": "3d/review/media/plank_female_start.jpg",
+      "bytes": 7838
+     },
+     {
+      "key": "middle",
+      "label": "過程",
+      "phase": "撐起",
+      "t": 1.335,
+      "file": "3d/review/media/plank_female_middle.jpg",
+      "bytes": 7784
+     },
+     {
+      "key": "key",
+      "label": "關鍵",
+      "phase": "撐住（每次停 30 秒）",
+      "t": 3.335,
+      "file": "3d/review/media/plank_female_key.jpg",
+      "bytes": 7734
+     },
+     {
+      "key": "end",
+      "label": "結束",
+      "phase": "放下",
+      "t": 5.83,
+      "file": "3d/review/media/plank_female_end.jpg",
+      "bytes": 7831
+     }
+    ]
+   },
+   "video": {
+    "file": "3d/review/media/plank.mp4",
+    "bytes": 76856,
+    "w": 960,
+    "h": 400,
+    "layout": "左：男性、右：女性（側面）"
+   }
+  },
+  {
+   "id": "lunge",
+   "name": "弓箭步",
+   "content": "e73933582356",
+   "dur": 2.033,
+   "phases": [
+    [
+     "預備",
+     0,
+     0.33
+    ],
+    [
+     "跨步下蹲",
+     0.33,
+     0.87
+    ],
+    [
+     "最低點",
+     0.87,
+     1.07
+    ],
+    [
+     "推回站直",
+     1.07,
+     1.47
+    ],
+    [
+     "完成",
+     1.47,
+     2.03
+    ]
+   ],
+   "shots": {
+    "male": [
+     {
+      "key": "start",
+      "label": "起始",
+      "phase": "預備",
+      "t": 0,
+      "file": "3d/review/media/lunge_male_start.jpg",
+      "bytes": 7947
+     },
+     {
+      "key": "middle",
+      "label": "過程",
+      "phase": "跨步下蹲",
+      "t": 0.6,
+      "file": "3d/review/media/lunge_male_middle.jpg",
+      "bytes": 9222
+     },
+     {
+      "key": "key",
+      "label": "關鍵",
+      "phase": "最低點",
+      "t": 0.97,
+      "file": "3d/review/media/lunge_male_key.jpg",
+      "bytes": 8537
+     },
+     {
+      "key": "end",
+      "label": "結束",
+      "phase": "推回站直",
+      "t": 1.47,
+      "file": "3d/review/media/lunge_male_end.jpg",
+      "bytes": 9570
+     }
+    ],
+    "female": [
+     {
+      "key": "start",
+      "label": "起始",
+      "phase": "預備",
+      "t": 0,
+      "file": "3d/review/media/lunge_female_start.jpg",
+      "bytes": 6454
+     },
+     {
+      "key": "middle",
+      "label": "過程",
+      "phase": "跨步下蹲",
+      "t": 0.6,
+      "file": "3d/review/media/lunge_female_middle.jpg",
+      "bytes": 7051
+     },
+     {
+      "key": "key",
+      "label": "關鍵",
+      "phase": "最低點",
+      "t": 0.97,
+      "file": "3d/review/media/lunge_female_key.jpg",
+      "bytes": 6871
+     },
+     {
+      "key": "end",
+      "label": "結束",
+      "phase": "推回站直",
+      "t": 1.47,
+      "file": "3d/review/media/lunge_female_end.jpg",
+      "bytes": 7136
+     }
+    ]
+   },
+   "video": {
+    "file": "3d/review/media/lunge.mp4",
+    "bytes": 72031,
+    "w": 960,
+    "h": 400,
+    "layout": "左：男性、右：女性（側面）"
+   }
+  },
+  {
+   "id": "bridge",
+   "name": "臀橋",
+   "content": "10b386e9b472",
+   "dur": 5.4,
+   "phases": [
+    [
+     "躺好",
+     0,
+     0.77
+    ],
+    [
+     "抬臀",
+     0.77,
+     1.47
+    ],
+    [
+     "停住",
+     1.47,
+     3.8
+    ],
+    [
+     "放下",
+     3.8,
+     4.63
+    ],
+    [
+     "完成",
+     4.63,
+     5.4
+    ]
+   ],
+   "shots": {
+    "male": [
+     {
+      "key": "start",
+      "label": "起始",
+      "phase": "躺好",
+      "t": 0,
+      "file": "3d/review/media/bridge_male_start.jpg",
+      "bytes": 9481
+     },
+     {
+      "key": "middle",
+      "label": "過程",
+      "phase": "抬臀",
+      "t": 1.12,
+      "file": "3d/review/media/bridge_male_middle.jpg",
+      "bytes": 9971
+     },
+     {
+      "key": "key",
+      "label": "關鍵",
+      "phase": "停住",
+      "t": 2.635,
+      "file": "3d/review/media/bridge_male_key.jpg",
+      "bytes": 10414
+     },
+     {
+      "key": "end",
+      "label": "結束",
+      "phase": "放下",
+      "t": 4.63,
+      "file": "3d/review/media/bridge_male_end.jpg",
+      "bytes": 9482
+     }
+    ],
+    "female": [
+     {
+      "key": "start",
+      "label": "起始",
+      "phase": "躺好",
+      "t": 0,
+      "file": "3d/review/media/bridge_female_start.jpg",
+      "bytes": 8094
+     },
+     {
+      "key": "middle",
+      "label": "過程",
+      "phase": "抬臀",
+      "t": 1.12,
+      "file": "3d/review/media/bridge_female_middle.jpg",
+      "bytes": 8406
+     },
+     {
+      "key": "key",
+      "label": "關鍵",
+      "phase": "停住",
+      "t": 2.635,
+      "file": "3d/review/media/bridge_female_key.jpg",
+      "bytes": 8773
+     },
+     {
+      "key": "end",
+      "label": "結束",
+      "phase": "放下",
+      "t": 4.63,
+      "file": "3d/review/media/bridge_female_end.jpg",
+      "bytes": 8143
+     }
+    ]
+   },
+   "video": {
+    "file": "3d/review/media/bridge.mp4",
+    "bytes": 67417,
+    "w": 960,
+    "h": 400,
+    "layout": "左：男性、右：女性（側面）"
+   }
+  }
+ ]
+}

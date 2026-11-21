@@ -82,4 +82,8 @@ THE SOFTWARE.
 
 ## 5. 自製動畫（棒式、臀橋）
 
-`3d/anims/plank.glb`（前臂＋膝蓋跪撐 → 抬膝撐起 → 撐住 → 放下）、`3d/anims/bridge.glb`（躺好 → 抬臀 → 停住 → 放下）由本專案自製（`tools/build-3d-anims.html`），沒有第三方素材。尚未經專業人員審核，App 內標示「自製草稿・待專業審核」。
+`3d/anims/plank.glb`（趴著 → 撐起 → 撐住 → 放下）、`3d/anims/bridge.glb`（躺好 → 抬臀 → 停住 → 放下）由本專案自製（`tools/build-3d-anims.html`），沒有第三方素材。尚未經專業人員審核，App 內標示「自製草稿・待專業審核」。
+
+## 6. 專業審核資料包的截圖與影片
+
+`3d/review/media/`（截圖 JPEG、影片 MP4）是用上面的人物（Microsoft Rocketbox，MIT）與動畫（CMU 動作捕捉、Mesh2Motion CC0、Kinwell 自製）在 App 的 3D 檢視器裡算圖產生（`tools/build-review.js`），授權與致謝同上；審核資料包頁面（`review/`）底部附素材授權說明。

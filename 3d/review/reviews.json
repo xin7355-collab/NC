@@ -1,0 +1,211 @@
+{
+ "type": "kinwell-3d-reviews",
+ "schema": 1,
+ "updated": "2026-11-21",
+ "note": "正式審核狀態（所有手機看到的）。教練的審核意見先在 App 匯入、確認後用「匯出審核資料庫」交給開發者更新這個檔；沒同意公開的姓名不會出現在這裡",
+ "items": {
+  "squat": {
+   "status": "pending_review",
+   "rev": 4,
+   "content": "4a6ba14d4c4d",
+   "reviewer": null,
+   "title": null,
+   "publish": false,
+   "reviewedAt": null,
+   "comments": {},
+   "history": [
+    {
+     "rev": 1,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "CMU 動作捕捉 86_02 第 2 下轉到人物骨架；兩腳鎖在地上、腳掌平貼（第三階段）"
+    },
+    {
+     "rev": 2,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "加上主要／次要肌群與具體肌肉（第四階段）"
+    },
+    {
+     "rev": 3,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "加上注意事項"
+    },
+    {
+     "rev": 4,
+     "date": "2026-11-21",
+     "kind": "status",
+     "status": "pending_review",
+     "note": "放進專業審核資料包"
+    }
+   ]
+  },
+  "pushup": {
+   "status": "pending_review",
+   "rev": 4,
+   "content": "512ac387a948",
+   "reviewer": null,
+   "title": null,
+   "publish": false,
+   "reviewedAt": null,
+   "comments": {},
+   "history": [
+    {
+     "rev": 1,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "Mesh2Motion〈Pushup〉（CC0）轉到人物骨架；手掌、腳尖固定在地上，0.75 倍速播放（第三階段）"
+    },
+    {
+     "rev": 2,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "加上主要／次要肌群與具體肌肉（第四階段）"
+    },
+    {
+     "rev": 3,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "加上注意事項"
+    },
+    {
+     "rev": 4,
+     "date": "2026-11-21",
+     "kind": "status",
+     "status": "pending_review",
+     "note": "放進專業審核資料包"
+    }
+   ]
+  },
+  "plank": {
+   "status": "pending_review",
+   "rev": 5,
+   "content": "3dcabb32a42a",
+   "reviewer": null,
+   "title": null,
+   "publish": false,
+   "reviewedAt": null,
+   "comments": {},
+   "history": [
+    {
+     "rev": 1,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "自製前臂棒式：撐住並有呼吸起伏（第三階段）"
+    },
+    {
+     "rev": 2,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "改成完整過程：趴著 → 撐起 → 撐住 → 放下；前臂、腳尖全程不滑"
+    },
+    {
+     "rev": 3,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "加上主要／次要肌群與具體肌肉（第四階段）"
+    },
+    {
+     "rev": 4,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "加上注意事項"
+    },
+    {
+     "rev": 5,
+     "date": "2026-11-21",
+     "kind": "status",
+     "status": "pending_review",
+     "note": "放進專業審核資料包"
+    }
+   ]
+  },
+  "lunge": {
+   "status": "pending_review",
+   "rev": 4,
+   "content": "e73933582356",
+   "reviewer": null,
+   "title": null,
+   "publish": false,
+   "reviewedAt": null,
+   "comments": {},
+   "history": [
+    {
+     "rev": 1,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "CMU 動作捕捉 144_17 第 1 下（原本受試者在出拳，手臂改成自然下垂）轉到人物骨架；支撐腳鎖在地上（第三階段）"
+    },
+    {
+     "rev": 2,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "加上主要／次要肌群與具體肌肉（第四階段）"
+    },
+    {
+     "rev": 3,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "加上注意事項"
+    },
+    {
+     "rev": 4,
+     "date": "2026-11-21",
+     "kind": "status",
+     "status": "pending_review",
+     "note": "放進專業審核資料包"
+    }
+   ]
+  },
+  "bridge": {
+   "status": "pending_review",
+   "rev": 6,
+   "content": "10b386e9b472",
+   "reviewer": null,
+   "title": null,
+   "publish": false,
+   "reviewedAt": null,
+   "comments": {},
+   "history": [
+    {
+     "rev": 1,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "自製臀橋關鍵影格（第三階段）"
+    },
+    {
+     "rev": 2,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "修正最高點：上背和頭貼地、腳不離地，抬到肩－髖－膝約 173 度（原本抬過頭、腳離地 8–10 公分）"
+    },
+    {
+     "rev": 3,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "女性模型加馬尾骨頭，躺下時馬尾平貼地面"
+    },
+    {
+     "rev": 4,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "加上主要／次要肌群與具體肌肉（第四階段）"
+    },
+    {
+     "rev": 5,
+     "date": "2026-11-21",
+     "kind": "content",
+     "note": "加上注意事項"
+    },
+    {
+     "rev": 6,
+     "date": "2026-11-21",
+     "kind": "status",
+     "status": "pending_review",
+     "note": "放進專業審核資料包"
+    }
+   ]
+  }
+ }
+}

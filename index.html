@@ -1393,7 +1393,7 @@ if(!mod.supports3D()){h3dMsg('這支手機的瀏覽器不支援 3D（需要 WebG
 if(!H3D.v)H3D.v=mod.createViewer(host,{ver:APP_VER,onLost:()=>{h3dDispose();h3dMsg('3D 畫面被系統暫停（可能是記憶體不足）：再按一次「載入 3D 人物」，或開啟省電模式',1)}});
 const i=$('#h3d .h3d-img');if(i)i.hidden=true;h3dMsg('下載 3D 人物… 0%');
 await H3D.v.load(sex,p=>h3dMsg(`下載 3D 人物… ${Math.min(99,Math.round(p*100))}%`));H3D.sex=sex;host.dataset.sex=sex;h3dMsg('');h3dUI();
-if(!H3D.ui){const U=await import('./3d/ui.js?v='+encodeURIComponent(APP_VER));H3D.ui=U.mountPlayer($('#h3d-play'),H3D.v,{reduced:matchMedia('(prefers-reduced-motion: reduce)').matches})}}
+if(!H3D.ui){const U=await import('./3d/ui.js?v='+encodeURIComponent(APP_VER));H3D.ui=U.mountPlayer($('#h3d-play'),H3D.v,{reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,ver:APP_VER})}}
 catch(e){const k=e?.message;h3dDispose();h3dMsg(k==='webgl'?'這支手機現在無法建立 3D 畫面：先用下面的 2D 動作示範，或關掉其他 App 再試':k==='load'||k==='mod'?'3D 人物下載失敗：請確認網路後再按一次「載入 3D 人物」':'3D 載入失敗：請再試一次，或開啟省電模式改用 2D',1)}
 finally{H3D.busy=0}}
 document.addEventListener('click',e=>{const t=e.target;if(t.closest('[data-h3d]')){h3dLoad(H3D.sex||$('#h3d')?.dataset.sex||'male');return}

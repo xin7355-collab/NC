@@ -2527,9 +2527,9 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('播放控制：選了動作自動播放、時間會走；暫停後停住、按鈕變「▶ 播放」；0.5× 速度大約是 1× 的一半；拖進度條、下一格／上一格各 1/30 秒；停在最低點時顯示「最低點」；重播從頭開始；關掉循環會停在最後一格、再按從頭播',
       C.auto && C.adv && C.paused && C.ratio >= 0.25 && C.ratio <= 0.8 && C.sp === 'true' && Math.abs(C.seek - 1) < 0.01 && Math.abs(C.fwd - (1 + 1 / 30)) < 0.005 && Math.abs(C.back - 1) < 0.005
         && C.ph === '最低點' && /最低點/.test(C.vt) && C.replay && C.loopOff && C.end && C.restart, JSON.stringify({ ...C, txt: undefined, card: undefined }));
-    check('換成女性時動作和時間點接著播；每個動作寫出做對的重點、常見錯誤、動畫來源與授權（CMU、Mesh2Motion CC0、自製）；審核狀態只有「待專業審核」或「自製草稿・待專業審核」，沒有審核人與日期時不會顯示「審核通過」；切換動作 GPU 資源不增加',
+    check('換成女性時動作和時間點接著播；每個動作寫出做對的重點、常見錯誤、動畫來源與授權（CMU、Mesh2Motion CC0、自製）；審核狀態只有「待專業審核」或「自製動畫・待專業審核」，沒有審核人與日期時不會顯示「審核通過」；切換動作 GPU 資源不增加',
       C.sw.sex === 'female' && C.sw.id === 'squat' && Math.abs(C.sw.t - 1.2) < 0.05 && /CMU/.test(C.txt.squat) && /Mesh2Motion/.test(C.txt.pushup) && /CC0/.test(C.txt.pushup) && /自製/.test(C.txt.plank) && /自製/.test(C.txt.bridge) && /CMU/.test(C.txt.lunge)
-        && /待專業審核/.test(C.txt.squat) && /自製草稿・待專業審核/.test(C.txt.bridge) && !/審核通過/.test(C.card) && C.rl[0] === '待專業審核' && C.rl[1] === '審核通過' && C.rl[2] === '自製草稿・待專業審核'
+        && /待專業審核/.test(C.txt.squat) && /自製動畫・待專業審核/.test(C.txt.bridge) && !/審核通過/.test(C.card) && C.rl[0] === '待專業審核' && C.rl[1] === '審核通過' && C.rl[2] === '草稿・尚未送審'
         && Object.values(C.txt).every(t => /做對的重點/.test(t) && /常見錯誤/.test(t) && /不能判斷你自己的動作/.test(t)) && C.gpu[0] <= C.gpu[2] + 40 && C.gpu[2] === C.gpu[2], JSON.stringify({ sw: C.sw, rl: C.rl, gpu: C.gpu }));
     // 視角按鈕：播地板動作（臀橋、伏地挺身）時按正面／側面／背面，整個人要在畫面裡、而且夠大（不能套站姿的取景把人擠到最下面、切掉頭）
     const VB = await page.evaluate(async () => { const out = {}, w = ms => new Promise(r => setTimeout(r, ms));
@@ -2557,13 +2557,14 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       /這個動作下載失敗：請確認網路後再點一次/.test(F.fail) && F.ctlHidden && F.playing === false && F.time === 0 && F.msg === '' && F.gpu[2] === F.gpu[0] && F.gpu[3] === F.gpu[1], JSON.stringify(F));
     await page.close(); srv4.close();
     // ④ 素材檔：大小、動作階段涵蓋整段、授權紀錄
+    const rd6 = f => JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'));
     const A = JSON.parse(fs.readFileSync(path.join(ROOT, '3d/licenses/assets.json'), 'utf8')), fields = ['source', 'author', 'license', 'commercial', 'modify', 'redistribute', 'conditions', 'changes', 'review'];
     const files = ['squat', 'pushup', 'plank', 'lunge', 'bridge'].map(id => { const g = fs.statSync(path.join(ROOT, '3d/anims', id + '.glb')).size, j = JSON.parse(fs.readFileSync(path.join(ROOT, '3d/anims', id + '.json'), 'utf8')), p = j.phases;
       return { id, kb: Math.round(g / 1024), cover: p[0][1] === 0 && p.every((x, i) => x[1] <= x[2] && (i === 0 || Math.abs(x[1] - p[i - 1][2]) < 1e-6)) && Math.abs(p[p.length - 1][2] - j.clips[0].dur) < 0.05, clips: j.clips.map(c => c.name).join() } });
     const notice = fs.readFileSync(path.join(ROOT, '3d/licenses/THIRD_PARTY_NOTICES.md'), 'utf8');
-    check('動畫檔每個 ≤ 300 KB、裡面有 male 和 female 兩段；動作階段從 0 秒接到結束；每個動畫都有來源、作者、授權、可否商用／修改／散布、修改內容、審核狀態；授權聲明附 CMU 致謝與 Mesh2Motion CC0',
+    check('動畫檔每個 ≤ 300 KB、裡面有 male 和 female 兩段；動作階段從 0 秒接到結束；每個動畫都有來源、作者、授權、可否商用／修改／散布、修改內容、審核狀態（跟審核資料庫一致）；授權聲明附 CMU 致謝與 Mesh2Motion CC0',
       files.every(f => f.kb <= 300 && f.cover && f.clips === 'male,female') && A.animations.length === 5 && A.animations.every(a => fields.every(k => a[k] !== undefined && a[k] !== '') && fs.existsSync(path.join(ROOT, a.file)))
-        && A.animations.filter(a => /自製/.test(a.source)).every(a => a.review === 'draft') && /NSF EIA-0196217/.test(notice) && /Mesh2Motion/.test(notice) && /CC0/.test(notice), JSON.stringify(files));
+        && A.animations.every(a => a.review === rd6('3d/review/reviews.json').items[a.id]?.status) && /NSF EIA-0196217/.test(notice) && /Mesh2Motion/.test(notice) && /CC0/.test(notice), JSON.stringify(files));
   }
 
   // =============== 6zzl. 3D 肌群部位標示（第四階段）：8 個部位分區（男女都合理）、紅＝主要／橘＝次要／灰＝其他、文字列出肌群（不只靠顏色）、換動作重新上色、換男女照舊、開關與換人物不漏 GPU 資源 ===============
@@ -2603,6 +2604,89 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('肌群模式開關 7 次、開著換女性再換回男性：GPU 的幾何與貼圖數量跟開始時一樣（換人物前先換回原本材質，原本的貼圖有跟著釋放）',
       MU.g1.geometries === MU.g0.geometries && MU.g1.textures === MU.g0.textures, JSON.stringify({ g0: [MU.g0.geometries, MU.g0.textures], g1: [MU.g1.geometries, MU.g1.textures] }));
     await page.close(); srv5.close();
+  }
+
+  // =============== 6zzm. 3D 專業審核（第五階段）：審核資料包（影片、起始／過程／關鍵／結束截圖、說明、注意事項、肌群、來源授權、修正紀錄）、教練填寫與匯出、App 匯入（先預覽、版本＋1、修正紀錄）、舊版內容的審核不算通過、姓名預設不公開、資料包沒過期 ===============
+  {
+    const RH = require(path.join(ROOT, 'tools', 'review-hash.js')), EXR = await RH.loadExercises(ROOT), rd = f => JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'));
+    const PKG = rd('3d/review/package.json'), DB = rd('3d/review/reviews.json'), ST = ['draft', 'pending_review', 'approved', 'revision_required', 'rejected'], HID = '（不公開姓名）';
+    const PI = Object.fromEntries(PKG.items.map(i => [i.id, i])), media = [];
+    for (const it of PKG.items) { for (const sx of ['male', 'female']) for (const x of it.shots[sx] || []) media.push(x.file); media.push(it.video.file) }
+    const sz = f => fs.existsSync(path.join(ROOT, f)) ? fs.statSync(path.join(ROOT, f)).size : -1, total = media.reduce((a, f) => a + Math.max(0, sz(f)), 0);
+    const mp4ok = f => { const b = fs.readFileSync(path.join(ROOT, f)); return b.slice(4, 8).toString() === 'ftyp' && b.includes('avc1') };
+    check('審核資料包沒過期：每個動作的內容版本（動畫檔＋畫面文字）跟現在的檔案一致（動畫或說明改了要重跑 node tools/build-review.js）；審核資料庫的內容版本也一致',
+      EXR.length === 5 && EXR.every(e => PI[e.id] && PI[e.id].content === RH.contentHash(ROOT, e) && DB.items[e.id]?.content === PI[e.id].content), JSON.stringify(EXR.map(e => [e.id, PI[e.id]?.content, DB.items[e.id]?.content, RH.contentHash(ROOT, e)])));
+    check('資料包檔案齊全：每個動作男女各有起始／過程／關鍵／結束 4 張截圖（每張 ≤ 120 KB）、一部 H.264 MP4 影片（≤ 400 KB，iPhone 能播）；全部 ≤ 3 MB',
+      PKG.items.length === 5 && PKG.items.every(it => ['male', 'female'].every(sx => (it.shots[sx] || []).map(x => x.key).join() === 'start,middle,key,end') && it.video.file.endsWith('.mp4'))
+        && media.every(f => sz(f) > 1000 && sz(f) <= (f.endsWith('.mp4') ? 400 : 120) * 1024) && PKG.items.every(it => mp4ok(it.video.file)) && total <= 3 * 1024 * 1024, JSON.stringify({ n: media.length, kb: Math.round(total / 1024) }));
+    const recOk = r => ST.includes(r.status) && r.rev >= 1 && Array.isArray(r.history) && r.history.length >= 1 && r.history.at(-1).rev === r.rev && r.history.every(h => h.rev && h.date && ['content', 'status', 'review'].includes(h.kind))
+      && (r.status !== 'approved' || (r.reviewer && r.title && r.reviewedAt)) && [r, ...r.history].every(o => !o.reviewer || o.publish || o.reviewer === HID);
+    check('審核資料庫：每個動作都有狀態（草稿／待專業審核／通過／需要修正／不予採用）、版本、修正紀錄；通過一定有審核人、職稱、日期；沒同意公開的姓名一律不出現在網站上；每個動作都有注意事項',
+      EXR.every(e => DB.items[e.id] && recOk(DB.items[e.id]) && (e.cautions || []).length >= 1), JSON.stringify(Object.fromEntries(Object.entries(DB.items).map(([k, r]) => [k, [r.status, r.rev, r.history.length]]))));
+    const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.glb': 'model/gltf-binary', '.jpg': 'image/jpeg', '.json': 'application/json', '.mp4': 'video/mp4', '.png': 'image/png' };
+    const srv6 = require('http').createServer((q, res) => { let u = decodeURIComponent(q.url.split('?')[0]); if (u.endsWith('/')) u += 'index.html'; const f = path.join(ROOT, u);
+      if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end() } res.writeHead(200, { 'content-type': MIME[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(res) });
+    await new Promise(ok => srv6.listen(0, '127.0.0.1', ok)); const base = `http://127.0.0.1:${srv6.address().port}/`, tmpDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'kwrv-'));
+    // ① 教練：審核資料包頁面
+    page = await newPage(null, { url: base + 'review/' }); await page.waitForSelector('#ex-bridge video');
+    const RP = await page.evaluate(() => { const C = [...document.querySelectorAll('section[id^="ex-"]')];
+      return { n: C.length, robots: document.querySelector('meta[name=robots]')?.content, wide: document.documentElement.scrollWidth <= innerWidth + 1,
+        cards: C.map(c => ({ v: c.querySelector('video')?.getAttribute('src') || '', inl: c.querySelector('video')?.hasAttribute('playsinline'), img: c.querySelectorAll('.shots img').length, alt: [...c.querySelectorAll('.shots img')].every(i => i.alt.length > 4),
+          h: [...c.querySelectorAll('h3')].map(h => h.textContent).join('/'), opt: c.querySelectorAll('input[type=radio]').length, ta: c.querySelectorAll('textarea').length, hist: /修正紀錄（\d+ 筆）/.test(c.textContent), tag: c.querySelector('.tg').textContent })) } });
+    check('審核資料包頁面（手機）：5 個動作各有影片（iPhone 內嵌播放）、男女 8 張關鍵畫面（有替代文字）、動作說明、常見錯誤、注意事項、肌群、來源與授權、修正紀錄、3 種審核結果與意見欄；不被搜尋引擎收錄、手機寬度不會左右捲動；目前都是「待專業審核」',
+      RP.n === 5 && RP.robots === 'noindex, nofollow' && RP.wide && RP.cards.every(c => /\.mp4$/.test(c.v) && c.inl && c.img === 8 && c.alt && /動作說明\/常見錯誤\/注意事項\/用到的肌群\/動畫來源與授權/.test(c.h) && c.opt === 3 && c.ta === 5 && c.hist && /待專業審核/.test(c.tag)), JSON.stringify(RP));
+    // 鍵盤移動焦點時，意見欄、按鈕不能被底部固定的「匯出審核意見」列蓋住（真的按 Tab：瀏覽器只捲到剛好看得到的邊緣，要靠 scroll-padding-bottom 留位置）
+    await page.evaluate(() => { scrollTo(0, 0); document.activeElement?.blur(); document.querySelectorAll('section[id^="ex-"] details').forEach(d => { d.open = true }) });
+    const FO = []; let lastF = '', nF = 0;
+    for (let i = 0; i < 200; i++) { await page.keyboard.press('Tab'); const r = await page.evaluate(() => { const e = document.activeElement; if (!e || e === document.body || e.tagName === 'VIDEO' || e.closest('.bar')) return null;
+        const b = e.getBoundingClientRect(), t = document.querySelector('.bar').getBoundingClientRect().top; return { id: (e.id || e.dataset.k || e.dataset.clear || e.tagName) + '@' + Math.round(b.top + scrollY), bad: b.bottom > t + 1 } });
+      if (!r || r.id === lastF) continue; lastF = r.id; nF++; if (r.bad) FO.push(r.id) }
+    await page.evaluate(() => document.querySelectorAll('section[id^="ex-"] details').forEach(d => { d.open = false }));
+    check('審核資料包：用鍵盤（Tab）移到意見欄、按鈕時，不會被底部固定的「匯出審核意見」列蓋住', nF >= 60 && FO.length === 0, JSON.stringify({ nF, FO: FO.slice(0, 8) }));
+    const msg = async () => (await page.textContent('#msgOut')).trim();
+    await page.click('#export'); const m1 = await msg(); await page.fill('#rvName', '測試教練'); await page.fill('#rvTitle', '物理治療師');
+    await page.check('#ex-squat input[value="approved"]', { force: true }); await page.check('#ex-bridge input[value="revision_required"]', { force: true }); await page.click('#export'); const m2 = await msg();
+    await page.fill('#ex-bridge textarea[data-k="general"]', '最高點骨盆再高一點 <img src=x onerror="window.__x=1">'); await page.reload(); await page.waitForSelector('#ex-bridge video');
+    const kept = await page.evaluate(() => [document.querySelector('#rvName').value, document.querySelector('#ex-squat input[value="approved"]').checked, document.querySelector('#ex-bridge textarea[data-k="general"]').value.length > 5]);
+    const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#export')]), rf = path.join(tmpDir, 'r.json'); await dl.saveAs(rf); const RJ = JSON.parse(fs.readFileSync(rf, 'utf8')), m3 = await msg();
+    check('教練填寫與匯出：沒填姓名、或選「需要修正」沒寫原因會擋下來並說明；分次填寫重新整理後還在；匯出檔有審核人、職稱、日期、每個動作的結果與意見、審核的內容版本，姓名預設不公開',
+      /請先填審核人的姓名/.test(m1) && /臀橋.*需要修正.*寫原因/.test(m2) && kept.every(Boolean) && /已下載審核意見檔/.test(m3) && RJ.type === 'kinwell-3d-review-result' && RJ.schema === 1 && RJ.reviewer.name === '測試教練' && RJ.reviewer.publish === false
+        && /^\d{4}-\d{2}-\d{2}$/.test(RJ.date) && RJ.items.length === 2 && RJ.items.every(i => i.content === PI[i.id].content) && RJ.items.find(i => i.id === 'bridge').comments.general.length > 5, JSON.stringify({ m1, m2, m3, kept, RJ: { ...RJ, items: RJ.items.map(i => [i.id, i.status]) } }));
+    await page.close();
+    // ② App：匯入、預覽、套用、重複匯入、舊版內容、錯誤檔、匯出審核資料庫、清除
+    const old = JSON.parse(JSON.stringify(RJ)); old.items = [{ id: 'pushup', content: 'old000000000', status: 'approved', comments: {} }]; fs.writeFileSync(path.join(tmpDir, 'old.json'), JSON.stringify(old));
+    const bad1 = { ...RJ, type: 'x' }, bad2 = { ...RJ, reviewer: { name: '', title: '物理治療師' } }, bad3 = { ...RJ, items: [{ id: 'lunge', content: PI.lunge.content, status: 'rejected', comments: {} }] };
+    [bad1, bad2, bad3].forEach((j, i) => fs.writeFileSync(path.join(tmpDir, `bad${i + 1}.json`), JSON.stringify(j)));
+    const seed = { members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1980-01-01', h: 172, w: 70, act: '1.375', goal: 'keep', role: 'me' }], active: 'a' };
+    page = await newPage(seed, { url: base }); await page.evaluate(() => go('fit', 'move')); await page.click('#h3d-go'); await page.waitForFunction(() => $('#h3d')?.dataset.state === 'ready' && H3D.ui && !H3D.busy, null, { timeout: 60000 });
+    await page.waitForFunction(() => document.querySelectorAll('.rvi').length === 5 && document.querySelector('.h3dp')?.dataset.rv === 'ready'); await page.click('.rvp summary');
+    const L = () => page.evaluate(() => Object.fromEntries([...document.querySelectorAll('.rvi')].map(x => [x.querySelector('b').textContent, x.querySelector('.tg').textContent + (x.querySelector('.note')?.textContent ? '｜' + x.querySelector('.note').textContent : '')])));
+    const imp = async f => { await page.setInputFiles('.rvp input[type=file]', path.join(tmpDir, f)); await page.waitForSelector('.rvprev:not([hidden])'); return (await page.textContent('.rvprev')).replace(/\s+/g, ' ') };
+    const before = await L(), pv = await imp('r.json'), hasOk = await page.$('[data-a="rvok"]') !== null; await page.click('[data-a="rvok"]'); const after = await L(), okMsg = (await page.textContent('.rvmsg')).trim();
+    const loc = await page.evaluate(() => JSON.parse(localStorage.getItem('nc_rev3d'))), offRev = DB.items.squat.rev;
+    const pv2 = await imp('r.json'), ok2 = await page.$('[data-a="rvok"]') !== null; await page.click('[data-a="rvno"]');
+    const pvOld = await imp('old.json'); await page.click('[data-a="rvok"]'); const afterOld = await L();
+    const e1 = await imp('bad1.json'); await page.click('[data-a="rvno"]'); const e2 = await imp('bad2.json'); await page.click('[data-a="rvno"]'); const e3 = await imp('bad3.json'); await page.click('[data-a="rvno"]');
+    check('App 匯入教練的審核意見：先預覽「待專業審核 → 審核通過」「→ 需要修正」與意見，按套用才存；套用後狀態、審核人職稱與日期更新，版本＋1、修正紀錄加一筆；同一個檔案再匯入顯示已經匯入過、沒有套用鈕',
+      Object.values(before).every(t => /待專業審核/.test(t)) && hasOk && /徒手深蹲：待專業審核 → 審核通過/.test(pv) && /臀橋：自製動畫・待專業審核 → 需要修正/.test(pv) && /姓名不公開/.test(pv)
+        && /^審核通過｜物理治療師 測試教練，\d{4}-\d{2}-\d{2}$/.test(after['徒手深蹲']) && /^需要修正/.test(after['臀橋']) && /待專業審核/.test(after['伏地挺身']) && /已套用 2 個動作/.test(okMsg)
+        && loc.items.squat.rev === offRev + 1 && loc.items.squat.history.at(-1).kind === 'review' && loc.items.squat.history.at(-1).rev === offRev + 1 && /已經匯入過/.test(pv2) && !ok2, JSON.stringify({ before, pv, after, okMsg, pv2 }));
+    check('舊版內容的審核不算通過：針對舊版動畫的「通過」只記在修正紀錄、伏地挺身仍是待專業審核；錯誤的檔案（不是審核意見檔、沒有審核人姓名、選不予採用卻沒寫原因）都不會套用並說明原因',
+      /舊版內容/.test(pvOld) && /待專業審核/.test(afterOld['伏地挺身']) && /不是 Kinwell 的審核意見檔/.test(e1) && /沒有審核人的姓名/.test(e2) && /弓箭步：選了「不予採用」但沒有寫原因/.test(e3) && /沒有套用任何資料/.test(e1 + e2 + e3), JSON.stringify({ pvOld, afterOld: afterOld['伏地挺身'], e1, e2, e3 }));
+    await page.click('[data-ex="bridge"]'); await page.waitForFunction(() => H3D.v.animState().id === 'bridge' && document.querySelector('.h3dp .hist'));
+    const D = await page.evaluate(() => ({ ex: document.querySelector('.h3dp .ex').textContent, hist: document.querySelector('.h3dp .hist').textContent, img: !!document.querySelector('.h3dp img'), x: window.__x || 0 }));
+    const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('[data-a="rvexp"]')]), ef = path.join(tmpDir, 'db.json'); await dl2.saveAs(ef); const EJ = JSON.parse(fs.readFileSync(ef, 'utf8'));
+    await page.reload(); await page.evaluate(() => go('fit', 'move')); await page.click('#h3d-go'); await page.waitForFunction(() => $('#h3d')?.dataset.state === 'ready' && H3D.ui && !H3D.busy, null, { timeout: 60000 }); await page.waitForFunction(() => document.querySelectorAll('.rvi').length === 5 && document.querySelector('.h3dp')?.dataset.rv === 'ready');
+    const persist = await L(); await page.click('.rvp summary'); await page.click('[data-a="rvclr"]'); const cleared = await L();
+    check('動作說明顯示注意事項、審核狀態與修正紀錄（教練意見裡的 HTML 不會被執行）；匯出審核資料庫給網站時姓名換成「不公開姓名」、保留職稱；重新打開 App 還在；清除後回到網站的正式狀態',
+      /注意事項/.test(D.ex) && /需要修正（物理治療師 測試教練/.test(D.ex) && /修正紀錄（\d+ 筆）/.test(D.hist) && /審核「需要修正」/.test(D.hist) && !D.img && !D.x
+        && EJ.type === 'kinwell-3d-reviews' && EJ.items.squat.status === 'approved' && EJ.items.squat.reviewer === HID && EJ.items.squat.title === '物理治療師' && !JSON.stringify(EJ).includes('測試教練') && Object.keys(EJ.items).length === 5
+        && /^審核通過/.test(persist['徒手深蹲']) && Object.values(cleared).every(t => /待專業審核/.test(t)), JSON.stringify({ hist: D.hist.slice(0, 160), persist, cleared, squat: EJ.items.squat.reviewer }));
+    const RL = await page.evaluate(async () => { const M = await import('./3d/exercises.js'), sq = M.EXERCISES[0], br = M.EXERCISES.find(e => e.id === 'bridge');
+      return [M.reviewLabel(sq, { status: 'approved', reviewer: 'x', reviewedAt: '2026-11-25', content: 'aaa' }, 'bbb'), M.reviewLabel(sq, { status: 'approved', content: 'aaa' }, 'aaa'), M.reviewLabel(sq, { status: 'approved', reviewer: 'x', reviewedAt: '2026-11-25', content: 'aaa' }, 'aaa'), M.reviewLabel(br, { status: 'pending_review' }), M.reviewLabel(sq, { status: 'revision_required', content: 'aaa' }, 'bbb')] });
+    check('審核標籤規則：審核的是舊版內容 → 「內容已更新・待重新審核」；沒有審核人或日期的通過 → 「待專業審核」；有審核人、日期且內容相同才是「審核通過」；自製動畫標「自製動畫・待專業審核」',
+      RL.join('|') === '內容已更新・待重新審核|待專業審核|審核通過|自製動畫・待專業審核|內容已更新・待重新審核', RL.join('|'));
+    await page.close(); srv6.close(); fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============

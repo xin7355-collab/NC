@@ -1,0 +1,11 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>審核資料包截圖（開發工具）</title></head>
+<body style="margin:0;background:#0b1220"><div id="h" style="width:480px;height:400px"></div>
+<script type="module">
+// 用 App 同一個 3D 檢視器拍審核資料包的關鍵畫面與影片格（tools/build-review.js 呼叫）
+import { createViewer } from '../3d/viewer.js';
+const v = createViewer(document.getElementById('h'), {}); let sex = '', ex = '';
+window.cap = async (s, id, times, q = 0.82) => { if (sex !== s) { await v.load(s); sex = s; ex = '' }
+  if (ex !== id) { await v.setExercise(id, { autoplay: false, view: 'side' }); v.setView('side'); ex = id }
+  const out = []; for (const t of times) { v.seek(t); out.push(v.snapshot('image/jpeg', q).split(',')[1]) } return out };
+window.ready = true;
+</script></body></html>
