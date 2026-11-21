@@ -6,8 +6,8 @@
  "items": {
   "squat": {
    "status": "pending_review",
-   "rev": 4,
-   "content": "4a6ba14d4c4d",
+   "rev": 5,
+   "content": "f3129e740ccd",
    "reviewer": null,
    "title": null,
    "publish": false,
@@ -38,13 +38,20 @@
      "kind": "status",
      "status": "pending_review",
      "note": "放進專業審核資料包"
+    },
+    {
+     "rev": 5,
+     "date": "2026-11-21",
+     "kind": "content",
+     "content": "f3129e740ccd",
+     "note": "依使用者回饋修正姿勢：上背打直（原本拱起約 36 度）、上身前傾不超過 40 度、頭頸中立；加註來源校正說明"
     }
    ]
   },
   "pushup": {
    "status": "pending_review",
-   "rev": 4,
-   "content": "512ac387a948",
+   "rev": 5,
+   "content": "0eaddcc58996",
    "reviewer": null,
    "title": null,
    "publish": false,
@@ -75,6 +82,13 @@
      "kind": "status",
      "status": "pending_review",
      "note": "放進專業審核資料包"
+    },
+    {
+     "rev": 5,
+     "date": "2026-11-21",
+     "kind": "content",
+     "content": "0eaddcc58996",
+     "note": "依使用者回饋修正姿勢：手掌移到肩膀正下方（原本約 1.9 倍肩寬）、手肘往後約 45 度（原本往兩側打開約 85 度）、頭頸中立、最低點手肘約彎 100 度"
     }
    ]
   },
@@ -123,8 +137,8 @@
   },
   "lunge": {
    "status": "pending_review",
-   "rev": 4,
-   "content": "e73933582356",
+   "rev": 5,
+   "content": "a3853b6879a4",
    "reviewer": null,
    "title": null,
    "publish": false,
@@ -155,6 +169,13 @@
      "kind": "status",
      "status": "pending_review",
      "note": "放進專業審核資料包"
+    },
+    {
+     "rev": 5,
+     "date": "2026-11-21",
+     "kind": "content",
+     "content": "a3853b6879a4",
+     "note": "依使用者回饋重做：原本的 CMU 144_17 是出拳動作（上身側傾扭轉、後膝離地 23 公分），改成自製：跨一大步、前後膝約 90 度、後膝離地約 11 公分、上身直立；說明文字一併更新"
     }
    ]
   },

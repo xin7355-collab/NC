@@ -48,12 +48,12 @@
    "drift_Rankle": 0.0002,
    "kneeMax": 129,
    "elbowMax": 42,
-   "lineMin": 111,
-   "hipLineMax": 170,
+   "lineMin": 114,
+   "hipLineMax": 169,
    "pelvisMin": 0.443,
    "pelvisMax": 0.877,
    "feet0": 0,
-   "arms0": 1.4166,
+   "arms0": 1.4201,
    "feetMax": 0
   },
   "female": {
@@ -64,12 +64,12 @@
    "drift_Rankle": 0.0002,
    "kneeMax": 129,
    "elbowMax": 42,
-   "lineMin": 109,
+   "lineMin": 111,
    "hipLineMax": 167,
    "pelvisMin": 0.462,
    "pelvisMax": 0.912,
    "feet0": 0,
-   "arms0": 1.3891,
+   "arms0": 1.395,
    "feetMax": 0
   }
  }

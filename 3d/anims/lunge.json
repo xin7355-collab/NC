@@ -4,73 +4,71 @@
   [
    "預備",
    0,
-   0.33
+   0.57
   ],
   [
    "跨步下蹲",
-   0.33,
-   0.87
+   0.57,
+   1.23
   ],
   [
    "最低點",
-   0.87,
-   1.07
+   1.23,
+   1.7
   ],
   [
    "推回站直",
-   1.07,
-   1.47
+   1.7,
+   2.37
   ],
   [
    "完成",
-   1.47,
-   2.03
+   2.37,
+   2.9
   ]
  ],
  "clips": [
   {
    "name": "male",
-   "dur": 2.033,
+   "dur": 2.9,
    "tracks": 24
   },
   {
    "name": "female",
-   "dur": 2.033,
+   "dur": 2.9,
    "tracks": 25
   }
  ],
  "metrics": {
   "male": {
    "minY": 0,
-   "frames": 62,
-   "dur": 2.033,
-   "drift_Ltoe": 0.0232,
-   "drift_Rtoe": 0.8077,
-   "kneeMax": 114,
-   "elbowMax": 16,
-   "lineMin": 162,
-   "hipLineMax": 175,
-   "pelvisMin": 0.604,
-   "pelvisMax": 0.875,
+   "frames": 88,
+   "dur": 2.9,
+   "drift_Ltoe": 0,
+   "kneeMax": 123,
+   "elbowMax": 9,
+   "lineMin": 167,
+   "hipLineMax": 176,
+   "pelvisMin": 0.473,
+   "pelvisMax": 0.893,
    "feet0": 0,
-   "arms0": 0.7728,
+   "arms0": 0.7146,
    "feetMax": 0
   },
   "female": {
    "minY": 0,
-   "frames": 62,
-   "dur": 2.033,
-   "drift_Ltoe": 0.0229,
-   "drift_Rtoe": 0.8376,
-   "kneeMax": 116,
-   "elbowMax": 16,
-   "lineMin": 163,
-   "hipLineMax": 172,
-   "pelvisMin": 0.617,
-   "pelvisMax": 0.908,
+   "frames": 88,
+   "dur": 2.9,
+   "drift_Ltoe": 0,
+   "kneeMax": 114,
+   "elbowMax": 9,
+   "lineMin": 172,
+   "hipLineMax": 178,
+   "pelvisMin": 0.52,
+   "pelvisMax": 0.928,
    "feet0": 0,
-   "arms0": 0.7354,
-   "feetMax": 0
+   "arms0": 0.7402,
+   "feetMax": 0.0015
   }
  }
 }

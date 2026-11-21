@@ -4,7 +4,7 @@
 //   3d/review/media/<動作>.mp4（男女並排、側面、一個循環；H.264，iPhone 能直接播）
 // 寫 3d/review/package.json（每個動作的內容版本、截圖、影片），更新 3d/review/reviews.json 的內容版本：
 //   內容（動畫檔或畫面上的文字）改過的動作 → 版本＋1、修正紀錄加一筆、已審核的狀態改回「待專業審核」（舊的審核不能沿用）
-// 用法：node tools/build-review.js [--note "這次改了什麼"]   需要：playwright、ffmpeg（libx264）
+// 用法：node tools/build-review.js [--note "這次改了什麼"] [--note-<動作> "這個動作改了什麼"]   需要：playwright、ffmpeg（libx264）
 const http = require('http'), fs = require('fs'), path = require('path'), os = require('os'), { execFileSync } = require('child_process'), { chromium } = require('playwright');
 const { contentHash, loadExercises } = require('./review-hash.js');
 const ROOT = path.join(__dirname, '..'), MEDIA = path.join(ROOT, '3d', 'review', 'media'), arg = k => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : null };
@@ -36,11 +36,11 @@ srv.listen(0, '127.0.0.1', async () => {
   await b.close(); srv.close();
   fs.writeFileSync(path.join(ROOT, '3d', 'review', 'package.json'), JSON.stringify({ type: 'kinwell-3d-review-package', schema: 1, built: TODAY, items }, null, 1) + '\n');
   // 審核資料庫：內容版本有變的動作加修正紀錄；已審核過的改回「待專業審核」
-  const dbf = path.join(ROOT, '3d', 'review', 'reviews.json'), db = JSON.parse(fs.readFileSync(dbf, 'utf8')), note = arg('--note') || '內容更新';
+  const dbf = path.join(ROOT, '3d', 'review', 'reviews.json'), db = JSON.parse(fs.readFileSync(dbf, 'utf8'));
   for (const it of items) { const r = db.items[it.id] || (db.items[it.id] = { status: 'pending_review', rev: 0, content: null, reviewer: null, title: null, publish: false, reviewedAt: null, comments: {}, history: [] });
     if (r.content == null) { r.content = it.content; continue }
     if (r.content === it.content) continue;
-    const back = !['draft', 'pending_review'].includes(r.status); r.rev += 1; r.history.push({ rev: r.rev, date: TODAY, kind: 'content', content: it.content, note: note + (back ? '（舊的審核不再適用，改回待專業審核）' : '') });
+    const back = !['draft', 'pending_review'].includes(r.status), note = arg('--note-' + it.id) || arg('--note') || '內容更新'; r.rev += 1; r.history.push({ rev: r.rev, date: TODAY, kind: 'content', content: it.content, note: note + (back ? '（舊的審核不再適用，改回待專業審核）' : '') });
     r.content = it.content; if (back) Object.assign(r, { status: 'pending_review', reviewer: null, title: null, publish: false, reviewedAt: null, comments: {} });
     console.log(`  ${it.id}：內容改過 → 版本 ${r.rev}${back ? '，改回待專業審核' : ''}`) }
   db.updated = TODAY; fs.writeFileSync(dbf, JSON.stringify(db, null, 1) + '\n'); console.log('完成：3d/review/package.json、reviews.json');

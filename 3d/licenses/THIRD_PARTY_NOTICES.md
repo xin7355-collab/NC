@@ -65,24 +65,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ```
 
-## 3. 運動動畫：CMU 動作捕捉資料庫（徒手深蹲、弓箭步）
+## 3. 運動動畫：CMU 動作捕捉資料庫（徒手深蹲）
 
-- 使用：`3d/anims/squat.glb`（86_02）、`3d/anims/lunge.glb`（144_17）
+- 使用：`3d/anims/squat.glb`（86_02）
 - 來源：https://mocap.cs.cmu.edu/ ；BVH 版由 Bruce Hahne（cgspeed）轉檔，取自 GitHub 鏡像 https://github.com/una-dinosauria/cmu-mocap （commit 09a07f54f3bbb58797325f009282d0b2048a2871）
 - 授權：CMU「This dataset of motions is free for all uses.」「You may include this data in commercially-sold products, but you may not resell this data directly, even in converted form.」；FAQ「The motion capture data may be copied, modified, or redistributed without permission.」；轉檔者「I (Bruce) place no additional restrictions on the use of this particular BVH conversion.」
 - 致謝（CMU 希望標註）：The data used in this project was obtained from mocap.cs.cmu.edu. The database was created with funding from NSF EIA-0196217.
-- 修改內容：轉到 Rocketbox 骨架、腳鎖定與貼地、可循環；弓箭步的手臂改成自然下垂。轉檔工具：`tools/build-3d-anims.js`
+- 修改內容：轉到 Rocketbox 骨架、腳鎖定與貼地、可循環；上半身依標準動作校正（背打直、前傾不超過 40 度、頭頸中立）。轉檔工具：`tools/build-3d-anims.js`
 
 ## 4. 運動動畫：Mesh2Motion（伏地挺身）
 
 - 使用：`3d/anims/pushup.glb`
 - 來源：https://github.com/Mesh2Motion/mesh2motion-app （commit 1632e1a7e009600500d436628075aa3a0e8b36ac，`static/assets/human/animations/pushup.glb`）
 - 授權：CC0（README：「The art assets (3d models, rigs, animations) are all licensed under CC0.」）
-- 修改內容：轉到 Rocketbox 骨架、手掌與腳尖固定在地上、可循環
+- 修改內容：轉到 Rocketbox 骨架、手掌與腳尖固定在地上、可循環；依標準動作校正手掌位置（肩膀正下方）、手肘角度（往後約 45 度）、頭頸與下降深度
 
-## 5. 自製動畫（棒式、臀橋）
+## 5. 自製動畫（棒式、弓箭步、臀橋）
 
-`3d/anims/plank.glb`（趴著 → 撐起 → 撐住 → 放下）、`3d/anims/bridge.glb`（躺好 → 抬臀 → 停住 → 放下）由本專案自製（`tools/build-3d-anims.html`），沒有第三方素材。尚未經專業人員審核，App 內標示「自製草稿・待專業審核」。
+`3d/anims/plank.glb`（趴著 → 撐起 → 撐住 → 放下）、`3d/anims/lunge.glb`（站 → 跨步下蹲 → 推回站直）、`3d/anims/bridge.glb`（躺好 → 抬臀 → 停住 → 放下）由本專案自製（`tools/build-3d-anims.html`），沒有第三方素材。尚未經專業人員審核，App 內標示「自製動畫・待專業審核」。
 
 ## 6. 專業審核資料包的截圖與影片
 

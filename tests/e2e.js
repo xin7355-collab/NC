@@ -2494,7 +2494,18 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       for (const sex of ['male', 'female']) { if (H3D.v.sex !== sex) { document.querySelector(`[data-h3dsex="${sex}"]`).click(); await new Promise(r => { const f = () => H3D.v?.sex === sex && !H3D.busy ? r() : setTimeout(f, 50); f() }) }
         for (const id of ids) { await H3D.v.setExercise(id, { autoplay: false }); const st = H3D.v.animState(), N = 20, times = Array.from({ length: N + 1 }, (_, i) => st.dur * i / N);
           const P = H3D.v.probeAnim(times, { feet: 'Foot|Toe', arms: 'Forearm|Hand|Finger' }), dr = n => Math.max(...P.map(p => Math.hypot(p.j[n][0] - P[0].j[n][0], p.j[n][2] - P[0].j[n][2])));
-          out[sex + ':' + id] = { minY: +Math.min(...P.map(p => p.minY)).toFixed(4), feet: +Math.max(...P.map(p => p.reg.feet)).toFixed(4), arms: +Math.max(...P.map(p => p.reg.arms)).toFixed(4),
+          // 姿勢：最低點（停住）那一刻的關節角度
+          const bt = st.phases[Math.min(2, st.phases.length - 1)], Jb = H3D.v.probeAnim([(bt[1] + bt[2]) / 2], {})[0].j, sub = (a, b) => a.map((x, i) => x - b[i]), mid = (a, b) => a.map((x, i) => (x + b[i]) / 2), len = a => Math.hypot(...a);
+          const ang = (a, b) => Math.acos(Math.max(-1, Math.min(1, a.reduce((s, x, i) => s + x * b[i], 0) / (len(a) * len(b))))) * 180 / Math.PI, U = [0, 1, 0], flex = (h, k, f) => 180 - ang(sub(h, k), sub(f, k));
+          const pose = {};
+          if (id === 'squat') Object.assign(pose, { lean: ang(sub(Jb.Neck, Jb.Spine1), U), hump: ang(sub(Jb.Spine2, Jb.Spine1), sub(Jb.Neck, Jb.Spine2)) });
+          if (id === 'pushup') { const sh = mid(Jb.L_UpperArm, Jb.R_UpperArm); Object.assign(pose, { elbow: Math.max(flex(Jb.L_UpperArm, Jb.L_Forearm, Jb.L_Hand), flex(Jb.R_UpperArm, Jb.R_Forearm, Jb.R_Hand)),
+            flare: Math.max(...['L', 'R'].map(s => Math.atan2(Math.abs(Jb[s + '_Forearm'][0] - Jb[s + '_UpperArm'][0]), Math.max(0.001, Jb[s + '_UpperArm'][2] - Jb[s + '_Forearm'][2])) * 180 / Math.PI)),
+            width: Math.abs(Jb.L_Hand[0] - Jb.R_Hand[0]) / Math.abs(Jb.L_UpperArm[0] - Jb.R_UpperArm[0]), neck: ang(sub(Jb.Head, Jb.Neck), sub(Jb.Neck, Jb.Pelvis)) }) }
+          if (id === 'lunge') { const fr = Jb.L_Calf[2] > Jb.R_Calf[2] ? 'L' : 'R', bk = fr === 'L' ? 'R' : 'L', sl = sub(Jb.L_UpperArm, Jb.R_UpperArm);
+            Object.assign(pose, { upright: ang(sub(Jb.Neck, Jb.Pelvis), U), side: Math.abs(Jb.Neck[0] - Jb.Pelvis[0]), twist: Math.atan2(Math.abs(sl[2]), Math.abs(sl[0])) * 180 / Math.PI, front: flex(Jb[fr + '_Thigh'], Jb[fr + '_Calf'], Jb[fr + '_Foot']), backKnee: Jb[bk + '_Calf'][1] }) }
+          for (const k in pose) pose[k] = +pose[k].toFixed(3);
+          out[sex + ':' + id] = { pose, minY: +Math.min(...P.map(p => p.minY)).toFixed(4), feet: +Math.max(...P.map(p => p.reg.feet)).toFixed(4), arms: +Math.max(...P.map(p => p.reg.arms)).toFixed(4),
             drift: +Math.max(0, ...PL[id].map(dr)).toFixed(4), stance: id === 'lunge' ? +Math.min(dr('L_Toe0'), dr('R_Toe0')).toFixed(4) : null, ph: st.phases.map(p => p[0]).join('/'), dur: st.dur } } }
       return out });
     const ok = (k, f) => f(Q[k]), both = f => ['male', 'female'].every(x => f(x));
@@ -2503,6 +2514,11 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
         && both(x => ok(x + ':squat', q => q.feet <= 0.01 && q.drift <= 0.01)) && both(x => ok(x + ':pushup', q => q.arms <= 0.01 && q.feet <= 0.02 && q.drift <= 0.01))
         && both(x => ok(x + ':plank', q => q.arms <= 0.01 && q.feet <= 0.015 && q.drift <= 0.01)) && both(x => ok(x + ':lunge', q => q.stance <= 0.03 && q.feet <= 0.01))
         && both(x => ok(x + ':bridge', q => q.feet <= 0.01 && q.arms <= 0.01 && q.drift <= 0.01)), JSON.stringify(Q));
+    const po = k => Q[k].pose;
+    check('姿勢正確（最低點，男女都量）：深蹲上身前傾 ≤ 43 度、背不拱（上背兩節夾角 ≤ 12 度）；伏地挺身手肘往後收（外開 ≤ 65 度）、最低點手肘彎 ≤ 105 度、雙手 ≤ 1.6 倍肩寬、頭頸跟身體一直線（≤ 25 度）；弓箭步上身直立（≤ 12 度）、不側傾（≤ 4 公分）、肩膀不扭轉（≤ 8 度）、前膝彎 70～115 度、後膝離地 4～18 公分',
+      both(x => ok(x + ':squat', () => po(x + ':squat').lean <= 43 && po(x + ':squat').hump <= 12) && ok(x + ':pushup', () => { const p = po(x + ':pushup'); return p.flare <= 65 && p.elbow <= 105 && p.width <= 1.6 && p.neck <= 25 })
+        && ok(x + ':lunge', () => { const p = po(x + ':lunge'); return p.upright <= 12 && p.side <= 0.04 && p.twist <= 8 && p.front >= 70 && p.front <= 115 && p.backKnee >= 0.04 && p.backKnee <= 0.18 })),
+      JSON.stringify(Object.fromEntries(Object.entries(Q).filter(([k]) => /squat|pushup|lunge/.test(k)).map(([k, v]) => [k, v.pose]))));
     check('每個動作都有完整的起始、過程、結束：深蹲「預備／下蹲／最低點／站起／完成」、伏地挺身「預備／下降／最低點／推起／完成」、弓箭步「…／最低點／推回站直／完成」、臀橋「躺好／抬臀／停住／放下／完成」、棒式「預備／撐起／撐住／放下／完成」',
       Q['male:squat'].ph === '預備/下蹲/最低點/站起/完成' && Q['male:pushup'].ph === '預備/下降/最低點/推起/完成' && /^預備\/跨步下蹲\/最低點\/推回站直\/完成$/.test(Q['male:lunge'].ph)
         && Q['male:bridge'].ph === '躺好/抬臀/停住/放下/完成' && Q['male:plank'].ph === '預備/撐起/撐住（每次停 30 秒）/放下/完成', JSON.stringify(Object.fromEntries(Object.entries(Q).filter(([k]) => k.startsWith('male')).map(([k, v]) => [k, v.ph]))));
@@ -2527,8 +2543,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('播放控制：選了動作自動播放、時間會走；暫停後停住、按鈕變「▶ 播放」；0.5× 速度大約是 1× 的一半；拖進度條、下一格／上一格各 1/30 秒；停在最低點時顯示「最低點」；重播從頭開始；關掉循環會停在最後一格、再按從頭播',
       C.auto && C.adv && C.paused && C.ratio >= 0.25 && C.ratio <= 0.8 && C.sp === 'true' && Math.abs(C.seek - 1) < 0.01 && Math.abs(C.fwd - (1 + 1 / 30)) < 0.005 && Math.abs(C.back - 1) < 0.005
         && C.ph === '最低點' && /最低點/.test(C.vt) && C.replay && C.loopOff && C.end && C.restart, JSON.stringify({ ...C, txt: undefined, card: undefined }));
-    check('換成女性時動作和時間點接著播；每個動作寫出做對的重點、常見錯誤、動畫來源與授權（CMU、Mesh2Motion CC0、自製）；審核狀態只有「待專業審核」或「自製動畫・待專業審核」，沒有審核人與日期時不會顯示「審核通過」；切換動作 GPU 資源不增加',
-      C.sw.sex === 'female' && C.sw.id === 'squat' && Math.abs(C.sw.t - 1.2) < 0.05 && /CMU/.test(C.txt.squat) && /Mesh2Motion/.test(C.txt.pushup) && /CC0/.test(C.txt.pushup) && /自製/.test(C.txt.plank) && /自製/.test(C.txt.bridge) && /CMU/.test(C.txt.lunge)
+    check('換成女性時動作和時間點接著播；每個動作寫出做對的重點、常見錯誤、動畫來源與授權（深蹲 CMU、伏地挺身 Mesh2Motion CC0、棒式／弓箭步／臀橋自製）；審核狀態只有「待專業審核」或「自製動畫・待專業審核」，沒有審核人與日期時不會顯示「審核通過」；切換動作 GPU 資源不增加',
+      C.sw.sex === 'female' && C.sw.id === 'squat' && Math.abs(C.sw.t - 1.2) < 0.05 && /CMU/.test(C.txt.squat) && /Mesh2Motion/.test(C.txt.pushup) && /CC0/.test(C.txt.pushup) && /自製/.test(C.txt.plank) && /自製/.test(C.txt.bridge) && /自製/.test(C.txt.lunge)
         && /待專業審核/.test(C.txt.squat) && /自製動畫・待專業審核/.test(C.txt.bridge) && !/審核通過/.test(C.card) && C.rl[0] === '待專業審核' && C.rl[1] === '審核通過' && C.rl[2] === '草稿・尚未送審'
         && Object.values(C.txt).every(t => /做對的重點/.test(t) && /常見錯誤/.test(t) && /不能判斷你自己的動作/.test(t)) && C.gpu[0] <= C.gpu[2] + 40 && C.gpu[2] === C.gpu[2], JSON.stringify({ sw: C.sw, rl: C.rl, gpu: C.gpu }));
     // 視角按鈕：播地板動作（臀橋、伏地挺身）時按正面／側面／背面，整個人要在畫面裡、而且夠大（不能套站姿的取景把人擠到最下面、切掉頭）

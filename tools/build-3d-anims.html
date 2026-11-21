@@ -100,6 +100,15 @@ function toClip(name, frames) {
 function loopBlend(frames, n) { const N = frames.length, F = frames[0]; for (let i = 0; i < n; i++) { const k = N - n + i, a = (i + 1) / n, f = frames[k]; f.root.lerp(F.root, a); f.rootQ.slerp(F.rootQ, a); for (const b of boneKeys(F)) f[b].slerp(F[b], a) } }
 
 // ---------- 動作捕捉／CC0 動畫 → 目標 ----------
+// 上半身校正（深蹲）：上背兩節脊椎打直（不駝背）、前傾不超過 maxLean 度、肩膀跟骨盆擺正、頭頸中立（往上抬 headUp 度看前下方）；手臂維持原本的方向
+// 下背那節（Spine）不動：Biped 骨架的大腿掛在它底下，轉它會連髖關節一起移
+function fixTorso(t, o) { const segs = s => [['_Clavicle', '_UpperArm'], ['_UpperArm', '_Forearm'], ['_Forearm', '_Hand'], ['_Hand', '_Finger2']].map(([a, b]) => [s + a, s + b, wp(T(t, s + b)).sub(wp(T(t, s + a))).normalize()]);
+  const keep = [...segs('L'), ...segs('R')], base = wp(T(t, 'Spine1')), d = wp(T(t, 'Neck')).sub(base).normalize(), lean = Math.acos(Math.min(1, d.dot(UP))) / D2R;
+  if (lean > o.maxLean) d.applyAxisAngle(V().crossVectors(d, UP).normalize(), (lean - o.maxLean) * D2R);
+  aim(t, 'Spine1', 'Spine2', d); aim(t, 'Spine2', 'Neck', d);
+  { const k = joints(t); twist(t, 'Spine2', d, k.Lsho.clone().sub(k.Rsho), k.Lhip.clone().sub(k.Rhip)) }
+  const hd = d.clone(), lh = Math.acos(Math.min(1, hd.dot(UP))) / D2R; if (lh > 1) hd.applyAxisAngle(V().crossVectors(hd, UP).normalize(), Math.min(lh, o.headUp ?? 15) * D2R); aim(t, 'Neck', 'Head', hd);
+  for (const [a, b, dir] of keep) aim(t, a, b, dir) }
 async function retarget(t, spec) {
   const src = await loadSource(spec.kind, spec.url), t0 = spec.from, t1 = spec.to ?? src.dur, n = Math.round((t1 - t0) * FPS) + 1;
   const P0 = src.at(t0), latS = P0.Lhip.clone().sub(P0.Rhip); latS.y = 0; const rot = Q().setFromUnitVectors(latS.normalize(), V(1, 0, 0));
@@ -120,9 +129,10 @@ async function retarget(t, spec) {
   let armDirs = null; if (spec.arms === 'sides') { resetBind(t); const c0 = wq(T(t, 'Spine2')).invert(), j = joints(t), lat = j.Lhip.clone().sub(j.Rhip).normalize(), fwd = V().crossVectors(lat, UP).normalize();
     armDirs = { c0, d: s => { const k = s === 'L' ? 1 : -1; return { u: UP.clone().negate().add(lat.clone().multiplyScalar(0.16 * k)).add(fwd.clone().multiplyScalar(-0.04)), f: UP.clone().negate().add(lat.clone().multiplyScalar(0.05 * k)).add(fwd.clone().multiplyScalar(0.22)) } } } }
   const pivot = raw[0].j.Ltoe.clone().add(raw[0].j.Rtoe).multiplyScalar(.5);
-  const run = tilt => { goal = {}; const out = []; let prev = null;
+  const run = (tilt, depthK = 1) => { goal = {}; const out = []; let prev = null, th0 = 0;
   for (let i = 0; i < n; i++) { apply(t, raw[i].f);
     if (tilt) { const r = T(t, ''), Rq = Q().setFromAxisAngle(V(1, 0, 0), tilt), np = pivot.clone().add(wp(r).sub(pivot).applyQuaternion(Rq)); setWorldQ(t, r, Rq.multiply(wq(r))); setRootWorld(t, np) }   // 以腳尖為支點整個人往頭的方向傾斜
+    if (spec.torso) fixTorso(t, spec.torso);
     if (armDirs) { const rq = wq(T(t, 'Spine2')).multiply(armDirs.c0); for (const s of ['L', 'R']) { const d = armDirs.d(s); aim(t, s + '_UpperArm', s + '_Forearm', d.u.clone().applyQuaternion(rq)); aim(t, s + '_Forearm', s + '_Hand', d.f.clone().applyQuaternion(rq)) } }
     const P = src.at(t0 + i / FPS);
     for (const s of ['L', 'R']) { const aK = s + 'ankle', tK = s + 'toe', useA = lockSets.includes(aK), useT = lockSets.includes(tK); if (!useA && !useT) continue;
@@ -131,10 +141,21 @@ async function retarget(t, spec) {
       else if (tP) { goal[tK] ??= (prev || j)[tK].clone(); goal[aK] = null; ik2(t, s + '_Thigh', s + '_Calf', s + '_Foot', goal[tK].clone().sub(sdir.clone().multiplyScalar(footLen[s])), pole); aim(t, s + '_Foot', s + '_Toe0', sdir) }
       else { goal[aK] = goal[tK] = null; aim(t, s + '_Foot', s + '_Toe0', sdir) } }
     if (spec.contact === 'toesHands') {   // 伏地挺身：腳尖、手掌都固定在地上；胸口或臉會碰地時，以腳尖為支點把上半身抬一點（手肘少彎），不整個人往上移
-      const r = T(t, ''), shiftY = d => setRootWorld(t, wp(r).add(V(0, d, 0))), arm = s => { const j = joints(t); ik2(t, s + '_UpperArm', s + '_Forearm', s + '_Hand', goal[s + 'wri'], j[s + 'elb'].clone().sub(j[s + 'sho'].clone().add(j[s + 'wri']).multiplyScalar(.5))) };
-      shiftY(-minY(t, /Foot|Toe/)); if (!goal.Lwri) { const hm = minY(t, /Hand|Finger/), j = joints(t); goal.Lwri = j.Lwri.clone().add(V(0, -hm, 0)); goal.Rwri = j.Rwri.clone().add(V(0, -hm, 0)) } arm('L'); arm('R');
+      const r = T(t, ''), shiftY = d => setRootWorld(t, wp(r).add(V(0, d, 0))), pa = spec.pushArms;
+      const neutral = () => { if (!pa) return; const j = joints(t), hc = j.Lhip.clone().add(j.Rhip).multiplyScalar(.5); aim(t, 'Neck', 'Head', wp(T(t, 'Neck')).sub(hc)); for (const s of ['L', 'R']) T(t, s + '_Clavicle').quaternion.copy(t.bind['Bip01_' + s + '_Clavicle'].q) };   // 頭跟身體一直線、不聳肩
+      const arm = s => { const j = joints(t), k = s === 'L' ? 1 : -1; ik2(t, s + '_UpperArm', s + '_Forearm', s + '_Hand', goal[s + 'wri'], pa ? V(0.55 * k, 0.35, -0.75) : j[s + 'elb'].clone().sub(j[s + 'sho'].clone().add(j[s + 'wri']).multiplyScalar(.5)));
+        if (pa) aim(t, s + '_Hand', s + '_Finger2', V(0.22 * k, -0.02, 1)) };   // 手肘朝腳的方向往外約 45 度（不是往兩側打開）；手掌平貼、手指朝前
+      shiftY(-minY(t, /Foot|Toe/)); neutral();
+      if (!goal.Lwri) { const j = joints(t), hm = minY(t, /Hand|Finger/);
+        if (pa) { const w = (j.Lsho.x - j.Rsho.x) / 2 * pa.width, z = (j.Lsho.z + j.Rsho.z) / 2, y = (j.Lwri.y + j.Rwri.y) / 2 - hm; goal.Lwri = V(w, y, z); goal.Rwri = V(-w, y, z);   // 手掌在肩膀正下方、比肩略寬
+          for (let it = 0; it < 3; it++) { arm('L'); arm('R'); const d = minY(t, /Hand|Finger/); goal.Lwri.y -= d; goal.Rwri.y -= d } }   // 手掌擺平之後再量一次高度，剛好貼地
+        else { goal.Lwri = j.Lwri.clone().add(V(0, -hm, 0)); goal.Rwri = j.Rwri.clone().add(V(0, -hm, 0)) } } arm('L'); arm('R');
       for (let it = 0; it < 5; it++) { const pen = -minY(t, /^(?!.*(Foot|Toe|Hand|Finger|Forearm)).*/); if (pen <= 0.003) break; const j = joints(t), pv = j.Ltoe.clone().add(j.Rtoe).multiplyScalar(.5), L = Math.abs((j.Lsho.z + j.Rsho.z) / 2 - pv.z) || 1;
-        const Rq = Q().setFromAxisAngle(V(1, 0, 0), -Math.asin(Math.min(0.4, (pen + 0.01) / L))), np = pv.clone().add(wp(r).sub(pv).applyQuaternion(Rq)); setWorldQ(t, r, Rq.multiply(wq(r))); setRootWorld(t, np); shiftY(-minY(t, /Foot|Toe/)); arm('L'); arm('R') }
+        const Rq = Q().setFromAxisAngle(V(1, 0, 0), -Math.asin(Math.min(0.4, (pen + 0.01) / L))), np = pv.clone().add(wp(r).sub(pv).applyQuaternion(Rq)); setWorldQ(t, r, Rq.multiply(wq(r))); setRootWorld(t, np); shiftY(-minY(t, /Foot|Toe/)); neutral(); arm('L'); arm('R') }
+      // 下降深度等比例縮小（保留來源的節奏）：以腳尖為支點，每格把身體抬回「這格比第一格低的角度 ×（1－k）」；k 由外面解到最低點手肘剛好彎 maxFlex 度
+      if (pa && depthK < 1) { const j = joints(t), pv = j.Ltoe.clone().add(j.Rtoe).multiplyScalar(.5), sh = j.Lsho.clone().add(j.Rsho).multiplyScalar(.5), th = Math.atan2(sh.y - pv.y, sh.z - pv.z);
+        if (i === 0) th0 = th; const lift = (1 - depthK) * (th0 - th);
+        if (lift > 0) { const Rq = Q().setFromAxisAngle(V(1, 0, 0), -lift), np = pv.clone().add(wp(r).sub(pv).applyQuaternion(Rq)); setWorldQ(t, r, Rq.multiply(wq(r))); setRootWorld(t, np); shiftY(-minY(t, /Foot|Toe/)); neutral(); arm('L'); arm('R') } }
       prev = joints(t); out.push(snap(t)); continue }
     for (const s of ['L', 'R']) { const wK = s + 'wri'; if (!lockSets.includes(wK)) continue; if (!planted(wK, i)) { goal[wK] = null; continue } const j = joints(t);
       goal[wK] ??= (prev || j)[wK].clone(); ik2(t, s + '_UpperArm', s + '_Forearm', s + '_Hand', goal[wK], j[s + 'elb'].clone().sub(j[s + 'sho'].clone().add(j[s + 'wri']).multiplyScalar(.5))) }
@@ -142,6 +163,9 @@ async function retarget(t, spec) {
   return out };
   // 伏地挺身：這副骨架手臂比來源短，最高點手臂打直時手掌碰不到地 → 量出手掌離地多高，以腳尖為支點把身體往頭的方向多傾斜一點，再算（最多 4 次）
   let tilt = 0, out = run(0); if (spec.handsDown) for (let it = 0; it < 4; it++) { apply(t, out[0]); const h = minY(t, /Hand|Finger/); if (h <= 0.003) break; const j = joints(t), L = Math.abs((j.Lwri.z + j.Rwri.z) / 2 - (j.Ltoe.z + j.Rtoe.z) / 2) || 1; tilt += Math.asin(Math.min(0.5, h / L)); out = run(tilt) }
+  // 伏地挺身最低點不要太深（標準：手肘約彎 90～100 度）：解出整段下降幅度的縮小比例 k
+  if (spec.pushArms?.maxFlex) { const flexMax = fr => Math.max(...fr.map(f => { apply(t, f); const j = joints(t); return Math.max(...['L', 'R'].map(s => 180 - angle(j[s + 'sho'], j[s + 'elb'], j[s + 'wri']))) }));
+    if (flexMax(out) > spec.pushArms.maxFlex) { let lo = 0.1, hi = 1; for (let it = 0; it < 9; it++) { const m = (lo + hi) / 2; if (flexMax(run(tilt, m)) > spec.pushArms.maxFlex) hi = m; else lo = m } out = run(tilt, lo); t._depthK = lo } }
   if (spec.loop) { loopBlend(out, Math.min(8, Math.floor(n / 6))); for (const f of out) { apply(t, f); const r = T(t, ''); setRootWorld(t, wp(r).add(V(0, -minY(t), 0))); Object.assign(f, snap(t)) } }   // 頭尾接合後每格重新貼地
   t._stance = stance; return out;
 }
@@ -183,6 +207,35 @@ const POSES = {
     for (const [s, k] of [['L', 1], ['R', -1]]) { aim(t, s + '_Thigh', s + '_Calf', V(0.04 * k, -sl, -1)); aim(t, s + '_Calf', s + '_Foot', V(0.02 * k, -sl, -1)); aim(t, s + '_Foot', s + '_Toe0', V(0, -1, 0.25));   // 腳尖收在腳踝正下方偏頭的方向
       aim(t, s + '_Clavicle', s + '_UpperArm', V(k, -0.15, 0)); aim(t, s + '_UpperArm', s + '_Forearm', V(-0.05 * k, -1, 0.02)); aim(t, s + '_Forearm', s + '_Hand', V(-0.12 * k, 0, 1)); aim(t, s + '_Hand', s + '_Finger2', V(-0.1 * k, 0.03, 1)) }   // 手掌平放（指尖不往下戳）
     placeGround(t) },
+  // 弓箭步（自製）：面朝 +Z、左＝+X。右腳往前跨一大步 → 前後膝都彎到約 90 度（後膝關節離地約 11 公分，不碰地）→ 右腳推回站直
+  // 上身全程直立、肩膀擺正、手臂自然垂在身側；後腳腳尖（腳掌球）固定在地上，腳跟隨下蹲抬起；兩腳都用 IK 固定，不滑
+  // 時間（共 2.9 秒）：站 0.4 → 跨步 0.4 → 下蹲 0.5 → 停 0.3 → 起身 0.5 → 收腳 0.4 → 站 0.4
+  lunge(t, x) { const S = t._lu || (t._lu = this._lungeSetup(t)), sec = x * 2.9, e = y => 0.5 - Math.cos(Math.PI * Math.min(1, Math.max(0, y))) / 2;
+    const st = sec < 0.4 ? 0 : sec < 0.8 ? e((sec - 0.4) / 0.4) : sec < 2.1 ? 1 : sec < 2.5 ? 1 - e((sec - 2.1) / 0.4) : 0;
+    const dp = sec < 0.8 ? 0 : sec < 1.3 ? e((sec - 0.8) / 0.5) : sec < 1.6 ? 1 : sec < 2.1 ? 1 - e((sec - 1.6) / 0.5) : 0;
+    this._lungeAt(t, st, dp) },
+  _lungeSetup(t) { resetBind(t); const j = joints(t), S = t._lu = { hc0: j.Lhip.clone().add(j.Rhip).multiplyScalar(.5), aR: j.Rankle.clone(), aL: j.Lankle.clone(), tL: j.Ltoe.clone(), fq: { L: wq(T(t, 'L_Foot')), R: wq(T(t, 'R_Foot')) }, tq: { L: wq(T(t, 'L_Toe0')), R: wq(T(t, 'R_Toe0')) } };
+    const l1 = j.Rhip.distanceTo(j.Rknee), l2 = j.Rknee.distanceTo(j.Rankle); S.l1 = l1; S.l2 = l2; S.L = 0.92 * (l1 + l2);
+    S.split = V(0, Math.sqrt((l1 + l2) ** 2 * 0.97 - (S.L / 2) ** 2) + S.aR.y, S.L * 0.5);   // 跨步站好（還沒蹲）：骨盆在兩腳中間、兩腿幾乎打直（前腳搆得到）
+    // 最低點：前腳大腿接近水平（骨盆在前腳後面約一個大腿長），骨盆高度解到後膝關節離地 11 公分
+    const zb = S.L - 0.93 * l1; let lo = S.aR.y + l2 - 0.1, hi = S.aR.y + l2 + 0.15;
+    for (let it = 0; it < 16; it++) { S.bottom = V(0, (lo + hi) / 2, zb); this._lungeAt(t, 1, 1); if (joints(t).Lknee.y < 0.11) lo = S.bottom.y; else hi = S.bottom.y } S.bottom = V(0, (lo + hi) / 2, zb);
+    return S },
+  _lungeAt(t, st, dp) { const S = t._lu; resetBind(t);
+    // 骨盆：站姿 → 跨步站好（st）→ 往下蹲（dp）；上身直立
+    const hc = S.hc0.clone().lerp(S.split, st).lerp(S.bottom || S.split, dp * st), j0 = joints(t), cur = j0.Lhip.clone().add(j0.Rhip).multiplyScalar(.5);
+    setRootWorld(t, wp(T(t, '')).add(hc.clone().sub(cur)));
+    aim(t, 'Spine', 'Spine1', V(0, 1, 0.04)); aim(t, 'Spine1', 'Spine2', V(0, 1, 0.02)); aim(t, 'Spine2', 'Neck', V(0, 1, 0)); aim(t, 'Neck', 'Head', V(0, 1, 0.06));
+    // 前腳（右）：往前跨，中途抬高 7 公分，腳掌平貼
+    const fa = S.aR.clone().lerp(V(S.aR.x, S.aR.y, S.aR.z + S.L), st).add(V(0, 0.07 * Math.sin(Math.PI * st) * (st < 1 ? 1 : 0), 0));
+    ik2(t, 'R_Thigh', 'R_Calf', 'R_Foot', fa, V(0, 0.1, 1)); setWorldQ(t, T(t, 'R_Foot'), S.fq.R.clone()); setWorldQ(t, T(t, 'R_Toe0'), S.tq.R.clone());
+    // 後腳（左）：腳掌球固定，腳跟抬起 phi（跨步站好 20 度，蹲到底 55 度）
+    const phi = st * (20 + 35 * dp) * D2R, Rq = Q().setFromAxisAngle(V(1, 0, 0), phi), ba = S.tL.clone().add(S.aL.clone().sub(S.tL).applyQuaternion(Rq));   // 繞 +X 正轉＝腳跟往上（腳掌撐地、腳趾彎起）
+    ik2(t, 'L_Thigh', 'L_Calf', 'L_Foot', ba, V(0, -0.45, 1)); setWorldQ(t, T(t, 'L_Foot'), Rq.clone().multiply(S.fq.L)); setWorldQ(t, T(t, 'L_Toe0'), S.tq.L.clone());
+    // 手臂自然垂在身側
+    { const k = joints(t), lat = k.Lhip.clone().sub(k.Rhip).normalize(); for (const [s, q] of [['L', 1], ['R', -1]]) { aim(t, s + '_Clavicle', s + '_UpperArm', lat.clone().multiplyScalar(q).add(V(0, -0.12, -0.05)));
+      aim(t, s + '_UpperArm', s + '_Forearm', V(0, -1, 0.03).add(lat.clone().multiplyScalar(0.17 * q))); aim(t, s + '_Forearm', s + '_Hand', V(0, -1, 0.14).add(lat.clone().multiplyScalar(0.05 * q))); aim(t, s + '_Hand', s + '_Finger2', V(0, -1, 0.1).add(lat.clone().multiplyScalar(-0.02 * q))) } }
+    const m = minY(t); if (m < 0) setRootWorld(t, wp(T(t, '')).add(V(0, -m, 0))) },
   // 臀橋：仰躺、頭朝 +Z、臉朝上；屈膝、腳掌平貼地；手平放身體兩側。地面 y＝0
   // 抬臀：以上背（肩膀）貼地的位置為支點把軀幹往上轉（腰不拱、不折），頭頸跟著前屈讓後腦留在地上，腳用 IK 固定在原地；
   // 抬多高不寫死：解到「肩－髖－膝」夾角 173 度（看起來一直線、不會抬過頭變成腰拱起）
@@ -236,14 +289,14 @@ function analyze(t, frames, spec) {
   const knee = j => 180 - Math.min(angle(j.Lhip, j.Lknee, j.Lankle), angle(j.Rhip, j.Rknee, j.Rankle)), elb = j => 180 - Math.min(angle(j.Lsho, j.Lelb, j.Lwri), angle(j.Rsho, j.Relb, j.Rwri));
   const line = j => angle(j.Lsho.clone().add(j.Rsho).multiplyScalar(.5), j.Lhip.clone().add(j.Rhip).multiplyScalar(.5), j.Lankle.clone().add(j.Rankle).multiplyScalar(.5));
   const hipLine = j => angle(j.Lsho.clone().add(j.Rsho).multiplyScalar(.5), j.Lhip.clone().add(j.Rhip).multiplyScalar(.5), j.Lknee.clone().add(j.Rknee).multiplyScalar(.5));
-  const pel = J.map(j => j.pelvis.y), m = { minY: +worstY.toFixed(4), frames: frames.length, dur: +((frames.length - 1) / FPS).toFixed(3) };
+  const pel = J.map(j => j.pelvis.y), m = { minY: +worstY.toFixed(4), frames: frames.length, dur: +((frames.length - 1) / FPS).toFixed(3) }, hgt = spec.phaseBy === 'sho' ? J.map(j => (j.Lsho.y + j.Rsho.y) / 2) : pel;   // 伏地挺身以腳尖為支點轉，骨盆幾乎不動 → 用肩膀高度切階段
   for (const key of spec.planted || []) m['drift_' + key] = +dr(key).toFixed(4);
   m.kneeMax = Math.round(Math.max(...J.map(knee))); m.elbowMax = Math.round(Math.max(...J.map(elb))); m.lineMin = Math.round(Math.min(...J.map(line))); m.hipLineMax = Math.round(Math.max(...J.map(hipLine)));
   m.pelvisMin = +Math.min(...pel).toFixed(3); m.pelvisMax = +Math.max(...pel).toFixed(3);
   // 著地檢查：第一格與整段中，腳、手臂（前臂＋手）皮膚最低點離地多高（踩在地上應該接近 0）
   apply(t, frames[0]); m.feet0 = +minY(t, /Foot|Toe/).toFixed(4); m.arms0 = +minY(t, /Forearm|Hand|Finger/).toFixed(4); m.feetMax = +Math.max(...frames.map(f => { apply(t, f); return minY(t, /Foot|Toe/) })).toFixed(4);
   // 動作階段：依骨盆高度（臀橋相反：往上）切成 預備／過程／最低（最高）點／回程／完成
-  const sgn = spec.up ? -1 : 1, h = pel.map(y => sgn * y), hi = Math.max(h[0], h[h.length - 1]), lo = Math.min(...h), span = hi - lo, ph = [];
+  const sgn = spec.up ? -1 : 1, h = hgt.map(y => sgn * y), hi = Math.max(h[0], h[h.length - 1]), lo = Math.min(...h), span = hi - lo, ph = [];
   if (span > 0.05) { const a = h.findIndex(y => y < hi - span * 0.06), bot = h.indexOf(lo), b = h.findIndex((y, i) => i <= bot && y < lo + span * 0.06), c = h.findIndex((y, i) => i > bot && y > lo + span * 0.06), d = h.findIndex((y, i) => i > bot && y > hi - span * 0.06);
     const T2 = i => +(i / FPS).toFixed(2), end = T2(frames.length - 1), at = [0, T2(a), T2(b), T2(c), T2(d < 0 ? frames.length - 1 : d), end];
     for (let i = 0; i < 5; i++) ph.push([spec.phaseNames[i], at[i], at[i + 1]]) } else ph.push([spec.phaseNames[0], 0, m.dur]);

@@ -6,7 +6,7 @@
   {
    "id": "squat",
    "name": "徒手深蹲",
-   "content": "4a6ba14d4c4d",
+   "content": "f3129e740ccd",
    "dur": 2.5,
    "phases": [
     [
@@ -43,7 +43,7 @@
       "phase": "預備",
       "t": 0,
       "file": "3d/review/media/squat_male_start.jpg",
-      "bytes": 7659
+      "bytes": 7711
      },
      {
       "key": "middle",
@@ -51,7 +51,7 @@
       "phase": "下蹲",
       "t": 0.815,
       "file": "3d/review/media/squat_male_middle.jpg",
-      "bytes": 8330
+      "bytes": 8236
      },
      {
       "key": "key",
@@ -59,7 +59,7 @@
       "phase": "最低點",
       "t": 1.23,
       "file": "3d/review/media/squat_male_key.jpg",
-      "bytes": 7983
+      "bytes": 7965
      },
      {
       "key": "end",
@@ -67,7 +67,7 @@
       "phase": "站起",
       "t": 2,
       "file": "3d/review/media/squat_male_end.jpg",
-      "bytes": 7871
+      "bytes": 7852
      }
     ],
     "female": [
@@ -77,7 +77,7 @@
       "phase": "預備",
       "t": 0,
       "file": "3d/review/media/squat_female_start.jpg",
-      "bytes": 6711
+      "bytes": 6712
      },
      {
       "key": "middle",
@@ -85,7 +85,7 @@
       "phase": "下蹲",
       "t": 0.815,
       "file": "3d/review/media/squat_female_middle.jpg",
-      "bytes": 6923
+      "bytes": 6986
      },
      {
       "key": "key",
@@ -93,7 +93,7 @@
       "phase": "最低點",
       "t": 1.23,
       "file": "3d/review/media/squat_female_key.jpg",
-      "bytes": 6859
+      "bytes": 6850
      },
      {
       "key": "end",
@@ -101,13 +101,13 @@
       "phase": "站起",
       "t": 2,
       "file": "3d/review/media/squat_female_end.jpg",
-      "bytes": 6852
+      "bytes": 6784
      }
     ]
    },
    "video": {
     "file": "3d/review/media/squat.mp4",
-    "bytes": 69019,
+    "bytes": 68318,
     "w": 960,
     "h": 400,
     "layout": "左：男性、右：女性（側面）"
@@ -116,32 +116,32 @@
   {
    "id": "pushup",
    "name": "伏地挺身",
-   "content": "512ac387a948",
+   "content": "0eaddcc58996",
    "dur": 1.533,
    "phases": [
     [
      "預備",
      0,
-     0.1
+     0.17
     ],
     [
      "下降",
-     0.1,
-     0.57
+     0.17,
+     0.67
     ],
     [
      "最低點",
-     0.57,
-     0.97
+     0.67,
+     0.9
     ],
     [
      "推起",
-     0.97,
-     1.37
+     0.9,
+     1.33
     ],
     [
      "完成",
-     1.37,
+     1.33,
      1.53
     ]
    ],
@@ -153,31 +153,31 @@
       "phase": "預備",
       "t": 0,
       "file": "3d/review/media/pushup_male_start.jpg",
-      "bytes": 8549
+      "bytes": 9058
      },
      {
       "key": "middle",
       "label": "過程",
       "phase": "下降",
-      "t": 0.335,
+      "t": 0.42,
       "file": "3d/review/media/pushup_male_middle.jpg",
-      "bytes": 8241
+      "bytes": 9072
      },
      {
       "key": "key",
       "label": "關鍵",
       "phase": "最低點",
-      "t": 0.77,
+      "t": 0.785,
       "file": "3d/review/media/pushup_male_key.jpg",
-      "bytes": 7826
+      "bytes": 8923
      },
      {
       "key": "end",
       "label": "結束",
       "phase": "推起",
-      "t": 1.37,
+      "t": 1.33,
       "file": "3d/review/media/pushup_male_end.jpg",
-      "bytes": 8621
+      "bytes": 9121
      }
     ],
     "female": [
@@ -187,37 +187,37 @@
       "phase": "預備",
       "t": 0,
       "file": "3d/review/media/pushup_female_start.jpg",
-      "bytes": 7546
+      "bytes": 8017
      },
      {
       "key": "middle",
       "label": "過程",
       "phase": "下降",
-      "t": 0.335,
+      "t": 0.42,
       "file": "3d/review/media/pushup_female_middle.jpg",
-      "bytes": 7478
+      "bytes": 7902
      },
      {
       "key": "key",
       "label": "關鍵",
       "phase": "最低點",
-      "t": 0.77,
+      "t": 0.785,
       "file": "3d/review/media/pushup_female_key.jpg",
-      "bytes": 6925
+      "bytes": 7920
      },
      {
       "key": "end",
       "label": "結束",
       "phase": "推起",
-      "t": 1.37,
+      "t": 1.33,
       "file": "3d/review/media/pushup_female_end.jpg",
-      "bytes": 7641
+      "bytes": 8011
      }
     ]
    },
    "video": {
     "file": "3d/review/media/pushup.mp4",
-    "bytes": 43108,
+    "bytes": 37730,
     "w": 960,
     "h": 400,
     "layout": "左：男性、右：女性（側面）"
@@ -336,33 +336,33 @@
   {
    "id": "lunge",
    "name": "弓箭步",
-   "content": "e73933582356",
-   "dur": 2.033,
+   "content": "a3853b6879a4",
+   "dur": 2.9,
    "phases": [
     [
      "預備",
      0,
-     0.33
+     0.57
     ],
     [
      "跨步下蹲",
-     0.33,
-     0.87
+     0.57,
+     1.23
     ],
     [
      "最低點",
-     0.87,
-     1.07
+     1.23,
+     1.7
     ],
     [
      "推回站直",
-     1.07,
-     1.47
+     1.7,
+     2.37
     ],
     [
      "完成",
-     1.47,
-     2.03
+     2.37,
+     2.9
     ]
    ],
    "shots": {
@@ -373,31 +373,31 @@
       "phase": "預備",
       "t": 0,
       "file": "3d/review/media/lunge_male_start.jpg",
-      "bytes": 7947
+      "bytes": 7077
      },
      {
       "key": "middle",
       "label": "過程",
       "phase": "跨步下蹲",
-      "t": 0.6,
+      "t": 0.9,
       "file": "3d/review/media/lunge_male_middle.jpg",
-      "bytes": 9222
+      "bytes": 8460
      },
      {
       "key": "key",
       "label": "關鍵",
       "phase": "最低點",
-      "t": 0.97,
+      "t": 1.465,
       "file": "3d/review/media/lunge_male_key.jpg",
-      "bytes": 8537
+      "bytes": 8166
      },
      {
       "key": "end",
       "label": "結束",
       "phase": "推回站直",
-      "t": 1.47,
+      "t": 2.37,
       "file": "3d/review/media/lunge_male_end.jpg",
-      "bytes": 9570
+      "bytes": 8255
      }
     ],
     "female": [
@@ -407,37 +407,37 @@
       "phase": "預備",
       "t": 0,
       "file": "3d/review/media/lunge_female_start.jpg",
-      "bytes": 6454
+      "bytes": 6294
      },
      {
       "key": "middle",
       "label": "過程",
       "phase": "跨步下蹲",
-      "t": 0.6,
+      "t": 0.9,
       "file": "3d/review/media/lunge_female_middle.jpg",
-      "bytes": 7051
+      "bytes": 6889
      },
      {
       "key": "key",
       "label": "關鍵",
       "phase": "最低點",
-      "t": 0.97,
+      "t": 1.465,
       "file": "3d/review/media/lunge_female_key.jpg",
-      "bytes": 6871
+      "bytes": 6690
      },
      {
       "key": "end",
       "label": "結束",
       "phase": "推回站直",
-      "t": 1.47,
+      "t": 2.37,
       "file": "3d/review/media/lunge_female_end.jpg",
-      "bytes": 7136
+      "bytes": 6687
      }
     ]
    },
    "video": {
     "file": "3d/review/media/lunge.mp4",
-    "bytes": 72031,
+    "bytes": 62733,
     "w": 960,
     "h": 400,
     "layout": "左：男性、右：女性（側面）"

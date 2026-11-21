@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // 3D 運動動畫轉檔（開發工具）：產生 3d/anims/<動作>.glb（male、female 兩段動畫）＋ 3d/anims/<動作>.json（動作階段、品質數據）＋關鍵影格截圖
 // 來源（授權見 3d/licenses）：
-//   CMU 動作捕捉（BVH 版）：git clone --filter=blob:none --no-checkout https://github.com/una-dinosauria/cmu-mocap.git cmu && cd cmu && git checkout HEAD -- data/086/86_02.bvh data/144/144_17.bvh
+//   CMU 動作捕捉（BVH 版）：git clone --filter=blob:none --no-checkout https://github.com/una-dinosauria/cmu-mocap.git cmu && cd cmu && git checkout HEAD -- data/086/86_02.bvh
 //   Mesh2Motion（CC0）：git clone --filter=blob:none --no-checkout https://github.com/Mesh2Motion/mesh2motion-app.git m2m && cd m2m && git checkout HEAD -- static/assets/human/animations/pushup.glb
 //   three 套件（BVHLoader、GLTFExporter 只有轉檔用）：npm pack three@0.187.0 && tar -xzf three-0.187.0.tgz
 // 用法：node tools/build-3d-anims.js --three package --cmu cmu/data --m2m m2m/static/assets/human/animations [--shots 截圖資料夾] [--only squat,lunge]
