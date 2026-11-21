@@ -2566,6 +2566,45 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
         && A.animations.filter(a => /自製/.test(a.source)).every(a => a.review === 'draft') && /NSF EIA-0196217/.test(notice) && /Mesh2Motion/.test(notice) && /CC0/.test(notice), JSON.stringify(files));
   }
 
+  // =============== 6zzl. 3D 肌群部位標示（第四階段）：8 個部位分區（男女都合理）、紅＝主要／橘＝次要／灰＝其他、文字列出肌群（不只靠顏色）、換動作重新上色、換男女照舊、開關與換人物不漏 GPU 資源 ===============
+  {
+    const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.glb': 'model/gltf-binary', '.jpg': 'image/jpeg', '.json': 'application/json' };
+    const srv5 = require('http').createServer((q, res) => { const u = decodeURIComponent(q.url.split('?')[0]), f = path.join(ROOT, u === '/' ? 'index.html' : u);
+      if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end() } res.writeHead(200, { 'content-type': MIME[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(res) });
+    await new Promise(ok => srv5.listen(0, '127.0.0.1', ok)); const base = `http://127.0.0.1:${srv5.address().port}/`;
+    const seed = { members: [{ id: 'a', name: '王小明', sex: 'm', birth: '1980-01-01', h: 172, w: 70, act: '1.375', goal: 'keep', role: 'me' }], active: 'a' };
+    page = await newPage(seed, { url: base }); await page.evaluate(() => go('fit', 'move')); await page.click('#h3d-go'); await page.waitForFunction(() => $('#h3d')?.dataset.state === 'ready' && H3D.ui && !H3D.busy, null, { timeout: 60000 });
+    const MU = await page.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)), Bq = s => document.querySelector('.h3dp ' + s), S = () => H3D.v.animState(), until = f => new Promise(r => { const g = () => f() ? r() : setTimeout(g, 30); g() });
+      const sex = async x => { document.querySelector(`[data-h3dsex="${x}"]`).click(); await until(() => H3D.v?.sex === x && !H3D.busy); await w(50) }, ex = async id => { Bq(`[data-ex="${id}"]`).click(); await until(() => S().id === id && S().ready); H3D.v.pause() };
+      const E = await import('./3d/exercises.js'), r = { keys: E.MUSCLE_GROUPS.map(g => g[0]), data: E.EXERCISES.map(e => ({ id: e.id, p: e.muscles?.primary || [], s: e.muscles?.secondary || [], note: !!e.musNote })) };
+      r.male = H3D.v.muscleState();
+      await ex('pushup'); H3D.v.seek(0.8); document.querySelector('[data-h3dview="front"]').click(); await w(50); r.off = H3D.v.colorStats(); r.g0 = H3D.v.stats(); const btn = Bq('[data-a="mus"]'); r.b0 = btn.getAttribute('aria-pressed');
+      btn.click(); await w(50); r.on = H3D.v.colorStats(); r.b1 = btn.getAttribute('aria-pressed'); r.lvPush = H3D.v.muscleState().levels; r.txt = Bq('.ex').textContent;
+      await ex('squat'); H3D.v.seek(1.2); await w(30); r.lvSquat = H3D.v.muscleState().levels; r.squat = H3D.v.colorStats(); r.txtSquat = Bq('.ex').textContent;
+      // 女性：開著換過去照舊；關掉讓原本的貼圖真的上傳到 GPU，再打開；換回男性時女性要整個釋放（含原本材質的貼圖）
+      await sex('female'); r.female = H3D.v.muscleState(); H3D.v.seek(1.2); r.fem = H3D.v.colorStats(); btn.click(); await w(30); H3D.v.colorStats(); btn.click(); await w(30);
+      await sex('male'); for (let i = 0; i < 3; i++) { btn.click(); await w(20); btn.click(); await w(20) }
+      btn.click(); await w(50); r.offAgain = H3D.v.colorStats(); r.b2 = btn.getAttribute('aria-pressed'); await ex('pushup'); H3D.v.seek(0.8); document.querySelector('[data-h3dview="front"]').click(); await w(50); H3D.v.colorStats(); r.g1 = H3D.v.stats();
+      return r });
+    const D = Object.fromEntries(MU.data.map(d => [d.id, d])), has = (a, b) => b.every(x => a.includes(x));
+    check('肌群資料：五個動作都有主要、次要肌群（都在胸部、背部、肩部、手臂、腹部、臀部、大腿、小腿 8 個部位裡，主要和次要不重複），附具體肌肉說明；伏地挺身主要＝胸部＋手臂、深蹲與弓箭步主要＝大腿＋臀部、棒式主要＝腹部、臀橋主要＝臀部',
+      MU.keys.length === 8 && MU.data.length === 5 && MU.data.every(d => d.p.length >= 1 && [...d.p, ...d.s].every(k => MU.keys.includes(k)) && !d.p.some(k => d.s.includes(k)) && d.note)
+        && has(D.pushup.p, ['chest', 'arms']) && has(D.squat.p, ['thighs', 'glutes']) && has(D.lunge.p, ['thighs', 'glutes']) && D.plank.p.join() === 'abs' && D.bridge.p.join() === 'glutes', JSON.stringify(MU.data));
+    const zones = z => Object.values(z.counts).every(n => n >= 40) && z.centroid.chest[1] > z.centroid.abs[1] && z.centroid.abs[1] > z.centroid.glutes[1] && z.centroid.thighs[1] > z.centroid.calves[1] && z.centroid.shoulders[1] > z.centroid.arms[1]
+      && z.centroid.chest[2] > z.centroid.back[2] && z.centroid.abs[2] > z.centroid.glutes[2] && z.centroid.back[1] > z.centroid.glutes[1];
+    check('部位分區男女都合理：8 個部位各有頂點；胸部在腹部上面、腹部在臀部上面、大腿在小腿上面、肩部在手臂上面；胸部、腹部在前面，背部、臀部在後面',
+      zones(MU.male) && zones(MU.female), JSON.stringify({ male: MU.male.counts, female: MU.female.counts, cm: MU.male.centroid, cf: MU.female.centroid }));
+    check('按「💪 標出肌群」才變成灰色假人加紅（主要）、橘（次要）：伏地挺身胸部、手臂紅，肩部、腹部橘；換深蹲改成大腿、臀部紅；換女性照樣標示；關掉就回到原本的樣子；按鈕 aria-pressed 跟著切換',
+      MU.b0 === 'false' && MU.b1 === 'true' && MU.b2 === 'false' && MU.off.red <= 3 && MU.on.red >= 8 && MU.on.gray >= 20 && MU.squat.red >= 8 && MU.squat.orange >= 8 && MU.fem.red >= 8 && MU.offAgain.red <= 3
+        && JSON.stringify(MU.lvPush) === JSON.stringify({ shoulders: 1, abs: 1, chest: 2, arms: 2 }) && JSON.stringify(MU.lvSquat) === JSON.stringify({ abs: 1, back: 1, calves: 1, thighs: 2, glutes: 2 }),
+      JSON.stringify({ b: [MU.b0, MU.b1, MU.b2], off: MU.off, on: MU.on, squat: MU.squat, fem: MU.fem, offAgain: MU.offAgain, lvPush: MU.lvPush, lvSquat: MU.lvSquat }));
+    check('肌群用文字寫出來（不只靠顏色）：「主要 胸部、手臂」「次要 肩部、腹部」、深蹲「大腿、臀部」，說明紅＝主要、橘＝次要、灰＝其他，而且寫明只是部位示意、不是真實肌肉的形狀或收縮',
+      /主要\s*胸部、手臂/.test(MU.txt) && /次要\s*肩部、腹部/.test(MU.txt) && /主要\s*大腿、臀部/.test(MU.txtSquat) && /紅＝主要、橘＝次要、灰＝其他/.test(MU.txt) && /部位示意/.test(MU.txt) && /肱三頭肌/.test(MU.txt), MU.txt.slice(0, 200));
+    check('肌群模式開關 7 次、開著換女性再換回男性：GPU 的幾何與貼圖數量跟開始時一樣（換人物前先換回原本材質，原本的貼圖有跟著釋放）',
+      MU.g1.geometries === MU.g0.geometries && MU.g1.textures === MU.g0.textures, JSON.stringify({ g0: [MU.g0.geometries, MU.g0.textures], g1: [MU.g1.geometries, MU.g1.textures] }));
+    await page.close(); srv5.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);

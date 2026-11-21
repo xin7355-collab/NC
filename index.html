@@ -1381,7 +1381,7 @@ return `<div class="card" id="h3dCard"><h2>🧍 3D 真人示範 <span class="tg"
 <div class="seg" role="group" aria-label="視角">${[['front','正面'],['side','側面'],['back','背面']].map(([k,t])=>`<button type="button" data-h3dview="${k}">${t}</button>`).join('')}</div></div>
 <div id="h3d-play"></div>
 <div class="chips" style="margin-top:8px"><button type="button" class="chip${low?' on':''}" data-h3dlow aria-pressed="${low}">🔋 省電模式：只用 2D</button></div>
-<p class="note">手指拖曳可以 360° 旋轉、兩指縮放。第一次要下載約 1.2 MB，之後比較快。肌肉標示會陸續加入。人物素材：Microsoft Rocketbox Avatar Library（MIT 授權）。</p></div>`}
+<p class="note">手指拖曳可以 360° 旋轉、兩指縮放。第一次要下載約 1.2 MB，之後比較快。選了動作後可按「💪 標出肌群」看用到哪些部位。人物素材：Microsoft Rocketbox Avatar Library（MIT 授權）。</p></div>`}
 const h3dMsg=(t,err)=>{const e=$('#h3d-msg');if(e){e.textContent=t;e.classList.toggle('err',!!err)}};
 const h3dUI=()=>{const on=!!H3D.v,h=$('#h3d');if(h)h.dataset.state=on?'ready':'idle';const i=$('#h3d .h3d-img');if(i)i.hidden=on;const g=$('#h3d-go');if(g)g.hidden=on||h3dLow();const c=$('#h3dCard .h3d-ctl');if(c)c.hidden=!on;
 $$('[data-h3dsex]').forEach(b=>{const x=b.dataset.h3dsex===(H3D.sex||h?.dataset.sex);b.classList.toggle('on',x);b.setAttribute('aria-pressed',x)})};

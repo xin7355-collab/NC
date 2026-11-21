@@ -6,6 +6,7 @@ import { OrbitControls } from './vendor/three/examples/jsm/controls/OrbitControl
 import { RoomEnvironment } from './vendor/three/examples/jsm/environments/RoomEnvironment.js';
 import { MODELS, CREDIT } from './manifest.js';
 import { EXERCISES } from './exercises.js';
+import { prepare, paint, makeMaterials } from './muscles.js';
 
 export { MODELS, CREDIT, EXERCISES };
 export const supports3D = () => { try { return !!document.createElement('canvas').getContext('webgl2') } catch (e) { return false } };
@@ -33,6 +34,7 @@ export function createViewer(host, opt = {}) {
   // 動畫（AnimationMixer）：一次一個動作；暫停時不更新動畫、也不持續渲染（省電）
   let mixer = null, action = null, exId = '', exData = null, playing = false, speed = 1, loopOn = true, lastT = 0, listener = opt.onAnim || null;
   let samp = null, rest = [];   // samp：probeAnim 的取樣頂點（跟著目前的人物）；rest：每根骨頭的站姿（換動作前歸位用）
+  let mus = null, musMat = null, musOn = false;   // 肌群部位（第四階段）：分區、假人材質、是否開啟
   const animCache = new Map(), emit = () => listener?.(animState());
   const render = () => { raf = 0; if (dead) return; const now = performance.now(), dt = lastT ? Math.min(0.1, (now - lastT) / 1000) : 0; lastT = now;
     if (mixer && playing) { mixer.update(dt); emit() } const moving = ctl.update(); R.render(scene, cam); if ((moving || playing) && visible) raf = requestAnimationFrame(render); else lastT = 0 };
@@ -56,6 +58,12 @@ export function createViewer(host, opt = {}) {
       aim(`Bip01_${s}_Forearm`, `Bip01_${s}_Hand`, up.clone().negate().add(lat.clone().multiplyScalar(0.06 * k)).add(fwd.clone().multiplyScalar(0.16)))
     }
   }
+  // ---- 肌群部位：灰色假人＋紅（主要）、橘（次要）、灰（其他）；只是部位示意 ----
+  const musLevels = () => { const m = EXERCISES.find(e => e.id === exId)?.muscles || {}, o = {}; for (const k of m.secondary || []) o[k] = 1; for (const k of m.primary || []) o[k] = 2; return o };
+  function setMats(on) { if (!model) return; model.traverse(m => { if (!m.isMesh) return; const o = m.userData.mat0;
+    if (on && musMat) { if (!o) m.userData.mat0 = m.material; const src = m.userData.mat0; m.material = Array.isArray(src) ? src.map(x => musMat.swap.get(x) || x) : musMat.swap.get(src) || src }
+    else if (o) { m.material = o; delete m.userData.mat0 } }) }   // 關掉或釋放前一定換回原本的材質：原本的貼圖才會跟著人物一起釋放
+  function setMuscles(on) { musOn = !!on; if (model && mus) { if (musOn) paint(mus, musLevels()); setMats(musOn) } kick(); emit(); return musOn }
   function setView(v) { const a = (VIEWS[v] ?? 0) * Math.PI / 180, d = Math.max(3.2, h * 2.3 / Math.min(1, cam.aspect * 1.6));
     if (action) { frame(a); kick(); return }   // 播動作時依動作的範圍取景（臀橋、伏地挺身人在地上，套站姿的取景會被擠到畫面最下面）
     ctl.target.set(0, h * 0.52, 0); cam.position.set(Math.sin(a) * d, h * 0.55, Math.cos(a) * d); cam.lookAt(ctl.target); ctl.update(); kick() }
@@ -64,11 +72,13 @@ export function createViewer(host, opt = {}) {
     let g; try { g = await new GLTFLoader().loadAsync(new URL(M.file, import.meta.url).href + ver, e => onProgress?.(e.total ? e.loaded / e.total : (e.loaded / M.bytes))) }
     catch (e) { const err = new Error('load'); err.cause = e; throw err }
     if (dead) { disposeObj(g.scene); return }
-    if (model) { scene.remove(model); disposeObj(model) }   // 一次只留一個人物
+    if (model) { setMats(false); scene.remove(model); disposeObj(model) } musMat?.dispose(); musMat = null;   // 一次只留一個人物（先換回原本材質再釋放）
     model = g.scene; sex = s; bones = {}; tris = 0; samp = null;   // 換人物：測試用的取樣頂點也要換
     model.traverse(o => { if (o.isBone) bones[o.name] = o; if (o.isMesh) { o.frustumCulled = false; tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3 } });
     const box = new THREE.Box3().setFromObject(model); h = box.max.y - box.min.y || 1.75;
+    mus = prepare(model); musMat = makeMaterials(model);   // 肌群分區要用綁定姿勢算（擺站姿之前）
     const keep = action ? action.time : 0; stand(); rest = []; model.traverse(o => { if (o.isBone) rest.push([o, o.position.clone(), o.quaternion.clone()]) }); scene.add(model);
+    if (musOn) { paint(mus, musLevels()); setMats(true) }   // 換男女時肌群模式照舊
     if (exData) bind(keep); else setView('front');   // 換男女：動作和時間點接著播
     return stats()
   }
@@ -95,7 +105,7 @@ export function createViewer(host, opt = {}) {
     mixer = new THREE.AnimationMixer(model); action = mixer.clipAction(clip); action.setLoop(loopOn ? THREE.LoopRepeat : THREE.LoopOnce, Infinity); action.clampWhenFinished = true; action.timeScale = speed; action.play();
     mixer.addEventListener('finished', () => { playing = false; emit() }); action.time = Math.min(keep, clip.duration); mixer.update(0); frame(); kick(); emit() }
   async function setExercise(id, o = {}) { const ex = EXERCISES.find(e => e.id === id); if (!ex) throw new Error('exercise'); const a = await loadAnim(id); if (dead) return;
-    exData = a; exId = id; speed = ex.speed || 1; playing = false; const az = (VIEWS[o.view || 'side'] ?? 90) * Math.PI / 180; cam.position.set(Math.sin(az) * 4, h * 0.55, Math.cos(az) * 4); ctl.target.set(0, h * 0.5, 0); ctl.update();
+    exData = a; exId = id; speed = ex.speed || 1; playing = false; if (musOn && mus) paint(mus, musLevels()); const az = (VIEWS[o.view || 'side'] ?? 90) * Math.PI / 180; cam.position.set(Math.sin(az) * 4, h * 0.55, Math.cos(az) * 4); ctl.target.set(0, h * 0.5, 0); ctl.update();
     bind(0); if (o.autoplay) play(); return animState() }
   function play() { if (!action) return; if (!loopOn && action.time >= action.getClip().duration - 1e-3) { action.reset(); action.play() } playing = true; lastT = 0; kick(); emit() }
   function pause() { playing = false; emit() }
@@ -104,17 +114,24 @@ export function createViewer(host, opt = {}) {
   function setLoop(on) { loopOn = !!on; if (action) { action.setLoop(loopOn ? THREE.LoopRepeat : THREE.LoopOnce, Infinity); action.clampWhenFinished = true } emit() }
   function seek(t) { if (!action) return; const d = action.getClip().duration; action.enabled = true; action.paused = false; action.time = Math.max(0, Math.min(d, t)); mixer.update(0); kick(); emit() }
   function step(n) { pause(); seek((action?.time || 0) + n / 30) }
-  function animState() { if (!action) return { id: exId, ready: false }; const d = action.getClip().duration, t = action.time, P = exData.phases, ph = P.find(p => t >= p[1] - 1e-6 && t <= p[2] + 1e-6) || P[0];
-    return { id: exId, ready: true, time: +t.toFixed(3), dur: +d.toFixed(3), playing, speed, loop: loopOn, phase: ph ? ph[0] : '', phases: P } }
+  function animState() { if (!action) return { id: exId, ready: false, mus: musOn }; const d = action.getClip().duration, t = action.time, P = exData.phases, ph = P.find(p => t >= p[1] - 1e-6 && t <= p[2] + 1e-6) || P[0];
+    return { id: exId, ready: true, time: +t.toFixed(3), dur: +d.toFixed(3), playing, speed, loop: loopOn, phase: ph ? ph[0] : '', phases: P, mus: musOn } }
   function stats() { const az = Math.round(THREE.MathUtils.radToDeg(ctl.getAzimuthalAngle())); const mi = R.info.memory;
     return { sex, bones: Object.keys(bones).length, tris: Math.round(tris), height: +h.toFixed(2), az, geometries: mi.geometries, textures: mi.textures, rendering: !!raf } }
   function attach(el) { mount = el; el.appendChild(cv); ro?.disconnect(); io?.disconnect(); ro?.observe(el); io?.observe(el); size() }
   function dispose() { if (dead) return; dead = true; if (raf) cancelAnimationFrame(raf); raf = 0; if (mixer) { mixer.stopAllAction(); mixer.uncacheRoot(mixer.getRoot()) } mixer = action = null; rest = []; animCache.clear(); listener = null; ro?.disconnect(); io?.disconnect(); document.removeEventListener('visibilitychange', onVis);
-    ctl.dispose(); if (model) disposeObj(model); model = null; shTex.dispose(); shadow.geometry.dispose(); shadow.material.dispose(); env.dispose(); R.dispose(); R.forceContextLoss?.(); cv.remove() }
+    ctl.dispose(); if (model) { setMats(false); disposeObj(model) } musMat?.dispose(); musMat = mus = null; model = null; shTex.dispose(); shadow.geometry.dispose(); shadow.material.dispose(); env.dispose(); R.dispose(); R.forceContextLoss?.(); cv.remove() }
   // 測試用：立刻渲染並讀畫面中央一條水平線上的像素，確認人有畫出來（不是只有背景）
   function probe() { R.render(scene, cam); const gl = R.getContext(), w = gl.drawingBufferWidth, hh = gl.drawingBufferHeight, px = new Uint8Array(4 * 41); let hit = 0;
     for (let i = 0; i <= 40; i++) { gl.readPixels(Math.round(w * (0.3 + i * 0.01)), Math.round(hh * 0.55), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px.subarray(i * 4, i * 4 + 4)); const r = px[i * 4], gg = px[i * 4 + 1], b = px[i * 4 + 2]; if (Math.abs(r - 11) + Math.abs(gg - 18) + Math.abs(b - 32) > 40) hit++ }
     return hit }
+  // 測試用：肌群分區的頂點數、各區中心（綁定姿勢）、目前各部位等級
+  function muscleState() { return { on: musOn, counts: mus?.counts || null, other: mus?.other ?? null, centroid: mus?.centroid || null, levels: musLevels() } }
+  // 測試用：立刻渲染、在畫面上取 48×48 個點，數紅（主要）、橘（次要）、灰（其他）的像素
+  function colorStats() { R.render(scene, cam); const gl = R.getContext(), w = gl.drawingBufferWidth, hh = gl.drawingBufferHeight, px = new Uint8Array(4), o = { red: 0, orange: 0, gray: 0 };
+    for (let i = 0; i < 48; i++) for (let j = 0; j < 48; j++) { gl.readPixels(Math.round((i + 0.5) * w / 48), Math.round((j + 0.5) * hh / 48), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const [r, g, b] = px;
+      if (r > 140 && g < 90 && b < 90) o.red++; else if (r > 170 && g > 95 && g < 200 && b < 110 && r - g > 50) o.orange++; else if (r > 55 && Math.abs(r - g) < 20 && Math.abs(g - b) < 26) o.gray++ }
+    return o }
   // 測試用：人物（目前姿勢）投影到畫面上的範圍，-1～1＝畫面邊緣；用來確認整個人都在畫面裡、而且夠大
   function screenBox() { if (!model) return null; model.updateMatrixWorld(true); cam.updateMatrixWorld(); const b = new THREE.Box3().setFromObject(model, true), o = { x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9 };
     for (let i = 0; i < 8; i++) { const p = new THREE.Vector3(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z).project(cam); o.x0 = Math.min(o.x0, p.x); o.x1 = Math.max(o.x1, p.x); o.y0 = Math.min(o.y0, p.y); o.y1 = Math.max(o.y1, p.y) }
@@ -130,5 +147,5 @@ export function createViewer(host, opt = {}) {
     seek(t0); return out }
   attach(host);
   return { load, setView, reset: () => setView('front'), stats, dispose, attach, probe, credit: CREDIT, get sex() { return sex },
-    setExercise, play, pause, replay, setSpeed, setLoop, seek, step, animState, probeAnim, screenBox, onAnim: f => { listener = f } }
+    setExercise, play, pause, replay, setSpeed, setLoop, seek, step, animState, probeAnim, screenBox, setMuscles, muscleState, colorStats, onAnim: f => { listener = f } }
 }

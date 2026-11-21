@@ -19,7 +19,7 @@
 | `PLAN.md` | 架構、判讀規則、公費篩檢資格 |
 | `PROMPTS.md` | AI 提示詞（體脂機、體檢報告、手錶、保單；與 App 內相同）、AI 醫生與保險 AI 工具的固定規則 |
 | `CLAUDE.md` | 給 Claude 的工作規則（改完測試通過直接推 `main`） |
-| `3d/` | 3D 真人示範：`viewer.js`（檢視器＋動畫播放）、`ui.js`（播放控制）、`exercises.js`（動作清單、重點、來源、審核狀態）、`manifest.js`（模型清單）、`models/`（男女 GLB 與預覽圖）、`anims/`（五個動作的動畫與動作階段）、`vendor/three/`（three.js，MIT）、`licenses/`（素材授權紀錄）。按「載入 3D」才下載 |
+| `3d/` | 3D 真人示範：`viewer.js`（檢視器＋動畫播放）、`ui.js`（播放控制）、`exercises.js`（動作清單、重點、肌群、來源、審核狀態）、`muscles.js`（肌群部位分區與上色）、`manifest.js`（模型清單）、`models/`（男女 GLB 與預覽圖）、`anims/`（五個動作的動畫與動作階段）、`vendor/three/`（three.js，MIT）、`licenses/`（素材授權紀錄）。按「載入 3D」才下載 |
 | `tools/` | 3D 素材轉檔工具，用法寫在各檔開頭；不屬於 App：`build-3d-models.js`（Rocketbox FBX → GLB）、`glb-textures.py`（貼圖壓縮）、`glb-add-ponytail.py`（女性加馬尾骨頭）、`build-3d-anims.js`＋`anim-specs.js`（動作捕捉／CC0 動畫轉到人物骨架、自製動作、品質數據與關鍵影格截圖）、`vendor-three.sh`（three.js 放進 `3d/vendor`） |
 
 **更新方式**：改完 `index.html` 推到 `main`，GitHub Actions 會把版本號（commit 編號）寫進 `APP_VER` 並同步到 `gh-pages` 發布，約 1 分鐘後網站更新。App 每次回到前景會比對線上版本，有新版就自動重新載入（正在填表時改顯示「有新版本」按鈕）。`gh-pages` 分支不要手動改。
