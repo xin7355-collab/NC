@@ -7,6 +7,7 @@ import { RoomEnvironment } from './vendor/three/examples/jsm/environments/RoomEn
 import { MODELS, CREDIT } from './manifest.js';
 import { EXERCISES } from './exercises.js';
 import { prepare, paint, makeMaterials } from './muscles.js';
+import { ASSET_VER } from './asset-ver.js';
 
 export { MODELS, CREDIT, EXERCISES };
 export const supports3D = () => { try { return !!document.createElement('canvas').getContext('webgl2') } catch (e) { return false } };
@@ -15,6 +16,8 @@ const BG = new THREE.Color('#0b1220');
 
 export function createViewer(host, opt = {}) {
   const ver = opt.ver ? `?v=${encodeURIComponent(opt.ver)}` : '', low = !!opt.low;
+  // 素材網址：有內容版本（3d/asset-ver.js）就用 ?h=版本（沒改就不重新下載、Service Worker 存在手機離線用），沒有才用 App 版本號
+  const assetURL = f => new URL(f, import.meta.url).href + (ASSET_VER[f] ? `?h=${ASSET_VER[f]}` : ver);
   let R;
   try { R = new THREE.WebGLRenderer({ antialias: !low, powerPreference: 'default' }) } catch (e) { const err = new Error('webgl'); err.cause = e; throw err }
   R.setPixelRatio(Math.min(devicePixelRatio || 1, low ? 1 : 2)); R.toneMapping = THREE.ACESFilmicToneMapping; R.outputColorSpace = THREE.SRGBColorSpace;
@@ -36,8 +39,11 @@ export function createViewer(host, opt = {}) {
   let samp = null, rest = [];   // samp：probeAnim 的取樣頂點（跟著目前的人物）；rest：每根骨頭的站姿（換動作前歸位用）
   let mus = null, musMat = null, musOn = false;   // 肌群部位（第四階段）：分區、假人材質、是否開啟
   const animCache = new Map(), emit = () => listener?.(animState());
+  // 低效能自動調整：播放時平均每格超過 45 毫秒（不到約 22 fps）就把解析度降到 1 倍，讓動畫順一點（不會再自動升回去）
+  let perf = [], lowAuto = false; const govern = dt => { if (lowAuto || R.getPixelRatio() <= 1) return; perf.push(dt); if (perf.length < 60) return;
+    const avg = perf.reduce((a, b) => a + b, 0) / perf.length; perf = []; if (avg > 0.045) { lowAuto = true; R.setPixelRatio(1); size(); emit() } };
   const render = () => { raf = 0; if (dead) return; const now = performance.now(), dt = lastT ? Math.min(0.1, (now - lastT) / 1000) : 0; lastT = now;
-    if (mixer && playing) { mixer.update(dt); emit() } const moving = ctl.update(); R.render(scene, cam); if ((moving || playing) && visible) raf = requestAnimationFrame(render); else lastT = 0 };
+    if (mixer && playing) { mixer.update(dt); if (dt) govern(dt); emit() } const moving = ctl.update(); R.render(scene, cam); if ((moving || playing) && visible) raf = requestAnimationFrame(render); else lastT = 0 };
   const kick = () => { if (!raf && visible && !dead) raf = requestAnimationFrame(render) };
   ctl.addEventListener('change', kick);
   const size = () => { if (!mount || dead) return; const w = mount.clientWidth || 300, hh = mount.clientHeight || 400; R.setSize(w, hh, false); cv.style.width = '100%'; cv.style.height = '100%'; cam.aspect = w / hh; cam.updateProjectionMatrix(); kick() };
@@ -69,7 +75,7 @@ export function createViewer(host, opt = {}) {
     ctl.target.set(0, h * 0.52, 0); cam.position.set(Math.sin(a) * d, h * 0.55, Math.cos(a) * d); cam.lookAt(ctl.target); ctl.update(); kick() }
   async function load(s, onProgress) {
     const M = MODELS[s]; if (!M) throw new Error('model');
-    let g; try { g = await new GLTFLoader().loadAsync(new URL(M.file, import.meta.url).href + ver, e => onProgress?.(e.total ? e.loaded / e.total : (e.loaded / M.bytes))) }
+    let g; try { g = await new GLTFLoader().loadAsync(assetURL(M.file), e => onProgress?.(e.total ? e.loaded / e.total : (e.loaded / M.bytes))) }
     catch (e) { const err = new Error('load'); err.cause = e; throw err }
     if (dead) { disposeObj(g.scene); return }
     if (model) { setMats(false); scene.remove(model); disposeObj(model) } musMat?.dispose(); musMat = null;   // 一次只留一個人物（先換回原本材質再釋放）
@@ -83,8 +89,8 @@ export function createViewer(host, opt = {}) {
     return stats()
   }
   // ---- 動作動畫 ----
-  async function loadAnim(id) { if (animCache.has(id)) return animCache.get(id); const base = new URL(`anims/${id}`, import.meta.url).href;
-    let g, meta; try { [g, meta] = await Promise.all([new GLTFLoader().loadAsync(base + '.glb' + ver), fetch(base + '.json' + ver).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() })]) }
+  async function loadAnim(id) { if (animCache.has(id)) return animCache.get(id);
+    let g, meta; try { [g, meta] = await Promise.all([new GLTFLoader().loadAsync(assetURL(`anims/${id}.glb`)), fetch(assetURL(`anims/${id}.json`)).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() })]) }
     catch (e) { const err = new Error('anim'); err.cause = e; throw err }
     const clips = {}; for (const c of g.animations) clips[c.name] = c; const a = { clips, phases: meta.phases || [] }; animCache.set(id, a); return a }
   // 取景：取動作前、中、後幾個時間點的實際（蒙皮後）外框，讓整個動作都在畫面裡（趴地的動作比站著的長）
@@ -114,10 +120,13 @@ export function createViewer(host, opt = {}) {
   function setLoop(on) { loopOn = !!on; if (action) { action.setLoop(loopOn ? THREE.LoopRepeat : THREE.LoopOnce, Infinity); action.clampWhenFinished = true } emit() }
   function seek(t) { if (!action) return; const d = action.getClip().duration; action.enabled = true; action.paused = false; action.time = Math.max(0, Math.min(d, t)); mixer.update(0); kick(); emit() }
   function step(n) { pause(); seek((action?.time || 0) + n / 30) }
-  function animState() { if (!action) return { id: exId, ready: false, mus: musOn }; const d = action.getClip().duration, t = action.time, P = exData.phases, ph = P.find(p => t >= p[1] - 1e-6 && t <= p[2] + 1e-6) || P[0];
-    return { id: exId, ready: true, time: +t.toFixed(3), dur: +d.toFixed(3), playing, speed, loop: loopOn, phase: ph ? ph[0] : '', phases: P, mus: musOn } }
+  function animState() { if (!action) return { id: exId, ready: false, mus: musOn, sex, low: lowAuto }; const d = action.getClip().duration, t = action.time, P = exData.phases, ph = P.find(p => t >= p[1] - 1e-6 && t <= p[2] + 1e-6) || P[0];
+    return { id: exId, ready: true, time: +t.toFixed(3), dur: +d.toFixed(3), playing, speed, loop: loopOn, phase: ph ? ph[0] : '', phases: P, mus: musOn, sex, low: lowAuto } }
   function stats() { const az = Math.round(THREE.MathUtils.radToDeg(ctl.getAzimuthalAngle())); const mi = R.info.memory;
-    return { sex, bones: Object.keys(bones).length, tris: Math.round(tris), height: +h.toFixed(2), az, geometries: mi.geometries, textures: mi.textures, rendering: !!raf } }
+    return { sex, bones: Object.keys(bones).length, tris: Math.round(tris), height: +h.toFixed(2), az, geometries: mi.geometries, textures: mi.textures, rendering: !!raf, pixelRatio: R.getPixelRatio(), lowAuto, calls: R.info.render.calls } }
+  // 離線：這個人物、各動作的素材是不是已經存在手機（Service Worker 的快取）；沒有 Service Worker 時回 null
+  async function cached() { if (typeof caches === 'undefined' || !navigator.serviceWorker?.controller) return null; const has = async f => !!(await caches.match(assetURL(f)).catch(() => null)), M = MODELS[sex], anims = {};
+    for (const e of EXERCISES) anims[e.id] = (await has(`anims/${e.id}.glb`)) && (await has(`anims/${e.id}.json`)); return { model: M ? await has(M.file) : false, anims } }
   function attach(el) { mount = el; el.appendChild(cv); ro?.disconnect(); io?.disconnect(); ro?.observe(el); io?.observe(el); size() }
   function dispose() { if (dead) return; dead = true; if (raf) cancelAnimationFrame(raf); raf = 0; if (mixer) { mixer.stopAllAction(); mixer.uncacheRoot(mixer.getRoot()) } mixer = action = null; rest = []; animCache.clear(); listener = null; ro?.disconnect(); io?.disconnect(); document.removeEventListener('visibilitychange', onVis);
     ctl.dispose(); if (model) { setMats(false); disposeObj(model) } musMat?.dispose(); musMat = mus = null; model = null; shTex.dispose(); shadow.geometry.dispose(); shadow.material.dispose(); env.dispose(); R.dispose(); R.forceContextLoss?.(); cv.remove() }
@@ -149,5 +158,5 @@ export function createViewer(host, opt = {}) {
     seek(t0); return out }
   attach(host);
   return { load, setView, reset: () => setView('front'), stats, dispose, attach, probe, credit: CREDIT, get sex() { return sex },
-    setExercise, play, pause, replay, setSpeed, setLoop, seek, step, animState, probeAnim, screenBox, setMuscles, muscleState, colorStats, snapshot, onAnim: f => { listener = f } }
+    setExercise, play, pause, replay, setSpeed, setLoop, seek, step, animState, probeAnim, screenBox, setMuscles, muscleState, colorStats, snapshot, cached, perfFeed: (dt, n = 1) => { for (let i = 0; i < n; i++) govern(dt); return lowAuto }, onAnim: f => { listener = f } }
 }

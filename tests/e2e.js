@@ -13,7 +13,8 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
 
 (async () => {
   const browser = await pw.chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: 'zh-TW', timezoneId: 'Asia/Taipei' });
+  // 一般測試不啟用 Service Worker（它發出的請求不經過 page.route，會讓「模擬下載失敗」等測試失準）；離線行為在 6zzn 另開環境測
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: 'zh-TW', timezoneId: 'Asia/Taipei', serviceWorkers: 'block' });
   const errs = [];
   // ---- AI Horde 模擬：ok 模式先排隊兩次再完成；fail 模式志工主機失敗；hang 模式查進度永遠不回應 ----
   let horde = { mode: 'ok', checks: 0, prompts: [] };
@@ -2703,6 +2704,59 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     check('審核標籤規則：審核的是舊版內容 → 「內容已更新・待重新審核」；沒有審核人或日期的通過 → 「待專業審核」；有審核人、日期且內容相同才是「審核通過」；自製動畫標「自製動畫・待專業審核」',
       RL.join('|') === '內容已更新・待重新審核|待專業審核|審核通過|自製動畫・待專業審核|內容已更新・待重新審核', RL.join('|'));
     await page.close(); srv6.close(); fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+
+  // =============== 6zzn. 3D 手機效能與離線（第六階段）：繪製次數、素材內容版本、Service Worker 離線播放、斷網訊息、版本自動更新不受影響、太卡自動降畫質 ===============
+  {
+    const AH = require(path.join(ROOT, 'tools', 'asset-hashes.js')), verSrc = fs.readFileSync(path.join(ROOT, '3d', 'asset-ver.js'), 'utf8'), table = JSON.parse(verSrc.slice(verSrc.indexOf('{'), verSrc.lastIndexOf('}') + 1));
+    const MAN = fs.readFileSync(path.join(ROOT, '3d', 'manifest.js'), 'utf8'), bytesOk = ['male', 'female'].every(x => new RegExp(`${x}: \\{ file: 'models/${x}\\.glb'[^}]*bytes: ${fs.statSync(path.join(ROOT, '3d', 'models', x + '.glb')).size}\\b`).test(MAN));
+    check('3D 素材內容版本表沒過期：每個模型、動畫、審核資料都有版本，跟檔案內容一致（改了素材要重跑 node tools/asset-hashes.js）；模型清單的檔案大小也正確（下載進度用）',
+      JSON.stringify(table) === JSON.stringify(AH.table) && AH.files().length >= 16 && bytesOk, JSON.stringify({ n: Object.keys(table).length, bytesOk }));
+    const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.glb': 'model/gltf-binary', '.jpg': 'image/jpeg', '.json': 'application/json', '.png': 'image/png', '.mp4': 'video/mp4' };
+    let ver7 = 'w1'; const html7 = () => fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').replace("const APP_VER='dev'", `const APP_VER='${ver7}'`);
+    const srv7 = require('http').createServer((q, res) => { let u = decodeURIComponent(q.url.split('?')[0]); if (q.method !== 'GET') { res.writeHead(404); return res.end() } if (u === '/' || u === '/index.html') { res.writeHead(200, { 'content-type': MIME['.html'] }); return res.end(html7()) }
+      const f = path.join(ROOT, u); if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end() } res.writeHead(200, { 'content-type': MIME[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(res) });
+    await new Promise(ok => srv7.listen(0, '127.0.0.1', ok)); const base = `http://127.0.0.1:${srv7.address().port}/`;
+    const ctx7 = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: 'zh-TW', timezoneId: 'Asia/Taipei', serviceWorkers: 'allow' });
+    await ctx7.addInitScript(() => { if (sessionStorage.getItem('seeded')) return; localStorage.clear(); const set = (k, v) => localStorage.setItem('nc_' + k, JSON.stringify(v)); set('tour', 2); set('members', [{ id: 'a', name: '王小明', sex: 'm', birth: '1980-01-01', h: 172, w: 70, act: '1.375', goal: 'keep', role: 'me' }]); set('active', 'a'); sessionStorage.setItem('seeded', '1') });
+    const p7 = await ctx7.newPage(); p7.on('pageerror', e => errs.push(`[pageerror 6zzn] ${e.message}`)); p7.on('dialog', d => d.accept());
+    const open3d = async () => { await p7.evaluate(() => go('fit', 'move')); await p7.click('#h3d-go'); await p7.waitForFunction(() => ($('#h3d')?.dataset.state === 'ready' && H3D.ui && !H3D.busy) || /沒有網路|失敗/.test($('#h3d-msg')?.textContent || ''), null, { timeout: 60000 }) };
+    await p7.goto(base); await p7.waitForFunction(() => navigator.serviceWorker?.controller, null, { timeout: 20000 }); await open3d();
+    const C1 = await p7.evaluate(async () => { const S = () => H3D.v.animState(); document.querySelector('[data-ex="squat"]').click(); await new Promise(r => { const f = () => S().id === 'squat' && S().ready ? r() : setTimeout(f, 50); f() });
+      H3D.v.probe(); const st = H3D.v.stats(); await new Promise(r => setTimeout(r, 300)); const keys = {}; for (const k of await caches.keys()) keys[k] = (await (await caches.open(k)).keys()).map(r => r.url);
+      return { calls: st.calls, keys, off: document.querySelector('.h3dp .off')?.textContent || '' } });
+    const all = Object.values(C1.keys).flat(), paths = all.map(u => new URL(u).pathname), d3 = C1.keys['kw-3d-v1'] || [];
+    // 女性：3 個材質區塊＋腳下影子＝4 次繪製
+    await p7.click('[data-h3dsex="female"]'); await p7.waitForFunction(() => H3D.v?.sex === 'female' && !H3D.busy, null, { timeout: 60000 }); const callsF = await p7.evaluate(() => { H3D.v.probe(); return H3D.v.stats().calls });
+    await p7.click('[data-h3dsex="male"]'); await p7.waitForFunction(() => H3D.v?.sex === 'male' && !H3D.busy, null, { timeout: 60000 });
+    // POST、找不到的檔案、跨網域都不會被存
+    await p7.evaluate(async () => { await fetch('/kw-no-such-file.json').catch(() => {}); await fetch('/kw-post', { method: 'POST', body: 'x' }).catch(() => {}); await fetch('https://example.invalid/x').catch(() => {}) });
+    const junk = await p7.evaluate(async () => { const out = []; for (const k of await caches.keys()) for (const r of await (await caches.open(k)).keys()) if (/kw-no-such|kw-post|example\.invalid/.test(r.url)) out.push(r.url); return out });
+    check('Service Worker 只存同網域的成功回應：3D 素材（男性人物、深蹲動畫）用內容版本網址存在手機、每個檔案只留一份；不存 POST、找不到的檔案、跨網域請求；播放器顯示「已存到這支手機」；繪製次數男 ≤ 3、女 ≤ 4（合併前 8、36）',
+      d3.some(u => /models\/male\.glb\?h=/.test(u)) && d3.some(u => /anims\/squat\.glb\?h=/.test(u)) && d3.some(u => /anims\/squat\.json\?h=/.test(u)) && new Set(paths).size === paths.length && all.every(u => u.startsWith(base))
+        && junk.length === 0 && /已存到這支手機/.test(C1.off) && /動作 1／5/.test(C1.off) && C1.calls <= 3 && callsF <= 4, JSON.stringify({ calls: [C1.calls, callsF], off: C1.off, d3: d3.map(u => u.replace(base, '')), junk }));
+    // 斷網：重新整理照樣開、3D 人物與下載過的動作照樣播；沒下載過的動作、人物說「目前沒有網路」（女性先從手機刪掉＝沒下載過）
+    await p7.evaluate(async () => { const c = await caches.open('kw-3d-v1'); for (const r of await c.keys()) if (/female\.glb/.test(r.url)) await c.delete(r) });
+    await ctx7.setOffline(true); await p7.reload(); await p7.waitForFunction(() => typeof go === 'function', null, { timeout: 20000 });
+    await p7.evaluate(() => { const m = localStorage.getItem('nc_h3dsex'); return m }); await open3d();
+    const OF = await p7.evaluate(async () => { const S = () => H3D.v?.animState?.(), w = ms => new Promise(r => setTimeout(r, ms)), r = { ready: $('#h3d')?.dataset.state, sex: H3D.v?.sex, msg0: $('#h3d-msg')?.textContent || '' };
+      if (r.ready === 'ready') { document.querySelector('[data-ex="squat"]').click(); for (let i = 0; i < 100 && !(S().id === 'squat' && S().ready); i++) await w(50); r.squat = S().id === 'squat' && S().ready;
+        document.querySelector('[data-ex="bridge"]').click(); await w(1500); r.bridgeMsg = document.querySelector('.h3dp .msg').textContent; r.off = document.querySelector('.h3dp .off')?.textContent || '' }
+      return r });
+    await p7.click('[data-h3dsex="female"]').catch(() => {}); await p7.waitForFunction(() => /沒有網路|失敗/.test($('#h3d-msg')?.textContent || ''), null, { timeout: 15000 }).catch(() => {}); const swMsg = await p7.evaluate(() => $('#h3d-msg')?.textContent || '');
+    await ctx7.setOffline(false);
+    check('斷網時：App 照樣打開（頁面用上次存的）；已存的 3D 人物和深蹲照樣載入、播放；沒下載過的動作說「目前沒有網路：這個動作還沒存到這支手機」；沒存過的人物說「目前沒有網路：3D 人物還沒存到這支手機」',
+      OF.ready === 'ready' && OF.squat && /目前沒有網路：這個動作還沒存到這支手機/.test(OF.bridgeMsg) && /目前沒有網路：3D 人物還沒存到這支手機/.test(swMsg), JSON.stringify({ OF, swMsg }));
+    // 版本自動更新：有 Service Worker 時線上新版一樣會換上
+    await p7.reload(); await p7.waitForFunction(() => typeof go === 'function'); ver7 = 'w2';
+    await Promise.all([p7.waitForEvent('load', { timeout: 15000 }).catch(() => {}), p7.evaluate(() => { verAt = 0; document.dispatchEvent(new Event('visibilitychange')) })]); await p7.waitForTimeout(500);
+    const v2 = await p7.evaluate(() => typeof APP_VER === 'undefined' ? '' : APP_VER);
+    // 太卡自動降畫質：每格 60 毫秒持續 1 秒 → 解析度降到 1 倍、畫面說明；每格 16 毫秒不會降
+    await open3d(); const LP = await p7.evaluate(async () => { const a = H3D.v.stats().pixelRatio, fast = H3D.v.perfFeed(0.016, 120), b = H3D.v.stats().pixelRatio, slow = H3D.v.perfFeed(0.06, 60), c = H3D.v.stats().pixelRatio;
+      for (let i = 0; i < 60 && !/自動降低畫質/.test(document.querySelector('.h3dp .off')?.textContent || ''); i++) await new Promise(r => setTimeout(r, 100)); return { a, fast, b, slow, c, off: document.querySelector('.h3dp .off')?.textContent || '' } });
+    check('有 Service Worker 時版本自動更新照常（線上換成新版會重新載入新版本）；播放太卡（每格 60 毫秒）自動把解析度從 2 倍降到 1 倍並在畫面說明，順暢時（每格 16 毫秒）不降',
+      v2 === 'w2' && LP.a === 2 && LP.fast === false && LP.b === 2 && LP.slow === true && LP.c === 1 && /自動降低畫質/.test(LP.off), JSON.stringify({ v2, LP }));
+    await p7.close(); await ctx7.close(); srv7.close();
   }
 
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============

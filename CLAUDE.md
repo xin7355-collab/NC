@@ -7,6 +7,7 @@
 - 架構：主程式是單檔 `index.html`，沒有建置步驟。3D 真人示範放在 `3d/`（three.js、GLB 人物模型，使用者按「載入 3D」才下載，開 App 不載入；2026-11 使用者同意）；轉檔工具在 `tools/`。健康資料只存在使用者手機（localStorage，圖片在 IndexedDB），不得上傳；任何 API Key 不得進前端或 repo，一律經 `gas/Code.gs` 代理。
 - 3D 素材：只用允許公開散布的授權（MIT、CC0、CC BY）；網站是公開的，付費素材多半禁止使用者下載原始檔，不能放。每個素材的來源、作者、授權、可否商用／修改／散布寫在 `3d/licenses/assets.json` 與 `THIRD_PARTY_NOTICES.md`。動作沒有專業審核紀錄時，不得顯示「已審核」。
 - 3D 動作的動畫或畫面文字（`3d/exercises.js`）改了：跑 `node tools/build-review.js --note "改了什麼"` 重建專業審核資料包（測試會擋過期的資料包；已審核的動作會自動改回待專業審核）。教練的審核意見檔、真實姓名不進 repo；更新 `3d/review/reviews.json` 只用 App「匯出審核資料庫」的檔案（沒同意公開的姓名已換掉），沒有審核人與日期不得標「審核通過」。
+- 3D 素材（`3d/models`、`3d/anims`、`3d/review` 的 JSON）改了：跑 `node tools/asset-hashes.js` 更新內容版本表（測試會擋過期的表）。`sw.js`（離線快取）不得快取跨網域請求、非 GET 或含健康資料的回應；改了快取規則要把 `V` 加一版。
 - 判讀規則、資料結構、公費篩檢資格見 `PLAN.md`；規則改了要同步更新 `PLAN.md`。
 - 外部 API：單一佇列、指數退避、失敗可略過，不可瞬間併發；GAS 寫入用 LockService。
 - 回報要誠實：哪些驗過、哪些沒驗到分開講；範圍外的問題簡短提出，不擅自擴大範圍。

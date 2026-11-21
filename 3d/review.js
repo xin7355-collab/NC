@@ -1,6 +1,7 @@
 // 專業審核（第五階段）：審核資料庫 3d/review/reviews.json（隨網站發布，所有手機看到的正式狀態）＋這支手機匯入的審核意見
 // App 的播放器和審核資料包頁面（review/）都用這個檔案。審核意見只在這支手機，直到開發者把「匯出審核資料庫」的檔案更新到網站
 import { EXERCISES, STATUS, reviewLabel } from './exercises.js';
+import { ASSET_VER } from './asset-ver.js';
 export { STATUS, reviewLabel };
 const LS = 'nc_rev3d';   // 本機匯入的審核意見（不在 App 健康資料備份裡；換手機要重新匯入，或請開發者發布到網站）
 export const CHOICES = ['approved', 'revision_required', 'rejected'];   // 審核的人可以選的結果
@@ -12,7 +13,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 export { esc };
 
 // 讀審核資料庫與資料包清單（內容版本）；ver＝App 版本號（換版時不吃舊快取）
-export async function loadDB(ver = '') { const q = ver ? `?v=${encodeURIComponent(ver)}` : '', get = async f => { const r = await fetch(new URL(`./review/${f}`, import.meta.url).href + q); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() };
+export async function loadDB(ver = '') { const q = f => ASSET_VER['review/' + f] ? `?h=${ASSET_VER['review/' + f]}` : ver ? `?v=${encodeURIComponent(ver)}` : '', get = async f => { const r = await fetch(new URL(`./review/${f}`, import.meta.url).href + q(f)); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() };
   const [db, pkg] = await Promise.all([get('reviews.json'), get('package.json')]);
   return { db, pkg, content: Object.fromEntries((pkg.items || []).map(i => [i.id, i.content])) } }
 export function local() { try { const v = JSON.parse(localStorage.getItem(LS) || 'null'); return v && v.items && typeof v.items === 'object' ? v : { schema: 1, items: {} } } catch (e) { return { schema: 1, items: {} } } }

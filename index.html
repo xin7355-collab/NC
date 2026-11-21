@@ -473,6 +473,7 @@ table.imap td.er{color:var(--red);font-weight:800}table.imap td.gp1{color:var(--
 
 <script>
 const APP_VER='dev'; // 推上 main 後，.github/workflows/pages-sync.yml 會換成 commit 編號；App 回到前景時用它比對線上版本
+if('serviceWorker'in navigator&&/^https?:$/.test(location.protocol))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); // 離線快取（sw.js）：頁面先走網路、下載過的 3D 素材存在手機
 /* ================= 基礎工具 ================= */
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1394,7 +1395,7 @@ if(!H3D.v)H3D.v=mod.createViewer(host,{ver:APP_VER,onLost:()=>{h3dDispose();h3dM
 const i=$('#h3d .h3d-img');if(i)i.hidden=true;h3dMsg('下載 3D 人物… 0%');
 await H3D.v.load(sex,p=>h3dMsg(`下載 3D 人物… ${Math.min(99,Math.round(p*100))}%`));H3D.sex=sex;host.dataset.sex=sex;h3dMsg('');h3dUI();
 if(!H3D.ui){const U=await import('./3d/ui.js?v='+encodeURIComponent(APP_VER));H3D.ui=U.mountPlayer($('#h3d-play'),H3D.v,{reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,ver:APP_VER})}}
-catch(e){const k=e?.message;h3dDispose();h3dMsg(k==='webgl'?'這支手機現在無法建立 3D 畫面：先用下面的 2D 動作示範，或關掉其他 App 再試':k==='load'||k==='mod'?'3D 人物下載失敗：請確認網路後再按一次「載入 3D 人物」':'3D 載入失敗：請再試一次，或開啟省電模式改用 2D',1)}
+catch(e){const k=e?.message;h3dDispose();h3dMsg(k==='webgl'?'這支手機現在無法建立 3D 畫面：先用下面的 2D 動作示範，或關掉其他 App 再試':(k==='load'||k==='mod')&&!navigator.onLine?'目前沒有網路：3D 人物還沒存到這支手機。連上網路後載入一次，之後沒網路也能看':k==='load'||k==='mod'?'3D 人物下載失敗：請確認網路後再按一次「載入 3D 人物」':'3D 載入失敗：請再試一次，或開啟省電模式改用 2D',1)}
 finally{H3D.busy=0}}
 document.addEventListener('click',e=>{const t=e.target;if(t.closest('[data-h3d]')){h3dLoad(H3D.sex||$('#h3d')?.dataset.sex||'male');return}
 const s=t.closest('[data-h3dsex]');if(s){if(H3D.v&&H3D.sex!==s.dataset.h3dsex)h3dLoad(s.dataset.h3dsex);return}
