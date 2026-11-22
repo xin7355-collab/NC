@@ -1375,6 +1375,7 @@ const REHAB=[['pf','足底筋膜炎',['towelst','wallcalf','ballroll','towelcurl
 const PAIN=[['😀 不痛（0–2 分）','很好：照這個量做，之後可以慢慢加次數或停留時間。'],['😐 有點痛（3–5 分）','可以做，但減少次數或幅度；隔天沒有更痛，再回到原本的量。'],['😣 很痛（6 分以上）','先停這個動作，改做溫和的伸展；持續或越來越痛，請看復健科。'],['⚡ 麻、刺痛往手腳竄','停止：可能是神經受到壓迫，儘快看復健科或神經科。']];
 // 運動回饋：跟著做完回報痛感、還能再做幾下 → 記在當天的運動紀錄（肌力動作＝居家肌力、其他＝復健動作，算進本週紀錄）；
 // mv＝每個動作 {a:動作, r:每組目標, S:預定組數, s:做完幾組（有按「開始」才有，只當參考）, p:痛感（PAIN 第幾項）, e:還能再做幾下（2＝2 下以上、1＝剛好、0＝做不完）}
+const VO={get on(){return S.get('voice',true)!==false},say(t){if(!this.on||!window.speechSynthesis)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='zh-TW';u.rate=.92;speechSynthesis.speak(u)}catch(e){}}};   // 跟著做的語音報數（iPhone 內建語音、不上傳；可關閉）
 const EFF=[['💪 還能再做 2 下以上',2],['🙂 剛好做完',1],['😓 做不完',0]],PN=[['knee','膝蓋'],['back','腰背'],['shoulder','肩膀'],['ankle','腳踝／腳底'],['chest','胸悶／頭暈']];
 const mvHist=(m,a)=>exlogOf(m).flatMap(r=>(r.mv||[]).filter(x=>x.a===a));
 // 下次目標（雙重漸進＋痛感把關，看使用者的回答）：連 2 次同樣次數都不痛、還能再做 2 下以上 → 肌力動作加 2 下、復健動作加 1 下（上限 20／15）；上次有點痛或做不完 → 少一階；
@@ -1436,20 +1437,27 @@ let ANR=null;
 function anRun(svg,X,onRep,onTick){const F=X.f.map(([p,d])=>[AP(p),d]),tot=F.reduce((a,x)=>a+x[1],0),R={svg,cyc:0,slow:false,pause:false,e:F[0][1]};
 const step=now=>{if(ANR!==R||!svg.isConnected)return;const dt=Math.min(100,now-(R.last??now));R.last=now;if(!R.pause){R.e+=dt/(R.slow?1.6:1);const c=Math.floor(R.e/tot);if(c>R.cyc){R.cyc=c;onRep?.(c)}let u=R.e-c*tot,i=0;while(i<F.length-1&&u>F[i][1]){u-=F[i][1];i++}
 onTick?.(i,F[i][1]-u);const f=Math.min(1,u/F[i][1]);anDraw(svg,anMix(F[(i+F.length-1)%F.length][0],F[i][0],.5-Math.cos(f*Math.PI)/2),X)}requestAnimationFrame(step)};ANR=R;requestAnimationFrame(step);return R}
-function openAnim(k,r,st){const X=ANX[k];if(!X)return;const m=me(),nx=mvNext(m,k,r||X.r),goal=nx.r,sets=st||X.sets||2,u=X.hold>=10?'次':'下',hz=(X.hold||0)*1000;let R=null,cam=null,hl='';
+function openAnim(k,r,st){const X=ANX[k];if(!X)return;const m=me(),nx=mvNext(m,k,r||X.r),goal=nx.r,sets=st||X.sets||2,u=X.hold>=10?'次':'下',hz=(X.hold||0)*1000;let R=null,cam=null,hl='',cd=null,wl=null;
 openSheet(sheetHead(`🎬 ${esc(X.n)}`,`${X.hold?`每${u}停 ${X.hold} 秒・`:''}${goal} ${u} × ${sets} 組`)+`<div class="anwrap">${anSVG(X,'anim big')}<video id="an-cam" playsinline muted hidden></video></div>${nx.why?`<div class="hl${nx.stop?' warn':''}" style="margin-top:8px">${nx.stop?'🛑':'📈'} ${esc(nx.why)}</div>`:''}<div id="an-hold" class="anhold" style="visibility:hidden">　</div>
 <div class="row" style="margin:10px 0 6px"><b id="an-cnt" aria-live="polite">按「開始」跟著做</b><span class="sub" id="an-set">第 1／${sets} 組</span></div>
-<div class="row2"><button class="btn" id="an-go">▶ 開始</button><button class="btn ghost" id="an-slow" aria-pressed="false">🐢 放慢</button></div>
+<div class="row2"><button class="btn" id="an-go">▶ 開始</button><button class="btn ghost" id="an-slow" aria-pressed="false">🐢 放慢</button>${window.speechSynthesis?`<button class="btn ghost${VO.on?' on':''}" id="an-voice" aria-pressed="${VO.on}">${VO.on?'🔊':'🔇'} 語音</button>`:''}</div>
 <button class="btn ghost" id="an-camb" style="margin-top:8px">📷 開前鏡頭對照（不錄影、不上傳）</button>
 <div class="h4">✅ 做對的重點</div>${X.cue.map(c=>`<div class="bl">${esc(c)}</div>`).join('')}${X.bad?.length?`<div class="h4">⚠️ 常見錯誤</div>${X.bad.map(c=>`<div class="bl">${esc(c)}</div>`).join('')}`:''}
 <div class="h4">做完感覺如何？</div><div class="chips" id="an-pain">${PAIN.map(([t],i)=>`<button type="button" class="chip" data-pi="${i}">${t}</button>`).join('')}</div>
 <div class="h4">還能再做幾下？</div><div class="chips" id="an-eff">${EFF.map(([t,v])=>`<button type="button" class="chip" data-ev="${v}">${t}</button>`).join('')}</div><div id="an-pout" aria-live="polite"></div>
 <p class="note">復健動作以不痛或微痛（0–3 分）為原則，幅度做到舒服的範圍就好；急性扭傷、骨折、開刀後，先照醫師或物理治療師的指示。</p>`);
 const svg=$('#sheetBody svg.anim'),cnt=$('#an-cnt'),go=$('#an-go');anDraw(svg,AP(X.f[0][0]),X);
-const hEl=$('#an-hold'),hold=t=>{if(t!==hl){hl=t;hEl.textContent=t||'　';hEl.style.visibility=t?'visible':'hidden'}},tick=(i,rem)=>hold(hz&&X.f[i][1]>=hz?`停住 ${Math.ceil(rem/1000)} 秒`:'');
-const rep=c=>{const s=Math.ceil(c/goal),n=c-(s-1)*goal;cnt.textContent=`${n}／${goal} ${u}`;if(n<goal)return;R.pause=true;hold('');
-if(s>=sets){cnt.textContent=`🎉 ${sets} 組完成！回報一下痛感`;go.textContent='▶ 再做一次';R.done=1}else{$('#an-set').textContent=`第 ${s+1}／${sets} 組`;go.textContent='▶ 下一組（先休息 30 秒）'}};
-go.onclick=()=>{if(!R||R.done){R=anRun(svg,X,rep,tick);$('#an-set').textContent=`第 1／${sets} 組`;cnt.textContent=`0／${goal} ${u}`;go.textContent='⏸ 暫停'}else{R.pause=!R.pause;go.textContent=R.pause?'▶ 繼續':'⏸ 暫停'}};
+const hEl=$('#an-hold'),hold=t=>{if(t!==hl){if(t&&!hl)VO.say(t);hl=t;hEl.textContent=t||'　';hEl.style.visibility=t?'visible':'hidden'}},tick=(i,rem)=>hold(hz&&X.f[i][1]>=hz?`停住 ${Math.ceil(rem/1000)} 秒`:'');
+// 做的時候螢幕不休眠（做完、關掉就放掉）
+const wake=async on=>{try{if(on){if(!wl)wl=await navigator.wakeLock?.request('screen')}else if(wl){const w=wl;wl=null;await w.release()}}catch(e){}};
+const rep=c=>{const s=Math.ceil(c/goal),n=c-(s-1)*goal;cnt.textContent=`${n}／${goal} ${u}`;if(n<goal){VO.say(String(n));return}R.pause=true;hold('');
+if(s>=sets){cnt.textContent=`🎉 ${sets} 組完成！回報一下痛感`;go.textContent='▶ 再做一次';R.done=1;VO.say(`${n}，${sets} 組完成，回報一下感覺`);wake(false)}else{$('#an-set').textContent=`第 ${s+1}／${sets} 組`;go.textContent='▶ 下一組（先休息 30 秒）';VO.say(`${n}，第 ${s} 組完成，休息 30 秒`)}};
+// 按「開始」先倒數 3 秒（長輩趴好、站穩再開始），倒數中再按一次就取消；暫停後「繼續」不用再倒數
+const big=t=>{hEl.textContent=t||'　';hEl.style.visibility=t?'visible':'hidden'},start=()=>{big('');R=anRun(svg,X,rep,tick);$('#an-set').textContent=`第 1／${sets} 組`;cnt.textContent=`0／${goal} ${u}`;go.textContent='⏸ 暫停';VO.say('開始')};
+go.onclick=()=>{if(cd){clearInterval(cd);cd=null;big('');cnt.textContent='按「開始」跟著做';go.textContent='▶ 開始';return}
+if(!R||R.done){let k=3;cnt.textContent='3';big('3');VO.say('3');go.textContent='✕ 取消';wake(true);cd=setInterval(()=>{if(--k>0){cnt.textContent=String(k);big(String(k));VO.say(String(k))}else{clearInterval(cd);cd=null;start()}},1000)}
+else{R.pause=!R.pause;go.textContent=R.pause?'▶ 繼續':'⏸ 暫停';if(!R.pause)wake(true)}};
+$('#an-voice')?.addEventListener('click',e=>{const b=e.currentTarget,on=!VO.on;S.set('voice',on);b.setAttribute('aria-pressed',on);b.classList.toggle('on',on);b.textContent=`${on?'🔊':'🔇'} 語音`;if(!on)try{speechSynthesis.cancel()}catch(x){}});
 $('#an-slow').onclick=e=>{const on=e.currentTarget.getAttribute('aria-pressed')!=='true';e.currentTarget.setAttribute('aria-pressed',on);e.currentTarget.classList.toggle('on',on);if(R)R.slow=on};
 $('#an-camb').onclick=async()=>{const v=$('#an-cam');if(cam){cam.getTracks().forEach(t=>t.stop());cam=null;v.hidden=true;return}
 try{cam=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});v.srcObject=cam;v.hidden=false;await v.play().catch(()=>{})}catch(err){toast(err?.name==='NotAllowedError'?'沒有相機權限：到 iPhone「設定 → Safari → 相機」改成允許，或對照動畫自己檢查重點':'這台裝置開不了前鏡頭：對照下面的重點自己檢查')}};
@@ -1458,7 +1466,7 @@ const fb={p:null,e:null},rec=()=>{if(fb.p==null)return;const done=R?(R.done?sets
 $('#an-pout').innerHTML=`<div class="hl" style="margin-top:8px">${esc(PAIN[fb.p][1])}</div>${ok?`<div class="sub" style="margin-top:6px">✓ 已記到今天的運動紀錄${done!=null?`（做完 ${done}／${sets} 組）`:''}${fb.e==null?'；再選「還能再做幾下」，下次的次數會更準':''}</div>`:''}`};
 $('#an-pain').onclick=e=>{const b=e.target.closest('[data-pi]');if(!b)return;$$('#an-pain .chip').forEach(x=>x.classList.toggle('on',x===b));fb.p=+b.dataset.pi;rec()};
 $('#an-eff').onclick=e=>{const b=e.target.closest('[data-ev]');if(!b)return;$$('#an-eff .chip').forEach(x=>x.classList.toggle('on',x===b));fb.e=+b.dataset.ev;if(fb.p==null)$('#an-pout').innerHTML='<div class="sub" style="margin-top:6px">再選一下「做完感覺如何」就會記下來</div>';else rec()};
-onSheetClose=()=>{ANR=null;if(cam)cam.getTracks().forEach(t=>t.stop());cam=null}}
+onSheetClose=()=>{ANR=null;clearInterval(cd);cd=null;wake(false);try{window.speechSynthesis?.cancel()}catch(e){}if(cam)cam.getTracks().forEach(t=>t.stop());cam=null}}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-anim]');if(t){e.preventDefault();openAnim(t.dataset.anim,+t.dataset.ar||0,+t.dataset.as||0)}});
 
 const fitOf=m=>{const f=obj(m.fit);return{lim:Array.isArray(f.lim)?f.lim.filter(k=>LIM.some(z=>z[0]===k)):[],lvl:['new','mid','pro'].includes(f.lvl)?f.lvl:'new',days:Math.min(6,Math.max(2,+f.days||3)),min:[20,30,45,60].includes(+f.min)?+f.min:30,like:Array.isArray(f.like)?f.like.filter(k=>EX[k]):[],time:/^\d{2}:\d{2}$/.test(f.time)?f.time:'07:00'}};
@@ -3188,7 +3196,7 @@ const SYM=[
 {k:'mouth',n:'嘴破、口腔白斑紅斑、硬塊',a:'頭頸',u:'clinic',rf:[['破洞、白斑或紅斑超過 2 週沒好、摸到硬塊、會出血','soon'],['嘴巴張不開、吞嚥困難或脖子腫','soon']],d:'牙科、口腔外科或耳鼻喉科',t:['口腔黏膜檢查','必要時切片'],tip:'嚼檳榔、抽菸、喝酒的人更要注意；30 歲以上嚼檳榔（含已戒）或吸菸可以公費每 2 年做口腔黏膜檢查'},
 {k:'gum',n:'牙齦流血、牙齒鬆動、牙痛',a:'頭頸',u:'obs',rf:[['腫到張口、吞嚥或呼吸困難','now'],['臉頰腫脹合併發燒','soon']],d:'牙科',t:['牙周檢查','牙科 X 光'],tip:'刷牙流血、牙齦萎縮多半是牙周病；每天用牙線，健保每半年可以洗牙 1 次'},
 {k:'stuffy',n:'鼻塞（躺下更塞）、流鼻水、打噴嚏',a:'頭頸',u:'obs',rf:[['單側鼻塞合併鼻涕帶血、單側耳悶或脖子硬塊','soon'],['發燒、臉頰或眼睛周圍腫痛','soon'],['眼睛周圍紅腫、視力改變、劇烈頭痛','now']],d:'耳鼻喉科',t:['鼻腔內視鏡','過敏原檢測（抽血）','必要時鼻竇電腦斷層'],tip:'躺下鼻塞常見於過敏性鼻炎、鼻中隔彎曲、下鼻甲肥大；側睡、枕頭墊高、睡前洗鼻；血管收縮型鼻噴劑連續用不要超過 3 天'},
-{k:'throat',n:'喉嚨痛、聲音沙啞',a:'頭頸',u:'obs',rf:[['吞嚥困難、流口水、呼吸有雜音或喘','now'],['沙啞超過 4 週，或咳血、脖子硬塊、體重下降','soon']],d:'耳鼻喉科',t:['喉頭內視鏡','頸部觸診或超音波'],tip:'抽菸、嚼檳榔、喝酒的人聲音沙啞要提早看，不要等 4 週'},
+{k:'throat',n:'喉嚨痛、聲音沙啞',a:'頭頸',u:'obs',rf:[['吞嚥困難、流口水、呼吸有雜音或喘','now'],['沙啞超過 4 週，或咳血、脖子硬塊、體重下降','soon']],d:'耳鼻喉科',t:['喉頭內視鏡','頸部觸診或超音波'],tip:'抽菸、嚼檳榔、喝酒的人聲音沙啞要提早看，不要等 4 週'}, {k:'choke',n:'吃東西、喝水會嗆咳',a:'頭頸',u:'clinic',s:'吞嚥困難 嗆到 噎到 卡喉 吞不下',rf:[['嗆到後一直咳、喘不過氣、說不出話（可能噎住）','now'],['發燒、咳嗽有痰、呼吸變喘（可能是吸入性肺炎）','soon'],['這一年得過肺炎，或吃得越來越少、體重一直掉','soon']],d:'復健科（吞嚥評估）／耳鼻喉科',t:['吞嚥功能評估（語言治療師）','必要時吞嚥內視鏡或吞嚥攝影檢查'],tip:'中風、巴金森氏症、失智、長期臥床的人常見，不要當成老了正常。吃飯坐直、小口慢慢吃、不要仰頭喝水（改用湯匙或吸管）；吞嚥訓練要先由語言治療師評估再做'},
 {k:'skin',n:'皮膚癢、紅疹、蕁麻疹',a:'全身',u:'obs',rf:[['嘴唇舌頭腫、喘或頭暈','now'],['發燒合併大片紅疹、水泡或嘴巴破（嚴重藥物過敏）','now'],['紅腫範圍快速擴大、發熱疼痛','soon']],d:'皮膚科',t:['醫師看診（多數不需要抽血）','必要時過敏原檢測'],tip:'最近 2 個月內開始吃的新藥（例如痛風藥 allopurinol、抗癲癇藥、抗生素、止痛藥），出疹時一定要告訴醫師'},
 {k:'neck',n:'頸肩痛',a:'骨骼肌肉',u:'obs',rf:[['胸悶、冒冷汗合併左肩頸痛','now'],['發燒合併脖子僵硬、頭痛','now'],['手臂麻、無力，或走路不穩','soon']],d:'復健科／骨科',t:['醫師評估','依需要頸椎 X 光或 MRI'],tip:'每 30–60 分鐘起來動一動、螢幕在視線高度；熱敷、伸展'},
 {k:'heel',n:'腳底／腳跟痛',a:'骨骼肌肉',u:'obs',rf:[['突然像被踢到一樣劇痛、無法踮腳（可能跟腱斷裂）','now'],['紅、腫、發熱或發燒','soon'],['腳受過傷後痛、不能踩地','soon']],d:'復健科／骨科（足踝）',t:['醫師觸診與步態評估','有外傷，或照顧 6 週以上沒改善，才由醫師決定照 X 光或超音波'],tip:'早上下床第一步痛多半是足底筋膜炎；腳跟後方痛多是跟腱或滑囊。沒有外傷、沒有紅腫發熱時：先放鬆、伸展小腿，穿後跟有緩衝的鞋，減少跑跳與久站；醫師交代泡腳熱敷就照做（泡到小腿）'},
@@ -3320,7 +3328,7 @@ $('#ai-copy').onclick=()=>copyText(txt(),'已複製，可以貼到任何 AI');up
 /* ================= 自我檢測：在家就能做的篩檢 → 結果、要做什麼、掛哪一科、可以請醫師安排的檢查，並能整理給 AI =================
 正式量表：BE FAST（中風警訊口訣）、AD8（極早期失智篩檢）、STOP-Bang（睡眠呼吸中止）、PHQ-9／GAD-7（憂鬱／焦慮）、SARC-F＋椅子起立 5 次（AWGS 2019 肌少症）；
 「心臟」「頭暈」不是正式量表，是依臨床警訊整理的分流問題。只存答案，結果每次重算（規則修正後舊紀錄跟著更新）；資料只存在手機 */
-const YN=[['沒有',0],['有',1]],FREQ=[['完全沒有',0],['有幾天',1],['一半以上的天數',2],['幾乎每天',3]],AD8O=[['是，有改變',1],['沒有改變',0],['不知道',0]],SARO=t=>[['沒有困難',0],['有點困難',1],[t||'很困難或做不到',2]];
+const YN=[['沒有',0],['有',1]],FREQ=[['完全沒有',0],['有幾天',1],['一半以上的天數',2],['幾乎每天',3]],AD8O=[['是，有改變',1],['沒有改變',0],['不知道',0]],ICO=[['答對',0],['答錯或答不出來',1]],SARO=t=>[['沒有困難',0],['有點困難',1],[t||'很困難或做不到',2]];
 const SLV=[['低風險','var(--lime)','低風險'],['注意','var(--amber)','注意'],['建議門診評估','#ff8a5c','門診'],['儘快就醫','var(--red)','儘快'],['立即打 119 或掛急診','var(--red)','立即']];
 let SELFR=S.get('self',{}); // {成員 id: [{id,k,t:'YYYY-MM-DD',a:[每題答案：選項序號或數字，沒答 null]}]}
 const selfOf=(m,k)=>(SELFR[m.id]||[]).filter(r=>SELF[r.k]&&(!k||r.k===k)).sort((a,b)=>String(b.t).localeCompare(String(a.t))||String(b.id).localeCompare(String(a.id)));
@@ -3440,7 +3448,7 @@ if(ty===2)todo.push('也做「肌力與跌倒」檢測；浴室加止滑墊、�
 if(ty===3)todo.push('也做「憂鬱」「焦慮」檢測：情緒和睡眠問題很常以頭暈表現');
 todo.push('發作時先坐下或扶著東西，避免跌倒；暈的時候不要開車、爬高');
 return{lv,head:lv>=3?'建議儘快就醫':'建議門診檢查',txt:'下面是依你的回答整理的可能方向（不是診斷）：',find:f,todo,dept:[...dp].join('、')||'家醫科',exams:[...ex]}}},
-memory:{n:'記憶力（極早期失智篩檢 AD8）',ic:'🧩',g:'scr',sub:'健忘還是失智？8 題，最好請家人一起回答',who:a=>a>=18,
+icope:{n:'長者認知初篩（ICOPE）',ic:'🧠',g:'scr',sub:'65 歲以上・3 題・請家人陪著問',who:a=>a>=65, intro:'國健署「長者功能評估」的認知初評，請家人照順序問長輩：① 先唸「鉛筆、汽車、書」，請長輩跟著說一次並記住；② 問「今天的日期？」（年、月、日）；③ 問「您現在在哪裡？」；④ 最後請長輩說出剛剛那 3 樣東西。', src:'國民健康署長者功能評估（參考 WHO ICOPE）認知初評：任一題答錯，就再做進一步篩檢（家屬可接著做 AD8）；篩檢不是診斷', qs:[{t:'說得出今天的日期（年、月、日都要對）',o:ICO},{t:'說得出現在在哪裡（例如家裡、哪間醫院）',o:ICO},{t:'說得出剛剛那 3 樣東西（鉛筆、汽車、書，3 樣都要對）',o:ICO}], rate(V){const n=V.reduce((t,v)=>t+(v||0),0),L6='其他 5 項（行動、營養、視力、聽力、情緒）可以用國健署「長者量六力」LINE（@hpaicope）在家自我檢測'; if(n)return{lv:1,sc:`錯 ${n} 題`,head:'建議再做進一步的認知評估',txt:'有答錯不代表失智（緊張、聽不清楚、沒睡好都會影響），但要再確認。',todo:['請家人接著做「記憶力（AD8）」檢測（就在下面）','到提供「長者功能評估」的診所或衛生所複評，或掛神經內科、精神科的記憶門診',L6],dept:'',exams:[]}; return{lv:0,sc:'3 題都對',head:'認知初評沒有發現問題',txt:'建議每年做一次；家人覺得記憶、判斷越來越差時，隨時可以做 AD8。',todo:[L6,'規律運動、多和人互動，聽力不好就配助聽器'],dept:'',exams:[]}}}, memory:{n:'記憶力（極早期失智篩檢 AD8）',ic:'🧩',g:'scr',sub:'健忘還是失智？8 題，最好請家人一起回答',who:a=>a>=18,
 intro:'和「幾年前」的自己比，下面這些有沒有改變？只算「因為記憶或思考問題」造成的改變（不是因為手腳不方便）。最好請家人或常相處的人一起回答。',
 src:'AD8 極早期失智症篩檢量表（© 2005 美國華盛頓大學，台灣失智症協會推廣中文版）：≥2 分建議進一步評估；篩檢不是診斷',
 qs:[{t:'判斷力變差：例如容易被騙、做出不好的財務決定、買了不合適的禮物',o:AD8O},{t:'對活動和嗜好的興趣降低',o:AD8O},{t:'重複問相同的問題、講相同的故事或話',o:AD8O},
@@ -3449,7 +3457,7 @@ qs:[{t:'判斷力變差：例如容易被騙、做出不好的財務決定、買
 ctx:ctxMem,
 rate(V,A,m,F){const sc=V.reduce((t,v)=>t+(v||0),0);
 if(sc>=2)return{lv:2,sc:`${sc}/8`,head:'建議到醫院做進一步的認知評估',txt:`AD8 ≥2 分代表可能有認知功能變化，要由醫師用正式測驗確認（篩檢不是診斷）。${F.a<50?'50 歲以下最常見的原因是壓力、睡眠不足、憂鬱或焦慮。':''}很多原因可以治療：甲狀腺低下、維生素 B12 不足、憂鬱、睡眠呼吸中止、聽力變差、藥物副作用都會讓記憶變差。`,
-todo:['帶一位熟悉你日常狀況的家人一起看診','整理正在吃的藥（包括安眠藥、過敏藥、止痛藥）給醫師看','也做「憂鬱」和「睡眠呼吸中止」檢測：憂鬱和睡不好最常被誤以為失智'],dept:'神經內科或精神科（記憶門診）',
+todo:['帶一位熟悉你日常狀況的家人一起看診','整理正在吃的藥（包括安眠藥、過敏藥、止痛藥）給醫師看','也做「憂鬱」和「睡眠呼吸中止」檢測：憂鬱和睡不好最常被誤以為失智','照顧上有問題、不知道找誰：撥失智症關懷專線 0800-474-580（台灣失智症協會）','需要長照服務、想找失智共同照護中心或社區服務據點：撥長照專線 1966（各縣市照管中心接聽，前 5 分鐘免費）'],dept:'神經內科或精神科（記憶門診）',
 exams:['認知功能測驗（MMSE、MoCA 或 CDR）','抽血：甲狀腺 TSH、維生素 B12、葉酸、血糖、肝腎功能、電解質','聽力檢查','必要時腦部電腦斷層或磁振造影']};
 if(sc===1)return{lv:1,sc:'1/8',head:'有 1 項改變，先觀察',txt:'還沒達到建議就醫的分數。半年後再測一次；如果家人也覺得變化越來越明顯，或開始影響生活，就提早看診。',todo:['規律運動、多和人互動、學新東西','控制血壓、血糖、血脂；聽力變差就配助聽器（聽力受損是可以改變的失智危險因子）'],dept:'',exams:[]};
 return{lv:0,sc:'0/8',head:'沒有明顯的認知變化',txt:'正常的健忘是「忘了細節，經人提醒會想起來」；失智是「整件事都忘了、提醒也想不起來，而且影響工作或生活」。',todo:[F.a>=65?'65 歲以上建議每年測一次':'有疑慮時再測；65 歲以上建議每年測一次','規律運動、控制三高、不吸菸，聽力不好就配助聽器'],dept:'',exams:[]}}},
@@ -4633,10 +4641,9 @@ const birthY=m=>+String(m.birth||'').slice(0,4)||new Date().getFullYear()-Math.f
 const TWID=/[A-Z][1289]\d{8}/g,TWPH=/09\d{2}[-\s]?\d{3}[-\s]?\d{3}/g,TWEM=/[\w.+-]+@[\w-]+(\.[\w-]+)+/g; // 身分證、新式外來人口統一證號（第二碼 8、9）、手機、Email
 function insScrub(v,W){let s=String(v??'');if(new RegExp(TWID.source).test(s)){s=s.replace(TWID,'＊＊＊');W.add('偵測到身分證字號，已自動刪除')}if(new RegExp(TWPH.source).test(s)){s=s.replace(TWPH,'＊＊＊');W.add('偵測到電話號碼，已自動刪除')}if(new RegExp(TWEM.source).test(s)){s=s.replace(TWEM,'＊＊＊');W.add('偵測到 Email，已自動刪除')}
 if(/\d{10,}/.test(s)){s=s.replace(/\d{10,}/g,d=>'＊＊＊'+d.slice(-4));W.add('偵測到完整保單號碼，只留末 4 碼')}return s} // 10 碼以上的連續數字（保單號碼）；金額不會這麼長
-// 防 AI 讀錯：金額一定要出現在 AI 抄的原文裡（萬元換算、千分位、全形數字都接受）；原文是國字數字時請人工核對
-function numInQuote(a,u,q){q=String(q||'').replace(/[０-９]/g,d=>String.fromCharCode(d.charCodeAt(0)-65248)).replace(/[,，\s]/g,'');if(!q||a==null)return null;
-const A=String(+a);if(q.includes(A))return true;const mul=unitInfo(u).mul;if(mul>1&&q.includes(String(a*mul)))return true;if(a>=1e4&&a%1e4===0&&q.includes(String(a/1e4)+'萬'))return true;
-return /[一二三四五六七八九十零〇壹貳參肆伍陸柒捌玖拾]/.test(q)?'cn':false} // 「萬」「千」只是單位，要有國字數字才算
+// 防 AI 讀錯：金額要「整個數字」出現在 AI 抄的原文裡（萬元換算、千分位、全形、2千、14.8萬都接受）；國字數字換算不了時請人工核對
+function numInQuote(a,u,q){q=String(q||'');if(!q.trim()||a==null)return null;const n=+a,mul=unitInfo(u).mul; // 整個數字要對得上（qHas／qNums：千分位、全形、2千、14.8萬、國字都會換算）；原文 20,000 不能替 2,000 背書
+if(qHas(q,n)||mul>1&&qHas(q,n*mul))return true;return /[一二三四五六七八九十零〇壹貳參肆伍陸柒捌玖拾]/.test(q)?'cn':false} // 換算不了的國字寫法請人工核對
 function polCheck(r,m,manual){const W=new Set(),E=[],str=(v,n)=>insScrub(typeof v==='string'?v.trim():typeof v==='number'?String(v):'',W).slice(0,n);
 const no=String(r.policyNoLast4??r.no4??'').replace(/\D/g,'');if(no.length>4)W.add('保單號碼只保留末 4 碼');
 const f=String(r.payFreq??''),st=String(r.status??''),pm=String(r.payMethod??r.payBy??'').trim()||(f.match(PAYM)||[''])[0],nx=(v,n)=>nameScrub(str(v,n+40),m,W).slice(0,n);

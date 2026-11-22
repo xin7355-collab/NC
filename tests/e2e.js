@@ -2337,7 +2337,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     const a2 = await page.evaluate(async () => {
       const raf = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))), X = ANX.towelst, tot = X.f.reduce((a, x) => a + x[1], 0), goal = X.r, sets = X.sets || 2;
       openAnim('towelst'); const pose = () => [...$('#sheetBody svg.anim').querySelectorAll('line')].map(l => l.getAttribute('x2')).join();
-      const p0 = pose(); $('#an-go').click(); await raf(); const run = !!ANR && !ANR.pause;
+      const p0 = pose(); $('#an-go').click(); const cd = $('#an-cnt').textContent; await new Promise(r => { const t0 = Date.now(), f = () => (ANR && !ANR.pause) || Date.now() - t0 > 6000 ? r() : setTimeout(f, 50); f() }); const run = cd === '3' && !!ANR && !ANR.pause;
       ANR.e = X.f[0][1] + X.f[1][1]; await raf(); const moved = pose() !== p0;
       ANR.e = X.f[0][1] + X.f[1][1] + 5000; await raf(); const hold = $('#an-hold').textContent, holdVis = $('#an-hold').style.visibility;
       ANR.e = tot + 1; await raf(); const c1 = $('#an-cnt').textContent;
@@ -2352,7 +2352,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: async () => { throw Object.assign(new Error('x'), { name: 'NotAllowedError' }) } } });
       openAnim('heelraise'); $('#an-camb').click(); await new Promise(r => setTimeout(r, 80)); const deny = $('#toast').textContent, camHid = $('#an-cam').hidden; closeSheet();
       return { run, moved, hold, holdVis, c1, c2, g2, s2, p2, p3, c4, g4, slow, pain, cam, stop, loop: loop === null, deny, camHid, goal, sets } });
-    check('跟著做：按開始才動、小人真的換姿勢；停留動作顯示「停住 25 秒」倒數；一個循環算一次；做滿一組自動暫停、按鈕變「下一組（先休息 30 秒）」、第 2 組；兩組做完顯示完成；放慢開關有作用；回報「很痛」建議先停',
+    check('跟著做：按開始先倒數 3 秒才動、小人真的換姿勢；停留動作顯示「停住 25 秒」倒數；一個循環算一次；做滿一組自動暫停、按鈕變「下一組（先休息 30 秒）」、第 2 組；兩組做完顯示完成；放慢開關有作用；回報「很痛」建議先停',
       a2.run && a2.moved && a2.hold === '停住 25 秒' && a2.holdVis === 'visible' && a2.c1 === `1／${a2.goal} 次` && a2.c2 === `${a2.goal}／${a2.goal} 次` && a2.p2 && /下一組（先休息 30 秒）/.test(a2.g2) && a2.s2 === `第 2／${a2.sets} 組` && a2.p3 === false
         && /🎉 2 組完成/.test(a2.c4) && /再做一次/.test(a2.g4) && a2.slow && /先停這個動作/.test(a2.pain), JSON.stringify(a2));
     check('前鏡頭對照：開了看得到自己（鏡像），關掉動畫就停止相機和動畫迴圈；沒權限時告訴使用者去哪裡打開，不是只丟錯誤',
@@ -2856,6 +2856,66 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     const C = await page.evaluate(() => JSON.stringify(cleanExLog({ id: 'z', d: '2026-01-01', k: 'home', min: 5, int: 'mod', pn: ['knee', '<img src=x>', 'knee', 'toString'], mv: [{ a: '__proto__', r: 12, S: 3, p: 0 }, { a: 'chairsq', r: 1000, S: 3, p: 0 }, { a: 'chairsq', r: 12, S: 3, p: 9 }, { a: 'chairsq', r: 12, S: 3, s: 2, p: 1, e: 2, evil: '<b>' }, 'x', null] }))).catch(e => ({ err: e.message }));
     check('備份還原的運動紀錄：不舒服部位只留認得的（去重複）、跟著做的明細只留認得的動作與合理數值（次數 1–100、組數 1–10、痛感 0–3、還能再做 0–2），多的欄位丟掉',
       C === JSON.stringify({ id: 'z', d: '2026-01-01', k: 'home', min: 5, int: 'mod', pn: ['knee'], mv: [{ a: 'chairsq', r: 12, S: 3, s: 2, p: 1, e: 2 }] }), C);
+    await page.close();
+  }
+
+  // =============== 6zzr. 保單金額防 AI 讀錯：金額要「整個數字」對得上原文（原文 20,000 不能替 2,000 背書）；正常寫法不誤報 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '測', sex: 'm', birth: '1980-01-01', h: 172, w: 70, act: '1.375', goal: 'auto', role: 'me' }], active: 'a' });
+    const R = await page.evaluate(() => { const m = me(), run = (amt, unit, quote) => polAudit({ id: 'p1', insurer: '測試人壽', product: '測試', status: 'active', src: 'ai', start: '2020-01-01', payYears: 20, payFreq: '年', prem: 10000,
+        items: [{ name: '保障', kind: 'main', cat: unit === '萬元' ? 'life' : 'hosp_day', amt, unit, quote, page: 2 }] }, m).some(f => f.lv === 'err' && /在原文裡找不到/.test(f.t));
+      return { miss: [run(2000, '元/日', '住院日額保險金：每日新臺幣 20,000 元'), run(500, '元/日', '每次 1,500 元'), run(100, '萬元', '身故保險金 1,000 萬元')],
+        ok: [run(2000, '元/日', '每日 2,000 元'), run(2000, '元/日', '每日２，０００元'), run(2000, '元/日', 'NT$2,000/日'), run(2000, '元/日', '每日 2千元'), run(20000, '元/日', '每日 2 萬元'), run(100, '萬元', '身故保險金 100 萬元'), run(1000, '元/日', '每日壹仟元'), run(148000, '元/日', '14.8萬')] } }).catch(e => ({ err: e.message }));
+    check('保單防 AI 讀錯：金額要整個數字對得上原文 — 原文 20,000 讀成 2,000、1,500 讀成 500、1,000 萬讀成 100 萬都要報「在原文裡找不到」；千分位、全形、NT$、2千、2 萬、100 萬元、國字壹仟、14.8萬這些正常寫法不誤報',
+      !R.err && R.miss.every(Boolean) && R.ok.every(x => !x), JSON.stringify(R));
+    await page.close();
+  }
+
+  // =============== 6zzs. 跟著做：按開始先倒數 3 秒（倒數中可取消）、語音報數（iPhone 內建語音、可關閉並記住）、做的時候螢幕不休眠 ===============
+  {
+    page = await newPage({ members: [{ id: 'a', name: '跟做', sex: 'f', birth: '1955-01-01', h: 155, w: 55, act: '1.375', goal: 'auto', role: 'me' }], active: 'a' });
+    const V = await page.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)), raf = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      window.__said = []; window.__wl = []; Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: { speak: u => __said.push(u.text + '|' + u.lang), cancel: () => {} } });
+      Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: { request: async () => { __wl.push('req'); return { release: async () => { __wl.push('rel') } } } } });
+      const X = ANX.chairsq, tot = X.f.reduce((a, x) => a + x[1], 0);
+      openAnim('chairsq', 3, 2); await w(50); const vb = $('#an-voice'), vOn = vb?.getAttribute('aria-pressed');
+      $('#an-go').click(); const c3 = $('#an-cnt').textContent, g3 = $('#an-go').textContent, early = !!ANR;
+      $('#an-go').click(); const cancel = $('#an-cnt').textContent, g0 = $('#an-go').textContent; await w(1300); const still = !!ANR;
+      __said = []; $('#an-go').click(); await w(3400); const started = !!ANR && !ANR.pause, c0 = $('#an-cnt').textContent, s1 = [...__said], wl1 = [...__wl];
+      ANR.e = tot + 1; await raf(); ANR.e = tot * 2 + 1; await raf(); const s2 = [...__said];
+      ANR.e = tot * 3 + 1; await raf(); const s3 = __said.at(-1), g1 = $('#an-go').textContent;
+      vb.click(); const off = vb.getAttribute('aria-pressed') + '|' + vb.textContent, saved = S.get('voice', true), n = __said.length;
+      $('#an-go').click(); ANR.e = tot * 4 + 1; await raf(); const quiet = __said.length === n;
+      closeSheet(); await w(50); const wl2 = [...__wl]; S.set('voice', true);
+      return { vOn, c3, g3, early, cancel, g0, still, started, c0, s1, wl1, s2, s3, g1, off, saved, quiet, wl2 } }).catch(e => ({ err: e.message }));
+    check('跟著做按「開始」先倒數 3 秒（3、2、1 才開始動，長輩趴好、站穩再做）；倒數中再按一次就取消、不會偷偷開始',
+      !V.err && V.c3 === '3' && /✕ 取消/.test(V.g3) && !V.early && V.cancel === '按「開始」跟著做' && /▶ 開始/.test(V.g0) && !V.still && V.started && V.c0 === '0／3 下', JSON.stringify(V));
+    check('語音報數（預設開、台灣中文）：倒數「3、2、1、開始」，每做一下報次數，做滿一組說「第 1 組完成，休息 30 秒」；按「🔇 語音」關掉後不再出聲、重新打開 App 也記得；做的時候螢幕不休眠，關掉就放掉',
+      V.vOn === 'true' && JSON.stringify(V.s1) === JSON.stringify(['3|zh-TW', '2|zh-TW', '1|zh-TW', '開始|zh-TW']) && V.s2?.slice(-2).join() === '1|zh-TW,2|zh-TW' && /^3，第 1 組完成，休息 30 秒\|zh-TW$/.test(V.s3 || '') && /下一組/.test(V.g1)
+        && V.off === 'false|🔇 語音' && V.saved === false && V.quiet && V.wl1?.includes('req') && V.wl2?.includes('rel'), JSON.stringify(V));
+    await page.close();
+  }
+
+  // =============== 6zzt. 失智：ICOPE 認知初篩（65 歲以上、家人陪著問）、AD8 陽性後的台灣照護資源；症狀表「吃東西、喝水會嗆咳」 ===============
+  {
+    page = await newPage({ members: [{ id: 'o', name: '長輩', sex: 'f', birth: '1952-03-01', h: 152, w: 50, act: '1.2', goal: 'auto', role: 'me' }, { id: 'y', name: '中年', sex: 'm', birth: '1970-03-01', h: 170, w: 70, act: '1.375', goal: 'auto' }], active: 'o' });
+    await page.click('#nav button[data-v="body"]'); await page.click('#v-body .subnav [data-sub="self"]'); await page.waitForTimeout(300);
+    const has = await page.evaluate(() => !!$('#selfBody [data-self="icope"]'));
+    await page.click('#selfBody [data-self="icope"]').catch(() => {}); await page.waitForTimeout(300); const intro = await page.evaluate(() => $('#sheetBody').textContent);
+    for (let i = 0; i < 3; i++) await page.click(`#sf-qs [data-qi="${i}"][data-oj="${i === 2 ? 1 : 0}"]`).catch(() => {});
+    await page.click('#sf-go').catch(() => {}); await page.waitForTimeout(300); const bad = await page.evaluate(() => $('#sheetBody').textContent); await page.evaluate(() => closeSheet()); await page.waitForTimeout(200);
+    const R = await page.evaluate(() => { const m = me(), F = { a: 72 }, ok = SELF.icope?.rate([0, 0, 0], [], m, F), ad = SELF.memory.rate([1, 1, 0, 0, 0, 0, 0, 0], [], m, F);
+      ACT = 'y'; renderAll(); go('body', 'self'); const young = !!$('#selfBody [data-self="icope"]'); ACT = 'o'; renderAll();
+      return { ok: ok && ok.lv + '|' + ok.head, adTodo: ad.todo.join('｜'), young } }).catch(e => ({ err: e.message }));
+    check('ICOPE 認知初篩（65 歲以上才出現、56 歲不出現）：依國健署題目請家人陪著問（記住鉛筆、汽車、書 → 日期 → 地點 → 回想）；3 樣東西沒說對 → 錯 1 題、建議接著做 AD8 或複評，並提到國健署「長者量六力」LINE；都答對 → 沒有發現問題',
+      has && !R.young && /鉛筆、汽車、書/.test(intro) && /今天的日期/.test(intro) && /錯 1 題/.test(bad) && /AD8/.test(bad) && /@hpaicope/.test(bad) && /^0\|認知初評沒有發現問題/.test(R.ok || ''), JSON.stringify({ has, young: R.young, err: R.err, bad: bad.slice(0, 200), ok: R.ok }));
+    check('AD8 ≥2 分的結果加上台灣的照護資源：失智症關懷專線 0800-474-580（台灣失智症協會）、長照專線 1966（找失智共同照護中心、社區服務據點）',
+      /0800-474-580/.test(R.adTodo || '') && /1966/.test(R.adTodo || '') && /失智共同照護中心/.test(R.adTodo || ''), R.adTodo || R.err);
+    // 症狀表：搜尋「嗆」找得到；噎住說不出話 → 立即；發燒有痰變喘 → 儘快；建議復健科吞嚥評估、語言治療師
+    const Y = await page.evaluate(async () => { const K = SYM.find(x => x.k === 'choke'); openSym(); await new Promise(r => setTimeout(r, 200)); const q = $('#sym-q'); q.value = '嗆'; q.dispatchEvent(new Event('input'));
+      const vis = [...$$('#sheetBody [data-sk]')].filter(b => !b.hidden).map(b => b.dataset.sk).join(); closeSheet(); return { vis, rf: K && K.rf.map(r => r[1]).join(), d: K?.d, t: K?.t.join(), tip: K?.tip } }).catch(e => ({ err: e.message }));
+    check('症狀表新增「吃東西、喝水會嗆咳」：搜尋「嗆」找得到；嗆到說不出話 → 立即、發燒有痰變喘（吸入性肺炎）→ 儘快；建議復健科吞嚥評估、由語言治療師評估，不要當成老了正常',
+      /choke/.test(Y.vis || '') && Y.rf === 'now,soon,soon' && /復健科/.test(Y.d || '') && /語言治療師/.test(Y.t || '') && /不要當成老了正常/.test(Y.tip || ''), JSON.stringify(Y));
     await page.close();
   }
 
