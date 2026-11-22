@@ -324,7 +324,7 @@ table.imap td.er{color:var(--red);font-weight:800}table.imap td.gp1{color:var(--
 .mkbar .btn.sm,.mkbar .seg button{min-height:44px;min-width:44px}
 .mkthumbs{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 .mkthumbs img{width:88px;height:88px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
-.anim{display:block;width:100%;max-width:360px;margin:0 auto;background:rgba(255,255,255,.03);border-radius:14px}.anim.sm{width:72px;height:62px;flex:none;margin:0 10px 0 0;border-radius:10px}.anwrap{display:flex;gap:8px;align-items:center}.anwrap .anim{flex:1;min-width:0}#an-pain .chip{min-height:44px}.anhold{text-align:center;font-size:22px;font-weight:700;color:var(--amber);margin-top:6px;font-variant-numeric:tabular-nums}.anwrap video{width:45%;max-width:240px;border-radius:12px;transform:scaleX(-1);background:#000}
+.anim{display:block;width:100%;max-width:360px;margin:0 auto;background:rgba(255,255,255,.03);border-radius:14px}.anim.sm{width:72px;height:62px;flex:none;margin:0 10px 0 0;border-radius:10px}.anwrap{display:flex;gap:8px;align-items:center}.anwrap .anim{flex:1;min-width:0}#an-pain .chip,#an-eff .chip,#xl-pn .chip{min-height:44px}.anhold{text-align:center;font-size:22px;font-weight:700;color:var(--amber);margin-top:6px;font-variant-numeric:tabular-nums}.anwrap video{width:45%;max-width:240px;border-radius:12px;transform:scaleX(-1);background:#000}
 .ag{stroke:var(--line);stroke-width:1}.ap{fill:none;stroke:var(--mute);stroke-width:1.5}.afar line{stroke:var(--cyan);stroke-opacity:.38;stroke-width:4;stroke-linecap:round}.anear line,.ab{stroke:var(--cyan);stroke-width:4.5;stroke-linecap:round;fill:none}.ah{fill:var(--cyan)}.atw{stroke:var(--amber);stroke-width:1.5}
 .symA .chip,#sym-out .chip{min-height:44px}.symbar .btn.urg{background:var(--red);color:#fff}.symbar{position:sticky;bottom:0;margin:0 -4px;padding:10px 4px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(rgba(6,9,18,0),var(--bg) 35%)}#sym-q{margin:4px 0 6px}
 #habCard .chip{min-height:44px}.hab{padding:10px 0;border-top:1px solid var(--line)}.hab .step{display:inline-flex;align-items:center;gap:10px}.hab .step .btn{width:44px;min-height:44px;padding:0;font-size:20px}
@@ -1311,13 +1311,14 @@ home:{n:'居家肌力',e:'🤸',t:'s',met:3.8,how:'徒手或彈力帶，動作�
 yoga:{n:'瑜伽／伸展',e:'🧘',t:'f',met:2.5,how:'每個伸展停 20–30 秒、不彈震',bad:[]},
 taichi:{n:'太極拳',e:'☯️',t:'b',met:3,how:'重心轉移練平衡，膝蓋不超過腳尖、不蹲太低',bad:[]}};
 const WHYNOT={knee:'膝蓋不適',ankle:'腳踝／足底不適',back:'下背痛',shoulder:'肩膀不適',osteo:'骨質疏鬆（怕衝擊、跌倒）',heart:'心臟病史（先讓醫師評估）',preg:'懷孕中',obese:'BMI ≥30，先用低衝擊保護關節',bp2:'血壓 ≥160/100，先暫停高強度',cvr:'冠狀動脈鈣化或中風病史（高強度前先讓醫師評估）',old:'65 歲以上，先練肌力與平衡',new:'新手，先打好有氧基礎'};
+// pt＝動作模式：sq 蹲（膝）、hg 髖（臀橋）、pu 推、pl 拉、co 核心、sl 單腳、hp 髖側穩定、ca 小腿、ba 平衡（fitPlan 每個模式先挑一個）
 const MOVES=[
-{n:'椅子深蹲',ax:'chairsq',d:'坐下、站起，膝蓋對準腳尖',r:12,bad:['knee']},{n:'坐姿抬腿',ax:'sitext',d:'坐椅子把小腿伸直停 5 秒（護膝的大腿訓練）',r:12,bad:[]},
-{n:'臀橋',ax:'bridge',d:'躺姿抬臀、停 2 秒',r:15,bad:['preg']},{n:'弓箭步',ax:'lunge',d:'前後腳下蹲，每腳',r:10,bad:['knee','ankle','osteo']},
-{n:'牆壁伏地挺身',ax:'wallpush',d:'手扶牆、身體一直線',r:12,bad:['shoulder']},{n:'彈力帶划船',ax:'row',d:'坐姿拉向肚臍、夾背',r:15,bad:[]},
-{n:'鳥狗式',ax:'birddog',d:'四足跪姿伸對側手腳、停 3 秒，每邊（護腰核心）',r:10,bad:[]},{n:'棒式',ax:'plank',d:'前臂撐地、身體一直線，不憋氣',r:30,u:'秒',bad:['shoulder','bp2','preg','heart']},
-{n:'側躺抬腿',ax:'sideleg',d:'練臀中肌、穩定膝蓋，每邊',r:15,bad:[]},{n:'扶牆墊腳尖',ax:'heelraise',d:'練小腿與平衡',r:15,bad:['ankle']},
-{n:'單腳站',ax:'balance',d:'扶椅單腳站，每腳（防跌倒）',r:30,u:'秒',bad:[]}];
+{n:'椅子深蹲',ax:'chairsq',pt:'sq',d:'坐下、站起，膝蓋對準腳尖',r:12,bad:['knee']},{n:'坐姿抬腿',ax:'sitext',pt:'sq',d:'坐椅子把小腿伸直停 5 秒（護膝的大腿訓練）',r:12,bad:[]},
+{n:'臀橋',ax:'bridge',pt:'hg',d:'躺姿抬臀、停 2 秒',r:15,bad:['preg']},{n:'弓箭步',ax:'lunge',pt:'sl',d:'前後腳下蹲，每腳',r:10,bad:['knee','ankle','osteo']},
+{n:'牆壁伏地挺身',ax:'wallpush',pt:'pu',d:'手扶牆、身體一直線',r:12,bad:['shoulder']},{n:'彈力帶划船',ax:'row',pt:'pl',d:'坐姿拉向肚臍、夾背',r:15,bad:[]},
+{n:'鳥狗式',ax:'birddog',pt:'co',d:'四足跪姿伸對側手腳、停 3 秒，每邊（護腰核心）',r:10,bad:[]},{n:'棒式',ax:'plank',pt:'co',d:'前臂撐地、身體一直線，不憋氣',r:30,u:'秒',bad:['shoulder','bp2','preg','heart']},
+{n:'側躺抬腿',ax:'sideleg',pt:'hp',d:'練臀中肌、穩定膝蓋，每邊',r:15,bad:[]},{n:'扶牆墊腳尖',ax:'heelraise',pt:'ca',d:'練小腿與平衡',r:15,bad:['ankle']},
+{n:'單腳站',ax:'balance',pt:'ba',d:'扶椅單腳站，每腳（防跌倒）',r:30,u:'秒',bad:[]}];
 /* ===== 動作動畫：側面小人（關鍵姿勢＋內插）；角度 0＝朝下、90＝朝前、180＝朝上、-90＝朝後；g：近側腳固定在地上（1 腳踝、2 腳尖） ===== */
 const AL={t:28,ua:14,fa:13,th:18,sh:17,ft:8},AG=110,aV=(o,a,l)=>[o[0]+Math.sin(a*Math.PI/180)*l,o[1]+Math.cos(a*Math.PI/180)*l];
 const AP=o=>({t:180,ua:[5,-5],fa:[10,-3],th:[0,0],sh:[0,0],ft:[90,90],c:0,...o,n:o.n??o.t??180});
@@ -1369,6 +1370,26 @@ const REHAB=[['pf','足底筋膜炎',['towelst','wallcalf','ballroll','towelcurl
 ['L:ankle','腳踝、足底不適',['ankle','balance','wallcalf','heelraise']],['L:knee','膝蓋不適',['sitext','slr','bridge','chairsq']],['L:back','下背痛',['ptilt','catcow','birddog','bridge','k2c']],['L:shoulder','肩膀不適',['pend','wallcrawl','scap']],
 ['neck','肩頸僵硬（久坐、低頭族）',['chin','scap','thoracic']],['elbow','網球肘（手肘外側痛）',['wrist']]];
 const PAIN=[['😀 不痛（0–2 分）','很好：照這個量做，之後可以慢慢加次數或停留時間。'],['😐 有點痛（3–5 分）','可以做，但減少次數或幅度；隔天沒有更痛，再回到原本的量。'],['😣 很痛（6 分以上）','先停這個動作，改做溫和的伸展；持續或越來越痛，請看復健科。'],['⚡ 麻、刺痛往手腳竄','停止：可能是神經受到壓迫，儘快看復健科或神經科。']];
+// 運動回饋：跟著做完回報痛感、還能再做幾下 → 記在當天的運動紀錄（肌力動作＝居家肌力、其他＝復健動作，算進本週紀錄）；
+// mv＝每個動作 {a:動作, r:每組目標, S:預定組數, s:做完幾組（有按「開始」才有，只當參考）, p:痛感（PAIN 第幾項）, e:還能再做幾下（2＝2 下以上、1＝剛好、0＝做不完）}
+const EFF=[['💪 還能再做 2 下以上',2],['🙂 剛好做完',1],['😓 做不完',0]],PN=[['knee','膝蓋'],['back','腰背'],['shoulder','肩膀'],['ankle','腳踝／腳底'],['chest','胸悶／頭暈']];
+const mvHist=(m,a)=>exlogOf(m).flatMap(r=>(r.mv||[]).filter(x=>x.a===a));
+// 下次目標（雙重漸進＋痛感把關，看使用者的回答）：連 2 次同樣次數都不痛、還能再做 2 下以上 → 肌力動作加 2 下、復健動作加 1 下（上限 20／15）；上次有點痛或做不完 → 少一階；
+// 很痛或手腳麻 → 先停；長停留的動作（棒式、單腳站）不自動加。只加次數、不加負重
+function mvNext(m,a,base){const X=ANX[a]||{},[l,q]=mvHist(m,a),st=MOVES.some(x=>x.ax===a)?2:1,cap=st>1?20:15;if(!l)return{r:base,why:''};
+const cur=X.hold>=10?base:l.r,lo=Math.max(1,Math.round(base/2));
+if(l.p>=2)return{r:cur,stop:1,why:'上次做完很痛或手腳麻：先停這個動作，改做溫和的伸展；持續痛請看復健科'};
+if(X.hold>=10)return{r:cur,why:l.p?'上次有點痛：幅度小一點、停留短一點':''};
+if(l.p===1||l.e===0){const r=Math.max(lo,cur-st);return{r,why:`上次${l.p===1?'有點痛':'做不完'}：${r<cur?`先少 ${cur-r} 下`:'照這個量'}${l.p===1?'、幅度小一點':''}`}}
+if(!l.p&&l.e===2&&q&&!q.p&&q.e===2&&q.r===l.r)return cur>=cap?{r:cur,why:`已經做到 ${cur} 下：可以請教練或物理治療師換難一點的版本`}:{r:Math.min(cap,cur+st),why:`連續 2 次都做完、不痛、還能多做：這次加 ${Math.min(cap,cur+st)-cur} 下`};
+return{r:cur,why:'照上次的量'}}
+function mvSave(m,o){const d=ymd(new Date()),str=MOVES.some(x=>x.ax===o.a),k=str?'home':'other',L=EXLOG[m.id]=EXLOG[m.id]||[];
+let r=L.find(x=>x.d===d&&x.k===k&&x.mv);if(!r){r={id:uid(),d,k,min:1,int:str?'mod':'easy',note:str?'跟著做':'復健動作',mv:[]};L.push(r)}
+r.mv=[...r.mv.filter(x=>x.a!==o.a),o];r.min=Math.max(1,Math.round(r.mv.reduce((t,x)=>{const X=ANX[x.a],c=X?X.f.reduce((a,f)=>a+f[1],0)/1000:4;const n=x.s??x.S;return t+n*x.r*c+Math.max(0,n-1)*30},0)/60));r.kcal=exKcal(r,calc(m).w);return S.set('exlog',EXLOG)}
+// 停練後回歸：之前規律（停之前 4 週有 ≥3 天有紀錄）、停了 ≥7 天 → 7–14 天先回到 8 成、15 天以上 6 成（肌力少 1 組）；回來後持續 1 週（停 15 天以上 2 週），漏掉的不用補
+function brkOf(m){const td=ymd(new Date()),ds=[...new Set(exlogOf(m).map(r=>r.d).filter(d=>d<=td))].sort().reverse();if(!ds.length)return null;
+const reg=e=>ds.filter(d=>d<=e&&dayDiff(e,d)<28).length>=3,g=dayDiff(td,ds[0]);if(g>=7&&reg(ds[0]))return{gap:g,f:g>=15?.6:.8,back:''};
+for(let i=0;i+1<ds.length&&dayDiff(td,ds[i])<14;i++){const gap=dayDiff(ds[i],ds[i+1]);if(gap>=7&&dayDiff(td,ds[i])<(gap>=15?14:7)&&reg(ds[i+1]))return{gap,f:gap>=15?.6:.8,back:ds[i]}}return null}
 const rehabMine=m=>{const ck=condKeys(m),lim=fitOf(m).lim;return REHAB.filter(([k])=>k.startsWith('L:')?lim.includes(k.slice(2)):ck.has(k))};
 // ↓ 3D 真人示範在 moveHTML 最上面
 // 3D 真人示範（第二階段：男女人物模型；動作動畫、肌肉標示之後加入）。按「載入 3D」才下載 3d/ 模組與模型（不在開 App 時下載），離開運動頁就釋放 GPU 記憶體
@@ -1412,13 +1433,14 @@ let ANR=null;
 function anRun(svg,X,onRep,onTick){const F=X.f.map(([p,d])=>[AP(p),d]),tot=F.reduce((a,x)=>a+x[1],0),R={svg,cyc:0,slow:false,pause:false,e:F[0][1]};
 const step=now=>{if(ANR!==R||!svg.isConnected)return;const dt=Math.min(100,now-(R.last??now));R.last=now;if(!R.pause){R.e+=dt/(R.slow?1.6:1);const c=Math.floor(R.e/tot);if(c>R.cyc){R.cyc=c;onRep?.(c)}let u=R.e-c*tot,i=0;while(i<F.length-1&&u>F[i][1]){u-=F[i][1];i++}
 onTick?.(i,F[i][1]-u);const f=Math.min(1,u/F[i][1]);anDraw(svg,anMix(F[(i+F.length-1)%F.length][0],F[i][0],.5-Math.cos(f*Math.PI)/2),X)}requestAnimationFrame(step)};ANR=R;requestAnimationFrame(step);return R}
-function openAnim(k,r,st){const X=ANX[k];if(!X)return;const goal=r||X.r,sets=st||X.sets||2,u=X.hold>=10?'次':'下',hz=(X.hold||0)*1000;let R=null,cam=null,hl='';
-openSheet(sheetHead(`🎬 ${esc(X.n)}`,`${X.hold?`每${u}停 ${X.hold} 秒・`:''}${goal} ${u} × ${sets} 組`)+`<div class="anwrap">${anSVG(X,'anim big')}<video id="an-cam" playsinline muted hidden></video></div><div id="an-hold" class="anhold" style="visibility:hidden">　</div>
+function openAnim(k,r,st){const X=ANX[k];if(!X)return;const m=me(),nx=mvNext(m,k,r||X.r),goal=nx.r,sets=st||X.sets||2,u=X.hold>=10?'次':'下',hz=(X.hold||0)*1000;let R=null,cam=null,hl='';
+openSheet(sheetHead(`🎬 ${esc(X.n)}`,`${X.hold?`每${u}停 ${X.hold} 秒・`:''}${goal} ${u} × ${sets} 組`)+`<div class="anwrap">${anSVG(X,'anim big')}<video id="an-cam" playsinline muted hidden></video></div>${nx.why?`<div class="hl${nx.stop?' warn':''}" style="margin-top:8px">${nx.stop?'🛑':'📈'} ${esc(nx.why)}</div>`:''}<div id="an-hold" class="anhold" style="visibility:hidden">　</div>
 <div class="row" style="margin:10px 0 6px"><b id="an-cnt" aria-live="polite">按「開始」跟著做</b><span class="sub" id="an-set">第 1／${sets} 組</span></div>
 <div class="row2"><button class="btn" id="an-go">▶ 開始</button><button class="btn ghost" id="an-slow" aria-pressed="false">🐢 放慢</button></div>
 <button class="btn ghost" id="an-camb" style="margin-top:8px">📷 開前鏡頭對照（不錄影、不上傳）</button>
 <div class="h4">✅ 做對的重點</div>${X.cue.map(c=>`<div class="bl">${esc(c)}</div>`).join('')}${X.bad?.length?`<div class="h4">⚠️ 常見錯誤</div>${X.bad.map(c=>`<div class="bl">${esc(c)}</div>`).join('')}`:''}
-<div class="h4">做完感覺如何？</div><div class="chips" id="an-pain">${PAIN.map(([t],i)=>`<button type="button" class="chip" data-pi="${i}">${t}</button>`).join('')}</div><div id="an-pout" aria-live="polite"></div>
+<div class="h4">做完感覺如何？</div><div class="chips" id="an-pain">${PAIN.map(([t],i)=>`<button type="button" class="chip" data-pi="${i}">${t}</button>`).join('')}</div>
+<div class="h4">還能再做幾下？</div><div class="chips" id="an-eff">${EFF.map(([t,v])=>`<button type="button" class="chip" data-ev="${v}">${t}</button>`).join('')}</div><div id="an-pout" aria-live="polite"></div>
 <p class="note">復健動作以不痛或微痛（0–3 分）為原則，幅度做到舒服的範圍就好；急性扭傷、骨折、開刀後，先照醫師或物理治療師的指示。</p>`);
 const svg=$('#sheetBody svg.anim'),cnt=$('#an-cnt'),go=$('#an-go');anDraw(svg,AP(X.f[0][0]),X);
 const hEl=$('#an-hold'),hold=t=>{if(t!==hl){hl=t;hEl.textContent=t||'　';hEl.style.visibility=t?'visible':'hidden'}},tick=(i,rem)=>hold(hz&&X.f[i][1]>=hz?`停住 ${Math.ceil(rem/1000)} 秒`:'');
@@ -1428,7 +1450,11 @@ go.onclick=()=>{if(!R||R.done){R=anRun(svg,X,rep,tick);$('#an-set').textContent=
 $('#an-slow').onclick=e=>{const on=e.currentTarget.getAttribute('aria-pressed')!=='true';e.currentTarget.setAttribute('aria-pressed',on);e.currentTarget.classList.toggle('on',on);if(R)R.slow=on};
 $('#an-camb').onclick=async()=>{const v=$('#an-cam');if(cam){cam.getTracks().forEach(t=>t.stop());cam=null;v.hidden=true;return}
 try{cam=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});v.srcObject=cam;v.hidden=false;await v.play().catch(()=>{})}catch(err){toast(err?.name==='NotAllowedError'?'沒有相機權限：到 iPhone「設定 → Safari → 相機」改成允許，或對照動畫自己檢查重點':'這台裝置開不了前鏡頭：對照下面的重點自己檢查')}};
-$('#an-pain').onclick=e=>{const b=e.target.closest('[data-pi]');if(!b)return;$$('#an-pain .chip').forEach(x=>x.classList.toggle('on',x===b));$('#an-pout').innerHTML=`<div class="hl" style="margin-top:8px">${esc(PAIN[+b.dataset.pi][1])}</div>`};
+// 選了痛感就記到今天的運動紀錄（之後改選會更新同一筆）；下次打開依紀錄調整次數（mvNext）
+const fb={p:null,e:null},rec=()=>{if(fb.p==null)return;const done=R?(R.done?sets:Math.min(sets,Math.floor(R.cyc/goal))):null,ok=mvSave(m,{a:k,r:goal,S:sets,...(done!=null?{s:done}:{}),p:fb.p,...(fb.e!=null?{e:fb.e}:{})});
+$('#an-pout').innerHTML=`<div class="hl" style="margin-top:8px">${esc(PAIN[fb.p][1])}</div>${ok?`<div class="sub" style="margin-top:6px">✓ 已記到今天的運動紀錄${done!=null?`（做完 ${done}／${sets} 組）`:''}${fb.e==null?'；再選「還能再做幾下」，下次的次數會更準':''}</div>`:''}`};
+$('#an-pain').onclick=e=>{const b=e.target.closest('[data-pi]');if(!b)return;$$('#an-pain .chip').forEach(x=>x.classList.toggle('on',x===b));fb.p=+b.dataset.pi;rec()};
+$('#an-eff').onclick=e=>{const b=e.target.closest('[data-ev]');if(!b)return;$$('#an-eff .chip').forEach(x=>x.classList.toggle('on',x===b));fb.e=+b.dataset.ev;if(fb.p==null)$('#an-pout').innerHTML='<div class="sub" style="margin-top:6px">再選一下「做完感覺如何」就會記下來</div>';else rec()};
 onSheetClose=()=>{ANR=null;if(cam)cam.getTracks().forEach(t=>t.stop());cam=null}}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-anim]');if(t){e.preventDefault();openAnim(t.dataset.anim,+t.dataset.ar||0,+t.dataset.as||0)}});
 
@@ -1462,9 +1488,13 @@ rest.forEach(x=>{x.b.push({k:'walk',min:per,note:sugar?'分成三餐飯後各走
 days.forEach(x=>x.kcal=Math.round(x.b.reduce((t,y)=>t+metK(EX[y.k].met,c.w,y.min),0)));
 const hrMax=Math.round(208-.7*a),hrRest=num(wr?.rhr)||num(s?.hr)||iv('pulse')||null,hrSrc=num(wr?.rhr)?'手錶 7 天平均':num(s?.hr)?'體脂機':iv('pulse')?'體檢':'',lo=fp.lvl==='pro'&&!F.has('heart')&&!F.has('bp2')?.6:.5,hi=F.has('heart')||F.has('cvr')||F.has('bp2')||F.has('old')||fp.lvl==='new'?.65:.75;
 const zone=hrRest?[Math.round(hrRest+(hrMax-hrRest)*lo),Math.round(hrRest+(hrMax-hrRest)*hi)]:[Math.round(hrMax*(lo+.1)),Math.round(hrMax*(hi+.1))];
-const mv=MOVES.filter(x=>!x.bad.some(y=>F.has(y))).sort((x,y)=>(a>=65&&y.n==='單腳站')-(a>=65&&x.n==='單腳站')).slice(0,6),sets=fp.lvl==='new'?2:3;
+// 肌力動作：蹲、推、拉、髖、核心、單腳每個模式先挑一個能做的（涵蓋主要肌群，長者也有背肌和核心），再用還沒挑到的模式補滿 6 個；65 歲以上單腳站（防跌倒）放最前面
+const okM=MOVES.filter(x=>!x.bad.some(y=>F.has(y))),pkM=a>=65?okM.filter(x=>x.pt==='ba'):[];for(const p of['sq','pu','pl','hg','co','sl']){const x=okM.find(z=>z.pt===p);if(x&&pkM.length<6)pkM.push(x)}
+for(const any of[0,1])for(const x of okM)if(pkM.length<6&&!pkM.includes(x)&&(any||!pkM.some(z=>z.pt===x.pt)))pkM.push(x);
+const bk=brkOf(m),mv=pkM.sort((x,y)=>(a>=65&&y.pt==='ba')-(a>=65&&x.pt==='ba')||MOVES.indexOf(x)-MOVES.indexOf(y)),sets=Math.max(1,(fp.lvl==='new'?2:3)-(bk&&bk.f<=.6?1:0));
 const W=[];const w=(ic,t,d)=>W.push({ic,t,d});
 if(stop)w('🚨',`血壓 ${sbp}/${dbp} 太高`,'先就醫把血壓控制下來，再開始中高強度運動；目前只做輕鬆散步');
+if(bk)w('🔁',`停了 ${bk.gap} 天${bk.back?'，剛回來':''}：先回到 ${bk.f*10} 成`,`${bk.f<=.6?'這 2 週':'這週'}每次運動先做平常的 ${bk.f*10} 成、強度輕鬆一點${bk.f<=.6?'，肌力每個動作少 1 組':''}；漏掉的不用補。因為生病、住院或開刀停的，先問醫師可以做到什麼程度`);
 for(const c of CL.items)if(c.T?.fw)w(...c.T.fw);
 if(medHas(m,'bb'))w('💊','吃乙型阻斷劑：心率會偏低','運動強度改用「說話測試」（喘但還能說話），不要只看心率區間');
 if(medHas(m,'hypo'))w('🍬','吃會造成低血糖的降血糖藥或打胰島素','運動前後注意低血糖：身上帶糖果，不要空腹做長時間運動，頭暈、冒冷汗、手抖就停');
@@ -1488,7 +1518,7 @@ if(wr?.steps!=null&&wr.steps<7000)w('👣',`手錶：每天約 ${fmt(Math.round(
 if(wr?.vo2!=null){const vc=vo2Cat(wr.vo2,a,m.sex);if(vc<=2)w('🫁',`手錶 VO₂max ${fmt(wr.vo2)}（同齡「${VO2T[vc]}」）`,'每週加 1 次間歇：快走或腳踏車「1 分鐘喘、2 分鐘輕鬆」× 6 組；3 個月後看手錶數字有沒有進步')}
 if(wr?.sleep!=null&&wr.sleep<6)w('😴',`手錶：平均睡 ${fmt(wr.sleep)} 小時`,'睡不夠時肌肉恢復差、容易受傷；先把睡眠拉到 7 小時，再加運動強度');
 w('🛑','出現這些立刻停','胸痛、頭暈、呼吸困難、冒冷汗、關節劇痛');
-return{c,fp,F,days,aer,aerT,strT,nS,cardio,str,bal,no,zone,hrMax,hrRest,hrSrc,mv,sets,W,stop,week:days.reduce((t,x)=>t+x.kcal,0)};
+return{c,fp,F,days,aer,aerT,strT,nS,cardio,str,bal,no,zone,hrMax,hrRest,hrSrc,mv,sets,W,stop,bk,week:days.reduce((t,x)=>t+x.kcal,0)};
 }
 
 /* ================= 病史：醫師診斷過、體檢看不到的疾病（例如蹠筋膜纖維瘤症、CT 看到冠狀動脈鈣化） =================
@@ -2347,7 +2377,7 @@ let bf=sc?.fat??null,bfSrc=bf!=null?'體脂機':'';
 const wa=+m.waist,ne=+m.neck,hi=+m.hip;
 if(bf==null&&wa&&ne&&!kid){if(male&&wa>ne)bf=495/(1.0324-.19077*Math.log10(wa-ne)+.15456*Math.log10(h))-450;
 if(!male&&hi&&wa+hi>ne)bf=495/(1.29579-.35004*Math.log10(wa+hi-ne)+.221*Math.log10(h))-450;if(bf!=null)bfSrc='圍度估算'}
-return{a,kid,h,w,bmi,cuts,cat,bmr,tdee,tdeeAct,wt,target,goal,gsel,sg,prot,fat,carb,bf,bfSrc,wMin:cuts[0]*hm*hm,wMax:cuts[1]*hm*hm,water:mode.waterLim?null:w*35,whtr:wa?wa/h:null,mode,sc};
+return{a,kid,h,w,bmi,cuts,cat,bmr,tdee,tdeeAct,wt,target,goal,gsel,sg,prot,pw,fat,carb,bf,bfSrc,wMin:cuts[0]*hm*hm,wMax:cuts[1]*hm*hm,water:mode.waterLim?null:w*35,whtr:wa?wa/h:null,mode,sc};
 }
 
 /* ================= 視覺元件 ================= */
@@ -2736,7 +2766,7 @@ const row=(ic,t,d)=>`<div class="do"><span class="ic">${ic}</span><div><b>${esc(
 const aerOk=P.aer>=P.aerT,tips=P.W.filter(x=>!P.stop||x!==P.W[0]);
 const dayCard=(X,lab)=>{const mn=X.b.reduce((t,y)=>t+y.min,0);return `<div class="card"><div class="row" style="margin:0 0 6px"><h2 style="margin:0">${lab}・${X.rest?'恢復日':'訓練日'}</h2><span class="tg">${mn} 分・約 ${X.kcal} kcal</span></div>
 ${X.b.map(y=>blk(y)).join('')}
-${X.rest?'':`<div class="note" style="margin-top:4px">前後各 5 分鐘熱身、伸展。${fp.lvl==='new'?`新手前 2 週先做 ${Math.round(mn*.6/5)*5} 分鐘，之後每週加 10%。`:''}</div>`}
+${X.rest?'':`<div class="note" style="margin-top:4px">前後各 5 分鐘熱身、伸展。${P.bk?`🔁 停了 ${P.bk.gap} 天：這次先做 ${Math.max(5,Math.round(mn*P.bk.f/5)*5)} 分鐘、強度輕鬆，漏掉的不用補。`:fp.lvl==='new'?`新手前 2 週先做 ${Math.round(mn*.6/5)*5} 分鐘，之後每週加 10%。`:''}</div>`}
 <button class="btn" data-timer="${X.d}">▶ 開始計時${X.b.some(y=>y.k==='slowjog')?'（含 180 步節拍器）':''}</button></div>`};
 $('#fitBody').innerHTML=`<div class="subp" data-sub="today"><div class="stg">
 ${m.fit?'':`<div class="hl" style="margin-bottom:14px">🏋️ <b>先告訴教練你的狀況</b><div class="sub" style="margin-top:4px">膝蓋、腰、肩膀有沒有不舒服、一週能練幾天、喜歡什麼運動，課表會跟著調整。</div><button class="btn sm" data-editmem="${esc(m.id)}" data-fit="1">填寫運動狀況</button></div>`}
@@ -2758,7 +2788,7 @@ ${dayCard(D,sel===ti?'今天':'週'+DOW[sel])}
 <div class="row" style="margin-top:0"><span class="sub">${Math.round(P.hrMax*.5)}</span><span class="sub">你的目標區間（白框）</span><span class="sub">最大 ${P.hrMax}</span></div>
 <div style="font-size:calc(26px*var(--fz));font-weight:800;margin-top:8px">${P.zone[0]}–${P.zone[1]} <span class="u" style="font-size:calc(13px*var(--fz));color:var(--mute)">下／分鐘</span></div>
 <div class="note" style="margin-top:4px">${P.hrRest?`依你的靜止心率 ${fmt(P.hrRest)}（${P.hrSrc}，Karvonen 公式）計算。`:'用年齡估算；在「身體 → ＋ 手錶」填靜止心率會更準。'}沒有手錶就用「說話測試」：微喘、能講完整句子但唱不了歌，就是對的強度。有吃血壓藥（β 阻斷劑）的人心率會偏低，以說話測試為準。</div></div>
-<div class="card"><h2>${EX[P.str].e} 肌力動作（每次 ${P.sets} 組）</h2>${P.mv.map(x=>`<div class="do"><span class="ic">✓</span><div style="flex:1"><b>${esc(x.n)}</b> <span class="sub">${x.r} ${x.u||'下'} × ${P.sets} 組</span><div class="s">${esc(x.d)}</div></div>${x.ax?`<button class="btn ghost sm" data-anim="${x.ax}" data-ar="${x.u?1:x.r}" data-as="${P.sets}" style="width:auto;min-height:44px;align-self:center">▶ 動畫</button>`:''}</div>`).join('')}
+<div class="card"><h2>${EX[P.str].e} 肌力動作（每次 ${P.sets} 組）</h2>${P.mv.map(x=>{const nx=mvNext(m,x.ax,x.u?1:x.r);return `<div class="do"><span class="ic">${nx.stop?'🛑':'✓'}</span><div style="flex:1"><b>${esc(x.n)}</b> <span class="sub">${x.u?x.r:nx.r} ${x.u||'下'} × ${P.sets} 組</span><div class="s">${esc(x.d)}</div>${nx.why?`<div class="s" style="color:var(${nx.stop?'--red':'--lime'})">${nx.stop?'🛑':'📈'} ${esc(nx.why)}</div>`:''}</div>${x.ax?`<button class="btn ghost sm" data-anim="${x.ax}" data-ar="${x.u?1:x.r}" data-as="${P.sets}" style="width:auto;min-height:44px;align-self:center">▶ 動畫</button>`:''}</div>`}).join('')}
 <p class="note">組間休息 60 秒。動作做對比做多重要；任何動作造成關節痛就跳過。</p></div></div></div>
 <div class="subp" data-sub="tips" hidden><div class="stg">
 <div class="card"><h2>教練提醒</h2>${tips.map(x=>row(x.ic,x.t,x.d)).join('')}</div>
@@ -2775,10 +2805,10 @@ function exlogCard(m,P){const mon=mondayOf(ymd(new Date())),W=exWeek(m,mon),pw=e
 return `<div class="card"><div class="row" style="margin:0 0 8px"><h2 style="margin:0">本週實際完成</h2><span class="tg">上週有氧 ${pw.aer} 分</span></div>
 <div class="grid2">${stat('中等以上有氧',W.aer,` / ${P.aerT} 分`,tagH(W.aer>=P.aerT?'達標':W.aer>=150?'已達 WHO 150':'還差 '+(P.aerT-W.aer)+' 分',W.aer>=P.aerT?'#b6ff3c':'#ffb547'))}${stat('肌力訓練',W.str,` / ${P.strT} 天`,tagH(`消耗約 ${W.kcal} kcal`,'#8a97b4'))}</div>
 <div class="bar" style="margin-top:10px"><i style="width:${pct}%;background:linear-gradient(90deg,#22e4ff,#b6ff3c)"></i></div>
-${W.L.length?W.L.map(r=>`<div class="rec"><span style="font-size:calc(22px*var(--fz))">${EX[r.k]?.e||'🏅'}</span><div class="m"><b>${esc(EX[r.k]?.n||r.note||'其他運動')} ${r.min} 分鐘</b><small>${mdT(r.d)}・${(INT.find(x=>x[0]===r.int)||INT[1])[1]}・約 ${r.kcal||0} kcal${r.note&&EX[r.k]?'・'+esc(r.note):''}</small></div><button class="x" data-exrm="${esc(r.id)}" aria-label="刪除這筆">✕</button></div>`).join('')
+${W.L.length?W.L.map(r=>`<div class="rec"><span style="font-size:calc(22px*var(--fz))">${EX[r.k]?.e||'🏅'}</span><div class="m"><b>${esc(EX[r.k]?.n||r.note||'其他運動')} ${r.min} 分鐘</b><small>${mdT(r.d)}・${(INT.find(x=>x[0]===r.int)||INT[1])[1]}・約 ${r.kcal||0} kcal${r.note&&EX[r.k]?'・'+esc(r.note):''}${r.mv?'・'+esc(r.mv.map(x=>`${ANX[x.a]?.n||''} ${x.r} ${ANX[x.a]?.hold>=10?'次':'下'}${x.s!=null?` × ${x.s} 組`:''}`).join('、')):''}${r.pn?'・不舒服：'+esc(r.pn.map(x=>PN.find(z=>z[0]===x)?.[1]||'').join('、')):''}</small></div><button class="x" data-exrm="${esc(r.id)}" aria-label="刪除這筆">✕</button></div>`).join('')
 :'<div class="empty" style="padding:10px 0">這週還沒有紀錄</div>'}
 ${(()=>{const b=exBonus(m,ymd(new Date()));return b.min?`<div class="hl" style="margin-top:10px">🍽 ${exBonusTxt(b,P.c)} <button class="btn sm ghost" data-go="menu" data-gosub="menu" style="margin-top:6px">看今天菜單 ›</button></div>`:''})()}
-<button class="btn ghost" data-exlog="1" style="margin-top:8px">＋ 手動記錄運動</button>
+${pnTip(m)}<button class="btn ghost" data-exlog="1" style="margin-top:8px">＋ 手動記錄運動</button>
 <p class="note">「輕鬆」強度（散步、伸展）會記下來，但不算進每週 150 分鐘；中等＝微喘還能說完整句子。</p></div>`}
 function openExLog(pre){const m=me(),o={d:ymd(new Date()),k:'walk',min:30,int:'mod',note:'',...(pre||{})};
 const kinds=[...Object.entries(EX).map(([k,e])=>[k,e.e+' '+e.n]),['other','🏅 其他']];
@@ -2788,15 +2818,18 @@ openSheet(sheetHead('記錄運動',esc(m.name))+`
 <input id="xl-note" placeholder="其他運動的名稱或備註（選填）" maxlength="30" value="${esc(o.note)}" style="margin-top:8px">
 <label>時間（分鐘）</label><div class="row2" style="margin-top:0"><input id="xl-min" inputmode="numeric" value="${o.min}" style="flex:0 0 90px">${[15,30,45,60].map(x=>`<button type="button" class="btn ghost sm" data-xm="${x}">${x}</button>`).join('')}</div>
 <label>強度</label><div class="seg" id="xl-int">${INT.map(([k,n])=>`<button type="button" data-v="${k}" class="${k===o.int?'on':''}">${n}</button>`).join('')}</div>
+<label>哪裡不舒服？（選填，可複選）</label><div class="chips" id="xl-pn">${PN.map(([k,n])=>`<button type="button" class="chip" data-pn="${k}" aria-pressed="false">${n}</button>`).join('')}</div><div id="xl-pnw" aria-live="polite"></div>
 <p class="note" id="xl-kcal"></p>
 <button class="btn" id="xl-save">儲存</button>`);
 const st={k:o.k,int:o.int},upd=()=>{const mn=num($('#xl-min').value)||0;$('#xl-kcal').textContent=mn>0?`約消耗 ${exKcal({k:st.k,int:st.int,min:mn},calc(m).w)} kcal（依體重 ${fmt(calc(m).w)} kg 估算）`:''};
 $$('#xl-k .chip').forEach(b=>b.onclick=()=>{st.k=b.dataset.k;$$('#xl-k .chip').forEach(x=>x.classList.toggle('on',x===b));upd()});
 $$('#xl-int button').forEach(b=>b.onclick=()=>{st.int=b.dataset.v;$$('#xl-int button').forEach(x=>x.classList.toggle('on',x===b));upd()});
 $$('[data-xm]').forEach(b=>b.onclick=()=>{$('#xl-min').value=b.dataset.xm;upd()});$('#xl-min').oninput=upd;upd();
+const pn=new Set();$$('#xl-pn .chip').forEach(b=>b.onclick=()=>{const k=b.dataset.pn,on=!pn.has(k);if(on)pn.add(k);else pn.delete(k);b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);
+$('#xl-pnw').innerHTML=pn.has('chest')?'<div class="hl warn" style="margin-top:8px">🛑 運動時胸悶、頭暈：先停下來休息。休息 5 分鐘沒好轉，或胸痛、冒冷汗、呼吸困難 → 立刻打 119；這週先別做中高強度運動，儘快看心臟科。</div>':''});
 $('#xl-save').onclick=()=>{const d=$('#xl-d').value,mn=num($('#xl-min').value);
 if(!parseYMD(d)||d>ymd(new Date()))return toast('請選今天或以前的日期');if(!(mn>=1&&mn<=600))return toast('時間請填 1–600 分鐘');
-const r={id:uid(),d,k:st.k,min:Math.round(mn),int:st.int,note:$('#xl-note').value.trim().slice(0,30)};r.kcal=exKcal(r,calc(m).w);
+const r={id:uid(),d,k:st.k,min:Math.round(mn),int:st.int,note:$('#xl-note').value.trim().slice(0,30)};if(pn.size)r.pn=[...pn];r.kcal=exKcal(r,calc(m).w);
 (EXLOG[m.id]=EXLOG[m.id]||[]).push(r);if(!S.set('exlog',EXLOG))return;closeSheet();renderAll();toast(`已記錄：${EX[r.k]?.n||r.note||'其他運動'} ${r.min} 分鐘`)}}
 // 運動加進飲食熱量：TDEE 已經用「活動量」算進一部分運動（輕度≈每天 15 分、中度≈30 分、高度≈50 分、極高≈70 分快走），只補回超過的部分；
 // TDEE 用手錶校正時，手錶的 7 天平均已含平常的運動 → 已算進的改成：那 7 天運動紀錄的每日平均淨消耗、手錶每日運動分鐘（×3.3 MET）取大者，兩個都沒有才用活動量設定；
@@ -2810,9 +2843,18 @@ base=Math.round(base);const net=Math.round(L.reduce((t,r)=>t+net1(r),0)),extra=M
 return{min:L.reduce((t,r)=>t+r.min,0),gross:L.reduce((t,r)=>t+(r.kcal||0),0),net,base,extra,eat,src:wt?'watch':'act',add:Math.min(800,Math.round(extra*eat/10)*10),L}}
 const exBonusTxt=(b,c)=>b.add?`今天記錄運動 ${b.min} 分鐘，淨消耗約 ${b.net} kcal；扣掉${b.src==='watch'?'手錶平均已算進':'活動量已算進'}的 ${b.base} kcal，今天可多吃約 <b>${b.add} kcal</b>${c.goal==='cut'?'（減脂只補回一半，熱量缺口才會在）':''}，多補的以全穀、地瓜等碳水為主（運動後補充最有效）`
 :b.min?`今天記錄運動 ${b.min} 分鐘（淨消耗約 ${b.net} kcal），${b.src==='watch'?'跟手錶平常的運動量差不多':'還在你設定的活動量內'}、已經算在每日消耗裡，不用多吃`:'';
+// 記錄運動勾的不舒服部位：最近 30 天手動記的 5 筆（不算跟著做自動記的）裡同一部位 ≥2 次、還沒列進運動限制 → 建議一鍵加入（課表自動避開）；7 天內記過胸悶／頭暈 → 先看心臟科
+function pnTip(m){const td=ymd(new Date()),L=exlogOf(m).filter(r=>!r.mv&&r.d<=td&&dayDiff(td,r.d)<=30).slice(0,5),lim=fitOf(m).lim,LN=Object.fromEntries(LIM),n=k=>L.filter(r=>r.pn?.includes(k)).length;
+return(L.some(r=>r.pn?.includes('chest')&&dayDiff(td,r.d)<=7)?'<div class="hl warn" style="margin-top:10px">🛑 最近運動時記了胸悶／頭暈：先讓心臟科評估，再做中高強度運動；胸痛、冒冷汗、呼吸困難立刻打 119。</div>':'')+
+['knee','back','shoulder','ankle'].filter(k=>!lim.includes(k)&&n(k)>=2).map(k=>`<div class="hl" style="margin-top:10px">🩹 最近 ${n(k)} 次運動都記了「${PN.find(z=>z[0]===k)[1]}不舒服」：要把「${LN[k]}」加進運動限制嗎？課表會避開比較傷的運動。<button class="btn sm" data-addlim="${k}" style="margin-top:8px;min-height:44px">加進運動限制</button></div>`).join('')}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-addlim]');if(!t)return;const m=me(),k=t.dataset.addlim,f=obj(m.fit);if(!LIM.some(z=>z[0]===k))return;const old=m.fit;
+m.fit={...f,lim:[...new Set([...fitOf(m).lim,k])]};if(!S.set('members',MEM)){m.fit=old;return}renderAll();toast(`已加入運動限制：${LIM.find(z=>z[0]===k)[1]}，課表已跟著調整`)});
 function delExLog(id){const m=me();EXLOG[m.id]=(EXLOG[m.id]||[]).filter(r=>r.id!==id);S.set('exlog',EXLOG);renderAll();toast('已刪除這筆紀錄')}
 const cleanExLog=r=>{const o={id:r.id,d:r.d,k:EX[r.k]||r.k==='other'?r.k:'other',min:Math.min(600,Math.max(1,Math.round(num(r.min)||0))),int:INT.some(x=>x[0]===r.int)?r.int:'mod'};
-if(typeof r.note==='string'&&r.note.trim())o.note=r.note.trim().slice(0,30);const k=num(r.kcal);if(k!=null&&k>=0&&k<5000)o.kcal=Math.round(k);return o};
+if(typeof r.note==='string'&&r.note.trim())o.note=r.note.trim().slice(0,30);const k=num(r.kcal);if(k!=null&&k>=0&&k<5000)o.kcal=Math.round(k);
+if(Array.isArray(r.pn)){const pn=[...new Set(r.pn.filter(x=>PN.some(z=>z[0]===x)))];if(pn.length)o.pn=pn}
+if(Array.isArray(r.mv)){const I=(v,a,b)=>{const n=num(v);return Number.isInteger(n)&&n>=a&&n<=b?n:null},mv=r.mv.slice(0,40).map(x=>x&&typeof x.a==='string'&&Object.prototype.hasOwnProperty.call(ANX,x.a)?{a:x.a,r:I(x.r,1,100),S:I(x.S,1,10),s:I(x.s,0,10),p:I(x.p,0,PAIN.length-1),e:I(x.e,0,2)}:null)
+.filter(x=>x&&x.r!=null&&x.S!=null&&x.p!=null).map(x=>{if(x.e==null)delete x.e;if(x.s==null)delete x.s;return x});if(mv.length)o.mv=mv}return o};
 
 /* ---- 運動計時器：倒數圓環＋超慢跑 180 步節拍器（Web Audio，要點按鈕後才能出聲）＋螢幕不關 ---- */
 function openTimer(di){
@@ -3966,11 +4008,21 @@ const pick=(arr,r)=>arr[Math.floor(r()*arr.length)];
 const dietOf=m=>{const d=obj(m.diet);return{no:Array.isArray(d.no)?d.no.filter(k=>EXG.some(z=>z[0]===k)):[],ban:Array.isArray(d.ban)?d.ban.filter(id=>BY_ID[id]):[]}};
 const okFood=(f,dt)=>!dt.ban.includes(f.id)&&!ingOf(f).some(i=>EXG.some(([k,,re])=>dt.no.includes(k)&&re.test(i.n)));
 const TAGN={hc:'精緻澱粉',oil:'油炸重油',salt:'重鹹湯麵',pur:'高普林',pro:'蛋白補充品',kf:'高鉀蔬果',fib:'高纖全穀',fish:'魚',fe:'含鐵',ca:'高鈣'};
-// 依營養師重點評分挑菜：避開的標籤 −3、偏好 +1、蛋白質密度加減分＋每週不同的亂數；
+// 有上下限的組合搜尋（分支界限；做法參考 mcfit-meal-planner 的 solver.py，MIT）：opts[i]＝第 i 餐的選項 {k,p,cost,id}（cost＝換菜、改份量的代價）
+// 分三階段：0＝熱量 T±10% 且蛋白質 ≤up、≥lo，取代價＋熱量偏差最小的（ok）；1＝熱量照樣要在 ±10% 內（腎臟病熱量不夠會營養不良，不能拿熱量換蛋白質），
+// 蛋白質超出越少越好；2＝都盡量（幾乎用不到）。午晚餐主菜（id）不重複
+function menuFit(opts,T,lo,up){opts=opts.map(o=>[...o].sort((a,b)=>a.cost-b.cost));const n=opts.length,kL=T*.9,kH=T*1.1,ext=(f,g)=>{const r=Array(n+1).fill(0);for(let i=n-1;i>=0;i--)r[i]=r[i+1]+g(...opts[i].map(f));return r};
+const k0=ext(o=>o.k,Math.min),k1=ext(o=>o.k,Math.max),p0=ext(o=>o.p,Math.min),p1=ext(o=>o.p,Math.max),c0=ext(o=>o.cost,Math.min),pk=[];let best=null,bc=1/0,nodes=0;
+const run=ph=>{const go=(i,K,P,C)=>{if(++nodes>3e5)return;const pv=ph?10*((up!=null?Math.max(0,P+p0[i]-up):0)+(lo!=null?Math.max(0,lo-P-p1[i]):0)):0,kv=ph>1?20*Math.max(0,K+k0[i]-kH,kL-K-k1[i])/T:0;
+if(ph<2&&(K+k0[i]>kH||K+k1[i]<kL)||!ph&&(up!=null&&P+p0[i]>up||lo!=null&&P+p1[i]<lo)||C+c0[i]+pv+kv>=bc)return;
+if(i===n){const c=C+10*Math.abs(K-T)/T+pv+kv;if(c<bc){bc=c;best={sel:[...pk],K,P,ok:!ph,ph,cost:c}}return}
+for(const o of opts[i]){if(o.id&&pk.slice(0,i).some(q=>q.id===o.id))continue;pk[i]=o;go(i+1,K+o.k,P+o.p,C+o.cost)}};go(0,0,0,0)};
+for(let ph=0;ph<3&&!best;ph++){nodes=0;run(ph)}return best}
+// 依營養師重點評分挑菜：避開的標籤 −3、偏好 +1、蛋白質密度加減分（護腎反過來偏好低蛋白）＋每週不同的亂數；
 // 每週取分數最高的一批（午晚餐 14、早餐 7、蔬菜 14、點心 7）輪流排，一週內不重複、每週換一批
 function plan(dateStr,m=me()){
 const n=nutriPlan(m),c=n.c,hp=c.goal!=='keep'||c.a>=65,dt=dietOf(m),wk=mondayOf(dateStr),di=Math.round(dayDiff(dateStr,wk)),xb=exBonus(m,dateStr),tgt=c.target+xb.add;
-const score=f=>{let v=0;for(const x of f.x){if(n.avd.has(x))v-=3;if(n.pref.has(x))v+=1}if(hp&&!c.mode.kidney)v+=(f.p*4/f.k-.2)*4;if(c.goal==='cut'&&f.m==='ld'&&f.k<=560)v+=.5;return v};
+const lim=c.mode.kidney||c.mode.kidneyMild,score=f=>{let v=0;for(const x of f.x){if(n.avd.has(x))v-=3;if(n.pref.has(x))v+=1}if(lim)v-=(f.p*4/f.k-.16)*8;else if(hp)v+=(f.p*4/f.k-.2)*4;if(c.goal==='cut'&&f.m==='ld'&&f.k<=560)v+=.5;return v};
 const pool=(t,K)=>FOODS.filter(f=>f.m===t&&okFood(f,dt)).map(f=>({f,v:score(f)+hash(wk+f.id)%1000/1000*1.5})).sort((x,y)=>y.v-x.v).slice(0,K).map(x=>x.f);
 const LD=pool('ld',14),V=pool('v',14),B=pool('b',7),SN=pool('s',7),at=(L,i)=>L.length?L[i%L.length]:null;
 const top=t=>at(t==='b'?B:SN,di),lunch=at(LD,di*2),dinner=at(LD,di*2+1),v1=at(V,di*2),v2=at(V,di*2+1);
@@ -3980,9 +4032,18 @@ if(n.lowC&&f.m==='ld'&&f.c>=55){a.push('主食半碗');k-=f.c*.35*4;cb=f.c*.65}
 if(n.avd.has('salt')&&f.x.includes('salt'))a.push('湯不喝完');if(n.avd.has('pur')&&f.x.includes('pur'))a.push('湯底不喝');if(n.avd.has('oil')&&f.x.includes('oil'))a.push('少油');
 return{f,k,p:f.p,c:cb,fa:f.f,a}};
 const slots=[{n:'早餐',share:.25,items:[top('b')]},{n:'午餐',share:.35,items:[lunch,v1]},{n:'晚餐',share:.30,items:[dinner,v2]},{n:'點心',share:.10,items:[top('s')]}].map(sl=>({...sl,items:sl.items.filter(Boolean)})).filter(sl=>sl.items.length).map(sl=>({...sl,t:sl.items.map(tune)}));
-slots.forEach(sl=>{const base=sl.t.reduce((a,x)=>a+x.k,0);sl.x=Math.min(1.75,Math.max(.5,Math.round(tgt*sl.share/base*4)/4));
-sl.adj=[...new Set(sl.t.flatMap(x=>x.a))];if(n.lowC&&sl.items.length>1)sl.adj.unshift('先吃菜再吃飯')});
-return{slots,c,n,xb,tgt};
+slots.forEach(sl=>{const base=sl.t.reduce((a,x)=>a+x.k,0);sl.x=Math.min(1.75,Math.max(.5,Math.round(tgt*sl.share/base*4)/4))});
+// 蛋白質上下限（護腎 0.8、顧腎 1.0 g/kg 是上限；65 歲以上至少 1.2 g/kg）：預設菜單超出時，在同餐別蛋白質較低（或較高）的菜與 0.5–1.75 份裡
+// 找最接近原菜單、熱量在 ±10% 內的組合；找不到就排超出最少的，畫面說明怎麼補救（renderMenu）
+const up=lim?c.prot:null,lo=!lim&&!c.kid&&c.a>=65?Math.min(1.2*c.pw,c.prot):null,pOf=()=>slots.reduce((a,sl)=>a+sl.t.reduce((b,x)=>b+x.p,0)*sl.x,0),p0=pOf(),pb=up!=null||lo!=null?{up,lo,ok:true,chg:0}:null;
+if(up!=null&&p0>up+.5||lo!=null&&p0<lo-.5){const X=[.5,.75,1,1.25,1.5,1.75],dn=f=>f.p*4/f.k;
+const alt=(t,o)=>{let L=FOODS.filter(f=>f.m===t&&okFood(f,dt));const g=L.filter(f=>!f.x.some(x=>n.avd.has(x)));if(g.length>=4)L=g;L=L.sort((a,b)=>(dn(a)-dn(b))*(up!=null?1:-1)).slice(0,8);return[0,1,2].map(j=>L[(o+j)%L.length]).filter(Boolean)};
+const opts=slots.map((sl,i)=>{const t0=sl.t[0],r=sl.t.slice(1),rk=r.reduce((a,x)=>a+x.k,0),rp=r.reduce((a,x)=>a+x.p,0),fs=[t0.f];for(const f of alt(t0.f.m,di*3+i))if(!fs.includes(f))fs.push(f);
+return fs.flatMap((f,j)=>{const tt=j?tune(f):t0;return X.map(x=>({tt,x,id:f.m==='ld'?f.id:'',k:(tt.k+rk)*x,p:(tt.p+rp)*x,cost:(j?3:0)+Math.abs(x-sl.x)*4}))})});
+const r=menuFit(opts,tgt,lo,up);if(r){r.sel.forEach((o,i)=>{const sl=slots[i];if(o.tt!==sl.t[0]){sl.t=[o.tt,...sl.t.slice(1)];sl.items=[o.tt.f,...sl.items.slice(1)];pb.chg++}if(o.x!==sl.x){sl.x=o.x;pb.chg++}});pb.ok=r.ok;pb.ph=r.ph}else pb.ok=false}
+if(pb)pb.P=pOf();
+slots.forEach(sl=>{sl.adj=[...new Set(sl.t.flatMap(x=>x.a))];if(n.lowC&&sl.items.length>1)sl.adj.unshift('先吃菜再吃飯')});
+return{slots,c,n,xb,tgt,pb};
 }
 let curDate=ymd(new Date()),TODAY=curDate;
 function renderDays(){
@@ -3992,15 +4053,21 @@ const b=document.createElement('button');b.className='day'+(s===curDate?' on':''
 b.innerHTML=`${i===0?'今天':'週'+wk[d.getDay()]}<b>${d.getDate()}</b>`;b.onclick=()=>{curDate=s;renderDays();renderMenu()};box.appendChild(b)}
 }
 function renderMenu(){
-const{slots,c,n,xb,tgt}=plan(curDate),xc=xb.add*.7/4,xf=xb.add*.3/9;let K=0,Pp=0,C=0,F=0;
+const{slots,c,n,xb,tgt,pb}=plan(curDate),xc=xb.add*.7/4,xf=xb.add*.3/9;let K=0,Pp=0,C=0,F=0;
 $('#menuTitle').textContent=(curDate===ymd(new Date())?'今日菜單':curDate+' 菜單')+'・'+me().name;
 $('#menuMode').innerHTML=[...n.avd].map(t=>`<span class="tg warn">避開${TAGN[t]||t}</span>`).concat([...n.pref].filter(t=>!n.avd.has(t)).map(t=>`<span class="tg">多吃${TAGN[t]||t}</span>`)).join('');
 $('#meals').innerHTML=slots.map(s=>{const k=s.t.reduce((a,x)=>a+x.k,0)*s.x;K+=k;s.t.forEach(x=>{Pp+=x.p*s.x;C+=x.c*s.x;F+=x.fa*s.x});
 return `<div class="meal" data-meal="${slots.indexOf(s)}" role="button"><div class="thumb">${thumb(s.items[0])}</div><div style="flex:1;min-width:0"><div class="slot">${s.n} · ×${s.x} 份</div><div class="t">${s.items.map(f=>f.n).join(' ＋ ')}</div><div class="s">${Math.round(k)} kcal · 蛋白 ${Math.round(s.t.reduce((a,x)=>a+x.p,0)*s.x)}g</div>${s.adj.length?`<div class="adj">${s.adj.map(a=>`<i>${esc(a)}</i>`).join('')}</div>`:''}</div><span class="chev" style="align-self:center">›</span></div>`}).join('')||'<div class="empty">沒有符合的菜色，請到「我的 → 編輯 → 不吃的食物」放寬設定</div>';
-const line=(nm,v,t,col)=>`<div class="row"><span>${nm}</span><span>${Math.round(v)} / ${Math.round(t)}</span></div><div class="bar"><i style="width:${Math.min(100,v/t*100)}%;background:${col}"></i></div>`;
-const gap=Math.round(c.prot-Pp);
-$('#menuSum').innerHTML=(xb.min?`<div class="hl" style="margin-bottom:10px">🏃 ${exBonusTxt(xb,c)}</div>`:'')+line('熱量 kcal',K,tgt,'linear-gradient(90deg,var(--cyan),var(--lime))')+line('蛋白質 g',Pp,c.prot,'var(--cyan)')+line('碳水 g',C,c.carb+xc,'var(--lime)')+line('脂肪 g',F,c.fat+xf,'var(--pink)')+
-(gap>10&&!c.mode.kidney?`<div class="hl" style="margin-top:12px">${esc(protTip(gap,c.mode,dietOf(me()).no))}</div>`:'')+
+// 達成狀態用文字＋圖示（不只靠顏色）：蛋白質有上限（護腎、顧腎）時超過就標「超過上限」，65 歲以上低於 1.2 g/kg 標「少於下限」
+const line=(nm,v,t,col,st)=>`<div class="row"><span>${nm}</span><span>${Math.round(v)} / ${Math.round(t)}${st?` <b style="color:${st[1]}">${st[0]}</b>`:''}</span></div><div class="bar"><i style="width:${Math.min(100,v/t*100)}%;background:${col}"></i></div>`;
+const gap=Math.round(c.prot-Pp),OK='var(--lime)',AM='var(--amber)',over=pb?.up!=null&&Pp>pb.up+.5,under=pb?.lo!=null&&Pp<pb.lo-.5;
+const pS=pb?.up!=null?(over?[`⚠️ 超過上限 ${Math.round(Pp-pb.up)} g`,'var(--red)']:['✓ 沒超過上限',OK]):under?[`⚠️ 少於下限 ${Math.round(pb.lo-Pp)} g`,'var(--red)']:gap>Math.max(3,c.prot*.1)?[`還差 ${gap} g`,AM]:['✓ 達標',OK];
+const pMsg=pb?.up!=null?`<div class="hl" style="margin-top:12px">${over?`⚠️ 這天的菜在熱量夠的情況下，蛋白質最少也有 ${Math.round(Pp)} g，超過上限 ${Math.round(Pp-pb.up)} g：主菜的肉、魚、蛋、豆製品吃一半，飯照吃；熱量不夠用冬粉、米粉、米苔目補。`
+:!pb.ok?`⚠️ 為了不超過上限，熱量只排到 ${Math.round(K)} kcal（少 ${Math.round(tgt-K)}）：用冬粉、米粉、米苔目、植物油補足熱量。`
+:`🩺 ${c.mode.kidney?'護腎':'顧腎'}：${pb.chg?'已換成蛋白質較低的菜、調整份量，':''}蛋白質控制在 ${Math.round(pb.up)} g 以內（每公斤 ${c.mode.kidney?'0.8':'1.0'} g）。`}份量請跟腎臟科醫師或營養師確認。</div>`
+:pb?.lo!=null&&(under||pb.chg)?`<div class="hl" style="margin-top:12px">${under?`⚠️ 蛋白質還差 ${Math.round(pb.lo-Pp)} g 才到 65 歲以上的下限（每公斤 1.2 g，防肌少症）：每餐加一份蛋、豆腐、魚或鮮奶。`:`🧓 已調整菜色與份量，讓蛋白質至少 ${Math.round(pb.lo)} g（65 歲以上每公斤 1.2 g，防肌少症）。`}</div>`:'';
+$('#menuSum').innerHTML=(xb.min?`<div class="hl" style="margin-bottom:10px">🏃 ${exBonusTxt(xb,c)}</div>`:'')+line('熱量 kcal',K,tgt,'linear-gradient(90deg,var(--cyan),var(--lime))',Math.abs(K-tgt)<=tgt*.1?['✓',OK]:[K<tgt?`少 ${Math.round(tgt-K)}`:`多 ${Math.round(K-tgt)}`,AM])+line('蛋白質 g',Pp,c.prot,over||under?'var(--red)':'var(--cyan)',pS)+line('碳水 g',C,c.carb+xc,'var(--lime)')+line('脂肪 g',F,c.fat+xf,'var(--pink)')+pMsg+
+(gap>10&&!c.mode.kidney&&!under?`<div class="hl" style="margin-top:12px">${esc(protTip(gap,c.mode,dietOf(me()).no))}</div>`:'')+
 '<p class="note">點一餐可看食材、移除不要的菜。每位家人依自己的體檢、目標和不吃的食材排菜（同一天會盡量排一樣的菜，方便一起煮），份量以 0.25 份為單位。</p>';
 }
 const fmtQ=(q,u)=>u==='g'||u==='ml'?`${Math.round(q)} ${u}`:`${Math.round(q*10)/10} ${u}`;

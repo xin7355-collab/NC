@@ -2767,6 +2767,98 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await p7.close(); await ctx7.close(); srv7.close();
   }
 
+  // =============== 6zzo. 菜單蛋白質上下限：護腎 ≤0.8、顧腎 ≤1.0、65 歲以上 ≥1.2 g/kg；超出時畫面說明怎麼補救；搜尋結果跟暴力窮舉一致 ===============
+  {
+    const mk = (id, o) => ({ id, name: '測' + id, act: '1.375', goal: 'auto', role: 'me', ...o });
+    page = await newPage({ members: [mk('k1', { sex: 'f', birth: '1961-01-01', h: 155, w: 55, cond: { items: [{ k: 'ckd', y: 2020, st: 'tx' }] } }), mk('k2', { sex: 'm', birth: '1956-01-01', h: 168, w: 65, act: '1.2', cond: { items: [{ k: 'ckd', y: 2018, st: 'tx' }] } }),
+      mk('e1', { sex: 'f', birth: '1951-01-01', h: 150, w: 45, act: '1.2' }), mk('a1', { sex: 'm', birth: '1986-01-01', h: 172, w: 70 })], active: 'k1' });
+    const R = await page.evaluate(() => { const out = {}; for (const m of MEM) { const c = calc(m), days = [];
+      for (let i = 0; i < 28; i++) { const d = addDays(ymd(new Date()), i), r = plan(d, m); let P = 0, K = 0; r.slots.forEach(s => { P += s.t.reduce((a, x) => a + x.p, 0) * s.x; K += s.t.reduce((a, x) => a + x.k, 0) * s.x }); days.push({ d, P, K, T: r.tgt, ok: r.pb ? r.pb.ok : null }) }
+      out[m.id] = { up: c.mode.kidney ? c.prot : null, lo: c.a >= 65 && !c.mode.kidney ? 1.2 * c.pw : null, pw: c.pw, days } } return out }).catch(e => ({ err: e.message }));
+    const kid = ['k1', 'k2'].map(id => { const r = R[id] || { days: [] }, ex = r.days.map(x => x.P - r.up); return { id, up: Math.round(r.up), maxOver: Math.round(Math.max(...ex)), okDays: r.days.filter(x => x.P <= r.up + .5).length,
+      unflagged: r.days.filter(x => x.P > r.up + .5 && x.ok !== false).length, kcal: r.days.every(x => x.K >= x.T * .9 - 1 && x.K <= x.T * 1.1 + 1) } });
+    const E = R.e1 || { days: [] }, A = R.a1 || { days: [] };
+    check('護腎（慢性腎臟病）的菜單蛋白質不再天天超標：合成的 66 歲女性 55 kg、71 歲男性 65 kg 排 28 天，蛋白質最多只超過上限（每公斤 0.8 g）6 g 以內、一半以上的天數完全沒超過，超過的那天一定標出來；熱量都在目標 ±10% 內（不拿熱量換蛋白質）',
+      !R.err && kid.every(k => k.maxOver <= 6 && k.okDays >= 14 && k.unflagged === 0 && k.kcal), JSON.stringify(R.err || kid));
+    check('65 歲以上（沒有腎臟病）每天蛋白質至少每公斤 1.2 g；沒有上下限的一般成年人不啟動搜尋（菜單照舊）',
+      E.days.length === 28 && E.days.every(x => x.P >= R.e1.lo - .5) && A.days.length === 28 && A.days.every(x => x.ok === null), JSON.stringify({ e1: E.days.map(x => Math.round(x.P)).join(','), lo: Math.round(R.e1?.lo), a1: A.days.slice(0, 3) }));
+    // 畫面：超過的那天標「超過上限」並說怎麼補；沒超過的那天標「沒超過上限」；一律提醒跟腎臟科醫師或營養師確認
+    const k1d = R.k1?.days || [], dOver = k1d.find(x => x.P > R.k1.up + .5)?.d, dOk = k1d.find(x => x.P <= R.k1.up + .5)?.d;
+    const V = await page.evaluate(([a, b]) => { go('menu', 'menu'); const t = d => { if (!d) return ''; curDate = d; renderMenu(); return $('#menuSum').textContent.replace(/\s+/g, ' ') }; return { over: t(a), ok: t(b) } }, [dOver, dOk]).catch(e => ({ err: e.message }));
+    check('今日菜單的營養達成用文字標狀態：護腎超過上限 →「⚠️ 超過上限 N g」＋「主菜的肉、魚、蛋、豆製品吃一半」「冬粉、米粉、米苔目補」；沒超過 →「✓ 沒超過上限」＋「🩺 護腎」；都提醒「份量請跟腎臟科醫師或營養師確認」',
+      !!dOver && !!dOk && /⚠️ 超過上限 \d+ g/.test(V.over) && /主菜的肉、魚、蛋、豆製品吃一半/.test(V.over) && /冬粉、米粉、米苔目/.test(V.over) && /✓ 沒超過上限/.test(V.ok) && /🩺 護腎/.test(V.ok) && [V.over, V.ok].every(t => /份量請跟腎臟科醫師或營養師確認/.test(t)),
+      JSON.stringify({ dOver, dOk, over: (V.over || V.err || '').slice(0, 200), ok: (V.ok || '').slice(0, 160) }));
+    // 搜尋（menuFit）跟暴力窮舉比對：300 組亂數題目，每題的階段（0＝都符合、1＝熱量符合但蛋白質超出、2＝都盡量）與目標值都要一樣
+    const X = await page.evaluate(() => { const r = rng(20261122); let bad = 0, n0 = 0, n1 = 0, n2 = 0; const why = [];
+      for (let t = 0; t < 300; t++) { const n = 2 + Math.floor(r() * 3), opts = Array.from({ length: n }, (_, i) => Array.from({ length: 2 + Math.floor(r() * 4) }, () => ({ k: 100 + r() * 500, p: 5 + r() * 40, cost: Math.floor(r() * 5), id: i && r() < .5 ? 'm' + Math.floor(r() * 3) : '' })));
+        const avg = f => opts.reduce((a, o) => a + o.reduce((b, x) => b + f(x), 0) / o.length, 0), T = avg(x => x.k) * (.8 + r() * .4), Pm = avg(x => x.p), up = r() < .5 ? Pm * (.7 + r() * .5) : null, lo = up == null ? Pm * (.8 + r() * .5) : null;
+        let bPh = 9, bC = Infinity; const rec = (i, sel) => { if (i === n) { const ids = sel.map(o => o.id).filter(Boolean); if (new Set(ids).size !== ids.length) return; const K = sel.reduce((a, o) => a + o.k, 0), P = sel.reduce((a, o) => a + o.p, 0), C = sel.reduce((a, o) => a + o.cost, 0);
+            const inK = K >= T * .9 && K <= T * 1.1, viol = (up != null ? Math.max(0, P - up) : 0) + (lo != null ? Math.max(0, lo - P) : 0), ph = inK && viol <= 0 ? 0 : inK ? 1 : 2, c = C + 10 * Math.abs(K - T) / T + (ph ? 10 * viol : 0) + (ph > 1 ? 20 * Math.max(0, K - T * 1.1, T * .9 - K) / T : 0);
+            if (ph < bPh || ph === bPh && c < bC) { bPh = ph; bC = c } return } for (const o of opts[i]) rec(i + 1, [...sel, o]) }; rec(0, []);
+        const g = menuFit(opts, T, lo, up); if (bPh === 9 ? g : !g || g.ph !== bPh || Math.abs(g.cost - bC) > 1e-6 || g.ok !== (bPh === 0)) { bad++; if (why.length < 3) why.push({ t, bPh, bC, g: g && [g.ph, g.cost] }) } if (bPh === 0) n0++; else if (bPh === 1) n1++; else if (bPh === 2) n2++ }
+      return { bad, n0, n1, n2, why } }).catch(e => ({ err: e.message }));
+    check('菜單搜尋（有上下限的組合搜尋）跟暴力窮舉逐題比對 300 組亂數：找到的階段（都符合／熱量符合但蛋白質超出／都盡量）和最佳值完全一樣，午晚餐不排同一道主菜',
+      !X.err && X.bad === 0 && X.n0 >= 50 && X.n1 >= 20, JSON.stringify(X));
+    await page.close();
+  }
+
+  // =============== 6zzp. 肌力課表涵蓋主要動作模式：每個人都有「拉」（背肌）和核心，長者單腳站排第一，禁忌照樣排除 ===============
+  {
+    page = await newPage({ members: [{ id: 'o', name: '長者', sex: 'f', birth: '1955-05-01', h: 152, w: 50, act: '1.2', goal: 'auto', role: 'me' }, { id: 'y', name: '中年', sex: 'm', birth: '1985-05-01', h: 172, w: 70, act: '1.375', goal: 'auto' },
+      { id: 'k', name: '膝蓋', sex: 'f', birth: '1970-05-01', h: 160, w: 60, act: '1.375', goal: 'auto', fit: { lim: ['knee'], lvl: 'mid', days: 3, min: 30 } }], active: 'o' });
+    const M = await page.evaluate(() => Object.fromEntries(MEM.map(m => [m.id, fitPlan(m).mv.map(x => x.n)]))), has = (a, re) => (a || []).some(n => re.test(n));
+    check('肌力課表涵蓋主要動作模式：70 歲長者、40 歲都有「拉」（彈力帶划船，練背肌防駝背、提重物）和核心（鳥狗式或棒式），長者單腳站排第一；膝蓋不適改坐姿抬腿（不排椅子深蹲、弓箭步），仍有拉和核心',
+      ['o', 'y', 'k'].every(id => M[id]?.length === 6 && has(M[id], /划船/) && has(M[id], /鳥狗式|棒式/)) && M.o[0] === '單腳站' && !has(M.k, /椅子深蹲|弓箭步/) && has(M.k, /坐姿抬腿/), JSON.stringify(M));
+    await page.close();
+  }
+
+  // =============== 6zzq. 運動回饋閉環：跟著做記下痛感與「還能再做幾下」→ 下次自動加減量（雙重漸進＋痛感把關）；記錄運動可勾哪裡不舒服 → 反覆出現建議加進運動限制；停練後自動降量回歸 ===============
+  {
+    const mv = (a, r, S, p, e) => ({ a, r, S, p, ...(e != null ? { e } : {}) }), rec = (id, d, k, mvs, o = {}) => ({ id, d, k, min: 5, int: k === 'home' ? 'mod' : 'easy', note: '跟著做', mv: mvs, ...o });
+    page = await newPage({ members: [{ id: 'a', name: '回饋', sex: 'f', birth: '1966-01-01', h: 160, w: 60, act: '1.375', goal: 'auto', role: 'me', fit: { lim: [], lvl: 'mid', days: 3, min: 30 } },
+      { id: 'b', name: '停練', sex: 'm', birth: '1960-01-01', h: 170, w: 70, act: '1.375', goal: 'auto', fit: { lim: [], lvl: 'mid', days: 3, min: 30 } }, { id: 'c', name: '回來', sex: 'm', birth: '1960-01-01', h: 170, w: 70, act: '1.375', goal: 'auto', fit: { lim: [], lvl: 'mid', days: 3, min: 30 } },
+      { id: 'd', name: '偶爾', sex: 'f', birth: '1970-01-01', h: 160, w: 55, act: '1.375', goal: 'auto' }], active: 'a',
+      exlog: { a: [rec('x1', addD(-3), 'home', [mv('chairsq', 12, 3, 0, 2), mv('plank', 1, 3, 0, 2)]), rec('x2', addD(-1), 'home', [mv('chairsq', 12, 3, 0, 2), mv('row', 15, 3, 2), mv('bridge', 15, 3, 1), mv('wallpush', 12, 3, 0, 0), mv('plank', 1, 3, 0, 2)]),
+          rec('x3', addD(-3), 'other', [mv('chin', 10, 2, 0, 2)]), rec('x4', addD(-1), 'other', [mv('chin', 10, 2, 0, 2)])],
+        b: [-40, -35, -30, -25].map((n, i) => ({ id: 'b' + i, d: addD(n), k: 'walk', min: 30, int: 'mod' })), c: [-40, -35, -30, -25, 0].map((n, i) => ({ id: 'c' + i, d: addD(n), k: 'walk', min: 30, int: 'mod' })), d: [{ id: 'd0', d: addD(-30), k: 'walk', min: 30, int: 'mod' }] } });
+    const N = await page.evaluate(() => { const m = me(), f = (a, b) => { const x = mvNext(m, a, b); return `${x.r}|${x.stop ? 'stop' : ''}|${x.why}` };
+      go('fit'); const card = [...document.querySelectorAll('#fitBody .card')].find(c => /肌力動作/.test(c.textContent))?.textContent || '';
+      return { sq: f('chairsq', 12), row: f('row', 15), br: f('bridge', 15), wp: f('wallpush', 12), pk: f('plank', 1), chin: f('chin', 10), none: f('lunge', 10), card } }).catch(e => ({ err: e.message }));
+    check('雙重漸進＋痛感把關：連 2 次同樣次數都不痛、還能再做 2 下以上 → 肌力動作加 2 下（椅子深蹲 12 → 14）、復健動作加 1 下（下巴後縮 10 → 11）；上次有點痛 → 少 2 下、幅度小一點；做不完 → 少 2 下；很痛或麻 → 先停；棒式這種長停留不自動加；沒紀錄照原本',
+      /^14\|\|連續 2 次都做完、不痛、還能多做：這次加 2 下/.test(N.sq) && /^15\|stop\|上次做完很痛或手腳麻/.test(N.row) && /^13\|\|上次有點痛：先少 2 下、幅度小一點/.test(N.br) && /^10\|\|上次做不完：先少 2 下/.test(N.wp) && /^1\|\|/.test(N.pk) && /^11\|\|.*加 1 下/.test(N.chin) && N.none === '10||',
+      JSON.stringify(N.err ? N : { ...N, card: undefined }));
+    check('運動頁的肌力動作顯示這次的次數和原因：「椅子深蹲 14 下 × 3 組」＋「📈 …這次加 2 下」；划船顯示「🛑 上次做完很痛…先停」',
+      /椅子深蹲 14 下 × 3 組/.test(N.card) && /📈 連續 2 次都做完、不痛、還能多做：這次加 2 下/.test(N.card) && /🛑 上次做完很痛或手腳麻：先停這個動作/.test(N.card), (N.card || N.err || '').slice(0, 300));
+    // 跟著做：打開就是這次的次數；選痛感＋還能再做幾下 → 記到今天的運動紀錄（肌力＝居家肌力，算肌力天數；復健＝其他、輕鬆，不算有氧）；改選很痛 → 下次先停
+    const F = await page.evaluate(async () => { const m = me(), w = ms => new Promise(r => setTimeout(r, ms)), td = ymd(new Date()), wk0 = exWeek(m, mondayOf(td));
+      openAnim('chairsq', 12, 3); await w(150); const head = $('#sheetBody').textContent; document.querySelector('#an-eff [data-ev="2"]').click(); await w(30); const hint = $('#an-pout').textContent;
+      document.querySelector('#an-pain [data-pi="0"]').click(); await w(30); const saved = $('#an-pout').textContent, r1 = JSON.parse(JSON.stringify(exlogOf(m).find(x => x.d === td && x.k === 'home') || null));
+      document.querySelector('#an-pain [data-pi="2"]').click(); await w(30); const r2 = exlogOf(m).filter(x => x.d === td && x.k === 'home').length, nx = mvNext(m, 'chairsq', 12); closeSheet(); await w(100);
+      openAnim('chin', 10, 2); await w(100); document.querySelector('#an-pain [data-pi="0"]').click(); await w(30); closeSheet(); await w(100); const o = exlogOf(m).find(x => x.d === td && x.k === 'other'), wk1 = exWeek(m, mondayOf(td));
+      return { head: /14 下 × 3 組/.test(head) && /📈/.test(head), hint, saved, r1, r2, stop: !!nx.stop, o: o && { k: o.k, int: o.int, note: o.note, a: o.mv.map(x => x.a).join() }, strUp: wk1.str - wk0.str, aer: wk1.aer - wk0.aer } }).catch(e => ({ err: e.message }));
+    check('跟著做：打開就是這次的次數（14 下＋📈）；只選「還能再做幾下」先提示選痛感；選了痛感 → 記到今天的運動紀錄（居家肌力、跟著做、明細有動作／次數／痛感／還能再做幾下，沒按開始就不記組數），本週肌力天數 +1；改選「很痛」更新同一筆、下次先停；復健動作記成「其他・復健動作」、輕鬆，不算有氧',
+      F.head && /再選一下「做完感覺如何」就會記下來/.test(F.hint) && /已記到今天的運動紀錄/.test(F.saved) && F.r1?.note === '跟著做' && F.r1?.int === 'mod' && JSON.stringify(F.r1?.mv) === JSON.stringify([{ a: 'chairsq', r: 14, S: 3, p: 0, e: 2 }]) && F.r2 === 1 && F.stop
+        && F.o?.k === 'other' && F.o?.int === 'easy' && F.o?.note === '復健動作' && F.o?.a === 'chin' && F.strUp === 1 && F.aer === 0, JSON.stringify(F));
+    // 記錄運動勾「哪裡不舒服」：同一部位 2 次 → 建議加進運動限制（按了課表就避開）；胸悶／頭暈 → 立刻說停下、119、看心臟科
+    const P = await page.evaluate(async () => { const m = me(), w = ms => new Promise(r => setTimeout(r, ms)), log = async pn => { openExLog(); await w(80); for (const k of pn) document.querySelector(`#xl-pn [data-pn="${k}"]`).click(); await w(20); const warn = $('#xl-pnw').textContent; $('#xl-save').click(); await w(150); return warn };
+      await log(['knee']); go('fit'); const one = !!document.querySelector('[data-addlim="knee"]'); await log(['knee', 'back']); for (let i = 0; i < 4; i++) EXLOG[m.id].push({ id: 'zz' + i, d: ymd(new Date()), k: 'home', min: 3, int: 'mod', note: '跟著做', mv: [{ a: 'chairsq', r: 12, S: 3, p: 0 }] }); S.set('exlog', EXLOG); go('fit'); renderAll(); const tip = document.querySelector('[data-addlim="knee"]')?.closest('.hl')?.textContent || '', back = !!document.querySelector('[data-addlim="back"]');
+      document.querySelector('[data-addlim="knee"]')?.click(); await w(150); const lim = fitOf(me()).lim.join(), mvs = fitPlan(me()).mv.map(x => x.n).join();
+      const chest = await log(['chest']); go('fit'); const card = document.querySelector('#fitBody')?.textContent || '', pnRec = exlogOf(m).find(r => r.pn?.includes('chest'))?.pn;
+      return { one, tip, back, lim, mvs, chest, chestCard: /最近運動時記了胸悶／頭暈：先讓心臟科評估/.test(card), pnRec } }).catch(e => ({ err: e.message }));
+    check('記錄運動可勾「哪裡不舒服」：膝蓋記 2 次 → 建議把「膝蓋不適」加進運動限制（只記 1 次不建議；之後又跟著做了 4 次也不會把手動紀錄擠掉）；按了就加入、課表不再排椅子深蹲、弓箭步；勾「胸悶／頭暈」立刻說先停下、5 分鐘沒好轉打 119、看心臟科，運動頁也提醒先讓心臟科評估',
+      !P.one && /最近 2 次運動都記了「膝蓋不舒服」/.test(P.tip) && !P.back && /knee/.test(P.lim) && !/椅子深蹲|弓箭步/.test(P.mvs) && /立刻打 119/.test(P.chest) && /心臟科/.test(P.chest) && P.chestCard && JSON.stringify(P.pnRec) === '["chest"]', JSON.stringify(P));
+    // 停練後回歸：之前規律、停 25 天 → 先回到 6 成、肌力少 1 組；剛回來（今天又開始）照樣降量；偶爾記一次的不觸發
+    const B = await page.evaluate(() => { const g = id => MEM.find(x => x.id === id), b = fitPlan(g('b')), c = fitPlan(g('c')); ACT = 'b'; fitDay = b.days.findIndex(x => !x.rest); go('fit'); renderFit(); const note = $('#fitBody').textContent; fitDay = null;
+      return { b: b.bk && `${b.bk.gap}|${b.bk.f}|${b.bk.back}`, bw: b.W.map(x => x.t + '：' + x.d).join('｜'), bs: b.sets, c: c.bk && `${c.bk.gap}|${c.bk.f}|${!!c.bk.back}`, d: brkOf(g('d')), a: brkOf(g('a')), note: /🔁 停了 25 天：這次先做 \d+ 分鐘、強度輕鬆，漏掉的不用補/.test(note) } }).catch(e => ({ err: e.message }));
+    check('停練後回歸：之前規律、已經 25 天沒運動 → 教練提醒「停了 25 天：先回到 6 成」（這 2 週、肌力少 1 組、漏掉的不用補、生病開刀停的先問醫師），訓練日的時間打折（「這次先做 N 分鐘」）；剛回來的人照樣降量；偶爾才記一次、從沒停過的不觸發',
+      B.b === '25|0.6|' && /停了 25 天：先回到 6 成：這 2 週每次運動先做平常的 6 成.*肌力每個動作少 1 組.*漏掉的不用補.*先問醫師/.test(B.bw) && B.bs === 2 && /^25\|0.6\|true$/.test(B.c || '') && B.d === null && B.a === null && B.note, JSON.stringify(B));
+    // 備份還原：不認得的部位、動作、超出範圍的數值都清掉
+    const C = await page.evaluate(() => JSON.stringify(cleanExLog({ id: 'z', d: '2026-01-01', k: 'home', min: 5, int: 'mod', pn: ['knee', '<img src=x>', 'knee', 'toString'], mv: [{ a: '__proto__', r: 12, S: 3, p: 0 }, { a: 'chairsq', r: 1000, S: 3, p: 0 }, { a: 'chairsq', r: 12, S: 3, p: 9 }, { a: 'chairsq', r: 12, S: 3, s: 2, p: 1, e: 2, evil: '<b>' }, 'x', null] }))).catch(e => ({ err: e.message }));
+    check('備份還原的運動紀錄：不舒服部位只留認得的（去重複）、跟著做的明細只留認得的動作與合理數值（次數 1–100、組數 1–10、痛感 0–3、還能再做 0–2），多的欄位丟掉',
+      C === JSON.stringify({ id: 'z', d: '2026-01-01', k: 'home', min: 5, int: 'mod', pn: ['knee'], mv: [{ a: 'chairsq', r: 12, S: 3, s: 2, p: 1, e: 2 }] }), C);
+    await page.close();
+  }
+
   // =============== 7. 版本自動更新（本機 http 伺服器模擬 GitHub Pages） ===============
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   check("index.html 恰好有一個 const APP_VER='dev'（部署時換成 commit 編號）", html.split("const APP_VER='dev'").length === 2);
