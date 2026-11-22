@@ -2706,7 +2706,7 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     await page.close(); srv6.close(); fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 
-  // =============== 6zzn. 3D 手機效能與離線（第六階段）：繪製次數、素材內容版本、Service Worker 離線播放、斷網訊息、版本自動更新不受影響、太卡自動降畫質 ===============
+  // =============== 6zzn. 3D 手機效能與離線（第六階段）：繪製次數、素材內容版本、Service Worker 離線播放、斷網訊息、版本自動更新不受影響、太卡自動降畫質、旋轉不卡 ===============
   {
     const AH = require(path.join(ROOT, 'tools', 'asset-hashes.js')), verSrc = fs.readFileSync(path.join(ROOT, '3d', 'asset-ver.js'), 'utf8'), table = JSON.parse(verSrc.slice(verSrc.indexOf('{'), verSrc.lastIndexOf('}') + 1));
     const MAN = fs.readFileSync(path.join(ROOT, '3d', 'manifest.js'), 'utf8'), bytesOk = ['male', 'female'].every(x => new RegExp(`${x}: \\{ file: 'models/${x}\\.glb'[^}]*bytes: ${fs.statSync(path.join(ROOT, '3d', 'models', x + '.glb')).size}\\b`).test(MAN));
@@ -2756,6 +2756,14 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
       for (let i = 0; i < 60 && !/自動降低畫質/.test(document.querySelector('.h3dp .off')?.textContent || ''); i++) await new Promise(r => setTimeout(r, 100)); return { a, fast, b, slow, c, off: document.querySelector('.h3dp .off')?.textContent || '' } });
     check('有 Service Worker 時版本自動更新照常（線上換成新版會重新載入新版本）；播放太卡（每格 60 毫秒）自動把解析度從 2 倍降到 1 倍並在畫面說明，順暢時（每格 16 毫秒）不降',
       v2 === 'w2' && LP.a === 2 && LP.fast === false && LP.b === 2 && LP.slow === true && LP.c === 1 && /自動降低畫質/.test(LP.off), JSON.stringify({ v2, LP }));
+    // 旋轉人物不卡：用手指拖曳旋轉時每格最多畫 1 次；放手、鏡頭停下後就不再繪製（省電）
+    await p7.evaluate(() => { H3D.v.pause(); const orig = window.requestAnimationFrame.bind(window); window.__rc = new Map(); window.requestAnimationFrame = cb => orig(t => { if (cb.name === 'render') __rc.set(t, (__rc.get(t) || 0) + 1); return cb(t) }) });
+    await p7.locator('#h3d canvas').scrollIntoViewIfNeeded(); const az0 = await p7.evaluate(() => H3D.v.stats().az), cb7 = await p7.locator('#h3d canvas').boundingBox(), cx7 = cb7.x + cb7.width / 2, cy7 = cb7.y + cb7.height / 2;
+    await p7.mouse.move(cx7, cy7); await p7.mouse.down(); for (let i = 1; i <= 10; i++) { await p7.mouse.move(cx7 + i * 8, cy7); await p7.waitForTimeout(30) } await p7.mouse.up();
+    await p7.waitForFunction(() => !H3D.v.stats().rendering, null, { timeout: 30000 }).catch(() => {});
+    const RT = await p7.evaluate(az0 => { const v = [...__rc.values()], az = H3D.v.stats().az; return { az0, az, turn: Math.abs(((az - az0 + 540) % 360) - 180), frames: v.length, max: Math.max(0, ...v), idle: !H3D.v.stats().rendering } }, az0);
+    check('旋轉 3D 人物不卡：手指拖曳旋轉時每格最多畫 1 次（以前每轉一格，下一格的繪製次數就加倍 1、2、4…48 次，播放順、一轉人物就卡）；放手、鏡頭停下後不再繪製（省電）',
+      RT.turn >= 10 && RT.frames >= 5 && RT.max === 1 && RT.idle, JSON.stringify(RT));
     await p7.close(); await ctx7.close(); srv7.close();
   }
 

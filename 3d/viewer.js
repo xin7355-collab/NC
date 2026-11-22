@@ -43,8 +43,11 @@ export function createViewer(host, opt = {}) {
   let perf = [], lowAuto = false; const govern = dt => { if (lowAuto || R.getPixelRatio() <= 1) return; perf.push(dt); if (perf.length < 60) return;
     const avg = perf.reduce((a, b) => a + b, 0) / perf.length; perf = []; if (avg > 0.045) { lowAuto = true; R.setPixelRatio(1); size(); emit() } };
   const render = () => { raf = 0; if (dead) return; const now = performance.now(), dt = lastT ? Math.min(0.1, (now - lastT) / 1000) : 0; lastT = now;
-    if (mixer && playing) { mixer.update(dt); if (dt) govern(dt); emit() } const moving = ctl.update(); R.render(scene, cam); if ((moving || playing) && visible) raf = requestAnimationFrame(render); else lastT = 0 };
-  const kick = () => { if (!raf && visible && !dead) raf = requestAnimationFrame(render) };
+    if (mixer && playing) { mixer.update(dt); if (dt) govern(dt); emit() } const moving = ctl.update(); R.render(scene, cam);
+    // 鏡頭在動時 ctl.update() 會觸發 change → kick() 已經排好下一格；這裡只在還沒排的時候才排。
+    // （以前兩邊都排：每轉一格，下一格的繪製次數就加倍 1、2、4…48 次 → 播放順、一轉人物就卡）
+    if ((moving || playing) && visible) { if (!raf) raf = requestAnimationFrame(render) } else if (!raf) lastT = 0 };
+  const kick = () => { if (!raf && visible && !dead) raf = requestAnimationFrame(render) };   // 任何時候最多只排一格
   ctl.addEventListener('change', kick);
   const size = () => { if (!mount || dead) return; const w = mount.clientWidth || 300, hh = mount.clientHeight || 400; R.setSize(w, hh, false); cv.style.width = '100%'; cv.style.height = '100%'; cam.aspect = w / hh; cam.updateProjectionMatrix(); kick() };
   const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(size) : null;
