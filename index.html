@@ -570,7 +570,7 @@ const ING_CAT={
 '主食':'飯糰,蛋餅皮,全麥吐司,全麥饅頭,全麥餅皮,全麥貝果,全麥麵包,燒餅,蔥抓餅,蘿蔔糕,油條,地瓜,燕麥片,糙米,白米,五穀米,藜麥,麵條,涼麵,河粉,義大利麵,蕎麥麵,烏龍麵,冬粉,米粉,粄條,冷凍水餃,越南春捲皮,全麥蘇打餅',
 '乳品':'希臘優格,無糖優格,鮮奶,起司片,乳清蛋白粉',
 '堅果種子':'綜合堅果,芝麻,花生,無糖花生醬',
-'調味乾貨':'醬油,味噌,咖哩塊,芝麻醬,韓式辣醬,辣豆瓣醬,青醬,橄欖油,海帶芽,海苔,乾辣椒,黑胡椒'};
+'調味乾貨':'醬油,香油,味噌,咖哩塊,芝麻醬,韓式辣醬,辣豆瓣醬,青醬,橄欖油,海帶芽,海苔,乾辣椒,黑胡椒'};
 const CATS=Object.keys(ING_CAT),CAT_OF={};CATS.forEach(c=>ING_CAT[c].split(',').forEach(n=>CAT_OF[n]=c));
 // 不吃的食材群組（比對食材名稱）：牛奶、牛蒡不算牛肉；雞蛋不算雞肉
 const EXG=[['beef','牛肉',/牛(?!奶|蒡)/],['pork','豬肉',/豬|培根|火腿|肉鬆/],['chicken','雞肉',/雞(?!蛋)|鴨/],['fish','魚',/魚|鮭|鯖|鱈|鯛|鱸|鮪|秋刀/],['shell','蝦蟹貝',/蝦|蛤|蟹|花枝|透抽|牡蠣|貝(?!果)|魷/],
@@ -674,7 +674,10 @@ l56|紅燒豆腐雞肉煲＋飯|🍲|ld|36,60,14|ca|板豆腐120g,雞胸肉80g,�
 l57|南瓜雞肉燉飯|🎃|ld|32,72,8||南瓜100g,雞胸肉100g,白米70g,洋蔥30g,鮮奶50ml|pumpkin chicken risotto
 l58|鮪魚蛋糙米壽司捲|🍣|ld|22,62,8|fib|糙米80g,鮪魚罐頭40g,雞蛋1顆,小黃瓜30g,海苔2片|brown rice sushi rolls with tuna, egg and cucumber
 l59|香菇雞湯＋糙米飯|🍲|ld|32,58,12||去皮雞腿130g,香菇40g,薑5g,糙米70g,高麗菜80g|shiitake chicken soup with brown rice
-l60|豆腐雞肉漢堡排＋地瓜|🍔|ld|30,42,12|ca|板豆腐100g,雞絞肉80g,洋蔥30g,地瓜120g,青花菜60g|tofu chicken patty with sweet potato and broccoli`;
+l60|豆腐雞肉漢堡排＋地瓜|🍔|ld|30,42,12|ca|板豆腐100g,雞絞肉80g,洋蔥30g,地瓜120g,青花菜60g|tofu chicken patty with sweet potato and broccoli
+l61|蔬菜炒冬粉（少肉）|🥢|ld|8,44,12|lp|冬粉40g,高麗菜100g,紅蘿蔔30g,黑木耳30g,瘦豬肉片30g,蔥10g,醬油|stir fried glass noodles with cabbage, carrot, wood ear mushroom and a little sliced pork
+l62|白菜滷冬粉（少肉）|🥬|ld|9,43,10|lp|冬粉40g,白菜150g,香菇30g,紅蘿蔔20g,瘦豬肉片30g,醬油|braised napa cabbage with glass noodles, shiitake mushrooms and a little sliced pork
+s27|涼拌冬粉小黃瓜|🥒|s|1,19,5|lp|冬粉20g,小黃瓜60g,紅蘿蔔10g,香油|cold glass noodle salad with shredded cucumber and carrot, sesame oil`;
 /* 營養師用的標籤：fib 高纖、fish 富含 Omega-3／維生素 D 的魚、fe 鐵、ca 鈣、kf 高鉀 */
 const XT={b3:['fib','ca'],b5:['fib','kf'],b6:['kf'],b7:['ca'],b9:['fib','ca'],l1:['fib'],l2:['fish','fib'],l3:['fe'],l5:['fish'],l7:['ca'],l10:['fe'],l11:['fish'],l13:['fe'],l14:['fish'],l15:['kf','fe'],l16:['ca'],l17:['fish','fib'],
 v1:['fib','kf','fe'],v2:['fib','ca'],v4:['kf','fe','ca'],v7:['fib'],s1:['kf'],s2:['fib'],s3:['ca'],s4:['ca'],s5:['fib'],s7:['ca']};
@@ -1276,7 +1279,7 @@ if(lv('sbp')||lv('dbp')||cd.has('htn')||cd.has('hf'))add({ic:'🧂',t:'降血壓
 if(lv('ua')||cd.has('gout'))add({ic:'🦶',t:'降尿酸',why:whyC(['ua'],['gout']),do:['少內臟、蝦蟹貝類、濃湯、火鍋湯底','戒含糖飲料（果糖會升尿酸）與啤酒','每天喝水 2–3 L（腎功能正常時）','雞蛋、低脂乳品、豆腐都是安全的蛋白質'],eat:['蛋、低脂乳','豆腐','大量白開水'],avoid:['內臟、海鮮','濃湯、火鍋湯','啤酒、含糖飲料']},['ca'],['pur']);
 if(['alt','ast','ggt','us_liver'].some(lv)||['nafld','hbv','hcv'].some(k=>cd.has(k)))add({ic:'🫁',t:'護肝（脂肪肝）',why:whyC(['alt','ast','ggt','us_liver'],['nafld','hbv','hcv']),do:[`體重減 5%（到 ${(w*.95).toFixed(1)} kg）肝脂肪就會下降；減 7–10%（到 ${(w*.9).toFixed(1)}–${(w*.93).toFixed(1)} kg）可改善肝發炎`,'追蹤脂肪肝期間以不喝酒為佳；少含糖飲料（果糖直接在肝臟變脂肪）','少油炸、少宵夜','無糖黑咖啡一天 1–2 杯對肝有幫助'],eat:['蔬菜、全穀','魚、豆腐'],avoid:['酒','油炸','含糖飲料']},[],['oil']);
 if(!kid&&c.mode.kidneyMild)add({ic:'🫘',t:'顧腎（腎功能略降或微量白蛋白尿）',why:why(['egfr','cr','upro','uacr']),do:['蛋白質每公斤 1.0 克以內，不吃高蛋白補充品','鹽一天 ≤5 g；不亂吃止痛藥（NSAIDs）、中草藥偏方','血壓、血糖控制好；3 個月後複驗腎功能與尿液微量白蛋白，確認是不是持續'],eat:['原型食物','適量蛋白質'],avoid:['高蛋白補充品','止痛藥（NSAIDs）']});
-if(kid)add({ic:'🫘',t:'護腎',why:why(['egfr','cr','upro','uacr','bun']),do:[`蛋白質 0.8 g/kg（約 ${Math.round(w*.8)} g），不吃高蛋白補充品`,'鹽 ≤5 g','不亂吃止痛藥、中草藥偏方',(num(l?.items?.egfr?.v)??99)<45?'eGFR <45：鉀、磷要問營養師（加工食品、可樂含磷高）':'定期追蹤 eGFR 與尿蛋白'],eat:['適量魚、蛋、豆腐'],avoid:['高蛋白粉','加工食品','止痛藥']},[],['pro','salt']);
+if(kid)add({ic:'🫘',t:'護腎',why:why(['egfr','cr','upro','uacr','bun']),do:[`蛋白質 0.8 g/kg（約 ${Math.round(w*.8)} g），不吃高蛋白補充品`,'鹽 ≤5 g','不亂吃止痛藥、中草藥偏方',(num(l?.items?.egfr?.v)??99)<45?'eGFR <45：鉀、磷要問營養師（加工食品、可樂含磷高）':'定期追蹤 eGFR 與尿蛋白'],eat:['適量魚、蛋、豆腐','冬粉、西谷米、藕粉（低蛋白澱粉，補熱量）'],avoid:['高蛋白粉','加工食品','止痛藥']},['lp'],['pro','salt']);
 if(lv('k')&&!lo('k'))add({ic:'🍌',t:'限鉀',why:why(['k']),do:['高鉀蔬果（香蕉、奇異果、地瓜葉、菠菜）先燙過、湯不喝','不用低鈉鹽（含鉀）'],eat:['燙過的蔬菜'],avoid:['香蕉、奇異果','菜湯、肉湯','低鈉鹽']},[],['kf']);
 if((lo('hb')||lo('ferritin')||lo('fe'))&&!(cd.has('thal')&&!lo('ferritin')&&!lo('fe')))add({ic:'🥩',t:'補鐵',why:why(['hb','ferritin','fe']),do:['紅肉（牛、豬）每週 2–3 次，深綠蔬菜天天吃','搭配維生素 C 水果（芭樂、奇異果）幫助吸收','茶、咖啡飯後隔 1 小時再喝'],eat:['牛肉','菠菜、地瓜葉','芭樂'],avoid:['飯後馬上喝茶']},['fe']);
 if(lo('vitd'))add({ic:'☀️',t:'補維生素 D',why:why(['vitd']),do:['每天曬太陽 10–15 分鐘（手腳露出）','鮭魚、鯖魚、蛋黃、曬過的香菇',num(l?.items?.vitd?.v)<20?'低於 20 ng/mL：和醫師討論補充劑量':'3 個月後複驗'],eat:['鮭魚、鯖魚','蛋黃'],avoid:[]},['fish']);
@@ -4007,7 +4010,7 @@ const pick=(arr,r)=>arr[Math.floor(r()*arr.length)];
 // 不吃的食材群組＋手動移除的菜（每位成員各自設定）
 const dietOf=m=>{const d=obj(m.diet);return{no:Array.isArray(d.no)?d.no.filter(k=>EXG.some(z=>z[0]===k)):[],ban:Array.isArray(d.ban)?d.ban.filter(id=>BY_ID[id]):[]}};
 const okFood=(f,dt)=>!dt.ban.includes(f.id)&&!ingOf(f).some(i=>EXG.some(([k,,re])=>dt.no.includes(k)&&re.test(i.n)));
-const TAGN={hc:'精緻澱粉',oil:'油炸重油',salt:'重鹹湯麵',pur:'高普林',pro:'蛋白補充品',kf:'高鉀蔬果',fib:'高纖全穀',fish:'魚',fe:'含鐵',ca:'高鈣'};
+const TAGN={lp:'低蛋白（冬粉）',hc:'精緻澱粉',oil:'油炸重油',salt:'重鹹湯麵',pur:'高普林',pro:'蛋白補充品',kf:'高鉀蔬果',fib:'高纖全穀',fish:'魚',fe:'含鐵',ca:'高鈣'};
 // 有上下限的組合搜尋（分支界限；做法參考 mcfit-meal-planner 的 solver.py，MIT）：opts[i]＝第 i 餐的選項 {k,p,cost,id}（cost＝換菜、改份量的代價）
 // 分三階段：0＝熱量 T±10% 且蛋白質 ≤up、≥lo，取代價＋熱量偏差最小的（ok）；1＝熱量照樣要在 ±10% 內（腎臟病熱量不夠會營養不良，不能拿熱量換蛋白質），
 // 蛋白質超出越少越好；2＝都盡量（幾乎用不到）。午晚餐主菜（id）不重複
@@ -4023,7 +4026,7 @@ for(let ph=0;ph<3&&!best;ph++){nodes=0;run(ph)}return best}
 function plan(dateStr,m=me()){
 const n=nutriPlan(m),c=n.c,hp=c.goal!=='keep'||c.a>=65,dt=dietOf(m),wk=mondayOf(dateStr),di=Math.round(dayDiff(dateStr,wk)),xb=exBonus(m,dateStr),tgt=c.target+xb.add;
 const lim=c.mode.kidney||c.mode.kidneyMild,score=f=>{let v=0;for(const x of f.x){if(n.avd.has(x))v-=3;if(n.pref.has(x))v+=1}if(lim)v-=(f.p*4/f.k-.16)*8;else if(hp)v+=(f.p*4/f.k-.2)*4;if(c.goal==='cut'&&f.m==='ld'&&f.k<=560)v+=.5;return v};
-const pool=(t,K)=>FOODS.filter(f=>f.m===t&&okFood(f,dt)).map(f=>({f,v:score(f)+hash(wk+f.id)%1000/1000*1.5})).sort((x,y)=>y.v-x.v).slice(0,K).map(x=>x.f);
+const pool=(t,K)=>FOODS.filter(f=>f.m===t&&okFood(f,dt)&&(lim||!f.x.includes('lp'))).map(f=>({f,v:score(f)+hash(wk+f.id)%1000/1000*1.5})).sort((x,y)=>y.v-x.v).slice(0,K).map(x=>x.f);
 const LD=pool('ld',14),V=pool('v',14),B=pool('b',7),SN=pool('s',7),at=(L,i)=>L.length?L[i%L.length]:null;
 const top=t=>at(t==='b'?B:SN,di),lunch=at(LD,di*2),dinner=at(LD,di*2+1),v1=at(V,di*2),v2=at(V,di*2+1);
 // 份量調整：控糖時主食減量（碳水 −35%），重鹹、高普林提醒湯不喝
@@ -4037,9 +4040,9 @@ slots.forEach(sl=>{const base=sl.t.reduce((a,x)=>a+x.k,0);sl.x=Math.min(1.75,Mat
 // 找最接近原菜單、熱量在 ±10% 內的組合；找不到就排超出最少的，畫面說明怎麼補救（renderMenu）
 const up=lim?c.prot:null,lo=!lim&&!c.kid&&c.a>=65?Math.min(1.2*c.pw,c.prot):null,pOf=()=>slots.reduce((a,sl)=>a+sl.t.reduce((b,x)=>b+x.p,0)*sl.x,0),p0=pOf(),pb=up!=null||lo!=null?{up,lo,ok:true,chg:0}:null;
 if(up!=null&&p0>up+.5||lo!=null&&p0<lo-.5){const X=[.5,.75,1,1.25,1.5,1.75],dn=f=>f.p*4/f.k;
-const alt=(t,o)=>{let L=FOODS.filter(f=>f.m===t&&okFood(f,dt));const g=L.filter(f=>!f.x.some(x=>n.avd.has(x)));if(g.length>=4)L=g;L=L.sort((a,b)=>(dn(a)-dn(b))*(up!=null?1:-1)).slice(0,8);return[0,1,2].map(j=>L[(o+j)%L.length]).filter(Boolean)};
+const alt=(t,o)=>{let L=FOODS.filter(f=>f.m===t&&okFood(f,dt)&&(lim||!f.x.includes('lp')));const g=L.filter(f=>!f.x.some(x=>n.avd.has(x)));if(g.length>=4)L=g;L=L.sort((a,b)=>(dn(a)-dn(b))*(up!=null?1:-1)).slice(0,8);return[0,1,2].map(j=>L[(o+j)%L.length]).filter(Boolean)};
 const opts=slots.map((sl,i)=>{const t0=sl.t[0],r=sl.t.slice(1),rk=r.reduce((a,x)=>a+x.k,0),rp=r.reduce((a,x)=>a+x.p,0),fs=[t0.f];for(const f of alt(t0.f.m,di*3+i))if(!fs.includes(f))fs.push(f);
-return fs.flatMap((f,j)=>{const tt=j?tune(f):t0;return X.map(x=>({tt,x,id:f.m==='ld'?f.id:'',k:(tt.k+rk)*x,p:(tt.p+rp)*x,cost:(j?3:0)+Math.abs(x-sl.x)*4}))})});
+return fs.flatMap((f,j)=>{const tt=j?tune(f):t0;return X.map(x=>({tt,x,id:f.m==='ld'?f.id:'',k:(tt.k+rk)*x,p:(tt.p+rp)*x,cost:(j?2.6+j*.4:0)+Math.abs(x-sl.x)*4}))})});   // 換菜代價依當天輪替順序略增：不同天優先換成不同的菜
 const r=menuFit(opts,tgt,lo,up);if(r){r.sel.forEach((o,i)=>{const sl=slots[i];if(o.tt!==sl.t[0]){sl.t=[o.tt,...sl.t.slice(1)];sl.items=[o.tt.f,...sl.items.slice(1)];pb.chg++}if(o.x!==sl.x){sl.x=o.x;pb.chg++}});pb.ok=r.ok;pb.ph=r.ph}else pb.ok=false}
 if(pb)pb.P=pOf();
 slots.forEach(sl=>{sl.adj=[...new Set(sl.t.flatMap(x=>x.a))];if(n.lowC&&sl.items.length>1)sl.adj.unshift('先吃菜再吃飯')});
@@ -4062,8 +4065,8 @@ return `<div class="meal" data-meal="${slots.indexOf(s)}" role="button"><div cla
 const line=(nm,v,t,col,st)=>`<div class="row"><span>${nm}</span><span>${Math.round(v)} / ${Math.round(t)}${st?` <b style="color:${st[1]}">${st[0]}</b>`:''}</span></div><div class="bar"><i style="width:${Math.min(100,v/t*100)}%;background:${col}"></i></div>`;
 const gap=Math.round(c.prot-Pp),OK='var(--lime)',AM='var(--amber)',over=pb?.up!=null&&Pp>pb.up+.5,under=pb?.lo!=null&&Pp<pb.lo-.5;
 const pS=pb?.up!=null?(over?[`⚠️ 超過上限 ${Math.round(Pp-pb.up)} g`,'var(--red)']:['✓ 沒超過上限',OK]):under?[`⚠️ 少於下限 ${Math.round(pb.lo-Pp)} g`,'var(--red)']:gap>Math.max(3,c.prot*.1)?[`還差 ${gap} g`,AM]:['✓ 達標',OK];
-const pMsg=pb?.up!=null?`<div class="hl" style="margin-top:12px">${over?`⚠️ 這天的菜在熱量夠的情況下，蛋白質最少也有 ${Math.round(Pp)} g，超過上限 ${Math.round(Pp-pb.up)} g：主菜的肉、魚、蛋、豆製品吃一半，飯照吃；熱量不夠用冬粉、米粉、米苔目補。`
-:!pb.ok?`⚠️ 為了不超過上限，熱量只排到 ${Math.round(K)} kcal（少 ${Math.round(tgt-K)}）：用冬粉、米粉、米苔目、植物油補足熱量。`
+const pMsg=pb?.up!=null?`<div class="hl" style="margin-top:12px">${over?`⚠️ 這天的菜在熱量夠的情況下，蛋白質最少也有 ${Math.round(Pp)} g，超過上限 ${Math.round(Pp-pb.up)} g：主菜的肉、魚、蛋、豆製品吃一半，飯照吃；熱量不夠用冬粉、西谷米、藕粉補。`
+:!pb.ok?`⚠️ 為了不超過上限，熱量只排到 ${Math.round(K)} kcal（少 ${Math.round(tgt-K)}）：用冬粉、西谷米、藕粉、植物油補足熱量。`
 :`🩺 ${c.mode.kidney?'護腎':'顧腎'}：${pb.chg?'已換成蛋白質較低的菜、調整份量，':''}蛋白質控制在 ${Math.round(pb.up)} g 以內（每公斤 ${c.mode.kidney?'0.8':'1.0'} g）。`}份量請跟腎臟科醫師或營養師確認。</div>`
 :pb?.lo!=null&&(under||pb.chg)?`<div class="hl" style="margin-top:12px">${under?`⚠️ 蛋白質還差 ${Math.round(pb.lo-Pp)} g 才到 65 歲以上的下限（每公斤 1.2 g，防肌少症）：每餐加一份蛋、豆腐、魚或鮮奶。`:`🧓 已調整菜色與份量，讓蛋白質至少 ${Math.round(pb.lo)} g（65 歲以上每公斤 1.2 g，防肌少症）。`}</div>`:'';
 $('#menuSum').innerHTML=(xb.min?`<div class="hl" style="margin-bottom:10px">🏃 ${exBonusTxt(xb,c)}</div>`:'')+line('熱量 kcal',K,tgt,'linear-gradient(90deg,var(--cyan),var(--lime))',Math.abs(K-tgt)<=tgt*.1?['✓',OK]:[K<tgt?`少 ${Math.round(tgt-K)}`:`多 ${Math.round(K-tgt)}`,AM])+line('蛋白質 g',Pp,c.prot,over||under?'var(--red)':'var(--cyan)',pS)+line('碳水 g',C,c.carb+xc,'var(--lime)')+line('脂肪 g',F,c.fat+xf,'var(--pink)')+pMsg+

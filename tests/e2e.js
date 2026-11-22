@@ -2773,20 +2773,20 @@ const results = []; const check = (name, ok, extra = '') => results.push(`${ok ?
     page = await newPage({ members: [mk('k1', { sex: 'f', birth: '1961-01-01', h: 155, w: 55, cond: { items: [{ k: 'ckd', y: 2020, st: 'tx' }] } }), mk('k2', { sex: 'm', birth: '1956-01-01', h: 168, w: 65, act: '1.2', cond: { items: [{ k: 'ckd', y: 2018, st: 'tx' }] } }),
       mk('e1', { sex: 'f', birth: '1951-01-01', h: 150, w: 45, act: '1.2' }), mk('a1', { sex: 'm', birth: '1986-01-01', h: 172, w: 70 })], active: 'k1' });
     const R = await page.evaluate(() => { const out = {}; for (const m of MEM) { const c = calc(m), days = [];
-      for (let i = 0; i < 28; i++) { const d = addDays(ymd(new Date()), i), r = plan(d, m); let P = 0, K = 0; r.slots.forEach(s => { P += s.t.reduce((a, x) => a + x.p, 0) * s.x; K += s.t.reduce((a, x) => a + x.k, 0) * s.x }); days.push({ d, P, K, T: r.tgt, ok: r.pb ? r.pb.ok : null }) }
+      for (let i = 0; i < 28; i++) { const d = addDays(ymd(new Date()), i), r = plan(d, m); let P = 0, K = 0; r.slots.forEach(s => { P += s.t.reduce((a, x) => a + x.p, 0) * s.x; K += s.t.reduce((a, x) => a + x.k, 0) * s.x }); days.push({ d, P, K, T: r.tgt, ok: r.pb ? r.pb.ok : null, lp: r.slots.some(s => s.items.some(f => f.x.includes('lp'))) }) }
       out[m.id] = { up: c.mode.kidney ? c.prot : null, lo: c.a >= 65 && !c.mode.kidney ? 1.2 * c.pw : null, pw: c.pw, days } } return out }).catch(e => ({ err: e.message }));
     const kid = ['k1', 'k2'].map(id => { const r = R[id] || { days: [] }, ex = r.days.map(x => x.P - r.up); return { id, up: Math.round(r.up), maxOver: Math.round(Math.max(...ex)), okDays: r.days.filter(x => x.P <= r.up + .5).length,
       unflagged: r.days.filter(x => x.P > r.up + .5 && x.ok !== false).length, kcal: r.days.every(x => x.K >= x.T * .9 - 1 && x.K <= x.T * 1.1 + 1) } });
     const E = R.e1 || { days: [] }, A = R.a1 || { days: [] };
-    check('護腎（慢性腎臟病）的菜單蛋白質不再天天超標：合成的 66 歲女性 55 kg、71 歲男性 65 kg 排 28 天，蛋白質最多只超過上限（每公斤 0.8 g）6 g 以內、一半以上的天數完全沒超過，超過的那天一定標出來；熱量都在目標 ±10% 內（不拿熱量換蛋白質）',
-      !R.err && kid.every(k => k.maxOver <= 6 && k.okDays >= 14 && k.unflagged === 0 && k.kcal), JSON.stringify(R.err || kid));
-    check('65 歲以上（沒有腎臟病）每天蛋白質至少每公斤 1.2 g；沒有上下限的一般成年人不啟動搜尋（菜單照舊）',
-      E.days.length === 28 && E.days.every(x => x.P >= R.e1.lo - .5) && A.days.length === 28 && A.days.every(x => x.ok === null), JSON.stringify({ e1: E.days.map(x => Math.round(x.P)).join(','), lo: Math.round(R.e1?.lo), a1: A.days.slice(0, 3) }));
+    check('護腎（慢性腎臟病）的菜單蛋白質不再天天超標：合成的 66 歲女性 55 kg、71 歲男性 65 kg 排 28 天，蛋白質最多只超過上限（每公斤 0.8 g）4 g 以內、至少 20 天完全沒超過（有冬粉類低蛋白菜可排），超過的那天一定標出來；熱量都在目標 ±10% 內（不拿熱量換蛋白質）',
+      !R.err && kid.every(k => k.maxOver <= 4 && k.okDays >= 20 && k.unflagged === 0 && k.kcal), JSON.stringify(R.err || kid));
+    check('65 歲以上（沒有腎臟病）每天蛋白質至少每公斤 1.2 g；沒有上下限的一般成年人不啟動搜尋（菜單照舊）；低蛋白菜（冬粉）只排給護腎成員，長者、一般人 28 天都不會排到',
+      E.days.length === 28 && E.days.every(x => x.P >= R.e1.lo - .5) && A.days.length === 28 && A.days.every(x => x.ok === null) && ![...E.days, ...A.days].some(x => x.lp) && ['k1', 'k2'].every(id => R[id].days.some(x => x.lp)), JSON.stringify({ e1: E.days.map(x => Math.round(x.P)).join(','), lo: Math.round(R.e1?.lo), a1: A.days.slice(0, 3) }));
     // 畫面：超過的那天標「超過上限」並說怎麼補；沒超過的那天標「沒超過上限」；一律提醒跟腎臟科醫師或營養師確認
     const k1d = R.k1?.days || [], dOver = k1d.find(x => x.P > R.k1.up + .5)?.d, dOk = k1d.find(x => x.P <= R.k1.up + .5)?.d;
     const V = await page.evaluate(([a, b]) => { go('menu', 'menu'); const t = d => { if (!d) return ''; curDate = d; renderMenu(); return $('#menuSum').textContent.replace(/\s+/g, ' ') }; return { over: t(a), ok: t(b) } }, [dOver, dOk]).catch(e => ({ err: e.message }));
-    check('今日菜單的營養達成用文字標狀態：護腎超過上限 →「⚠️ 超過上限 N g」＋「主菜的肉、魚、蛋、豆製品吃一半」「冬粉、米粉、米苔目補」；沒超過 →「✓ 沒超過上限」＋「🩺 護腎」；都提醒「份量請跟腎臟科醫師或營養師確認」',
-      !!dOver && !!dOk && /⚠️ 超過上限 \d+ g/.test(V.over) && /主菜的肉、魚、蛋、豆製品吃一半/.test(V.over) && /冬粉、米粉、米苔目/.test(V.over) && /✓ 沒超過上限/.test(V.ok) && /🩺 護腎/.test(V.ok) && [V.over, V.ok].every(t => /份量請跟腎臟科醫師或營養師確認/.test(t)),
+    check('今日菜單的營養達成用文字標狀態：護腎超過上限 →「⚠️ 超過上限 N g」＋「主菜的肉、魚、蛋、豆製品吃一半」「冬粉、西谷米、藕粉補」；沒超過 →「✓ 沒超過上限」＋「🩺 護腎」；都提醒「份量請跟腎臟科醫師或營養師確認」',
+      !!dOver && !!dOk && /⚠️ 超過上限 \d+ g/.test(V.over) && /主菜的肉、魚、蛋、豆製品吃一半/.test(V.over) && /冬粉、西谷米、藕粉/.test(V.over) && /✓ 沒超過上限/.test(V.ok) && /🩺 護腎/.test(V.ok) && [V.over, V.ok].every(t => /份量請跟腎臟科醫師或營養師確認/.test(t)),
       JSON.stringify({ dOver, dOk, over: (V.over || V.err || '').slice(0, 200), ok: (V.ok || '').slice(0, 160) }));
     // 搜尋（menuFit）跟暴力窮舉比對：300 組亂數題目，每題的階段（0＝都符合、1＝熱量符合但蛋白質超出、2＝都盡量）與目標值都要一樣
     const X = await page.evaluate(() => { const r = rng(20261122); let bad = 0, n0 = 0, n1 = 0, n2 = 0; const why = [];
