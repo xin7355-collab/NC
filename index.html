@@ -472,7 +472,7 @@ table.imap td.er{color:var(--red);font-weight:800}table.imap td.gp1{color:var(--
 <button id="updBar" hidden onclick="location.reload()">有新版本，點這裡更新</button>
 
 <script>
-const APP_VER='dev'; // 推上 main 後，.github/workflows/pages-sync.yml 會換成 commit 編號；App 回到前景時用它比對線上版本
+const APP_VER='22f3bea'; // 推上 main 後，.github/workflows/pages-sync.yml 會換成 commit 編號；App 回到前景時用它比對線上版本
 if('serviceWorker'in navigator&&/^https?:$/.test(location.protocol))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); // 離線快取（sw.js）：頁面先走網路、下載過的 3D 素材存在手機
 /* ================= 基礎工具 ================= */
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
