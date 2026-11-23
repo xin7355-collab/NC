@@ -330,7 +330,7 @@ table.imap td.er{color:var(--red);font-weight:800}table.imap td.gp1{color:var(--
 #habCard .chip{min-height:44px}.hab{padding:10px 0;border-top:1px solid var(--line)}.hab .step{display:inline-flex;align-items:center;gap:10px}.hab .step .btn{width:44px;min-height:44px;padding:0;font-size:20px}
 .h3d{position:relative;height:min(56vh,460px);min-height:300px;border-radius:14px;overflow:hidden;background:#0b1220;margin:6px 0 10px}.h3d-img{width:100%;height:100%;object-fit:contain;display:block}.h3d canvas{position:absolute;inset:0}
 .h3d-msg{position:absolute;left:10px;right:10px;bottom:10px;padding:8px 10px;border-radius:10px;background:rgba(6,9,18,.82);color:var(--text);font-size:calc(13px*var(--fz));line-height:1.5}.h3d-msg:empty{display:none}.h3d-msg.err{border:1px solid var(--amber)}
-.h3d-ctl{display:flex;gap:8px;flex-wrap:wrap}.h3d-ctl .seg{flex:1 1 140px}
+.h3d-ctl{display:flex;gap:8px;flex-wrap:wrap}.h3d-ctl .seg{flex:1 1 260px}.h3d-who{flex-wrap:wrap;margin:0 0 8px}.h3d-who button{flex:1 1 40%}.h3d-who button,.h3d-ctl .seg button,#h3dCard .chip{min-height:44px}@media(min-width:560px){.h3d-who button{flex-basis:20%}}
 </style>
 </head>
 <body>
@@ -1398,16 +1398,19 @@ const rehabMine=m=>{const ck=condKeys(m),lim=fitOf(m).lim;return REHAB.filter(([
 // ↓ 3D 真人示範在 moveHTML 最上面
 // 3D 真人示範（第二階段：男女人物模型；動作動畫、肌肉標示之後加入）。按「載入 3D」才下載 3d/ 模組與模型（不在開 App 時下載），離開運動頁就釋放 GPU 記憶體
 var H3D={v:null,sex:'',busy:0};
-const h3dLow=()=>!!S.get('low3d',false);
-function h3dCard(m){const sx=H3D.sex||(m.sex==='f'?'female':'male'),on=!!H3D.v,low=h3dLow();
+// 人物（亞洲臉孔，3d/manifest.js）與風格（3d/viewer.js 的 STYLES）：選了記在這支手機
+const H3M=[['male','男・短髮'],['male2','男・中長髮'],['female','女・馬尾'],['female2','女・短髮']],H3S=[['real','寫實'],['anime','動漫'],['line','線稿'],['clay','黏土']];
+const h3dLow=()=>!!S.get('low3d',false),h3dSty=()=>S.get('h3dStyle','real'),h3dWho=m=>{const k=H3D.sex||S.get('h3dModel','');return H3M.some(x=>x[0]===k)?k:m.sex==='f'?'female':'male'},h3dName=k=>(H3M.find(x=>x[0]===k)||H3M[0])[1];
+function h3dCard(m){const sx=h3dWho(m),on=!!H3D.v,low=h3dLow(),st=h3dSty(),seg=(L,a,c,lb,v)=>`<div class="seg${c}" role="group" aria-label="${lb}">${L.map(([k,t])=>`<button type="button" data-${a}="${k}" class="${v===k?'on':''}" aria-pressed="${v===k}">${t}</button>`).join('')}</div>`;
 return `<div class="card" id="h3dCard"><h2>🧍 3D 真人示範 <span class="tg">測試中</span></h2>
-<div class="h3d" id="h3d" data-sex="${sx}" data-state="${on?'ready':'idle'}"><img class="h3d-img" src="3d/models/${sx}.jpg" loading="lazy" alt="3D 人物預覽（${sx==='female'?'女性':'男性'}）"${on?' hidden':''}><div class="h3d-msg" id="h3d-msg" role="status" aria-live="polite">${low?'省電模式：不載入 3D，動作示範用下面的 2D 動畫':''}</div></div>
-<button class="btn" data-h3d="go" id="h3d-go"${on||low?' hidden':''}>▶ 載入 3D 人物（約 1.2 MB）</button>
-<div class="h3d-ctl"${on?'':' hidden'}><div class="seg" role="group" aria-label="人物">${[['male','男'],['female','女']].map(([k,t])=>`<button type="button" data-h3dsex="${k}" class="${sx===k?'on':''}" aria-pressed="${sx===k}">${t}</button>`).join('')}</div>
-<div class="seg" role="group" aria-label="視角">${[['front','正面'],['side','側面'],['back','背面']].map(([k,t])=>`<button type="button" data-h3dview="${k}">${t}</button>`).join('')}</div></div>
+<div class="h3d" id="h3d" data-sex="${sx}" data-state="${on?'ready':'idle'}"><img class="h3d-img" src="3d/models/${sx}.jpg" loading="lazy" alt="3D 人物預覽（${h3dName(sx)}）"${on?' hidden':''}><div class="h3d-msg" id="h3d-msg" role="status" aria-live="polite">${low?'省電模式：不載入 3D，動作示範用下面的 2D 動畫':''}</div></div>
+${seg(H3M,'h3dsex',' h3d-who','人物',sx)}
+<button class="btn" data-h3d="go" id="h3d-go"${on||low?' hidden':''}>▶ 載入 3D 人物（約 1.2～1.4 MB）</button>
+<div class="h3d-ctl"${on?'':' hidden'}>${seg(H3S,'h3dsty','','風格',st)}
+<div class="seg" role="group" aria-label="視角">${[['front','正面'],['side','側面'],['back','背面'],['face','臉部']].map(([k,t])=>`<button type="button" data-h3dview="${k}">${t}</button>`).join('')}</div></div>
 <div id="h3d-play"></div>
 <div class="chips" style="margin-top:8px"><button type="button" class="chip${low?' on':''}" data-h3dlow aria-pressed="${low}">🔋 省電模式：只用 2D</button></div>
-<p class="note">手指拖曳可以 360° 旋轉、兩指縮放。第一次要下載約 1.2 MB，之後比較快。選了動作後可按「💪 標出肌群」看用到哪些部位。人物素材：Microsoft Rocketbox Avatar Library（MIT 授權）。</p></div>`}
+<p class="note">手指拖曳可以 360° 旋轉、兩指縮放。每個人物第一次要下載約 1.2～1.4 MB，之後比較快；「風格」可以換成動漫、線稿、黏土。選了動作後可按「💪 標出肌群」看用到哪些部位。人物素材：Microsoft Rocketbox Avatar Library（MIT 授權）。</p></div>`}
 const h3dMsg=(t,err)=>{const e=$('#h3d-msg');if(e){e.textContent=t;e.classList.toggle('err',!!err)}};
 const h3dUI=()=>{const on=!!H3D.v,h=$('#h3d');if(h)h.dataset.state=on?'ready':'idle';const i=$('#h3d .h3d-img');if(i)i.hidden=on;const g=$('#h3d-go');if(g)g.hidden=on||h3dLow();const c=$('#h3dCard .h3d-ctl');if(c)c.hidden=!on;
 $$('[data-h3dsex]').forEach(b=>{const x=b.dataset.h3dsex===(H3D.sex||h?.dataset.sex);b.classList.toggle('on',x);b.setAttribute('aria-pressed',x)})};
@@ -1416,14 +1419,15 @@ function h3dReattach(){if(!H3D.v)return;const el=$('#h3d');if(el){H3D.v.attach(e
 async function h3dLoad(sex){const host=$('#h3d');if(!host||H3D.busy||h3dLow())return;H3D.busy=1;
 try{h3dMsg('載入 3D 程式…');const mod=await import('./3d/viewer.js?v='+encodeURIComponent(APP_VER)).catch(e=>{throw Object.assign(new Error('mod'),{cause:e})});
 if(!mod.supports3D()){h3dMsg('這支手機的瀏覽器不支援 3D（需要 WebGL 2）：請用下面的 2D 動作示範；iPhone 更新到 iOS 15 以上就能用',1);return}
-if(!H3D.v)H3D.v=mod.createViewer(host,{ver:APP_VER,onLost:()=>{h3dDispose();h3dMsg('3D 畫面被系統暫停（可能是記憶體不足）：再按一次「載入 3D 人物」，或開啟省電模式',1)}});
+if(!H3D.v){H3D.v=mod.createViewer(host,{ver:APP_VER,onLost:()=>{h3dDispose();h3dMsg('3D 畫面被系統暫停（可能是記憶體不足）：再按一次「載入 3D 人物」，或開啟省電模式',1)}});H3D.v.setStyle(h3dSty())}
 const i=$('#h3d .h3d-img');if(i)i.hidden=true;h3dMsg('下載 3D 人物… 0%');
 await H3D.v.load(sex,p=>h3dMsg(`下載 3D 人物… ${Math.min(99,Math.round(p*100))}%`));H3D.sex=sex;host.dataset.sex=sex;h3dMsg('');h3dUI();
 if(!H3D.ui){const U=await import('./3d/ui.js?v='+encodeURIComponent(APP_VER));H3D.ui=U.mountPlayer($('#h3d-play'),H3D.v,{reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,ver:APP_VER})}}
 catch(e){const k=e?.message;h3dDispose();h3dMsg(k==='webgl'?'這支手機現在無法建立 3D 畫面：先用下面的 2D 動作示範，或關掉其他 App 再試':(k==='load'||k==='mod')&&!navigator.onLine?'目前沒有網路：3D 人物還沒存到這支手機。連上網路後載入一次，之後沒網路也能看':k==='load'||k==='mod'?'3D 人物下載失敗：請確認網路後再按一次「載入 3D 人物」':'3D 載入失敗：請再試一次，或開啟省電模式改用 2D',1)}
 finally{H3D.busy=0}}
 document.addEventListener('click',e=>{const t=e.target;if(t.closest('[data-h3d]')){h3dLoad(H3D.sex||$('#h3d')?.dataset.sex||'male');return}
-const s=t.closest('[data-h3dsex]');if(s){if(H3D.v&&H3D.sex!==s.dataset.h3dsex)h3dLoad(s.dataset.h3dsex);return}
+const s=t.closest('[data-h3dsex]');if(s){const k=s.dataset.h3dsex,h=$('#h3d'),i=$('#h3d .h3d-img');S.set('h3dModel',k);if(H3D.v){if(H3D.sex!==k)h3dLoad(k)}else{if(h)h.dataset.sex=k;if(i){i.src=`3d/models/${k}.jpg`;i.alt=`3D 人物預覽（${h3dName(k)}）`}h3dUI()}return}
+const y=t.closest('[data-h3dsty]');if(y){const k=H3D.v?H3D.v.setStyle(y.dataset.h3dsty):y.dataset.h3dsty;S.set('h3dStyle',k);$$('[data-h3dsty]').forEach(b=>{const x=b.dataset.h3dsty===k;b.classList.toggle('on',x);b.setAttribute('aria-pressed',x)});return}
 const v=t.closest('[data-h3dview]');if(v){H3D.v?.setView(v.dataset.h3dview);return}
 const l=t.closest('[data-h3dlow]');if(l){const on=!h3dLow();S.set('low3d',on);l.classList.toggle('on',on);l.setAttribute('aria-pressed',on);if(on)h3dDispose();h3dUI();h3dMsg(on?'省電模式：不載入 3D，動作示範用下面的 2D 動畫':'')}});
 function moveHTML(m){const mine=rehabMine(m),rest=REHAB.filter(r=>!mine.includes(r)),card=k=>{const X=ANX[k];return `<button class="rec" data-anim="${k}">${anSVG(X,'anim sm',k)}<div class="m"><b>${esc(X.n)}</b><small>${X.hold?`每${X.hold>=10?'次':'下'}停 ${X.hold} 秒・`:''}${X.r} ${X.hold>=10?'次':'下'}・${esc(X.cue[0])}</small></div><span class="chev">›</span></button>`},grp=([,t,L],o)=>`<div class="h4">${o?'🩹 你的：':''}${esc(t)}</div>${L.map(card).join('')}`;

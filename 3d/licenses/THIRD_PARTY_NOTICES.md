@@ -5,11 +5,16 @@ App 的 3D 功能使用以下第三方素材與程式。每一項的來源、授
 
 ## 1. 人物模型：Microsoft Rocketbox Avatar Library
 
-- 使用：`3d/models/male.glb`（Sports_Male_04）、`3d/models/female.glb`（Sports_Female_02），以及預覽圖 `male.jpg`、`female.jpg`
-- 來源：https://github.com/microsoft/Microsoft-Rocketbox（commit 0943055db6ec570bcef9f2c8b41c9e5467c808f9）
+- 使用：四個人物（`3d/models/` 的 GLB 與預覽圖 JPG）
+  - `male.glb` 男・短髮＝Sports_Male_04 的身體＋Business_Male_02 的頭
+  - `male2.glb` 男・中長髮＝Sports_Male_04 的身體＋Male_Adult_10 的頭
+  - `female.glb` 女・馬尾＝Sports_Female_02（原本就是亞洲臉孔）
+  - `female2.glb` 女・短髮＝Sports_Female_02 的身體＋Female_Adult_03 的頭
+- 來源：https://github.com/microsoft/Microsoft-Rocketbox（commit 0943055db6ec570bcef9f2c8b41c9e5467c808f9；身體在 `Assets/Avatars/Professions/`，Male_Adult_10、Female_Adult_03 在 `Assets/Avatars/Adults/`）
 - 授權：MIT（可商用、可修改、可散布；條件是附上下面的著作權與授權聲明）
-- 修改內容：FBX 轉 GLB；3ds Max 材質（底色為黑）改成白底 PBR；貼圖縮小並改 JPEG（頭髮透明貼圖改 256 色 PNG）；合併重複頂點；公分換算公尺；腳底貼地；合併同材質區塊（減少繪製次數，外觀不變，`tools/glb-merge-prims.py`）。轉檔工具：`tools/build-3d-models.js`
-- 女性另外加一根馬尾骨頭 `Bip01_Ponytail`：原檔的馬尾整條綁在頭骨上，躺下（臀橋）時會插進地板。只改骨架和馬尾頂點的蒙皮權重，頂點、貼圖不動，靜止時外觀跟原檔一樣。工具：`tools/glb-add-ponytail.py`
+- 修改內容：FBX 轉 GLB；3ds Max 材質（底色為黑）改成白底 PBR；貼圖縮小並改 JPEG（頭髮透明貼圖改 256 色 PNG）；合併重複頂點；公分換算公尺；腳底貼地；合併同材質區塊（減少繪製次數，外觀不變，`tools/glb-merge-prims.py`）；修正頭部、頭髮跟面方向差太多的頂點法線（原檔打光時頭髮會出現發亮的方塊）。轉檔工具：`tools/build-3d-models.js`
+- 換頭（亞洲臉孔）：同性別的 Rocketbox 人物共用同一套 Biped 骨架、頭部網格與頭部 UV 排法，把另一個人物的頭部網格與貼圖逐骨頭對位搬到運動服身體上；脖子接縫用身體原本的脖子補、細三角形縫合，脖子貼圖用身體原本的並在接縫附近漸層對齊膚色。男性不用透明髮片（短髮外觀幾乎一樣）；女・短髮垂在背上的頭髮改綁頭骨。工具：`tools/headswap.js`
+- 女性另外加一根馬尾骨頭 `Bip01_Ponytail`：原檔的馬尾整條綁在頭骨上，躺下（臀橋）時會插進地板。只改骨架和馬尾頂點的蒙皮權重，頂點、貼圖不動，靜止時外觀跟原檔一樣（女・短髮只加骨頭、不綁頂點）。工具：`tools/glb-add-ponytail.py`
 
 ```
 MIT License

@@ -5,7 +5,8 @@
 加一根骨頭後，動畫可以讓馬尾平貼地面；沒有動畫控制時骨頭停在原位，外觀跟原檔一模一樣。
 只改骨架（多一個節點、一個反綁定矩陣）和馬尾頂點的蒙皮權重；頂點位置、貼圖、材質都不動。
 
-用法：python3 tools/glb-add-ponytail.py 3d/models/female.glb [輸出檔（預設覆寫輸入檔）]
+用法：python3 tools/glb-add-ponytail.py 3d/models/female.glb [輸出檔（預設覆寫輸入檔）] [--bone-only-if-short]
+  --bone-only-if-short：短髮（找不到馬尾）時只加骨頭、不改任何權重——女性動畫都帶馬尾軌，骨頭在才綁得上（換頭成短髮的人物用）
 需要：numpy
 """
 import json
@@ -49,8 +50,10 @@ def write_back(binb, arr, off, st, dt):
 
 
 def main():
-    src = sys.argv[1]
-    dst = sys.argv[2] if len(sys.argv) > 2 else src
+    args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    short_ok = '--bone-only-if-short' in sys.argv
+    src = args[0]
+    dst = args[1] if len(args) > 1 else src
     gj, binb = read_glb(src)
     nodes, skin = gj['nodes'], gj['skins'][0]
     if any(n.get('name') == NAME for n in nodes):
@@ -74,11 +77,17 @@ def main():
     ph = (Mh @ np.c_[P, np.ones(len(P))].T).T[:, :3]
     dom = J[np.arange(len(J)), W.argmax(1)]
     tail = (dom == jh) & (ph[:, 0] < -BELOW_CM) & (ph[:, 1] < -BEHIND_CM)
-    if tail.sum() < 50:
+    short = tail.sum() < 50
+    if short and not short_ok:
         sys.exit(f'找不到馬尾（只有 {tail.sum()} 個頂點），不處理')
-    q = ph[tail]
-    root = np.array([-BELOW_CM + 0.5, float(np.median(q[q[:, 0] > -8, 1])), 0.0])
-    tip = q[q[:, 0] < q[:, 0].min() + 2].mean(0)
+    if short:   # 短髮：骨頭放在後腦下方、不綁任何頂點（動畫轉它也不影響外觀）
+        tail[:] = False
+        root = np.array([-BELOW_CM + 0.5, -BEHIND_CM - 5.0, 0.0])
+        tip = root + np.array([-15.0, 0.0, 0.0])
+    else:
+        q = ph[tail]
+        root = np.array([-BELOW_CM + 0.5, float(np.median(q[q[:, 0] > -8, 1])), 0.0])
+        tip = q[q[:, 0] < q[:, 0].min() + 2].mean(0)
 
     # 權重：馬尾頂點原本 100% 綁頭骨，依離根部的距離把一部分（5 公分外全部）改綁新骨頭
     s = np.clip((root[0] - ph[:, 0]) / BLEND_CM, 0, 1)

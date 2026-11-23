@@ -68,14 +68,16 @@ ${H.length ? `<details class="hist"><summary>修正紀錄（${H.length} 筆）</
     if (!db) return rvMsg('審核資料還沒讀到：請確認網路後再試一次'); preview(RV.checkResult(j, { recs: recs(), content: db.content })) });
   async function select(id) { if (busy) return; busy = true; msg.textContent = '載入動作…';
     try { await v.setExercise(id, { autoplay: !opt.reduced }); msg.textContent = ''; details(EXERCISES.find(e => e.id === id)) }
-    catch (e) { msg.textContent = navigator.onLine === false ? '目前沒有網路：這個動作還沒存到這支手機，連上網路後點一次就會存起來' : '這個動作下載失敗：請確認網路後再點一次' } finally { busy = false; offline() } }
+    catch (e) { msg.textContent = navigator.onLine === false ? '目前沒有網路：這個動作還沒存到這支手機，連上網路後點一次就會存起來' : '這個動作下載失敗：請確認網路後再點一次' } finally { busy = false; offline(); later() } }
   // 離線狀態：人物和動作是不是已經存在這支手機（有 Service Worker 才顯示）；播放太卡自動降畫質時也在這裡說
-  let lastSex = '', lowShown = false;
+  let lastSex = '', lowShown = false, again = 0;
+  // Service Worker 是下載完才在背景把檔案存進手機：剛載入時查可能還沒存好，1.5 秒後再查一次，狀態才不會停在「還沒存」
+  const later = () => { clearTimeout(again); again = setTimeout(() => { if (root.isConnected) offline() }, 1500) };
   async function offline() { const el = $('.off'); try { const c = v.cached ? await v.cached() : null; if (!c) { el.hidden = !lowShown; return }
       const n = Object.values(c.anims).filter(Boolean).length; el.textContent = (c.model ? `📦 已存到這支手機（沒網路也能看）：人物 ✓、動作 ${n}／${EXERCISES.length}` : '📦 人物還沒存到這支手機：連上網路時載入一次，之後沒網路也能看') + (lowShown ? '。已自動降低畫質，讓動畫更順' : ''); el.hidden = false }
     catch (e) { el.hidden = true } }
   const put = (e, t) => { if (e.textContent !== t) e.textContent = t };   // 播放時每格都會同步：文字有變才寫，省掉手機上無謂的版面重算
-  function sync(s) { st = s || { ready: false }; if (st.sex && st.sex !== lastSex) { lastSex = st.sex; offline() } if (st.low && !lowShown) { lowShown = true; offline() } $('.ctl').hidden = !st.ready; $$('[data-ex]').forEach(b => { const on = b.dataset.ex === st.id; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on) });
+  function sync(s) { st = s || { ready: false }; if (st.sex && st.sex !== lastSex) { lastSex = st.sex; offline(); later() } if (st.low && !lowShown) { lowShown = true; offline() } $('.ctl').hidden = !st.ready; $$('[data-ex]').forEach(b => { const on = b.dataset.ex === st.id; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on) });
     if (!st.ready) return; const p = $('[data-a="play"]'); put(p, st.playing ? '⏸ 暫停' : '▶ 播放'); p.setAttribute('aria-pressed', st.playing);
     rng.max = st.dur; if (!drag) rng.value = st.time; rng.setAttribute('aria-valuetext', `${st.phase}，第 ${st.time.toFixed(1)} 秒`);
     put($('.ph'), st.phase); put($('.tm'), `${st.time.toFixed(1)}／${st.dur.toFixed(1)} 秒`);
@@ -91,5 +93,5 @@ ${H.length ? `<details class="hist"><summary>修正紀錄（${H.length} 筆）</
   v.onAnim(sync);
   function attach(c) { if (c) c.appendChild(root) }
   attach(el); sync(v.animState()); refresh(); offline();
-  return { attach, select, destroy() { v.onAnim(null); root.remove() }, get el() { return root } }
+  return { attach, select, destroy() { clearTimeout(again); v.onAnim(null); root.remove() }, get el() { return root } }
 }

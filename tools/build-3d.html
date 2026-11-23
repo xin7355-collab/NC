@@ -3,13 +3,14 @@
 <script type="importmap">{"imports":{"three":"/three/build/three.module.js","three/addons/":"/three/examples/jsm/"}}</script>
 </head><body>
 <script type="module">
-// Microsoft Rocketbox（MIT）FBX＋TGA → GLB：材質改成白底 PBR（3ds Max 材質的底色是黑的）、公分→公尺、腳底貼地；另外輸出站姿預覽圖（3D 載入失敗時顯示）
+// Microsoft Rocketbox（MIT）FBX＋TGA → GLB：（可選）換成另一個人物的頭（tools/headswap.js）、材質改成白底 PBR（3ds Max 材質的底色是黑的）、公分→公尺、腳底貼地；另外輸出站姿預覽圖（3D 載入失敗時顯示）
 import * as THREE from 'three';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { TGALoader } from 'three/addons/loaders/TGALoader.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { rebuild } from '/tools/headswap.js';
 const b64 = buf => { let s = ''; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s) };
 // 自然站姿：上臂、前臂往下（只用在預覽圖；匯出的 GLB 保留原本的綁定姿勢）
 function stand(obj) {
@@ -22,11 +23,16 @@ function stand(obj) {
     aim(`Bip01_${s}_Forearm`, `Bip01_${s}_Hand`, up.clone().negate().add(lat.clone().multiplyScalar(0.06 * k)).add(fwd.clone().multiplyScalar(0.16)))
   }
 }
-window.convert = async name => {
-  const dir = `/src/${name}/`, mgr = new THREE.LoadingManager(); let missing = [];
+async function loadFBX(name, missing) {
+  const dir = `/src/${name}/`, mgr = new THREE.LoadingManager();
   mgr.setURLModifier(u => /\.tga$/i.test(u) ? dir + 'Textures/' + u.split(/[\\/]/).pop() : u); mgr.addHandler(/\.tga$/i, new TGALoader(mgr)); mgr.onError = u => missing.push(u);
   const obj = await new FBXLoader(mgr).loadAsync(dir + `Export/${name}.fbx`);
   await new Promise(r => { if (mgr.itemsLoaded >= mgr.itemsTotal) r(); else { mgr.onLoad = r; setTimeout(r, 30000) } });
+  obj.updateMatrixWorld(true); let mesh = null; obj.traverse(o => { if (o.isSkinnedMesh) mesh = o }); return { obj, mesh, name };
+}
+// name：身體（含衣服）；head：提供頭部的人物（換成亞洲臉孔，見 tools/headswap.js）。沒給 head 也會修頭髮的錯誤法線
+window.convert = async (name, head, opt = {}) => {
+  const missing = [], B = await loadFBX(name, missing), obj = B.obj, swap = rebuild(B, head ? await loadFBX(head, missing) : null, opt);
   let tris = 0, bones = 0; const mats = [];
   // TGA 解出來是原始像素（DataTexture），GLTFExporter 要能畫在 canvas 上的圖：先轉成 CanvasTexture（方向、色彩空間照舊）
   const cv = t => { if (!t || !t.isDataTexture) return t; const { data, width, height } = t.image, c = document.createElement('canvas'); c.width = width; c.height = height;
@@ -50,7 +56,7 @@ window.convert = async name => {
   const key = new THREE.DirectionalLight('#fff4ea', 2.0); key.position.set(1.6, 3.2, 2.6); sc.add(key); const rim = new THREE.DirectionalLight('#9ec8ff', 1.2); rim.position.set(-2, 2.2, -2.5); sc.add(rim); sc.add(new THREE.HemisphereLight('#dfe9ff', '#2a2420', 0.5));
   stand(obj); sc.add(obj); const cam = new THREE.PerspectiveCamera(26, W / H, 0.05, 50), a = 20 * Math.PI / 180; cam.position.set(Math.sin(a) * 4.4, 1.0, Math.cos(a) * 4.4); cam.lookAt(0, height / 2, 0); R.render(sc, cam);
   const preview = R.domElement.toDataURL('image/jpeg', 0.82).split(',')[1]; R.dispose();
-  return { glb: b64(glb), preview, info: { name, tris: Math.round(tris), bones, height, mats, missing, vin, vout } }
+  return { glb: b64(glb), preview, info: { name, head, swap, tris: Math.round(tris), bones, height, mats, missing, vin, vout } }
 };
 window.ready = true;
 </script></body></html>
